@@ -3,11 +3,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
+import { GoogleButtonComponent } from '../../shared/google-button.component';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, GoogleButtonComponent],
   template: `
     <h2>Masuk ke Akun</h2>
     <p class="subtitle">Silakan masuk untuk melanjutkan.</p>
@@ -31,9 +33,13 @@ import { ToastService } from '../../core/services/toast.service';
     </form>
 
     <div class="divider"><span>atau</span></div>
-    <button class="btn btn-google" type="button" (click)="google()">
-      <span class="g">G</span> Masuk dengan Google
-    </button>
+    @if (googleEnabled) {
+      <app-google-button text="signin_with" (credential)="google($event)" />
+    } @else {
+      <button class="btn btn-google" type="button" (click)="google()">
+        <span class="g">G</span> Masuk dengan Google
+      </button>
+    }
 
     <p class="foot">Belum punya akun? <a routerLink="/daftar">Daftar sekarang</a></p>
   `,
@@ -56,6 +62,7 @@ export class LoginComponent {
   password = '';
   remember = true;
   loading = signal(false);
+  googleEnabled = !!environment.googleClientId;
 
   submit(): void {
     if (!this.email || !this.password) { this.toast.error('Email dan kata sandi wajib diisi'); return; }
@@ -70,8 +77,19 @@ export class LoginComponent {
     });
   }
 
-  google(): void {
-    // Integrasi penuh Google Identity Services memerlukan Client ID terkonfigurasi.
-    this.toast.info('Login Google memerlukan konfigurasi Google Client ID pada environment.');
+  google(idToken?: string): void {
+    if (!idToken) {
+      this.toast.info('Login Google memerlukan konfigurasi Google Client ID pada environment.');
+      return;
+    }
+    this.loading.set(true);
+    this.auth.loginGoogle(idToken).subscribe({
+      next: (res) => {
+        this.loading.set(false);
+        this.toast.success('Selamat datang, ' + res.user.fullName);
+        this.router.navigate([res.user.emailVerified ? '/cms/dashboard' : '/verifikasi-email']);
+      },
+      error: () => this.loading.set(false),
+    });
   }
 }

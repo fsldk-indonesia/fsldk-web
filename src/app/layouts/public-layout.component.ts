@@ -18,6 +18,7 @@ import { AuthService } from '../core/services/auth.service';
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Beranda</a>
           <a routerLink="/tentang" routerLinkActive="active">Tentang</a>
           <a routerLink="/berita" routerLinkActive="active">Berita</a>
+          <a routerLink="/artikel" routerLinkActive="active">Artikel</a>
           <a routerLink="/kontak" routerLinkActive="active">Kontak</a>
         </nav>
         <div class="flex items-center gap-sm">

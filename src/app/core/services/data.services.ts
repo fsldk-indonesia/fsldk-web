@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import {
-  Category, DashboardSummary, MenuItem, News, Pagination, Permission, Role, UserProfile, UserRow,
+  Article, Category, Content, DashboardSummary, MenuItem, News, OrgMember, Pagination, Permission, Role, UserProfile, UserRow,
 } from '../models/models';
 
 /** Menu sidebar CMS (dinamis dari API, sesuai permission role). */
@@ -56,12 +56,36 @@ export class RoleService {
   permissions(): Observable<Permission[]> { return this.api.get('/permissions'); }
 }
 
-/** Konten Landing Page. */
+/** Artikel — publik & CMS. */
+@Injectable({ providedIn: 'root' })
+export class ArticleService {
+  private api = inject(ApiService);
+  publicList(q: Record<string, unknown>): Observable<Pagination<Article>> { return this.api.get('/public/articles', q); }
+  publicDetail(slug: string): Observable<Article> { return this.api.get(`/public/articles/${slug}`); }
+  categories(): Observable<Category[]> { return this.api.get('/public/article-categories'); }
+
+  cmsList(q: Record<string, unknown>): Observable<Pagination<Article>> { return this.api.get('/articles', q); }
+  cmsGet(id: number): Observable<Article> { return this.api.get(`/articles/${id}`); }
+  create(body: unknown): Observable<Article> { return this.api.post('/articles', body); }
+  update(id: number, body: unknown): Observable<Article> { return this.api.put(`/articles/${id}`, body); }
+  publish(id: number, isPublished: boolean): Observable<unknown> { return this.api.patch(`/articles/${id}/publish`, { isPublished }); }
+  remove(id: number): Observable<unknown> { return this.api.delete(`/articles/${id}`); }
+}
+
+/** Konten Landing Page & struktur organisasi. */
 @Injectable({ providedIn: 'root' })
 export class ContentService {
   private api = inject(ApiService);
+  // Publik
   profile(): Observable<Record<string, string>> { return this.api.get('/public/profile'); }
-  orgStructure(): Observable<unknown[]> { return this.api.get('/public/organization-structure'); }
+  orgStructure(): Observable<OrgMember[]> { return this.api.get('/public/organization-structure'); }
+  // CMS
+  list(): Observable<Content[]> { return this.api.get('/contents'); }
+  update(key: string, body: { contentTitle: string; contentBody: string }): Observable<unknown> { return this.api.put(`/contents/${key}`, body); }
+  cmsOrg(): Observable<OrgMember[]> { return this.api.get('/organization-structure'); }
+  createOrg(body: unknown): Observable<unknown> { return this.api.post('/organization-structure', body); }
+  updateOrg(id: number, body: unknown): Observable<unknown> { return this.api.put(`/organization-structure/${id}`, body); }
+  removeOrg(id: number): Observable<unknown> { return this.api.delete(`/organization-structure/${id}`); }
 }
 
 /** Dashboard CMS. */

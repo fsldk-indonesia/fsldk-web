@@ -104,6 +104,41 @@ export interface News {
   createdDate: string;
 }
 
+export interface Article {
+  articleID: number;
+  articleTitle: string;
+  articleSlug: string;
+  articleExcerpt: string | null;
+  articleContent: string;
+  articleImage: string | null;
+  categoryID: number;
+  categoryName: string;
+  isPublished: boolean;
+  publishedDate: string | null;
+  authorName: string;
+  createdDate: string;
+}
+
+export interface Content {
+  contentID: number;
+  contentKey: string;
+  contentTitle: string | null;
+  contentBody: string | null;
+  contentType: string;
+  sortOrder: number | null;
+  isActive: boolean;
+}
+
+export interface OrgMember {
+  structureID: number;
+  memberName: string;
+  position: string;
+  photoURL: string | null;
+  level: string | null;
+  sortOrder: number | null;
+  isActive: boolean;
+}
+
 export interface DashboardSummary {
   totalNews: number;
   publishedNews: number;
