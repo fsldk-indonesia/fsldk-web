@@ -1,0 +1,18 @@
+@if (verifying()) {
+  <div class="center"><span class="spinner spinner-dark"></span><p>Memverifikasi email…</p></div>
+} @else if (verified()) {
+  <div class="icon ok">&#10003;</div>
+  <h2>Email Terverifikasi</h2>
+  <p class="subtitle">Akun Anda telah aktif. Silakan masuk untuk mulai menggunakan CMS.</p>
+  <a routerLink="/login" class="btn btn-primary btn-block">Lanjut ke Login</a>
+} @else {
+  <div class="icon wait">&#9993;</div>
+  <h2>Verifikasi Email Anda</h2>
+  <p class="subtitle">Kami telah mengirim tautan verifikasi ke email Anda. Silakan buka email dan klik tautan tersebut untuk mengaktifkan akun.</p>
+  @if (isLoggedIn()) {
+    <button class="btn btn-primary btn-block" (click)="resend()" [disabled]="resendLoading()">
+      @if (resendLoading()) { <span class="spinner"></span> } @else { Kirim Ulang Email Verifikasi }
+    </button>
+  }
+  <p class="foot"><a routerLink="/login">Kembali ke Login</a></p>
+}

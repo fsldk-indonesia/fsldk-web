@@ -1,8 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from '../core/services/auth.service';
-import { MenuService } from '../core/services/data.services';
-import { MenuItem } from '../core/models/models';
+import { AuthRepository } from '../modules/user/repositories/auth.repository';
+import { PermissionRepository } from '../modules/permission/repositories/permission.repository';
+import { MenuItem } from '../modules/permission/entities/menu-item';
 
 /**
  * Layout CMS: sidebar gelap dengan menu dinamis dari API (/me/menus),
@@ -77,15 +77,15 @@ import { MenuItem } from '../core/models/models';
   `],
 })
 export class CmsLayoutComponent implements OnInit {
-  auth = inject(AuthService);
-  private menuSvc = inject(MenuService);
+  auth = inject(AuthRepository);
+  private permissionRepo = inject(PermissionRepository);
   private router = inject(Router);
 
   menus = signal<MenuItem[]>([]);
   sidebarOpen = signal(false);
 
   ngOnInit(): void {
-    this.menuSvc.getMenus().subscribe({ next: (m) => this.menus.set(m), error: () => {} });
+    this.permissionRepo.getMenus().subscribe({ next: (m) => this.menus.set(m), error: () => {} });
   }
 
   initials(): string {

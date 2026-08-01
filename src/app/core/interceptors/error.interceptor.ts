@@ -2,7 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { AuthService } from '../services/auth.service';
+import { AuthRepository } from '../../modules/user/repositories/auth.repository';
 import { ToastService } from '../services/toast.service';
 
 /**
@@ -11,7 +11,7 @@ import { ToastService } from '../services/toast.service';
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const toast = inject(ToastService);
-  const auth = inject(AuthService);
+  const auth = inject(AuthRepository);
   const router = inject(Router);
 
   return next(req).pipe(

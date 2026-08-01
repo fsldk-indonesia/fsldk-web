@@ -1,0 +1,44 @@
+<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:32px">
+      <span class="eyebrow">Berita &amp; Kabar Dakwah Kampus</span>
+      <h1>Ikuti Cerita Gerak Dakwah Kampus</h1>
+    </div>
+
+    <div class="filters">
+      <input class="form-control search" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari berita…">
+      <div class="chips">
+        <span class="chip" [class.active]="activeCat === ''" (click)="filterCat('')">Semua</span>
+        @for (c of categories(); track c.categoryID) {
+          <span class="chip" [class.active]="activeCat === c.categorySlug" (click)="filterCat(c.categorySlug)">{{ c.categoryName }}</span>
+        }
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="center-screen"><span class="spinner spinner-dark"></span></div>
+    } @else {
+      <div class="grid grid-3 mt-lg">
+        @for (n of news(); track n.newsID) {
+          <a class="news-card" [routerLink]="['/berita', n.newsSlug]">
+            <div class="news-thumb">@if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <span>FOTO BERITA</span> }</div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ n.categoryName }}</span>
+              <h3>{{ n.newsTitle }}</h3>
+              <p class="excerpt">{{ n.newsExcerpt }}</p>
+              <p class="meta">{{ n.authorName }} · {{ n.publishedDate | date:'d MMM yyyy' }}</p>
+            </div>
+          </a>
+        } @empty { <p class="text-muted">Tidak ada berita ditemukan.</p> }
+      </div>
+
+      @if (count() > limit) {
+        <div class="pager">
+          <button class="btn btn-outline btn-sm" [disabled]="page() <= 1" (click)="go(page() - 1)">Sebelumnya</button>
+          <span>Halaman {{ page() }} dari {{ totalPages() }}</span>
+          <button class="btn btn-outline btn-sm" [disabled]="page() >= totalPages()" (click)="go(page() + 1)">Berikutnya</button>
+        </div>
+      }
+    }
+  </div>
+</section>

@@ -1,0 +1,20 @@
+<article class="section">
+  <div class="container narrow">
+    @if (loading()) {
+      <div class="center-screen"><span class="spinner spinner-dark"></span></div>
+    } @else {
+      @if (news(); as n) {
+        <nav class="crumb"><a routerLink="/">Beranda</a> / <a routerLink="/berita">Berita</a> / <span>Detail</span></nav>
+        <span class="chip chip-green">{{ n.categoryName }}</span>
+        <h1>{{ n.newsTitle }}</h1>
+        <p class="meta">Oleh {{ n.authorName }} · {{ n.publishedDate | date:'d MMMM yyyy' }} · {{ n.viewCount }} kali dibaca</p>
+        @if (n.newsImage) { <img class="cover" [src]="n.newsImage" [alt]="n.newsTitle"> }
+        @else { <div class="cover placeholder">FOTO BERITA</div> }
+        <div class="content" [innerHTML]="n.newsContent"></div>
+        <a routerLink="/berita" class="btn btn-outline mt-lg">← Kembali ke Berita</a>
+      } @else {
+        <div class="text-center"><h2>Berita tidak ditemukan</h2><a routerLink="/berita" class="btn btn-primary mt">Kembali ke Berita</a></div>
+      }
+    }
+  </div>
+</article>

@@ -1,0 +1,53 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Manajemen Pengguna</h1><p class="text-muted">Kelola akun & peran pengguna CMS.</p></div>
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Tambah Pengguna</button> }
+</div>
+
+<div class="card">
+  <div class="card-pad flex gap">
+    <input class="form-control" [(ngModel)]="search" (keyup.enter)="load()" placeholder="Cari pengguna…">
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @for (u of users(); track u.userID) {
+          <tr>
+            <td><strong>{{ u.fullName }}</strong></td>
+            <td class="text-muted">{{ u.email }}</td>
+            <td><span class="chip chip-green">{{ u.role }}</span></td>
+            <td><span class="badge" [class.badge-active]="u.isActive" [class.badge-inactive]="!u.isActive">{{ u.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
+            <td>
+              <div class="table-actions">
+                @if (canUpdate) { <span class="link-action" (click)="openEdit(u)">Edit</span> }
+                @if (canUpdate) { <span class="link-action" (click)="reset(u)">Reset PW</span> }
+                @if (canDelete) { <span class="link-danger" (click)="remove(u)">Hapus</span> }
+              </div>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="text-muted">Tidak ada pengguna.</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ editId ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h3>
+      <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName"></div>
+      @if (!editId) { <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email"></div> }
+      @if (!editId) { <div class="form-group"><label class="form-label">Kata Sandi</label><input class="form-control" type="password" [(ngModel)]="form.password"></div> }
+      <div class="form-group"><label class="form-label">Role</label>
+        <select class="form-control" [(ngModel)]="form.roleID">
+          @for (r of roles(); track r.roleID) { <option [value]="r.roleID">{{ r.roleName }}</option> }
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div>
+      <div class="flex gap justify-between">
+        <button class="btn btn-ghost" (click)="close()">Batal</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
+      </div>
+    </div>
+  </div>
+}

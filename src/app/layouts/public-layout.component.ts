@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { AuthService } from '../core/services/auth.service';
+import { AuthRepository } from '../modules/user/repositories/auth.repository';
 
 /** Layout Landing Page publik: header (menu statis) + konten + footer. */
 @Component({
@@ -63,6 +63,6 @@ import { AuthService } from '../core/services/auth.service';
   `],
 })
 export class PublicLayoutComponent {
-  auth = inject(AuthService);
+  auth = inject(AuthRepository);
   year = new Date().getFullYear();
 }

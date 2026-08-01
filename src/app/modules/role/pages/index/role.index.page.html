@@ -1,0 +1,47 @@
+<div class="page-head"><h1>Manajemen Role</h1><p class="text-muted">Atur peran dan hak akses (permission) pengguna.</p></div>
+
+<div class="grid grid-2">
+  @for (r of roles(); track r.roleID) {
+    <div class="card card-pad">
+      <div class="flex justify-between items-center">
+        <h3>{{ r.roleName }}</h3>
+        @if (r.isSystemRole) { <span class="chip">Sistem</span> }
+      </div>
+      <p class="text-muted">{{ r.roleDescription }}</p>
+      <div class="perm-chips">
+        @for (p of r.permissions.slice(0, 6); track p) { <span class="chip chip-green">{{ p }}</span> }
+        @if (r.permissions.length > 6) { <span class="chip">+{{ r.permissions.length - 6 }}</span> }
+      </div>
+      <div class="flex justify-between items-center mt">
+        <span class="text-muted">{{ r.userCount }} pengguna</span>
+        @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openPerms(r)">Atur Permission</button> }
+      </div>
+    </div>
+  }
+</div>
+
+@if (editing(); as r) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>Permission — {{ r.roleName }}</h3>
+      <p class="text-muted">Centang permission yang diberikan ke role ini.</p>
+      <div class="perm-list">
+        @for (mod of moduleKeys(); track mod) {
+          <div class="perm-mod">
+            <strong>{{ mod }}</strong>
+            @for (p of grouped()[mod]; track p.permissionID) {
+              <label class="perm-item">
+                <input type="checkbox" [checked]="selected.has(p.permissionID)" (change)="toggle(p.permissionID)">
+                {{ p.permissionName }} <code>{{ p.permissionCode }}</code>
+              </label>
+            }
+          </div>
+        }
+      </div>
+      <div class="flex gap justify-between mt">
+        <button class="btn btn-ghost" (click)="close()">Batal</button>
+        <button class="btn btn-primary" (click)="savePerms()" [disabled]="saving()">Simpan</button>
+      </div>
+    </div>
+  </div>
+}

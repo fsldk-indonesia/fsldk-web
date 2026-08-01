@@ -1,0 +1,36 @@
+<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:32px">
+      <span class="eyebrow">Artikel &amp; Kajian</span>
+      <h1>Gagasan &amp; Wawasan Dakwah Kampus</h1>
+    </div>
+
+    <div class="filters">
+      <input class="form-control search" [(ngModel)]="search" (keyup.enter)="apply()" placeholder="Cari artikel…">
+      <div class="chips">
+        <span class="chip" [class.active]="cat === ''" (click)="filter('')">Semua</span>
+        @for (c of categories(); track c.categoryID) {
+          <span class="chip" [class.active]="cat === c.categorySlug" (click)="filter(c.categorySlug)">{{ c.categoryName }}</span>
+        }
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="center-screen"><span class="spinner spinner-dark"></span></div>
+    } @else {
+      <div class="grid grid-3 mt-lg">
+        @for (a of items(); track a.articleID) {
+          <a class="news-card" [routerLink]="['/artikel', a.articleSlug]">
+            <div class="news-thumb">@if (a.articleImage) { <img [src]="a.articleImage" [alt]="a.articleTitle"> } @else { <span>ARTIKEL</span> }</div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ a.categoryName }}</span>
+              <h3>{{ a.articleTitle }}</h3>
+              <p class="excerpt">{{ a.articleExcerpt }}</p>
+              <p class="meta">{{ a.authorName }} · {{ a.publishedDate | date:'d MMM yyyy' }}</p>
+            </div>
+          </a>
+        } @empty { <p class="text-muted">Belum ada artikel.</p> }
+      </div>
+    }
+  </div>
+</section>

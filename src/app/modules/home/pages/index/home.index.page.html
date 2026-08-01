@@ -1,0 +1,38 @@
+<section class="hero">
+  <div class="container">
+    <span class="hero-badge">● {{ content()['home.hero.badge'] || '40 Tahun Merajut Ukhuwah · Sejak 1986' }}</span>
+    <h1 class="hero-title">Menyatukan Langkah <span class="text-primary">Dakwah Kampus</span> se-Indonesia</h1>
+    <p class="hero-sub">{{ content()['home.hero.subtitle'] || defaultSub }}</p>
+    <div class="flex gap mt-lg">
+      <a routerLink="/berita" class="btn btn-primary">Baca Berita</a>
+      <a routerLink="/tentang" class="btn btn-outline">Tentang FSLDK</a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:40px">
+      <span class="eyebrow">Berita &amp; Kabar Dakwah Kampus</span>
+      <h2>Ikuti Cerita Gerak Dakwah Kampus</h2>
+    </div>
+    @if (loading()) {
+      <div class="center-screen"><span class="spinner spinner-dark"></span></div>
+    } @else {
+      <div class="grid grid-3">
+        @for (n of news(); track n.newsID) {
+          <a class="news-card" [routerLink]="['/berita', n.newsSlug]">
+            <div class="news-thumb">@if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <span>FOTO BERITA</span> }</div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ n.categoryName }}</span>
+              <h3>{{ n.newsTitle }}</h3>
+              <p class="meta">{{ n.authorName }} · {{ n.publishedDate | date:'d MMM yyyy' }}</p>
+            </div>
+          </a>
+        } @empty {
+          <p class="text-muted">Belum ada berita dipublikasikan.</p>
+        }
+      </div>
+    }
+  </div>
+</section>

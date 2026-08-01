@@ -1,11 +1,11 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthRepository } from '../../modules/user/repositories/auth.repository';
 import { ToastService } from '../services/toast.service';
 
 /** Memastikan pengguna sudah login. */
 export const authGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+  const auth = inject(AuthRepository);
   const router = inject(Router);
   if (auth.isLoggedIn()) return true;
   router.navigate(['/login']);
@@ -14,7 +14,7 @@ export const authGuard: CanActivateFn = () => {
 
 /** Mencegah pengguna yang sudah login mengakses halaman login/daftar. */
 export const loginGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+  const auth = inject(AuthRepository);
   const router = inject(Router);
   if (!auth.isLoggedIn()) return true;
   router.navigate(['/cms/dashboard']);
@@ -23,7 +23,7 @@ export const loginGuard: CanActivateFn = () => {
 
 /** Memastikan email pengguna sudah terverifikasi. */
 export const verifiedGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+  const auth = inject(AuthRepository);
   const router = inject(Router);
   if (auth.isLoggedIn() && auth.isVerified()) return true;
   if (auth.isLoggedIn()) {
@@ -36,7 +36,7 @@ export const verifiedGuard: CanActivateFn = () => {
 
 /** Memastikan pengguna memiliki permission tertentu (data: { permission }). */
 export const permissionGuard: CanActivateFn = (route) => {
-  const auth = inject(AuthService);
+  const auth = inject(AuthRepository);
   const router = inject(Router);
   const toast = inject(ToastService);
   const required = route.data?.['permission'] as string | undefined;

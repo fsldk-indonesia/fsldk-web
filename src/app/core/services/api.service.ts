@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse } from '../models/models';
+import { ApiResponse } from '../entities/api-response';
 
 /**
  * ApiService adalah pembungkus HttpClient yang membuka amplop response standar
