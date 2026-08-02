@@ -5,5 +5,5 @@ export interface RoleIndexView {
   setRoles(roles: Role[]): void;
   setPermissions(permissions: Permission[]): void;
   setSaving(saving: boolean): void;
-  onSavePermissionsSuccess(): void;
+  onSaveSuccess(): void;
 }

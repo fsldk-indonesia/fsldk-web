@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GoogleButtonComponent } from '../../../../shared/google-button.component';
 import { environment } from '../../../../../environments/environment';
 import { LoginPresenter } from './login.presenter';
@@ -18,13 +18,15 @@ import { LoginView } from './login.view';
     .divider { text-align: center; margin: 22px 0; position: relative; color: var(--color-muted); font-size: .85rem; }
     .divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background: var(--color-border); }
     .divider span { background: var(--color-bg-warm); padding: 0 12px; position: relative; }
-    .g { font-family: var(--font-heading); font-weight: 800; color: #4285F4; }
+    .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .g-icon { flex-shrink: 0; }
     .foot { text-align: center; margin-top: 24px; color: var(--color-text-secondary); font-size: .9rem; }
   `],
 })
 export class LoginPage implements OnInit, LoginView {
   private presenter = inject(LoginPresenter);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   email = '';
   password = '';
@@ -39,5 +41,9 @@ export class LoginPage implements OnInit, LoginView {
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   navigateToVerifyEmail(): void { this.router.navigate(['/verifikasi-email']); }
-  navigateToDashboard(): void { this.router.navigate(['/cms/dashboard']); }
+  navigateAfterLogin(hasCmsAccess: boolean): void {
+    if (hasCmsAccess) { this.router.navigate(['/cms/dashboard']); return; }
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    this.router.navigateByUrl(returnUrl || '/');
+  }
 }

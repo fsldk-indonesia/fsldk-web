@@ -55,7 +55,6 @@ export class UserIndexPage implements OnInit, UserIndexView {
   close(): void { this.showForm.set(false); }
 
   save(): void { this.presenter.save(this.editId, this.form); }
-  reset(u: UserRow): void { this.presenter.resetPassword(u.userID); }
   remove(u: UserRow): void {
     if (!confirm(`Hapus pengguna ${u.fullName}?`)) return;
     this.presenter.remove(u.userID);
@@ -65,6 +64,5 @@ export class UserIndexPage implements OnInit, UserIndexView {
   setRoles(roles: Role[]): void { this.roles.set(roles); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.showForm.set(false); this.load(); }
-  onResetPasswordSuccess(_temporaryPassword: string): void {}
   onRemoveSuccess(): void { this.load(); }
 }

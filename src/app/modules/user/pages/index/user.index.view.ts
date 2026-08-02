@@ -6,6 +6,5 @@ export interface UserIndexView {
   setRoles(roles: Role[]): void;
   setSaving(saving: boolean): void;
   onSaveSuccess(): void;
-  onResetPasswordSuccess(temporaryPassword: string): void;
   onRemoveSuccess(): void;
 }

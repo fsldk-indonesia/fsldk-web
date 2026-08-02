@@ -3,12 +3,12 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthRepository } from '../../modules/user/repositories/auth.repository';
 import { ToastService } from '../services/toast.service';
 
-/** Memastikan pengguna sudah login. */
-export const authGuard: CanActivateFn = () => {
+/** Memastikan pengguna sudah login; simpan URL tujuan sebagai returnUrl bila belum. */
+export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthRepository);
   const router = inject(Router);
   if (auth.isLoggedIn()) return true;
-  router.navigate(['/login']);
+  router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
   return false;
 };
 

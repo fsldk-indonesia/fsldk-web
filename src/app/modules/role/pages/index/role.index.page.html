@@ -1,4 +1,7 @@
-<div class="page-head"><h1>Manajemen Role</h1><p class="text-muted">Atur peran dan hak akses (permission) pengguna.</p></div>
+<div class="flex justify-between items-center page-head">
+  <div><h1>Manajemen Role</h1><p class="text-muted">Atur peran dan hak akses (permission) pengguna.</p></div>
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Tambah Role</button> }
+</div>
 
 <div class="grid grid-2">
   @for (r of roles(); track r.roleID) {
@@ -14,17 +17,25 @@
       </div>
       <div class="flex justify-between items-center mt">
         <span class="text-muted">{{ r.userCount }} pengguna</span>
-        @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openPerms(r)">Atur Permission</button> }
+        @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openEdit(r)">Edit Role</button> }
       </div>
     </div>
   }
 </div>
 
-@if (editing(); as r) {
+@if (showForm()) {
   <div class="modal-backdrop" (click)="close()">
     <div class="modal" (click)="$event.stopPropagation()">
-      <h3>Permission — {{ r.roleName }}</h3>
-      <p class="text-muted">Centang permission yang diberikan ke role ini.</p>
+      <h3>{{ editId ? 'Ubah Role' : 'Tambah Role' }}</h3>
+      <div class="form-group">
+        <label class="form-label">Nama Role</label>
+        <input class="form-control" [(ngModel)]="form.roleName" [disabled]="editingSystemRole">
+        @if (editingSystemRole) { <small class="text-muted">Nama role bawaan sistem tidak dapat diubah.</small> }
+      </div>
+      <div class="form-group"><label class="form-label">Deskripsi</label><input class="form-control" [(ngModel)]="form.roleDescription"></div>
+      @if (editId) { <div class="form-group"><label class="form-label"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div> }
+
+      <p class="text-muted mt">Centang permission yang diberikan ke role ini.</p>
       <div class="perm-list">
         @for (mod of moduleKeys(); track mod) {
           <div class="perm-mod">
@@ -40,7 +51,7 @@
       </div>
       <div class="flex gap justify-between mt">
         <button class="btn btn-ghost" (click)="close()">Batal</button>
-        <button class="btn btn-primary" (click)="savePerms()" [disabled]="saving()">Simpan</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
       </div>
     </div>
   </div>

@@ -1,5 +1,5 @@
 import { Component, HostListener, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 
 /**
@@ -28,10 +28,25 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 
         <div class="flex items-center gap-sm pub-actions">
           @if (auth.isLoggedIn()) {
-            <a routerLink="/cms/dashboard" class="btn btn-primary btn-sm">Masuk CMS</a>
+            <div class="user-fun-wrap" (mouseenter)="openUserMenu()" (mouseleave)="closeUserMenu()">
+              <button class="btn btn-outline btn-sm btn-user-fun account-chip" type="button" (click)="toggleUserMenu($event)">
+                <span class="chip-avatar">{{ initials() }}</span> {{ auth.user()?.fullName }}
+              </button>
+              <div class="dropdown-fun" [class.open]="userMenuOpen()">
+                @if (auth.hasAnyCmsAccess()) {
+                  <a routerLink="/cms/dashboard" class="dropdown-fun-item" (click)="closeUserMenu()">Masuk CMS</a>
+                }
+                <button type="button" class="dropdown-fun-item" (click)="logout()">Keluar</button>
+              </div>
+            </div>
           } @else {
-            <a routerLink="/login" class="btn btn-outline btn-sm">Masuk</a>
-            <a routerLink="/daftar" class="btn btn-primary btn-sm">Gabung LDK Kami</a>
+            <div class="user-fun-wrap" (mouseenter)="openUserMenu()" (mouseleave)="closeUserMenu()">
+              <button class="btn btn-primary btn-sm btn-user-fun" type="button" (click)="toggleUserMenu($event)">Masuk / Daftar</button>
+              <div class="dropdown-fun" [class.open]="userMenuOpen()">
+                <a routerLink="/login" class="dropdown-fun-item" (click)="closeUserMenu()">Masuk</a>
+                <a routerLink="/daftar" class="dropdown-fun-item" (click)="closeUserMenu()">Daftar</a>
+              </div>
+            </div>
           }
         </div>
 
@@ -57,10 +72,14 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
       </nav>
       <div class="mobile-actions">
         @if (auth.isLoggedIn()) {
-          <a routerLink="/cms/dashboard" class="btn btn-primary btn-block" (click)="closeMobile()">Masuk CMS</a>
+          <div class="mobile-account"><span class="chip-avatar">{{ initials() }}</span> {{ auth.user()?.fullName }}</div>
+          @if (auth.hasAnyCmsAccess()) {
+            <a routerLink="/cms/dashboard" class="btn btn-primary btn-block" (click)="closeMobile()">Masuk CMS</a>
+          }
+          <button type="button" class="btn btn-outline btn-block" (click)="logout(); closeMobile()">Keluar</button>
         } @else {
           <a routerLink="/login" class="btn btn-outline btn-block" (click)="closeMobile()">Masuk</a>
-          <a routerLink="/daftar" class="btn btn-primary btn-block" (click)="closeMobile()">Gabung LDK Kami</a>
+          <a routerLink="/daftar" class="btn btn-primary btn-block" (click)="closeMobile()">Daftar</a>
         }
       </div>
     </aside>
@@ -109,6 +128,16 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     .pub-nav a { font-size: .95rem; }
     .pub-nav a.active { color: var(--color-primary); }
 
+    .user-fun-wrap { position: relative; }
+    .btn-user-fun { border: none; cursor: pointer; font-family: var(--font-body); }
+    .account-chip { display: flex; align-items: center; gap: 8px; }
+    .chip-avatar { width: 24px; height: 24px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
+    .dropdown-fun { position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border); border-radius: 12px; box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .18s ease, transform .18s ease, visibility .18s ease; z-index: 70; }
+    .dropdown-fun-item { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; border: none; background: none; color: var(--color-text); font-family: var(--font-body); font-weight: 600; font-size: .9rem; white-space: nowrap; cursor: pointer; }
+    .dropdown-fun-item:hover { background: var(--color-bg-warm); text-decoration: none; }
+    .dropdown-fun.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .mobile-account { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-weight: 600; color: var(--color-text); }
+
     .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: 10px; cursor: pointer; padding: 0; }
     .mobile-toggle span { display: block; width: 18px; height: 2px; background: var(--color-primary-dark); border-radius: 2px; transition: transform .25s ease, opacity .25s ease; }
     .mobile-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
@@ -141,16 +170,40 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 })
 export class PublicLayoutComponent {
   auth = inject(AuthRepository);
+  private router = inject(Router);
   year = new Date().getFullYear();
 
   scrolled = signal(false);
   mobileOpen = signal(false);
+  userMenuOpen = signal(false);
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
     this.scrolled.set(window.scrollY > 80);
   }
 
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.userMenuOpen.set(false);
+  }
+
   toggleMobile(): void { this.mobileOpen.update((v) => !v); }
   closeMobile(): void { this.mobileOpen.set(false); }
+
+  openUserMenu(): void { this.userMenuOpen.set(true); }
+  closeUserMenu(): void { this.userMenuOpen.set(false); }
+  toggleUserMenu(event: Event): void {
+    event.stopPropagation();
+    this.userMenuOpen.update((v) => !v);
+  }
+
+  initials(): string {
+    const name = this.auth.user()?.fullName ?? '';
+    return name.split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase();
+  }
+
+  logout(): void {
+    this.auth.logout();
+    this.router.navigate(['/']);
+  }
 }

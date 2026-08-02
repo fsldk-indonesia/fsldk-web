@@ -15,7 +15,14 @@ import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/sh
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
- * lalu diagregasikan di sini di bawah 3 layout shell: publik, autentikasi, CMS.
+ * lalu diagregasikan di sini di bawah 2 layout shell: publik (termasuk
+ * autentikasi, bersarang di dalamnya) dan CMS.
+ *
+ * Halaman autentikasi (login/daftar/dll) sengaja dipasang sebagai anak dari
+ * PublicLayoutComponent, bukan shell terpisah — persis pola ldksyahid-app
+ * (halaman auth memakai navbar & footer landing page yang sama) karena
+ * halaman ini diperuntukkan bagi masyarakat umum, bukan hanya pengguna CMS.
+ * AuthLayoutComponent kini hanya membingkai kartu form + panel visual.
  *
  * Tentang & Kontak tidak lagi punya rute sendiri — kontennya digabung sebagai
  * bagian dari Beranda (lihat modules/home), diakses lewat anchor #tentang / #kontak.
@@ -28,7 +35,7 @@ import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/sh
  * tertangkap sebagai shortlink.
  */
 export const routes: Routes = [
-  // ---------- Publik (Landing Page) ----------
+  // ---------- Publik (Landing Page + Autentikasi) ----------
   {
     path: '',
     component: PublicLayoutComponent,
@@ -36,14 +43,8 @@ export const routes: Routes = [
       ...homeRoutes(),
       ...newsPublicRoutes(),
       ...articlePublicRoutes(),
+      { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
     ],
-  },
-
-  // ---------- Autentikasi ----------
-  {
-    path: '',
-    component: AuthLayoutComponent,
-    children: [...authRoutes()],
   },
 
   // ---------- CMS (terproteksi) ----------

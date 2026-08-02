@@ -63,6 +63,11 @@ export class AuthRepository {
     return this.user()?.permissions.includes(code) ?? false;
   }
 
+  /** Apakah pengguna memiliki akses ke CMS (setidaknya satu permission). */
+  hasAnyCmsAccess(): boolean {
+    return (this.user()?.permissions.length ?? 0) > 0;
+  }
+
   logout(): void {
     this.session.clear();
     this.user.set(null);

@@ -188,12 +188,17 @@ Modul `modules/auth/` sendiri **hanya berisi halaman** (login/register/verify-em
 
 Setiap modul mengekspor factory `() => Routes` di `<modul>.routes.ts`, memakai `loadComponent` (bukan `component` langsung) agar tiap halaman menjadi *lazy chunk* terpisah — diverifikasi lewat `ng build` (lihat daftar "Lazy chunk files" pada output build).
 
-[`app.routes.ts`](../src/app/app.routes.ts) mengagregasi seluruh route modul di bawah tiga *layout shell*:
+[`app.routes.ts`](../src/app/app.routes.ts) mengagregasi seluruh route modul di bawah dua *layout shell*. Halaman autentikasi (login/daftar/lupa-password/dst.) sengaja **bersarang di dalam** `PublicLayoutComponent`, bukan shell terpisah — persis pola ldksyahid-app, karena halaman ini untuk masyarakat umum (bukan hanya pengguna dengan akses CMS) sehingga memakai navbar & footer landing page yang sama. `AuthLayoutComponent` kini hanya membingkai kartu form + panel visual (ayat & poin komunitas), bukan shell penuh:
 
 ```ts
 export const routes: Routes = [
-  { path: '', component: PublicLayoutComponent, children: [...homeRoutes(), ...newsPublicRoutes(), ...] },
-  { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
+  {
+    path: '', component: PublicLayoutComponent,
+    children: [
+      ...homeRoutes(), ...newsPublicRoutes(), ...articlePublicRoutes(),
+      { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
+    ],
+  },
   { path: 'cms', component: CmsLayoutComponent, canActivate: [authGuard], children: [...dashboardRoutes(), ...userRoutes(), ...] },
 ];
 ```
@@ -204,10 +209,12 @@ Guard dipasang berlapis, berurutan (`canActivate: [verifiedGuard, permissionGuar
 
 | Guard | Fungsi |
 |---|---|
-| `authGuard` | Wajib login (dipasang di level layout `cms`, bukan per-rute) |
+| `authGuard` | Wajib login (dipasang di level layout `cms`, bukan per-rute); jika belum login, redirect ke `/login?returnUrl=<url tujuan>` |
 | `loginGuard` | Kebalikannya — cegah pengguna yang sudah login membuka `/login`, `/daftar`, dst. |
 | `verifiedGuard` | Wajib email terverifikasi (redirect ke `/verifikasi-email` bila belum) |
 | `permissionGuard` | Cek `route.data.permission` terhadap `AuthRepository.hasPermission(code)` |
+
+**Redirect pasca-login** (`LoginPresenter`/`RegisterPresenter` → `LoginView.navigateAfterLogin(hasCmsAccess)`): bila `AuthResult.user.permissions.length > 0` (punya akses CMS), arahkan ke `/cms/dashboard`; bila tidak, arahkan ke query param `returnUrl` (diisi `authGuard` saat pengguna diarahkan ke `/login` dari halaman terproteksi) atau `/` bila kosong — pengguna umum yang cuma daftar/login untuk membaca konten kembali ke halaman sebelumnya, bukan dipaksa ke CMS.
 
 ### Rute catch-all `/:key` (redirect shortlink)
 

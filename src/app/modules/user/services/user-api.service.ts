@@ -14,6 +14,5 @@ export class UserApiService {
   create(body: unknown): Observable<UserRow> { return this.api.post('/users', body); }
   update(id: number, body: unknown): Observable<UserRow> { return this.api.put(`/users/${id}`, body); }
   setStatus(id: number, isActive: boolean): Observable<unknown> { return this.api.patch(`/users/${id}/status`, { isActive }); }
-  resetPassword(id: number): Observable<{ temporaryPassword: string }> { return this.api.post(`/users/${id}/reset-password`); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/users/${id}`); }
 }

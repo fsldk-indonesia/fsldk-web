@@ -1,14 +1,16 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { Role } from '../../entities/role';
 import { Permission } from '../../../permission/entities/permission';
-import { RoleIndexPresenter } from './role.index.presenter';
+import { RoleFormValue, RoleIndexPresenter } from './role.index.presenter';
 import { RoleIndexView } from './role.index.view';
 
 @Component({
   selector: 'app-role-index-page',
   standalone: true,
   templateUrl: './role.index.page.html',
+  imports: [FormsModule],
   providers: [RoleIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -27,9 +29,13 @@ export class RoleIndexPage implements OnInit, RoleIndexView {
 
   roles = signal<Role[]>([]);
   permissions = signal<Permission[]>([]);
-  editing = signal<Role | null>(null);
+  showForm = signal(false);
+  editId: number | null = null;
+  editingSystemRole = false;
   selected = new Set<number>();
   saving = signal(false);
+  form: RoleFormValue = { roleName: '', roleDescription: '', isActive: true };
+  canCreate = this.auth.hasPermission('role.create');
   canUpdate = this.auth.hasPermission('role.update');
 
   ngOnInit(): void {
@@ -46,21 +52,27 @@ export class RoleIndexPage implements OnInit, RoleIndexView {
   }
   moduleKeys(): string[] { return Object.keys(this.grouped()); }
 
-  openPerms(r: Role): void {
-    this.editing.set(r);
+  openCreate(): void {
+    this.editId = null;
+    this.editingSystemRole = false;
+    this.form = { roleName: '', roleDescription: '', isActive: true };
+    this.selected = new Set();
+    this.showForm.set(true);
+  }
+  openEdit(r: Role): void {
+    this.editId = r.roleID;
+    this.editingSystemRole = r.isSystemRole;
+    this.form = { roleName: r.roleName, roleDescription: r.roleDescription, isActive: r.isActive };
     this.selected = new Set(r.permissionIDs);
+    this.showForm.set(true);
   }
   toggle(id: number): void { this.selected.has(id) ? this.selected.delete(id) : this.selected.add(id); }
-  close(): void { this.editing.set(null); }
+  close(): void { this.showForm.set(false); }
 
-  savePerms(): void {
-    const r = this.editing();
-    if (!r) return;
-    this.presenter.savePermissions(r.roleID, [...this.selected]);
-  }
+  save(): void { this.presenter.save(this.editId, this.form, [...this.selected]); }
 
   setRoles(roles: Role[]): void { this.roles.set(roles); }
   setPermissions(permissions: Permission[]): void { this.permissions.set(permissions); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
-  onSavePermissionsSuccess(): void { this.close(); this.presenter.loadRoles(); }
+  onSaveSuccess(): void { this.close(); this.presenter.loadRoles(); }
 }

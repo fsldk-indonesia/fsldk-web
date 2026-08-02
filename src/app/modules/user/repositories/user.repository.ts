@@ -14,6 +14,5 @@ export class UserRepository {
   create(body: unknown): Observable<UserRow> { return this.api.create(body); }
   update(id: number, body: unknown): Observable<UserRow> { return this.api.update(id, body); }
   setStatus(id: number, isActive: boolean): Observable<unknown> { return this.api.setStatus(id, isActive); }
-  resetPassword(id: number): Observable<{ temporaryPassword: string }> { return this.api.resetPassword(id); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
 }

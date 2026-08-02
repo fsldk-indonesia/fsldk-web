@@ -20,7 +20,6 @@
             <td>
               <div class="table-actions">
                 @if (canUpdate) { <span class="link-action" (click)="openEdit(u)">Edit</span> }
-                @if (canUpdate) { <span class="link-action" (click)="reset(u)">Reset PW</span> }
                 @if (canDelete) { <span class="link-danger" (click)="remove(u)">Hapus</span> }
               </div>
             </td>
@@ -36,8 +35,11 @@
     <div class="modal" (click)="$event.stopPropagation()">
       <h3>{{ editId ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h3>
       <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName"></div>
-      @if (!editId) { <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email"></div> }
-      @if (!editId) { <div class="form-group"><label class="form-label">Kata Sandi</label><input class="form-control" type="password" [(ngModel)]="form.password"></div> }
+      <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email"></div>
+      <div class="form-group">
+        <label class="form-label">Kata Sandi</label>
+        <input class="form-control" type="password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
+      </div>
       <div class="form-group"><label class="form-label">Role</label>
         <select class="form-control" [(ngModel)]="form.roleID">
           @for (r of roles(); track r.roleID) { <option [value]="r.roleID">{{ r.roleName }}</option> }

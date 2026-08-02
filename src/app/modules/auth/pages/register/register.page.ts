@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GoogleButtonComponent } from '../../../../shared/google-button.component';
 import { environment } from '../../../../../environments/environment';
 import { RegisterPresenter } from './register.presenter';
@@ -18,12 +18,14 @@ import { RegisterView } from './register.view';
     .divider { text-align: center; margin: 22px 0; position: relative; color: var(--color-muted); font-size: .85rem; }
     .divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background: var(--color-border); }
     .divider span { background: var(--color-bg-warm); padding: 0 12px; position: relative; }
-    .g { font-family: var(--font-heading); font-weight: 800; color: #4285F4; }
+    .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .g-icon { flex-shrink: 0; }
   `],
 })
 export class RegisterPage implements OnInit, RegisterView {
   private presenter = inject(RegisterPresenter);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   fullName = '';
   email = '';
@@ -39,5 +41,9 @@ export class RegisterPage implements OnInit, RegisterView {
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   navigateToVerifyEmail(email: string): void { this.router.navigate(['/verifikasi-email'], { queryParams: { email } }); }
-  navigateToDashboard(): void { this.router.navigate(['/cms/dashboard']); }
+  navigateAfterLogin(hasCmsAccess: boolean): void {
+    if (hasCmsAccess) { this.router.navigate(['/cms/dashboard']); return; }
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    this.router.navigateByUrl(returnUrl || '/');
+  }
 }

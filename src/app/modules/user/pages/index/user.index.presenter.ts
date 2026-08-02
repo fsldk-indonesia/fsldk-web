@@ -33,7 +33,7 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
   save(editId: number | null, form: UserFormValue): void {
     this.view.setSaving(true);
     if (editId) {
-      this.userRepo.update(editId, { fullName: form.fullName, roleID: +form.roleID, isActive: form.isActive }).subscribe({
+      this.userRepo.update(editId, { fullName: form.fullName, email: form.email, roleID: +form.roleID, isActive: form.isActive, password: form.password }).subscribe({
         next: () => { this.toast.success('Pengguna diperbarui'); this.view.setSaving(false); this.view.onSaveSuccess(); },
         error: () => this.view.setSaving(false),
       });
@@ -43,13 +43,6 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
         error: () => this.view.setSaving(false),
       });
     }
-  }
-
-  resetPassword(id: number): void {
-    this.userRepo.resetPassword(id).subscribe({
-      next: (r) => { this.toast.success('Password sementara: ' + r.temporaryPassword); this.view.onResetPasswordSuccess(r.temporaryPassword); },
-      error: () => {},
-    });
   }
 
   remove(id: number): void {
