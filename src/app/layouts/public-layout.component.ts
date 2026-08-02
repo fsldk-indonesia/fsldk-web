@@ -12,7 +12,7 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
       <div class="container flex items-center justify-between">
         <a routerLink="/" class="brand" (click)="closeMobile()">
           <img src="assets/logo-fsldk.svg" alt="Logo FSLDK Indonesia" class="brand-logo-img">
-          <span class="brand-text">FSLDK <b>Indonesia</b><small>Forum Silaturahmi Dakwah Kampus</small></span>
+          <span class="brand-text">FSLDK <b>Indonesia</b></span>
         </a>
 
         <nav class="pub-nav">
@@ -43,7 +43,7 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
       <div class="mobile-drawer-head">
         <a routerLink="/" class="brand" (click)="closeMobile()">
           <img src="assets/logo-fsldk.svg" alt="Logo FSLDK Indonesia" class="brand-logo-img sm">
-          <span class="brand-text"><b>FSLDK</b> Indonesia</span>
+          <span class="brand-text">FSLDK <b>Indonesia</b></span>
         </a>
         <button class="mobile-close" (click)="closeMobile()" aria-label="Tutup menu">&times;</button>
       </div>
@@ -77,8 +77,8 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     </footer>
   `,
   styles: [`
-    .pub-header { position: sticky; top: 0; z-index: 60; background: rgba(255,255,255,.88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-border); padding: 16px 0; transition: margin .25s ease, padding .25s ease, border-radius .25s ease, box-shadow .25s ease, background .25s ease; }
-    .pub-header.scrolled { margin: 12px 16px 0; padding: 10px 0; border-radius: var(--radius-lg); border: 1px solid var(--color-border); box-shadow: var(--shadow-lg); background: rgba(255,255,255,.97); }
+    .pub-header { position: sticky; top: 0; z-index: 60; margin: 14px 20px 0; background: rgba(255,255,255,.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 10px 8px; transition: box-shadow .25s ease, background .25s ease; }
+    .pub-header.scrolled { background: #fff; box-shadow: var(--shadow-lg); }
 
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand:hover { text-decoration: none; }
@@ -87,7 +87,6 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     .brand-logo-img.sm { width: 36px; height: 36px; }
     .brand-text { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; display: flex; flex-direction: column; line-height: 1.1; }
     .brand-text b { color: var(--color-primary); display: inline; }
-    .brand-text small { font-family: var(--font-body); font-weight: 500; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; color: var(--color-muted); }
     .brand-text.light { color: #fff; } .brand-text.light b { color: var(--color-primary-bright); }
 
     .pub-nav { display: flex; gap: 28px; }
@@ -120,7 +119,7 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     @media (max-width: 900px) {
       .pub-nav, .pub-actions { display: none; }
       .mobile-toggle { display: flex; }
-      .pub-header.scrolled { margin: 8px 10px 0; }
+      .pub-header { margin: 10px 12px 0; padding: 8px 6px; }
     }
   `],
 })
