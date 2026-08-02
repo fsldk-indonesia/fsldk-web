@@ -5,6 +5,12 @@ import { News } from '../../../news/entities/news';
 import { HomeIndexPresenter } from './home.index.presenter';
 import { HomeIndexView } from './home.index.view';
 
+interface OrgMember {
+  memberName: string;
+  position: string;
+  level: string;
+}
+
 @Component({
   selector: 'app-home-index-page',
   standalone: true,
@@ -22,19 +28,47 @@ import { HomeIndexView } from './home.index.view';
     .news-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .news-body { padding: 20px; } .news-body h3 { margin: 12px 0 8px; font-size: 1.15rem; }
     .meta { color: var(--color-muted); font-size: .85rem; margin: 0; }
+
+    .hero-about { background: linear-gradient(180deg, #fff, var(--color-primary-soft)); padding: 64px 0; }
+    .lead { max-width: 760px; font-size: 1.12rem; color: var(--color-text-secondary); }
+    .big { font-size: 1.3rem; font-family: var(--font-heading); font-weight: 600; line-height: 1.4; margin-top: 12px; }
+    .mission { margin: 12px 0 0; padding-left: 20px; color: var(--color-text-secondary); }
+    .mission li { margin-bottom: 8px; }
+    .struktur { background: var(--color-bg-alt); }
+    .org { text-align: center; } .big-av { width: 64px; height: 64px; font-size: 1.5rem; margin: 0 auto 14px; }
+    .narrow { max-width: 760px; margin: 0 auto; }
   `],
 })
 export class HomeIndexPage implements OnInit, HomeIndexView {
   private presenter = inject(HomeIndexPresenter);
 
   news = signal<News[]>([]);
-  content = signal<Record<string, string>>({});
   loading = signal(true);
-  defaultSub = 'FSLDK Indonesia adalah forum silaturahmi dan pusat koordinasi bagi Lembaga Dakwah Kampus di seluruh negeri — merawat ukhuwah, membina kader, dan menggerakkan dakwah yang terpadu dan kompak.';
+
+  readonly missionList: string[] = [
+    'Membangkitkan kembali identitas Islam pada mahasiswa muslim dan masyarakat.',
+    'Mengokohkan fikrah dan syariat Islam untuk melahirkan khoiru ummah.',
+    'Membangkitkan jiwa nasionalisme dan patriotisme.',
+    'Membangun, menjaga, dan mengelola jaringan.',
+    'Membangun profesionalitas lembaga.',
+    'Membentuk dan mengakselerasi kemuslimahan nasional.',
+    'Mewujudkan lembaga yang mandiri secara finansial.',
+  ];
+
+  readonly orgStructure: OrgMember[] = [
+    { memberName: 'Puskomnas', position: 'Pusat Komunikasi Nasional — LDK koordinator tertinggi FSLDK Indonesia, dipilih dalam FSLDKN untuk masa kerja 2 tahun.', level: 'Nasional' },
+    { memberName: 'BK Puskomnas', position: 'Badan Khusus Puskomnas — LDK yang ditunjuk untuk kerja khusus (Hubungan Internasional, Kebangsaan, Kemanusiaan, Kemuslimahan, Kepalestinaan).', level: 'Nasional' },
+    { memberName: 'Puskomda', position: 'Pusat Komunikasi Daerah — LDK koordinator FSLDK tingkat daerah, dipilih dalam musyawarah daerah untuk masa kerja 2 tahun.', level: 'Daerah' },
+    { memberName: 'LDK', position: 'Lembaga Dakwah Kampus — menaungi aktivitas dakwah Islam secara legal dan formal di perguruan tinggi.', level: 'Kampus' },
+    { memberName: 'ADK', position: 'Aktivis Dakwah Kampus — individu muslim berstatus mahasiswa yang berperan dalam aktivitas dakwah kampus.', level: 'Individu' },
+    { memberName: 'IKA FSLDK', position: 'Ikatan Keluarga Alumni FSLDK — wadah berhimpun alumni aktivis dakwah kampus.', level: 'Alumni' },
+  ];
+
+  readonly contactEmail = 'info@fsldk-indonesia.com';
+  readonly contactInstagram = 'fsldkindonesia';
 
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setNews(news: News[]): void { this.news.set(news); }
-  setContent(content: Record<string, string>): void { this.content.set(content); }
 }

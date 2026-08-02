@@ -41,10 +41,10 @@ src/
     │   ├── permission/        # Menu sidebar dinamis
     │   ├── news/               # Berita — publik & CMS
     │   ├── article/            # Artikel — publik & CMS
-    │   ├── content/            # Konten Landing Page & struktur organisasi CMS
     │   ├── dashboard/          # Ringkasan statistik CMS
-    │   ├── home/ about/ contact/  # Halaman publik lain
-    │   └── ...
+    │   └── home/               # Beranda — hero, berita terbaru, Tentang & Kontak (hardcoded)
+    │                           #   (Tentang & Kontak sengaja tidak jadi modul/rute
+    │                           #   terpisah — kontennya statis, digabung di Beranda)
     ├── layouts/               # public, auth, cms (sidebar menu dinamis)
     ├── shared/                # Komponen reusable lintas-modul (toast, google-button)
     └── app.routes.ts          # Mengagregasi <modul>.routes.ts tiap modul di bawah 3 layout shell
@@ -63,9 +63,9 @@ Langkah lengkap + konfigurasi Google OAuth + kredensial Admin FSLDK ada di **[do
 
 | Area | Halaman |
 |---|---|
-| **Publik** | Beranda, Tentang (visi/misi/struktur organisasi), Berita (list + filter + pagination), Detail Berita, Artikel (list + filter), Detail Artikel, Kontak |
+| **Publik** | Beranda (hero, berita terbaru, Tentang — visi/misi/struktur organisasi, Kontak — semuanya satu halaman), Berita (list + filter + pagination), Detail Berita, Artikel (list + filter), Detail Artikel |
 | **Autentikasi** | Login (email/password + Google), Registrasi mandiri (+ Google), Verifikasi Email, Lupa Password, Reset Password |
-| **CMS** | Dashboard (statistik), Manajemen Pengguna, Manajemen Role & Permission, Manajemen Berita + Form, Manajemen Artikel + Form, Konten Landing Page + Struktur Organisasi |
+| **CMS** | Dashboard (statistik), Manajemen Pengguna, Manajemen Role & Permission, Manajemen Berita + Form, Manajemen Artikel + Form |
 
 ## Konsep Autentikasi
 
@@ -75,9 +75,9 @@ Password lokal (wajib verifikasi email) & Google OAuth (auto-link/auto-provision
 
 | Grup | Contoh Rute |
 |---|---|
-| Publik | `/`, `/tentang`, `/berita`, `/berita/:slug`, `/artikel`, `/artikel/:slug`, `/kontak` |
+| Publik | `/` (Beranda — termasuk section Tentang & Kontak), `/berita`, `/berita/:slug`, `/artikel`, `/artikel/:slug` |
 | Autentikasi | `/login`, `/daftar`, `/verifikasi-email`, `/lupa-password`, `/reset-password` |
-| CMS | `/cms/dashboard`, `/cms/users`, `/cms/roles`, `/cms/news`, `/cms/news/form(/:id)`, `/cms/articles`, `/cms/articles/form(/:id)`, `/cms/contents` |
+| CMS | `/cms/dashboard`, `/cms/users`, `/cms/roles`, `/cms/news`, `/cms/news/form(/:id)`, `/cms/articles`, `/cms/articles/form(/:id)` |
 
 ## Perintah
 

@@ -1,11 +1,11 @@
 <section class="hero">
   <div class="container">
-    <span class="hero-badge">● {{ content()['home.hero.badge'] || '40 Tahun Merajut Ukhuwah · Sejak 1986' }}</span>
+    <span class="hero-badge">● 40 Tahun Merajut Ukhuwah · Sejak 1986</span>
     <h1 class="hero-title">Menyatukan Langkah <span class="text-primary">Dakwah Kampus</span> se-Indonesia</h1>
-    <p class="hero-sub">{{ content()['home.hero.subtitle'] || defaultSub }}</p>
+    <p class="hero-sub">FSLDK Indonesia adalah forum silaturahmi dan pusat koordinasi bagi Lembaga Dakwah Kampus di seluruh negeri — merawat ukhuwah, membina kader, dan menggerakkan dakwah yang terpadu dan kompak.</p>
     <div class="flex gap mt-lg">
       <a routerLink="/berita" class="btn btn-primary">Baca Berita</a>
-      <a routerLink="/tentang" class="btn btn-outline">Tentang FSLDK</a>
+      <a href="#tentang" class="btn btn-outline">Tentang FSLDK</a>
     </div>
   </div>
 </section>
@@ -34,5 +34,62 @@
         }
       </div>
     }
+  </div>
+</section>
+
+<section class="section hero-about" id="tentang">
+  <div class="container">
+    <span class="eyebrow">Tentang Kami</span>
+    <h2>Tentang FSLDK Indonesia</h2>
+    <p class="lead">Forum Silaturahmi Lembaga Dakwah Kampus (FSLDK) Indonesia adalah forum silaturahmi dan koordinasi antar Lembaga Dakwah Kampus (LDK) se-Indonesia, sebagai sarana bagi terciptanya gerak dakwah yang teratur, terpadu, dan kompak menuju ummatan wahidah. FSLDK Indonesia didirikan di Yogyakarta pada 25 Mei 1986.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container grid grid-2">
+    <div class="card card-pad">
+      <span class="eyebrow">Visi</span>
+      <p class="big">Terwujudnya sinergi antar LDK se-Indonesia menuju Indonesia madani.</p>
+    </div>
+    <div class="card card-pad">
+      <span class="eyebrow">Misi</span>
+      <ul class="mission">
+        @for (m of missionList; track m) { <li>{{ m }}</li> }
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section struktur">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:32px"><span class="eyebrow">Struktur Organisasi</span><h2>Jaringan FSLDK Indonesia</h2></div>
+    <div class="grid grid-3">
+      @for (o of orgStructure; track o.position) {
+        <div class="card card-pad org">
+          <div class="avatar big-av">{{ o.memberName.charAt(0) }}</div>
+          <h3>{{ o.memberName }}</h3>
+          <p class="text-muted">{{ o.position }}</p>
+          @if (o.level) { <span class="chip chip-green">{{ o.level }}</span> }
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<section class="section" id="kontak">
+  <div class="container narrow text-center">
+    <span class="eyebrow">Kontak</span>
+    <h2>Hubungi FSLDK Indonesia</h2>
+    <p class="text-muted">Sampaikan pertanyaan, kolaborasi, atau silaturahmi bersama kami.</p>
+    <div class="grid grid-2 mt-lg">
+      <div class="card card-pad">
+        <h3>Email</h3>
+        <p><a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a></p>
+      </div>
+      <div class="card card-pad">
+        <h3>Instagram</h3>
+        <p><a [href]="'https://instagram.com/' + contactInstagram" target="_blank" rel="noopener">&#64;{{ contactInstagram }}</a></p>
+      </div>
+    </div>
   </div>
 </section>

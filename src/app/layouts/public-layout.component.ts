@@ -2,12 +2,17 @@ import { Component, HostListener, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 
-/** Layout Landing Page publik: navbar sticky (floating saat scroll) + drawer mobile + konten + footer. */
+/**
+ * Layout Landing Page publik: navbar mengikuti alur halaman di posisi atas,
+ * baru berubah jadi kartu mengambang (position: fixed) setelah melewati
+ * ambang scroll — bukan sticky sejak awal — plus drawer mobile + konten + footer.
+ */
 @Component({
   selector: 'app-public-layout',
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
+    <div class="nav-placeholder" [class.active]="scrolled()"></div>
     <header class="pub-header" [class.scrolled]="scrolled()">
       <div class="container flex items-center justify-between">
         <a routerLink="/" class="brand" (click)="closeMobile()">
@@ -17,10 +22,8 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 
         <nav class="pub-nav">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Beranda</a>
-          <a routerLink="/tentang" routerLinkActive="active">Tentang</a>
           <a routerLink="/berita" routerLinkActive="active">Berita</a>
           <a routerLink="/artikel" routerLinkActive="active">Artikel</a>
-          <a routerLink="/kontak" routerLinkActive="active">Kontak</a>
         </nav>
 
         <div class="flex items-center gap-sm pub-actions">
@@ -49,10 +52,8 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
       </div>
       <nav class="mobile-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobile()">Beranda</a>
-        <a routerLink="/tentang" routerLinkActive="active" (click)="closeMobile()">Tentang</a>
         <a routerLink="/berita" routerLinkActive="active" (click)="closeMobile()">Berita</a>
         <a routerLink="/artikel" routerLinkActive="active" (click)="closeMobile()">Artikel</a>
-        <a routerLink="/kontak" routerLinkActive="active" (click)="closeMobile()">Kontak</a>
       </nav>
       <div class="mobile-actions">
         @if (auth.isLoggedIn()) {
@@ -77,8 +78,21 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     </footer>
   `,
   styles: [`
-    .pub-header { position: sticky; top: 0; z-index: 60; margin: 14px 20px 0; background: rgba(255,255,255,.92); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 10px 8px; transition: box-shadow .25s ease, background .25s ease; }
-    .pub-header.scrolled { background: #fff; box-shadow: var(--shadow-lg); }
+    /* Mengikuti pola ldksyahid-app: header normal (ikut alur halaman, ikut ter-scroll)
+       di posisi atas, baru berubah jadi kartu mengambang (position: fixed) setelah
+       melewati ambang scroll tertentu — bukan sticky sejak piksel pertama. */
+    .nav-placeholder { height: 0; transition: height .2s ease; }
+    .nav-placeholder.active { height: 78px; }
+
+    .pub-header { position: relative; top: 0; left: 0; width: 100%; z-index: 60; background: rgba(255,255,255,.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-border); padding: 16px 0; }
+    .pub-header.scrolled {
+      position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+      width: min(1180px, calc(100% - 32px));
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg); background: #fff; padding: 10px 8px;
+      animation: navFadeIn .25s ease;
+    }
+    @keyframes navFadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-12px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand:hover { text-decoration: none; }
@@ -119,7 +133,9 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     @media (max-width: 900px) {
       .pub-nav, .pub-actions { display: none; }
       .mobile-toggle { display: flex; }
-      .pub-header { margin: 10px 12px 0; padding: 8px 6px; }
+      .pub-header { padding: 12px 0; }
+      .pub-header.scrolled { top: 10px; width: calc(100% - 24px); padding: 8px 6px; }
+      .nav-placeholder.active { height: 64px; }
     }
   `],
 })
@@ -132,7 +148,7 @@ export class PublicLayoutComponent {
 
   @HostListener('window:scroll')
   onWindowScroll(): void {
-    this.scrolled.set(window.scrollY > 12);
+    this.scrolled.set(window.scrollY > 80);
   }
 
   toggleMobile(): void { this.mobileOpen.update((v) => !v); }

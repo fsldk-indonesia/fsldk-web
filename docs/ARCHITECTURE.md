@@ -53,7 +53,7 @@ modules/news/
 └── news.routes.ts                  # factory `() => Routes`, lazy via loadComponent
 ```
 
-**Modul yang ada saat ini** (satu-satu berpasangan dengan modul backend `fsldk-api`, ditambah 3 halaman konten publik):
+**Modul yang ada saat ini** (satu-satu berpasangan dengan modul backend `fsldk-api`, ditambah `home` untuk Beranda):
 
 | Modul | Isi |
 |---|---|
@@ -63,13 +63,14 @@ modules/news/
 | `permission` | Menu sidebar dinamis (`GET /me/menus`) & daftar permission |
 | `news` | Berita — publik (list/detail) & CMS (manajemen/form) |
 | `article` | Artikel — publik (list/detail) & CMS (manajemen/form) |
-| `content` | Konten Landing Page & struktur organisasi (CMS) |
 | `dashboard` | Ringkasan statistik CMS |
-| `home`, `about`, `contact` | Halaman publik yang mengonsumsi `news`/`content` lintas modul |
+| `home` | Beranda — hero, berita terbaru, serta section Tentang & Kontak (teks tetap/hardcoded, bukan dari API) |
+
+> Konten Landing Page (visi/misi/struktur organisasi/kontak) sengaja **tidak** dikelola via CMS/database — sesuai keputusan produk, teksnya statis langsung di `modules/home/pages/index/home.index.page.ts`. Tidak ada lagi modul `content`, `about`, atau `contact` terpisah.
 
 ### Aturan lintas modul
 
-Meng-import `entities`/`repositories` dari modul lain **diperbolehkan dan wajar** — repository adalah permukaan publik modul. Contoh: `modules/home` men-inject `NewsRepository` dan `ContentRepository`; hampir semua halaman CMS men-inject `AuthRepository` dari `modules/user` untuk cek `hasPermission(...)`.
+Meng-import `entities`/`repositories` dari modul lain **diperbolehkan dan wajar** — repository adalah permukaan publik modul. Contoh: `modules/home` men-inject `NewsRepository` untuk daftar berita terbaru; hampir semua halaman CMS men-inject `AuthRepository` dari `modules/user` untuk cek `hasPermission(...)`.
 
 ---
 
