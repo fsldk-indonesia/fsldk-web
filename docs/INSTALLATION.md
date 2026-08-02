@@ -89,7 +89,7 @@ Buka **http://localhost:4200**. Perubahan kode otomatis memicu rebuild + reload 
 
    | Field | Nilai |
    |---|---|
-   | **Email** | `noreply-fsldk@gmail.com` |
+   | **Email** | `noreplyfsldkindonesia@gmail.com` |
    | **Password** | `abc123` |
 
    *(Kredensial ini didefinisikan di sisi backend `fsldk-api` — lihat panduan instalasi repositori tersebut. Wajib diganti setelah login pertama di lingkungan produksi.)*
