@@ -16,7 +16,7 @@ import { MenuItem } from '../modules/permission/entities/menu-item';
     <div class="cms">
       <aside class="sidebar" [class.open]="sidebarOpen()">
         <div class="side-brand">
-          <span class="brand-icon"><span class="pin"></span></span>
+          <span class="brand-icon"><img src="assets/logo-fsldk.svg" alt="Logo FSLDK"></span>
           <span>FSLDK <b>CMS</b></span>
         </div>
         <nav class="side-nav">
@@ -53,8 +53,8 @@ import { MenuItem } from '../modules/permission/entities/menu-item';
     .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; display: flex; flex-direction: column; padding: 24px 16px; position: sticky; top: 0; height: 100vh; }
     .side-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-weight: 700; font-size: 1.2rem; padding: 8px; margin-bottom: 24px; }
     .side-brand b { color: var(--color-primary-bright); }
-    .brand-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--color-primary); display: flex; align-items: center; justify-content: center; }
-    .pin { width: 15px; height: 15px; background: #fff; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+    .brand-icon { width: 36px; height: 36px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+    .brand-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .side-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
     .side-nav a { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-radius: 12px; color: #c9cdd1; font-weight: 600; font-size: .95rem; }
     .side-nav a:hover { background: rgba(255,255,255,.06); color: #fff; text-decoration: none; }
