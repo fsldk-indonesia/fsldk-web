@@ -63,6 +63,7 @@ modules/news/
 | `permission` | Menu sidebar dinamis (`GET /me/menus`) & daftar permission |
 | `news` | Berita — publik (list/detail) & CMS (manajemen/form) |
 | `article` | Artikel — publik (list/detail) & CMS (manajemen/form) |
+| `shortlink` | Manajemen shortlink CMS — buat/lihat/ubah/hapus, salin tautan pendek |
 | `dashboard` | Ringkasan statistik CMS |
 | `home` | Beranda — hero, berita terbaru, serta section Tentang & Kontak (teks tetap/hardcoded, bukan dari API) |
 
@@ -207,6 +208,12 @@ Guard dipasang berlapis, berurutan (`canActivate: [verifiedGuard, permissionGuar
 | `loginGuard` | Kebalikannya — cegah pengguna yang sudah login membuka `/login`, `/daftar`, dst. |
 | `verifiedGuard` | Wajib email terverifikasi (redirect ke `/verifikasi-email` bila belum) |
 | `permissionGuard` | Cek `route.data.permission` terhadap `AuthRepository.hasPermission(code)` |
+
+### Rute catch-all `/:key` (redirect shortlink)
+
+`modules/shortlink` mengekspor dua factory rute, bukan satu: `shortlinkRoutes()` (CMS, `/cms/shortlinks`) dan `shortlinkRedirectRoutes()` — rute publik `path: ':key'` yang menangkap path satu-segmen apa pun yang tidak cocok rute lain (mis. `/promo2026`), me-resolve kuncinya lewat `GET /public/shortlinks/:key` di backend, lalu `window.location.href = destinationURL`. Ini membuat shortlink yang dibagikan memakai domain frontend (`fsldk-indonesia.com/promo2026`), bukan domain backend.
+
+`shortlinkRedirectRoutes()` **wajib** ditaruh di [`app.routes.ts`](../src/app/app.routes.ts) setelah seluruh rute publik/auth/cms dan sebelum wildcard `**` — Angular mencocokkan array rute berurutan, jadi urutan ini memastikan `/login`, `/berita`, dst. tetap ditangani rute aslinya dan hanya path yang benar-benar tidak dikenal jatuh ke resolver shortlink.
 
 ---
 

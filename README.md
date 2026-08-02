@@ -41,6 +41,7 @@ src/
     │   ├── permission/        # Menu sidebar dinamis
     │   ├── news/               # Berita — publik & CMS
     │   ├── article/            # Artikel — publik & CMS
+    │   ├── shortlink/          # Manajemen shortlink (pemendek URL) CMS
     │   ├── dashboard/          # Ringkasan statistik CMS
     │   └── home/               # Beranda — hero, berita terbaru, Tentang & Kontak (hardcoded)
     │                           #   (Tentang & Kontak sengaja tidak jadi modul/rute
@@ -65,7 +66,7 @@ Langkah lengkap + konfigurasi Google OAuth + kredensial Admin FSLDK ada di **[do
 |---|---|
 | **Publik** | Beranda (hero, berita terbaru, Tentang — visi/misi/struktur organisasi, Kontak — semuanya satu halaman), Berita (list + filter + pagination), Detail Berita, Artikel (list + filter), Detail Artikel |
 | **Autentikasi** | Login (email/password + Google), Registrasi mandiri (+ Google), Verifikasi Email, Lupa Password, Reset Password |
-| **CMS** | Dashboard (statistik), Manajemen Pengguna, Manajemen Role & Permission, Manajemen Berita + Form, Manajemen Artikel + Form |
+| **CMS** | Dashboard (statistik), Manajemen Pengguna, Manajemen Role & Permission, Manajemen Berita + Form, Manajemen Artikel + Form, Manajemen Shortlink |
 
 ## Konsep Autentikasi
 
@@ -77,7 +78,8 @@ Password lokal (wajib verifikasi email) & Google OAuth (auto-link/auto-provision
 |---|---|
 | Publik | `/` (Beranda — termasuk section Tentang & Kontak), `/berita`, `/berita/:slug`, `/artikel`, `/artikel/:slug` |
 | Autentikasi | `/login`, `/daftar`, `/verifikasi-email`, `/lupa-password`, `/reset-password` |
-| CMS | `/cms/dashboard`, `/cms/users`, `/cms/roles`, `/cms/news`, `/cms/news/form(/:id)`, `/cms/articles`, `/cms/articles/form(/:id)` |
+| CMS | `/cms/dashboard`, `/cms/users`, `/cms/roles`, `/cms/news`, `/cms/news/form(/:id)`, `/cms/articles`, `/cms/articles/form(/:id)`, `/cms/shortlinks` |
+| Shortlink | `/:key` — catch-all publik, resolve & redirect ke `destinationURL` (lihat [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md#rute-catch-all-key-redirect-shortlink)) |
 
 ## Perintah
 

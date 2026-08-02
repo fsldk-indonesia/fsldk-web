@@ -1,0 +1,55 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Shortlink</h1><p class="text-muted">Pendekkan tautan panjang menjadi mudah dibagikan.</p></div>
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Buat Shortlink</button> }
+</div>
+
+<div class="card">
+  <div class="card-pad">
+    <input class="form-control" [(ngModel)]="search" (keyup.enter)="load()" placeholder="Cari berdasarkan kunci atau tujuan…">
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Shortlink</th><th>Tujuan</th><th>Klik</th><th>Dibuat</th><th></th></tr></thead>
+      <tbody>
+        @for (s of shortlinks(); track s.shortLinkID) {
+          <tr>
+            <td>
+              <div class="flex items-center gap-sm">
+                <code class="key">{{ s.shortURL }}</code>
+                <span class="link-action" (click)="copy(s.shortURL)">Salin</span>
+              </div>
+            </td>
+            <td class="text-muted destination" [title]="s.destinationURL">{{ s.destinationURL }}</td>
+            <td class="text-center">{{ s.visitCount }}</td>
+            <td class="text-muted">{{ s.createdDate | date:'d MMM yyyy' }}</td>
+            <td>
+              <div class="table-actions">
+                @if (canUpdate) { <span class="link-action" (click)="openEdit(s)">Edit</span> }
+                @if (canDelete) { <span class="link-danger" (click)="remove(s)">Hapus</span> }
+              </div>
+            </td>
+          </tr>
+        } @empty { <tr><td colspan="5" class="text-muted">Belum ada shortlink.</td></tr> }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ editId ? 'Ubah Shortlink' : 'Buat Shortlink' }}</h3>
+      <div class="form-group"><label class="form-label">URL Tujuan</label>
+        <input class="form-control" [(ngModel)]="form.destinationURL" placeholder="https://..."></div>
+      <div class="form-group"><label class="form-label">Kunci Kustom (opsional)</label>
+        <input class="form-control" [(ngModel)]="form.shortKey" placeholder="kosongkan untuk dibuat otomatis">
+        <p class="form-hint">Huruf & angka saja, tanpa spasi.</p></div>
+      <div class="flex gap justify-between">
+        <button class="btn btn-ghost" (click)="close()">Batal</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+          @if (saving()) { <span class="spinner"></span> } @else { Simpan }
+        </button>
+      </div>
+    </div>
+  </div>
+}

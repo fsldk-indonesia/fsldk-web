@@ -64,7 +64,7 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
     { memberName: 'IKA FSLDK', position: 'Ikatan Keluarga Alumni FSLDK — wadah berhimpun alumni aktivis dakwah kampus.', level: 'Alumni' },
   ];
 
-  readonly contactEmail = 'info@fsldk-indonesia.com';
+  readonly contactEmail = 'fsldkindonesia29@gmail.com';
   readonly contactInstagram = 'fsldkindonesia';
 
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }

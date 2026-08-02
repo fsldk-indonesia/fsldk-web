@@ -17,7 +17,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((err: HttpErrorResponse) => {
       const body = err.error;
-      const message = body?.message || 'Terjadi kesalahan. Silakan coba lagi.';
+      const fieldMessages = Array.isArray(body?.errors)
+        ? (body.errors as { message?: string }[]).map((e) => e.message).filter(Boolean).join(', ')
+        : '';
+      const message = fieldMessages || body?.message || 'Terjadi kesalahan. Silakan coba lagi.';
       const code = body?.code as string | undefined;
 
       if (err.status === 401) {

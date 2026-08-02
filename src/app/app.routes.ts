@@ -11,6 +11,7 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { roleRoutes } from './modules/role/role.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
+import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
@@ -18,6 +19,13 @@ import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
  *
  * Tentang & Kontak tidak lagi punya rute sendiri — kontennya digabung sebagai
  * bagian dari Beranda (lihat modules/home), diakses lewat anchor #tentang / #kontak.
+ *
+ * shortlinkRedirectRoutes() (path `:key`) WAJIB ditaruh setelah seluruh rute
+ * bernama (publik/auth/cms) dan sebelum wildcard `**` — ia menangkap path
+ * satu-segmen yang tidak cocok rute mana pun (mis. /promo2026) sebagai kunci
+ * shortlink untuk di-resolve & redirect. Karena Angular mencocokkan array
+ * rute secara berurutan, urutan ini mencegah /login, /berita, dst. malah
+ * tertangkap sebagai shortlink.
  */
 export const routes: Routes = [
   // ---------- Publik (Landing Page) ----------
@@ -50,8 +58,11 @@ export const routes: Routes = [
       ...roleRoutes(),
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
+      ...shortlinkRoutes(),
     ],
   },
+
+  ...shortlinkRedirectRoutes(),
 
   { path: '**', redirectTo: '' },
 ];

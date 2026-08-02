@@ -1,0 +1,11 @@
+@if (notFound()) {
+  <div class="center-screen text-center">
+    <div>
+      <h2>Tautan Tidak Ditemukan</h2>
+      <p class="text-muted">Shortlink ini tidak valid atau sudah tidak berlaku.</p>
+      <a routerLink="/" class="btn btn-primary mt">Kembali ke Beranda</a>
+    </div>
+  </div>
+} @else {
+  <div class="center-screen"><span class="spinner spinner-dark"></span></div>
+}
