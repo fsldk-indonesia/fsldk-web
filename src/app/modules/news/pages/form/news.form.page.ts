@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
 import { NewsCategory } from '../../entities/news-category';
 import { NewsFormPresenter, NewsFormValue, emptyNewsForm } from './news.form.presenter';
 import { NewsFormView } from './news.form.view';
@@ -11,7 +12,7 @@ import { NewsFormView } from './news.form.view';
   selector: 'app-news-form-page',
   standalone: true,
   templateUrl: './news.form.page.html',
-  imports: [FormsModule, RouterLink, ImageUploadComponent],
+  imports: [FormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent],
   providers: [NewsFormPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }

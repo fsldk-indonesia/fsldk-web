@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
 import { ArticleCategory } from '../../entities/article-category';
 import { ArticleFormPresenter, ArticleFormValue, emptyArticleForm } from './article.form.presenter';
 import { ArticleFormView } from './article.form.view';
@@ -11,7 +12,7 @@ import { ArticleFormView } from './article.form.view';
   selector: 'app-article-form-page',
   standalone: true,
   templateUrl: './article.form.page.html',
-  imports: [FormsModule, RouterLink, ImageUploadComponent],
+  imports: [FormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent],
   providers: [ArticleFormPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }

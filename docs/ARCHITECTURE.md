@@ -184,6 +184,8 @@ Modul `modules/auth/` sendiri **hanya berisi halaman** (login/register/verify-em
 
 **Unggah gambar**: `shared/image-upload.component.ts` (`<app-image-upload [(value)]="form.xxxImage">`) adalah komponen dumb reusable — dipakai oleh form Artikel & Berita CMS untuk field "Gambar Utama". Alih-alih menempel URL manual, pengguna memilih berkas lewat `<input type="file">` tersembunyi; komponen langsung mengunggahnya lewat `core/services/upload.service.ts` (`POST /uploads/image`, `multipart/form-data`) dan memancarkan URL hasil unggahan ke field form via banana-in-a-box `[(value)]`. Validasi tipe/ukuran berkas dilakukan di sisi klien (JPG/PNG/WEBP/GIF, maks. 5MB) sebelum diunggah, meniru batas yang sama di endpoint backend.
 
+**Editor konten (TinyMCE)**: `shared/rich-text-editor.component.ts` (`<app-rich-text-editor [(value)]="form.xxxContent">`) membungkus `@tinymce/tinymce-angular` untuk field "Konten" Artikel & Berita — **self-hosted lewat npm** (`tinymce` package), bukan TinyMCE Cloud, sehingga tidak butuh API key. Berkas `node_modules/tinymce` disalin ke `dist/fsldk-web/browser/tinymce` lewat entri `assets` tambahan di `angular.json` dan dimuat via `tinymceScriptSrc="tinymce/tinymce.min.js"`; konfigurasi menyertakan `license_key: 'gpl'` untuk menyatakan penggunaan open-source (TinyMCE Community, GPL-2.0-or-later), bukan lisensi berbayar. Tombol sisip gambar pada editor memakai `images_upload_handler` yang memanggil `UploadService` yang sama dengan `image-upload.component.ts` (`POST /uploads/image`), jadi gambar yang disisipkan di dalam konten juga tersimpan di backend sendiri, bukan base64 inline. Output HTML-nya dirender lewat `[innerHTML]` di halaman publik (`article.public-detail`, `news.public-detail`).
+
 ---
 
 ## 6. Routing & Lazy Loading

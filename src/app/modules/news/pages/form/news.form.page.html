@@ -24,7 +24,7 @@
   <div class="form-group"><label class="form-label">Ringkasan</label>
     <input class="form-control" [(ngModel)]="form.newsExcerpt" placeholder="Ringkasan singkat…"></div>
   <div class="form-group"><label class="form-label">Konten</label>
-    <textarea class="form-control" rows="12" [(ngModel)]="form.newsContent" placeholder="Isi berita…"></textarea></div>
+    <app-rich-text-editor [(value)]="form.newsContent" /></div>
   <div class="form-group"><label class="form-label"><input type="checkbox" [(ngModel)]="form.isFeatured"> Jadikan berita unggulan</label></div>
 
   <div class="flex gap justify-between">

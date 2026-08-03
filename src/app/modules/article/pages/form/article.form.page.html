@@ -24,7 +24,7 @@
   <div class="form-group"><label class="form-label">Ringkasan</label>
     <input class="form-control" [(ngModel)]="form.articleExcerpt" placeholder="Ringkasan singkat…"></div>
   <div class="form-group"><label class="form-label">Konten</label>
-    <textarea class="form-control" rows="12" [(ngModel)]="form.articleContent" placeholder="Isi artikel…"></textarea></div>
+    <app-rich-text-editor [(value)]="form.articleContent" /></div>
 
   <div class="flex gap justify-between">
     <a routerLink="/cms/articles" class="btn btn-ghost">Batal</a>

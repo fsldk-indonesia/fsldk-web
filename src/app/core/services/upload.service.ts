@@ -11,9 +11,10 @@ export interface UploadResult {
 export class UploadService {
   private api = inject(ApiService);
 
-  uploadImage(file: File): Observable<UploadResult> {
+  uploadImage(file: Blob, filename?: string): Observable<UploadResult> {
     const formData = new FormData();
-    formData.append('image', file);
+    if (filename) formData.append('image', file, filename);
+    else formData.append('image', file);
     return this.api.post<UploadResult>('/uploads/image', formData);
   }
 }
