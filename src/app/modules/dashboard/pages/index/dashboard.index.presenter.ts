@@ -9,6 +9,5 @@ export class DashboardIndexPresenter extends BasePresenter<DashboardIndexView> {
 
   load(): void {
     this.dashboardRepo.summary().subscribe({ next: (d) => this.view.setSummary(d), error: () => {} });
-    this.dashboardRepo.recentNews().subscribe({ next: (r) => this.view.setRecentNews(r), error: () => {} });
   }
 }

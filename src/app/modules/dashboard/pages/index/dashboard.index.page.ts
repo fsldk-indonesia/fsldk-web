@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { DashboardSummary, RecentNewsItem } from '../../entities/dashboard-summary';
+import { DashboardSummary } from '../../entities/dashboard-summary';
 import { DashboardIndexPresenter } from './dashboard.index.presenter';
 import { DashboardIndexView } from './dashboard.index.view';
 
@@ -18,10 +18,8 @@ export class DashboardIndexPage implements OnInit, DashboardIndexView {
   private presenter = inject(DashboardIndexPresenter);
 
   summary = signal<DashboardSummary | null>(null);
-  recentNews = signal<RecentNewsItem[]>([]);
 
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
 
   setSummary(summary: DashboardSummary): void { this.summary.set(summary); }
-  setRecentNews(items: RecentNewsItem[]): void { this.recentNews.set(items); }
 }
