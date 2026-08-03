@@ -182,6 +182,8 @@ Modul `modules/auth/` sendiri **hanya berisi halaman** (login/register/verify-em
 
 **Google OAuth**: `shared/google-button.component.ts` memuat Google Identity Services dari `environment.googleClientId`; bila kosong, halaman login/daftar menampilkan tombol placeholder dengan pesan info. Token ID dari Google diteruskan ke `AuthRepository.loginGoogle(idToken)` → `POST /auth/google`.
 
+**Unggah gambar**: `shared/image-upload.component.ts` (`<app-image-upload [(value)]="form.xxxImage">`) adalah komponen dumb reusable — dipakai oleh form Artikel & Berita CMS untuk field "Gambar Utama". Alih-alih menempel URL manual, pengguna memilih berkas lewat `<input type="file">` tersembunyi; komponen langsung mengunggahnya lewat `core/services/upload.service.ts` (`POST /uploads/image`, `multipart/form-data`) dan memancarkan URL hasil unggahan ke field form via banana-in-a-box `[(value)]`. Validasi tipe/ukuran berkas dilakukan di sisi klien (JPG/PNG/WEBP/GIF, maks. 5MB) sebelum diunggah, meniru batas yang sama di endpoint backend.
+
 ---
 
 ## 6. Routing & Lazy Loading

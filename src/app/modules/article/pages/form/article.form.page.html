@@ -19,8 +19,8 @@
     </div>
   </div>
 
-  <div class="form-group"><label class="form-label">Gambar Utama (URL)</label>
-    <input class="form-control" [(ngModel)]="form.articleImage" placeholder="https://…"></div>
+  <div class="form-group"><label class="form-label">Gambar Utama</label>
+    <app-image-upload [(value)]="form.articleImage" /></div>
   <div class="form-group"><label class="form-label">Ringkasan</label>
     <input class="form-control" [(ngModel)]="form.articleExcerpt" placeholder="Ringkasan singkat…"></div>
   <div class="form-group"><label class="form-label">Konten</label>

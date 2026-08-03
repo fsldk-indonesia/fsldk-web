@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { NewsCategory } from '../../entities/news-category';
 import { NewsFormPresenter, NewsFormValue, emptyNewsForm } from './news.form.presenter';
 import { NewsFormView } from './news.form.view';
@@ -10,7 +11,7 @@ import { NewsFormView } from './news.form.view';
   selector: 'app-news-form-page',
   standalone: true,
   templateUrl: './news.form.page.html',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, ImageUploadComponent],
   providers: [NewsFormPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }
