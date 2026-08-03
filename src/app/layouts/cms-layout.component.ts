@@ -35,6 +35,13 @@ import { MenuItem } from '../modules/permission/entities/menu-item';
         <header class="topbar">
           <button class="hamburger" (click)="toggle()" aria-label="Menu">&#9776;</button>
           <div class="spacer"></div>
+          <a routerLink="/" class="nav-website-link">
+            <svg class="nav-website-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"></path>
+            </svg>
+            Website
+          </a>
           <div class="user-dropdown">
             <button class="user-chip" type="button" (click)="toggleDropdown($event)">
               <span class="avatar">{{ initials() }}</span>
@@ -46,7 +53,6 @@ import { MenuItem } from '../modules/permission/entities/menu-item';
             </button>
             @if (dropdownOpen()) {
               <div class="dropdown-panel">
-                <a routerLink="/">Kembali ke Beranda</a>
                 <button type="button" (click)="logout()">Keluar</button>
               </div>
             }
@@ -78,6 +84,9 @@ import { MenuItem } from '../modules/permission/entities/menu-item';
     .topbar { display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
     .spacer { flex: 1; }
     .hamburger { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; }
+    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 10px; color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; }
+    .nav-website-link:hover { background: var(--color-bg-warm); color: var(--color-primary-dark); text-decoration: none; }
+    .nav-website-icon { flex-shrink: 0; }
     .user-dropdown { position: relative; }
     .user-chip { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 10px; font-family: var(--font-body); }
     .user-chip:hover { background: var(--color-bg-warm); }
