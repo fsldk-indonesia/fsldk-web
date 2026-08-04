@@ -9,12 +9,15 @@ export interface ArticleFormValue {
   categoryID: number;
   status: 'draft' | 'published';
   articleImage: string;
-  articleExcerpt: string;
-  articleContent: string;
+  articleWriter: string;
+  articleEditor: string;
+  articlePdf: string;
+  articleIntro: string;
 }
 
 export const emptyArticleForm: ArticleFormValue = {
-  articleTitle: '', categoryID: 0, status: 'draft', articleImage: '', articleExcerpt: '', articleContent: '',
+  articleTitle: '', categoryID: 0, status: 'draft', articleImage: '',
+  articleWriter: '', articleEditor: '', articlePdf: '', articleIntro: '',
 };
 
 @Injectable()
@@ -28,16 +31,21 @@ export class ArticleFormPresenter extends BasePresenter<ArticleFormView> {
 
   loadForEdit(id: number): void {
     this.articleRepo.cmsGet(id).subscribe({
-      next: (a) => this.view.setForm({
-        articleTitle: a.articleTitle, categoryID: a.categoryID, status: a.isPublished ? 'published' : 'draft',
-        articleImage: a.articleImage ?? '', articleExcerpt: a.articleExcerpt ?? '', articleContent: a.articleContent,
-      }),
+      next: (a) => {
+        this.view.setForm({
+          articleTitle: a.articleTitle, categoryID: a.categoryID, status: a.isPublished ? 'published' : 'draft',
+          articleImage: a.articleImage ?? '', articleWriter: a.articleWriter ?? '', articleEditor: a.articleEditor ?? '',
+          articlePdf: a.articlePdf ?? '', articleIntro: a.articleIntro,
+        });
+        this.view.setPublishedDate(a.publishedDate);
+      },
       error: () => {},
     });
   }
 
   save(editId: number | null, form: ArticleFormValue): void {
-    if (!form.articleTitle || !form.articleContent) { this.toast.error('Judul dan konten wajib diisi'); return; }
+    if (!form.articleTitle || !form.articleIntro) { this.toast.error('Judul dan pendahuluan wajib diisi'); return; }
+    if (!form.articleWriter) { this.toast.error('Penulis wajib diisi'); return; }
     this.view.setSaving(true);
     const body = { ...form, categoryID: +form.categoryID };
     const done = () => { this.toast.success('Artikel disimpan'); this.view.setSaving(false); this.view.navigateToIndex(); };

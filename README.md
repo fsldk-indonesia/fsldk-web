@@ -64,7 +64,7 @@ Langkah lengkap + konfigurasi Google OAuth + kredensial Admin FSLDK ada di **[do
 
 | Area | Halaman |
 |---|---|
-| **Publik** | Beranda (hero, berita terbaru, Tentang — visi/misi/struktur organisasi, Kontak — semuanya satu halaman), Berita (list + filter + pagination), Detail Berita, Artikel (list + filter), Detail Artikel |
+| **Publik** | Beranda (hero, berita terbaru, Tentang — visi/misi/struktur organisasi, Kontak — semuanya satu halaman), Berita (list + filter + pagination), Detail Berita, Artikel (list + filter), Detail Artikel (pendahuluan singkat + naskah lengkap via PDF) |
 | **Autentikasi** | Login (email/password + Google), Registrasi mandiri (+ Google), Verifikasi Email, Lupa Password, Reset Password |
 | **CMS** | Dashboard (statistik), Manajemen Pengguna, Manajemen Role & Permission, Manajemen Berita + Form, Manajemen Artikel + Form, Manajemen Shortlink |
 

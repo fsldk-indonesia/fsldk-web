@@ -25,8 +25,8 @@
             <div class="news-body">
               <span class="chip chip-green">{{ a.categoryName }}</span>
               <h3>{{ a.articleTitle }}</h3>
-              <p class="excerpt">{{ a.articleExcerpt }}</p>
-              <p class="meta">{{ a.authorName }} · {{ a.publishedDate | date:'d MMM yyyy' }}</p>
+              <p class="meta">{{ a.articleWriter || a.authorName }} · {{ a.publishedDate | date:'d MMM yyyy' }}</p>
+              @if (a.articlePdf) { <span class="chip chip-pdf">📄 PDF</span> }
             </div>
           </a>
         } @empty { <p class="text-muted">Belum ada artikel.</p> }

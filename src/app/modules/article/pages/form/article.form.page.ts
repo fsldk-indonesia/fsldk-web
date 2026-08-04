@@ -1,8 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
 import { ArticleCategory } from '../../entities/article-category';
 import { ArticleFormPresenter, ArticleFormValue, emptyArticleForm } from './article.form.presenter';
@@ -12,7 +14,7 @@ import { ArticleFormView } from './article.form.view';
   selector: 'app-article-form-page',
   standalone: true,
   templateUrl: './article.form.page.html',
-  imports: [FormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent],
+  imports: [FormsModule, RouterLink, DatePipe, ImageUploadComponent, PdfUploadComponent, RichTextEditorComponent],
   providers: [ArticleFormPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }
@@ -30,6 +32,7 @@ export class ArticleFormPage implements OnInit, ArticleFormView {
   editId: number | null = null;
   canPublish = this.auth.hasPermission('article.publish');
   form: ArticleFormValue = { ...emptyArticleForm };
+  publishedDate = signal<string | null>(null);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
@@ -49,6 +52,7 @@ export class ArticleFormPage implements OnInit, ArticleFormView {
     if (!this.form.categoryID && categories[0]) this.form.categoryID = categories[0].categoryID;
   }
   setForm(form: ArticleFormValue): void { this.form = form; }
+  setPublishedDate(date: string | null): void { this.publishedDate.set(date); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   navigateToIndex(): void { this.router.navigate(['/cms/articles']); }
 }

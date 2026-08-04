@@ -16,15 +16,29 @@
         <option value="published">Published</option>
       </select>
       @if (!canPublish) { <p class="form-hint">Hanya Editor/Super Admin yang dapat mempublikasikan.</p> }
+      @if (publishedDate()) { <p class="form-hint">Dipublikasikan pertama kali: {{ publishedDate() | date:'d MMMM yyyy, HH:mm' }}</p> }
     </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Penulis</label>
+      <input class="form-control" [(ngModel)]="form.articleWriter" placeholder="Nama penulis…"></div>
+    <div class="form-group"><label class="form-label">Editor</label>
+      <input class="form-control" [(ngModel)]="form.articleEditor" placeholder="Nama editor (opsional)…"></div>
   </div>
 
   <div class="form-group"><label class="form-label">Gambar Utama</label>
     <app-image-upload [(value)]="form.articleImage" /></div>
-  <div class="form-group"><label class="form-label">Ringkasan</label>
-    <input class="form-control" [(ngModel)]="form.articleExcerpt" placeholder="Ringkasan singkat…"></div>
-  <div class="form-group"><label class="form-label">Konten</label>
-    <app-rich-text-editor [(value)]="form.articleContent" /></div>
+
+  <div class="form-group">
+    <label class="form-label">Berkas PDF</label>
+    <p class="form-hint">Naskah lengkap artikel dibaca pengunjung lewat berkas PDF ini di landing page.</p>
+    <app-pdf-upload [(value)]="form.articlePdf" />
+  </div>
+
+  <div class="form-group"><label class="form-label">Pendahuluan</label>
+    <p class="form-hint">Ringkasan/pembuka yang tampil di landing page sebelum pengunjung membuka PDF lengkapnya.</p>
+    <app-rich-text-editor [(value)]="form.articleIntro" /></div>
 
   <div class="flex gap justify-between">
     <a routerLink="/cms/articles" class="btn btn-ghost">Batal</a>

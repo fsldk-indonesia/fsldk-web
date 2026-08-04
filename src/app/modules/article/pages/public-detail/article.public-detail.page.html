@@ -7,9 +7,23 @@
         <nav class="crumb"><a routerLink="/">Beranda</a> / <a routerLink="/artikel">Artikel</a> / <span>Detail</span></nav>
         <span class="chip chip-green">{{ a.categoryName }}</span>
         <h1>{{ a.articleTitle }}</h1>
-        <p class="meta">Oleh {{ a.authorName }} · {{ a.publishedDate | date:'d MMMM yyyy' }}</p>
+        <p class="meta">
+          Oleh {{ a.articleWriter || a.authorName }}
+          @if (a.articleEditor) { · Editor: {{ a.articleEditor }} }
+          · {{ a.publishedDate | date:'d MMMM yyyy' }}
+        </p>
         @if (a.articleImage) { <img class="cover" [src]="a.articleImage" [alt]="a.articleTitle"> }
-        <div class="content" [innerHTML]="a.articleContent"></div>
+        <div class="content" [innerHTML]="a.articleIntro"></div>
+
+        @if (a.articlePdf) {
+          <div class="pdf-cta">
+            <p>Naskah lengkap artikel ini tersedia dalam berkas PDF.</p>
+            <a [href]="a.articlePdf" target="_blank" rel="noopener" class="btn btn-primary">📄 Baca Artikel Lengkap (PDF)</a>
+          </div>
+        } @else {
+          <p class="pdf-missing">Berkas PDF lengkap belum tersedia untuk artikel ini.</p>
+        }
+
         <a routerLink="/artikel" class="btn btn-outline mt-lg">← Kembali ke Artikel</a>
       } @else {
         <div class="text-center"><h2>Artikel tidak ditemukan</h2><a routerLink="/artikel" class="btn btn-primary mt">Kembali</a></div>

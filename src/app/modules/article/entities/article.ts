@@ -2,9 +2,11 @@ export interface Article {
   articleID: number;
   articleTitle: string;
   articleSlug: string;
-  articleExcerpt: string | null;
-  articleContent: string;
+  articleIntro: string;
   articleImage: string | null;
+  articleWriter: string | null;
+  articleEditor: string | null;
+  articlePdf: string | null;
   categoryID: number;
   categoryName: string;
   isPublished: boolean;
