@@ -26,7 +26,7 @@
               <span class="chip chip-green">{{ n.categoryName }}</span>
               <h3>{{ n.newsTitle }}</h3>
               <p class="excerpt">{{ n.newsExcerpt }}</p>
-              <p class="meta">{{ n.authorName }} · {{ n.publishedDate | date:'d MMM yyyy' }}</p>
+              <p class="meta">{{ n.newsReporter || n.authorName }} · {{ n.publishedDate | date:'d MMM yyyy' }}</p>
             </div>
           </a>
         } @empty { <p class="text-muted">Tidak ada berita ditemukan.</p> }

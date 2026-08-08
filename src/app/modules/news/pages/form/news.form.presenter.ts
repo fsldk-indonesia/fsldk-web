@@ -9,13 +9,17 @@ export interface NewsFormValue {
   categoryID: number;
   status: 'draft' | 'published';
   newsImage: string;
+  newsPublisher: string;
+  newsReporter: string;
+  newsEditor: string;
   newsExcerpt: string;
   newsContent: string;
   isFeatured: boolean;
 }
 
 export const emptyNewsForm: NewsFormValue = {
-  newsTitle: '', categoryID: 0, status: 'draft', newsImage: '', newsExcerpt: '', newsContent: '', isFeatured: false,
+  newsTitle: '', categoryID: 0, status: 'draft', newsImage: '',
+  newsPublisher: '', newsReporter: '', newsEditor: '', newsExcerpt: '', newsContent: '', isFeatured: false,
 };
 
 @Injectable()
@@ -31,7 +35,8 @@ export class NewsFormPresenter extends BasePresenter<NewsFormView> {
     this.newsRepo.cmsGet(id).subscribe({
       next: (n) => this.view.setForm({
         newsTitle: n.newsTitle, categoryID: n.categoryID, status: n.isPublished ? 'published' : 'draft',
-        newsImage: n.newsImage ?? '', newsExcerpt: n.newsExcerpt ?? '', newsContent: n.newsContent, isFeatured: n.isFeatured,
+        newsImage: n.newsImage ?? '', newsPublisher: n.newsPublisher ?? '', newsReporter: n.newsReporter ?? '',
+        newsEditor: n.newsEditor ?? '', newsExcerpt: n.newsExcerpt ?? '', newsContent: n.newsContent, isFeatured: n.isFeatured,
       }),
       error: () => {},
     });
@@ -39,6 +44,7 @@ export class NewsFormPresenter extends BasePresenter<NewsFormView> {
 
   save(editId: number | null, form: NewsFormValue): void {
     if (!form.newsTitle || !form.newsContent) { this.toast.error('Judul dan konten wajib diisi'); return; }
+    if (!form.newsReporter) { this.toast.error('Reporter wajib diisi'); return; }
     this.view.setSaving(true);
     const body = { ...form, categoryID: +form.categoryID };
     const done = () => { this.toast.success('Berita disimpan'); this.view.setSaving(false); this.view.navigateToIndex(); };

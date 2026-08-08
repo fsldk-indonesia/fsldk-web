@@ -19,6 +19,15 @@
     </div>
   </div>
 
+  <div class="grid grid-3">
+    <div class="form-group"><label class="form-label">Publisher</label>
+      <input class="form-control" [(ngModel)]="form.newsPublisher" placeholder="Nama penerbit (opsional)…"></div>
+    <div class="form-group"><label class="form-label">Reporter</label>
+      <input class="form-control" [(ngModel)]="form.newsReporter" placeholder="Nama reporter…"></div>
+    <div class="form-group"><label class="form-label">Editor</label>
+      <input class="form-control" [(ngModel)]="form.newsEditor" placeholder="Nama editor (opsional)…"></div>
+  </div>
+
   <div class="form-group"><label class="form-label">Gambar Utama</label>
     <app-image-upload [(value)]="form.newsImage" /></div>
   <div class="form-group"><label class="form-label">Ringkasan</label>

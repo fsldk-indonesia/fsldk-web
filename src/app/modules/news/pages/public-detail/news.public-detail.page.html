@@ -7,7 +7,12 @@
         <nav class="crumb"><a routerLink="/">Beranda</a> / <a routerLink="/berita">Berita</a> / <span>Detail</span></nav>
         <span class="chip chip-green">{{ n.categoryName }}</span>
         <h1>{{ n.newsTitle }}</h1>
-        <p class="meta">Oleh {{ n.authorName }} · {{ n.publishedDate | date:'d MMMM yyyy' }} · {{ n.viewCount }} kali dibaca</p>
+        <p class="meta">
+          Oleh {{ n.newsReporter || n.authorName }}
+          @if (n.newsPublisher) { · Penerbit: {{ n.newsPublisher }} }
+          @if (n.newsEditor) { · Editor: {{ n.newsEditor }} }
+          · {{ n.publishedDate | date:'d MMMM yyyy' }} · {{ n.viewCount }} kali dibaca
+        </p>
         @if (n.newsImage) { <img class="cover" [src]="n.newsImage" [alt]="n.newsTitle"> }
         @else { <div class="cover placeholder">FOTO BERITA</div> }
         <div class="content" [innerHTML]="n.newsContent"></div>
