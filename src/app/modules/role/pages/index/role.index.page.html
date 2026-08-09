@@ -3,25 +3,53 @@
   @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Tambah Role</button> }
 </div>
 
-<div class="grid grid-2">
-  @for (r of roles(); track r.roleID) {
-    <div class="card card-pad">
-      <div class="flex justify-between items-center">
-        <h3>{{ r.roleName }}</h3>
-        @if (r.isSystemRole) { <span class="chip">Sistem</span> }
+@if (loading()) {
+  <div class="grid grid-2">
+    @for (i of [1,2,3,4]; track i) {
+      <div class="card card-pad">
+        <span class="skel skel-line" style="width:120px;height:20px"></span>
+        <span class="skel skel-line" style="width:90%;margin-top:10px"></span>
+        <span class="skel skel-line" style="width:60%"></span>
       </div>
-      <p class="text-muted">{{ r.roleDescription }}</p>
-      <div class="perm-chips">
-        @for (p of r.permissions.slice(0, 6); track p) { <span class="chip chip-green">{{ p }}</span> }
-        @if (r.permissions.length > 6) { <span class="chip">+{{ r.permissions.length - 6 }}</span> }
+    }
+  </div>
+} @else if (roles().length === 0) {
+  <div class="card"><div class="empty-state">
+    <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="shield-check" [size]="26" /></span>
+    <h4>Belum ada role</h4>
+    <p>Buat role untuk mengatur hak akses pengguna CMS.</p>
+    @if (canCreate) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Tambah Role</button> }
+  </div></div>
+} @else {
+  <div class="grid grid-2">
+    @for (r of roles(); track r.roleID) {
+      <div class="card card-pad">
+        <div class="flex justify-between items-center">
+          <h3>{{ r.roleName }}</h3>
+          @if (r.isSystemRole) { <span class="chip">Sistem</span> }
+        </div>
+        <p class="text-muted">{{ r.roleDescription }}</p>
+        <div class="perm-chips">
+          @for (p of r.permissions.slice(0, 6); track p) { <span class="chip chip-green">{{ p }}</span> }
+          @if (r.permissions.length > 6) { <span class="chip">+{{ r.permissions.length - 6 }}</span> }
+        </div>
+        <div class="flex justify-between items-center mt">
+          <span class="text-muted">{{ r.userCount }} pengguna</span>
+          <div class="card-actions">
+            @if (canDelete) {
+              <span
+                class="link-danger"
+                [attr.aria-disabled]="r.isSystemRole || r.userCount > 0 ? true : null"
+                [title]="r.isSystemRole ? 'Role bawaan sistem tidak dapat dihapus' : (r.userCount > 0 ? 'Role masih dipakai pengguna, tidak dapat dihapus' : '')"
+                (click)="remove(r)">Hapus</span>
+            }
+            @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openEdit(r)">Edit Role</button> }
+          </div>
+        </div>
       </div>
-      <div class="flex justify-between items-center mt">
-        <span class="text-muted">{{ r.userCount }} pengguna</span>
-        @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openEdit(r)">Edit Role</button> }
-      </div>
-    </div>
-  }
-</div>
+    }
+  </div>
+}
 
 @if (showForm()) {
   <div class="modal-backdrop" (click)="close()">
@@ -33,9 +61,9 @@
         @if (editingSystemRole) { <small class="text-muted">Nama role bawaan sistem tidak dapat diubah.</small> }
       </div>
       <div class="form-group"><label class="form-label">Deskripsi</label><input class="form-control" [(ngModel)]="form.roleDescription"></div>
-      @if (editId) { <div class="form-group"><label class="form-label"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div> }
+      @if (editId) { <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div> }
 
-      <p class="text-muted mt">Centang permission yang diberikan ke role ini.</p>
+      <p class="text-muted">Centang permission yang diberikan ke role ini.</p>
       <div class="perm-list">
         @for (mod of moduleKeys(); track mod) {
           <div class="perm-mod">
@@ -49,7 +77,7 @@
           </div>
         }
       </div>
-      <div class="flex gap justify-between mt">
+      <div class="flex gap justify-between modal-footer">
         <button class="btn btn-ghost" (click)="close()">Batal</button>
         <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
       </div>

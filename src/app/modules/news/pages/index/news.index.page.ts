@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { News } from '../../entities/news';
+import { IconComponent } from '../../../../shared/icon.component';
+import { PaginationComponent } from '../../../../shared/pagination.component';
 import { NewsIndexPresenter } from './news.index.presenter';
 import { NewsIndexView } from './news.index.view';
 
@@ -10,7 +12,7 @@ import { NewsIndexView } from './news.index.view';
   selector: 'app-news-index-page',
   standalone: true,
   templateUrl: './news.index.page.html',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, IconComponent, PaginationComponent],
   providers: [NewsIndexPresenter],
   styles: [`.page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }`],
 })
@@ -19,7 +21,12 @@ export class NewsIndexPage implements OnInit, NewsIndexView {
   private auth = inject(AuthRepository);
 
   news = signal<News[]>([]);
+  loading = signal(true);
   status = '';
+  page = signal(1);
+  count = signal(0);
+  readonly limit = 10;
+
   canCreate = this.auth.hasPermission('news.create');
   canUpdate = this.auth.hasPermission('news.update');
   canPublish = this.auth.hasPermission('news.publish');
@@ -27,15 +34,16 @@ export class NewsIndexPage implements OnInit, NewsIndexView {
 
   ngOnInit(): void { this.presenter.attachView(this); this.load(); }
 
-  load(): void { this.presenter.load(this.status); }
-  filter(s: string): void { this.status = s; this.load(); }
+  load(): void { this.loading.set(true); this.presenter.load(this.page(), this.limit, this.status); }
+  filter(s: string): void { this.status = s; this.page.set(1); this.load(); }
+  goPage(p: number): void { this.page.set(p); this.load(); }
   togglePublish(n: News): void { this.presenter.togglePublish(n); }
   remove(n: News): void {
     if (!confirm(`Hapus berita "${n.newsTitle}"?`)) return;
     this.presenter.remove(n);
   }
 
-  setNews(news: News[]): void { this.news.set(news); }
+  setNews(news: News[], count: number): void { this.news.set(news); this.count.set(count); this.loading.set(false); }
   onPublishToggleSuccess(_wasPublished: boolean): void { this.load(); }
   onRemoveSuccess(): void { this.load(); }
 }

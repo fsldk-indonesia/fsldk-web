@@ -13,23 +13,48 @@
     <table class="table">
       <thead><tr><th>Judul</th><th>Reporter</th><th>Kategori</th><th>Status</th><th>Tanggal</th><th></th></tr></thead>
       <tbody>
-        @for (n of news(); track n.newsID) {
-          <tr>
-            <td><strong>{{ n.newsTitle }}</strong></td>
-            <td class="text-muted">{{ n.newsReporter || '–' }}</td>
-            <td class="text-muted">{{ n.categoryName }}</td>
-            <td><span class="badge" [class.badge-published]="n.isPublished" [class.badge-draft]="!n.isPublished">{{ n.isPublished ? 'Published' : 'Draft' }}</span></td>
-            <td class="text-muted">{{ n.createdDate | date:'d MMM yyyy' }}</td>
-            <td>
-              <div class="table-actions">
-                @if (canUpdate) { <a class="link-action" [routerLink]="['/cms/news/form', n.newsID]">Edit</a> }
-                @if (canPublish) { <span class="link-action" (click)="togglePublish(n)">{{ n.isPublished ? 'Tarik' : 'Publish' }}</span> }
-                @if (canDelete) { <span class="link-danger" (click)="remove(n)">Hapus</span> }
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:60px"></span></td>
+              <td><span class="skel skel-line" style="width:80px"></span></td>
+              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:70px"></span></td>
+              <td><span class="skel skel-line" style="width:90px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (n of news(); track n.newsID) {
+            <tr>
+              <td><strong>{{ n.newsTitle }}</strong></td>
+              <td class="text-muted">{{ n.newsReporter || '–' }}</td>
+              <td class="text-muted">{{ n.categoryName }}</td>
+              <td><span class="badge" [class.badge-published]="n.isPublished" [class.badge-draft]="!n.isPublished">{{ n.isPublished ? 'Published' : 'Draft' }}</span></td>
+              <td class="text-muted">{{ n.createdDate | date:'d MMM yyyy' }}</td>
+              <td>
+                <div class="table-actions">
+                  @if (canUpdate) { <a class="link-action" [routerLink]="['/cms/news/form', n.newsID]">Edit</a> }
+                  @if (canPublish) { <span class="link-action" (click)="togglePublish(n)">{{ n.isPublished ? 'Tarik' : 'Publish' }}</span> }
+                  @if (canDelete) { <span class="link-danger" (click)="remove(n)">Hapus</span> }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="newspaper" [size]="26" /></span>
+                <h4>Belum ada berita</h4>
+                <p>Berita yang Anda publikasikan akan muncul di sini.</p>
+                @if (canCreate) { <a routerLink="/cms/news/form" class="btn btn-primary btn-sm">+ Tambah Berita</a> }
               </div>
-            </td>
-          </tr>
-        } @empty { <tr><td colspan="6" class="text-muted">Belum ada berita.</td></tr> }
+            </td></tr>
+          }
+        }
       </tbody>
     </table>
   </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
 </div>

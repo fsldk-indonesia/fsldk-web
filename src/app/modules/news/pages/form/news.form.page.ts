@@ -1,22 +1,32 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
+import { SelectComponent } from '../../../../shared/select.component';
 import { NewsCategory } from '../../entities/news-category';
 import { NewsFormPresenter, NewsFormValue, emptyNewsForm } from './news.form.presenter';
 import { NewsFormView } from './news.form.view';
+
+const STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+];
 
 @Component({
   selector: 'app-news-form-page',
   standalone: true,
   templateUrl: './news.form.page.html',
-  imports: [FormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent],
+  imports: [FormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent, SelectComponent],
   providers: [NewsFormPresenter],
   styles: [`
-    .page-head { margin-bottom: 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }
-    .form-card { max-width: 820px; }
+    /* Header dan kartu form memakai lebar maksimum yang sama supaya sejajar
+       sebagai satu kolom — sebelumnya kartu formnya sendiri yang dibatasi
+       820px sementara header di atasnya full-width, jadi terlihat "nabrak
+       kiri" dengan sisa ruang kosong di kanan yang tidak presisi. */
+    .page-head { max-width: 820px; margin: 0 auto 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }
+    .form-card { max-width: 820px; margin: 0 auto; }
   `],
 })
 export class NewsFormPage implements OnInit, NewsFormView {
@@ -30,6 +40,8 @@ export class NewsFormPage implements OnInit, NewsFormView {
   editId: number | null = null;
   canPublish = this.auth.hasPermission('news.publish');
   form: NewsFormValue = { ...emptyNewsForm };
+  statusOptions = STATUS_OPTIONS;
+  categoryOptions = computed(() => this.categories().map((c) => ({ value: c.categoryID, label: c.categoryName })));
 
   ngOnInit(): void {
     this.presenter.attachView(this);

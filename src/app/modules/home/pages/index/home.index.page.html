@@ -1,57 +1,120 @@
 <section class="hero">
-  <div class="container">
-    <span class="hero-badge">● 40 Tahun Merajut Ukhuwah · Sejak 1986</span>
-    <h1 class="hero-title">Menyatukan Langkah <span class="text-primary">Dakwah Kampus</span> se-Indonesia</h1>
-    <p class="hero-sub">FSLDK Indonesia adalah forum silaturahmi dan pusat koordinasi bagi Lembaga Dakwah Kampus di seluruh negeri — merawat ukhuwah, membina kader, dan menggerakkan dakwah yang terpadu dan kompak.</p>
-    <div class="flex gap mt-lg">
-      <a routerLink="/berita" class="btn btn-primary">Baca Berita</a>
-      <a href="#tentang" class="btn btn-outline">Tentang FSLDK</a>
+  <div class="hero-texture" aria-hidden="true"></div>
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="hero-badge">● 40 Tahun Merajut Ukhuwah · Sejak 1986</span>
+      <h1 class="hero-title">Menyatukan Langkah <span class="text-primary">Dakwah Kampus</span> se-Indonesia</h1>
+      <p class="hero-sub">FSLDK Indonesia adalah forum silaturahmi dan pusat koordinasi bagi Lembaga Dakwah Kampus di seluruh negeri — merawat ukhuwah, membina kader, dan menggerakkan dakwah yang terpadu dan kompak.</p>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="hero-orbit-system">
+        <div class="hero-orbit-disc float-accent"></div>
+        <div class="hero-orbit-ring"></div>
+        <div class="hero-orbit-logo">
+          <img src="assets/logo-fsldk-removebg.png" alt="Logo FSLDK Indonesia">
+        </div>
+        <div class="hero-orbit-node node-1 float-accent" style="animation-delay:.2s">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c2.5.3 4.5 2.3 4.8 5.5"/></svg>
+        </div>
+        <div class="hero-orbit-node node-2 float-accent" style="animation-delay:.6s">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 014 18.5v-13Z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5a1.5 1.5 0 001.5-1.5v-13Z"/></svg>
+        </div>
+        <div class="hero-orbit-node node-3 float-accent" style="animation-delay:1s">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.8 7.3 10.5 16M16.2 7.3 13.5 16M8.4 6h7.2"/></svg>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section stats-strip">
   <div class="container">
-    <div class="text-center" style="margin-bottom:40px">
-      <span class="eyebrow">Berita &amp; Kabar Dakwah Kampus</span>
-      <h2>Ikuti Cerita Gerak Dakwah Kampus</h2>
+    <div class="stats-row">
+      <div class="stat-item"><b>1986</b><span>Tahun berdiri, di Yogyakarta</span></div>
+      <div class="stat-item"><b>{{ orgStructure.length }}</b><span>Tingkatan jaringan nasional</span></div>
+      <div class="stat-item"><b>{{ missionList.length }}</b><span>Misi utama perjuangan</span></div>
     </div>
-    @if (loading()) {
-      <div class="center-screen"><span class="spinner spinner-dark"></span></div>
-    } @else {
+  </div>
+</section>
+
+@if (loading() || news().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Berita &amp; Kabar Dakwah Kampus</span>
+        <h2>Ikuti Cerita Gerak Dakwah Kampus</h2>
+      </div>
+      @if (loading()) {
+        <div class="grid grid-3">
+          @for (i of [1,2,3]; track i) {
+            <div class="card" style="overflow:hidden">
+              <span class="skel skel-thumb" style="border-radius:0"></span>
+              <div class="card-pad">
+                <span class="skel skel-line" style="width:80px;height:20px;border-radius:999px"></span>
+                <span class="skel skel-title" style="margin-top:12px"></span>
+                <span class="skel skel-line" style="width:50%"></span>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="grid grid-3">
+          @for (n of news(); track n.newsID) {
+            <a class="news-card" [routerLink]="['/berita', n.newsSlug]">
+              <div class="news-thumb">@if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <span>FOTO BERITA</span> }</div>
+              <div class="news-body">
+                <span class="chip chip-green">{{ n.categoryName }}</span>
+                <h3>{{ n.newsTitle }}</h3>
+                <p class="meta">{{ n.authorName }} · {{ n.publishedDate | date:'d MMM yyyy' }}</p>
+              </div>
+            </a>
+          }
+        </div>
+      }
+    </div>
+  </section>
+}
+
+@if (!loading() && articles().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Artikel &amp; Kajian</span>
+        <h2>Gagasan &amp; Wawasan Dakwah Kampus</h2>
+      </div>
       <div class="grid grid-3">
-        @for (n of news(); track n.newsID) {
-          <a class="news-card" [routerLink]="['/berita', n.newsSlug]">
-            <div class="news-thumb">@if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <span>FOTO BERITA</span> }</div>
+        @for (a of articles(); track a.articleID) {
+          <a class="news-card" [routerLink]="['/artikel', a.articleSlug]">
+            <div class="news-thumb">@if (a.articleImage) { <img [src]="a.articleImage" [alt]="a.articleTitle"> } @else { <span>ARTIKEL</span> }</div>
             <div class="news-body">
-              <span class="chip chip-green">{{ n.categoryName }}</span>
-              <h3>{{ n.newsTitle }}</h3>
-              <p class="meta">{{ n.authorName }} · {{ n.publishedDate | date:'d MMM yyyy' }}</p>
+              <span class="chip chip-green">{{ a.categoryName }}</span>
+              <h3>{{ a.articleTitle }}</h3>
+              <p class="meta">{{ a.articleWriter || a.authorName }} · {{ a.publishedDate | date:'d MMM yyyy' }}</p>
             </div>
           </a>
-        } @empty {
-          <p class="text-muted">Belum ada berita dipublikasikan.</p>
         }
       </div>
-    }
-  </div>
-</section>
+    </div>
+  </section>
+}
 
 <section class="section hero-about" id="tentang">
-  <div class="container">
-    <span class="eyebrow">Tentang Kami</span>
-    <h2>Tentang FSLDK Indonesia</h2>
-    <p class="lead">Forum Silaturahmi Lembaga Dakwah Kampus (FSLDK) Indonesia adalah forum silaturahmi dan koordinasi antar Lembaga Dakwah Kampus (LDK) se-Indonesia, sebagai sarana bagi terciptanya gerak dakwah yang teratur, terpadu, dan kompak menuju ummatan wahidah. FSLDK Indonesia didirikan di Yogyakarta pada 25 Mei 1986.</p>
+  <div class="container about-grid">
+    <div class="reveal">
+      <span class="eyebrow">Tentang Kami</span>
+      <h2>Tentang FSLDK Indonesia</h2>
+    </div>
+    <p class="lead reveal">Forum Silaturahmi Lembaga Dakwah Kampus (FSLDK) Indonesia adalah forum silaturahmi dan koordinasi antar Lembaga Dakwah Kampus (LDK) se-Indonesia, sebagai sarana bagi terciptanya gerak dakwah yang teratur, terpadu, dan kompak menuju ummatan wahidah. FSLDK Indonesia didirikan di Yogyakarta pada 25 Mei 1986.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container grid grid-2">
-    <div class="card card-pad">
+    <div class="card card-pad reveal">
       <span class="eyebrow">Visi</span>
       <p class="big">Terwujudnya sinergi antar LDK se-Indonesia menuju Indonesia madani.</p>
     </div>
-    <div class="card card-pad">
+    <div class="card card-pad reveal">
       <span class="eyebrow">Misi</span>
       <ul class="mission">
         @for (m of missionList; track m) { <li>{{ m }}</li> }
@@ -73,6 +136,16 @@
         </div>
       }
     </div>
+  </div>
+</section>
+
+<section class="section cta-band">
+  <div class="container cta-inner reveal">
+    <div>
+      <h2>Siap jadi bagian gerakan ini?</h2>
+      <p class="text-muted" style="color:rgba(255,255,255,.85)">Ikuti kabar terbaru dan silaturahmi bersama FSLDK Indonesia.</p>
+    </div>
+    <a routerLink="/berita" class="btn cta-btn">Baca Berita Terbaru</a>
   </div>
 </section>
 

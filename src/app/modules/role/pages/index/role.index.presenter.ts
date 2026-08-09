@@ -50,4 +50,11 @@ export class RoleIndexPresenter extends BasePresenter<RoleIndexView> {
       });
     }
   }
+
+  remove(roleID: number): void {
+    this.roleRepo.remove(roleID).subscribe({
+      next: () => { this.toast.success('Role dihapus'); this.view.onRemoveSuccess(); },
+      error: () => {},
+    });
+  }
 }

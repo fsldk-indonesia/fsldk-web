@@ -4,6 +4,8 @@ import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ShortLink } from '../../entities/shortlink';
+import { IconComponent } from '../../../../shared/icon.component';
+import { PaginationComponent } from '../../../../shared/pagination.component';
 import { ShortlinkFormValue, ShortlinkIndexPresenter } from './shortlink.index.presenter';
 import { ShortlinkIndexView } from './shortlink.index.view';
 
@@ -11,7 +13,7 @@ import { ShortlinkIndexView } from './shortlink.index.view';
   selector: 'app-shortlink-index-page',
   standalone: true,
   templateUrl: './shortlink.index.page.html',
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, IconComponent, PaginationComponent],
   providers: [ShortlinkIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -27,7 +29,11 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   private toast = inject(ToastService);
 
   shortlinks = signal<ShortLink[]>([]);
+  loading = signal(true);
   search = '';
+  page = signal(1);
+  count = signal(0);
+  readonly limit = 10;
   showForm = signal(false);
   saving = signal(false);
   editId: number | null = null;
@@ -39,7 +45,9 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
 
   ngOnInit(): void { this.presenter.attachView(this); this.load(); }
 
-  load(): void { this.presenter.load(this.search); }
+  load(): void { this.loading.set(true); this.presenter.load(this.page(), this.limit, this.search); }
+  applySearch(): void { this.page.set(1); this.load(); }
+  goPage(p: number): void { this.page.set(p); this.load(); }
 
   openCreate(): void {
     this.editId = null;
@@ -70,7 +78,7 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
     );
   }
 
-  setShortlinks(items: ShortLink[]): void { this.shortlinks.set(items); }
+  setShortlinks(items: ShortLink[], count: number): void { this.shortlinks.set(items); this.count.set(count); this.loading.set(false); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.close(); this.load(); }
   onRemoveSuccess(): void { this.load(); }

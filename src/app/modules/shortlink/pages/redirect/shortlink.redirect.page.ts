@@ -1,5 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { IconComponent } from '../../../../shared/icon.component';
+import { PageLoaderComponent } from '../../../../shared/page-loader.component';
 import { ShortlinkRedirectPresenter } from './shortlink.redirect.presenter';
 import { ShortlinkRedirectView } from './shortlink.redirect.view';
 
@@ -13,7 +15,7 @@ import { ShortlinkRedirectView } from './shortlink.redirect.view';
   selector: 'app-shortlink-redirect-page',
   standalone: true,
   templateUrl: './shortlink.redirect.page.html',
-  imports: [RouterLink],
+  imports: [RouterLink, IconComponent, PageLoaderComponent],
   providers: [ShortlinkRedirectPresenter],
 })
 export class ShortlinkRedirectPage implements OnInit, ShortlinkRedirectView {

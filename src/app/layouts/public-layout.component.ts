@@ -1,6 +1,7 @@
-import { Component, HostListener, inject, signal } from '@angular/core';
+import { Component, HostListener, NgZone, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
+import { IconComponent } from '../shared/icon.component';
 
 /**
  * Layout Landing Page publik: navbar mengikuti alur halaman di posisi atas,
@@ -10,8 +11,9 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
   template: `
+    <div class="page-shell">
     <div class="nav-placeholder" [class.active]="scrolled()"></div>
     <header class="pub-header" [class.scrolled]="scrolled()">
       <div class="container flex items-center justify-between">
@@ -34,17 +36,19 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
               </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
                 @if (auth.hasAnyCmsAccess()) {
-                  <a routerLink="/cms/dashboard" class="dropdown-fun-item" (click)="closeUserMenu()">Masuk CMS</a>
+                  <a routerLink="/cms/dashboard" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="dashboard" [size]="16" />Masuk CMS</a>
                 }
-                <button type="button" class="dropdown-fun-item" (click)="logout()">Keluar</button>
+                <button type="button" class="dropdown-fun-item" (click)="logout()"><app-icon name="log-out" [size]="16" />Keluar</button>
               </div>
             </div>
           } @else {
             <div class="user-fun-wrap" (mouseenter)="openUserMenu()" (mouseleave)="closeUserMenu()">
-              <button class="btn btn-primary btn-sm btn-user-fun" type="button" (click)="toggleUserMenu($event)">Masuk / Daftar</button>
+              <button class="btn btn-outline btn-sm btn-user-fun account-chip" type="button" (click)="toggleUserMenu($event)">
+                <span class="chip-avatar guest"><app-icon name="guest" [size]="15" /></span> Pengunjung
+              </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
-                <a routerLink="/login" class="dropdown-fun-item" (click)="closeUserMenu()">Masuk</a>
-                <a routerLink="/daftar" class="dropdown-fun-item" (click)="closeUserMenu()">Daftar</a>
+                <a routerLink="/login" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="log-in" [size]="16" />Masuk</a>
+                <a routerLink="/daftar" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="user-plus" [size]="16" />Daftar</a>
               </div>
             </div>
           }
@@ -74,12 +78,13 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
         @if (auth.isLoggedIn()) {
           <div class="mobile-account"><span class="chip-avatar">{{ initials() }}</span> {{ auth.user()?.fullName }}</div>
           @if (auth.hasAnyCmsAccess()) {
-            <a routerLink="/cms/dashboard" class="btn btn-primary btn-block" (click)="closeMobile()">Masuk CMS</a>
+            <a routerLink="/cms/dashboard" class="btn btn-primary btn-block" (click)="closeMobile()"><app-icon name="dashboard" [size]="17" />Masuk CMS</a>
           }
-          <button type="button" class="btn btn-outline btn-block" (click)="logout(); closeMobile()">Keluar</button>
+          <button type="button" class="btn btn-outline btn-block" (click)="logout(); closeMobile()"><app-icon name="log-out" [size]="17" />Keluar</button>
         } @else {
-          <a routerLink="/login" class="btn btn-outline btn-block" (click)="closeMobile()">Masuk</a>
-          <a routerLink="/daftar" class="btn btn-primary btn-block" (click)="closeMobile()">Daftar</a>
+          <div class="mobile-account"><span class="chip-avatar guest"><app-icon name="guest" [size]="15" /></span> Pengunjung</div>
+          <a routerLink="/login" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="log-in" [size]="17" />Masuk</a>
+          <a routerLink="/daftar" class="btn btn-primary btn-block" (click)="closeMobile()"><app-icon name="user-plus" [size]="17" />Daftar</a>
         }
       </div>
     </aside>
@@ -95,8 +100,20 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
         <p class="foot-copy">&copy; {{ year }} Perkumpulan Forum Silaturahmi Lembaga Dakwah Kampus Indonesia. Sejak 1986.</p>
       </div>
     </footer>
+    </div>
   `,
   styles: [`
+    /* Sengaja TIDAK memaksa main mengisi 100dvh penuh. Percobaan sebelumnya
+       (main{flex:1 0 auto} + page-shell{min-height:100dvh}) membuat total
+       tinggi halaman berkonten pendek (mis. hasil pencarian kosong) mendarat
+       PAS di 100dvh, sehingga jarak yang bisa di-scroll jadi nyaris nol.
+       Browser menangani jarak scroll yang nyaris-nol itu dengan buruk saat
+       scroll momentum/trackpad — terasa "tersangkut"/tidak bisa mentok ke
+       bawah. Alur dokumen biasa di sini menghindari itu; konsekuensinya
+       halaman yang sangat pendek bisa punya sedikit ruang kosong di bawah
+       footer, yang jauh lebih ringan daripada scroll yang terasa rusak. */
+    .page-shell { min-height: 100dvh; }
+
     /* Mengikuti pola ldksyahid-app: header normal (ikut alur halaman, ikut ter-scroll)
        di posisi atas, baru berubah jadi kartu mengambang (position: fixed) setelah
        melewati ambang scroll tertentu — bukan sticky sejak piksel pertama. */
@@ -123,22 +140,27 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     .brand-text.light { color: #fff; } .brand-text.light b { color: var(--color-primary-bright); }
 
     .pub-nav { display: flex; gap: 28px; }
-    .pub-nav a, .mobile-nav a { color: var(--color-text); font-weight: 600; }
-    .pub-nav a:hover, .mobile-nav a:hover { text-decoration: none; }
+    .pub-nav a, .mobile-nav a { display: flex; align-items: center; gap: 7px; color: var(--color-text); font-weight: 600; transition: color var(--motion-fast) ease; }
+    .pub-nav a svg, .mobile-nav a svg { opacity: .75; }
+    .pub-nav a.active svg, .mobile-nav a.active svg { opacity: 1; }
+    .pub-nav a:hover, .mobile-nav a:hover { text-decoration: none; color: var(--color-primary-dark); }
     .pub-nav a { font-size: .95rem; }
     .pub-nav a.active { color: var(--color-primary); }
+    .pub-nav a:focus-visible, .mobile-nav a:focus-visible, .btn-user-fun:focus-visible, .mobile-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-xs); }
 
     .user-fun-wrap { position: relative; }
     .btn-user-fun { border: none; cursor: pointer; font-family: var(--font-body); }
     .account-chip { display: flex; align-items: center; gap: 8px; }
-    .chip-avatar { width: 24px; height: 24px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
-    .dropdown-fun { position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border); border-radius: 12px; box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity .18s ease, transform .18s ease, visibility .18s ease; z-index: 70; }
-    .dropdown-fun-item { display: block; width: 100%; text-align: left; padding: 10px 12px; border-radius: 8px; border: none; background: none; color: var(--color-text); font-family: var(--font-body); font-weight: 600; font-size: .9rem; white-space: nowrap; cursor: pointer; }
+    .chip-avatar { width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
+    .chip-avatar.guest { background: var(--color-bg-alt); color: var(--color-text-secondary); }
+    .dropdown-fun { position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), visibility var(--motion-base); z-index: 70; }
+    .dropdown-fun-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; color: var(--color-text); font-family: var(--font-body); font-weight: 600; font-size: .9rem; white-space: nowrap; cursor: pointer; transition: background var(--motion-fast) ease; }
+    .dropdown-fun-item svg { opacity: .7; flex-shrink: 0; }
     .dropdown-fun-item:hover { background: var(--color-bg-warm); text-decoration: none; }
     .dropdown-fun.open { opacity: 1; visibility: visible; transform: translateY(0); }
     .mobile-account { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-weight: 600; color: var(--color-text); }
 
-    .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: 10px; cursor: pointer; padding: 0; }
+    .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: var(--radius-xs); cursor: pointer; padding: 0; }
     .mobile-toggle span { display: block; width: 18px; height: 2px; background: var(--color-primary-dark); border-radius: 2px; transition: transform .25s ease, opacity .25s ease; }
     .mobile-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .mobile-toggle.active span:nth-child(2) { opacity: 0; }
@@ -149,13 +171,17 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     .mobile-drawer { position: fixed; top: 0; right: -100%; width: 82%; max-width: 320px; height: 100vh; height: 100dvh; background: #fff; z-index: 100; display: flex; flex-direction: column; box-shadow: -10px 0 40px rgba(20,23,26,.15); transition: right .35s cubic-bezier(.4,0,.2,1); }
     .mobile-drawer.active { right: 0; }
     .mobile-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--color-border); }
-    .mobile-close { width: 34px; height: 34px; border-radius: 10px; background: var(--color-primary-soft); color: var(--color-primary-dark); border: none; font-size: 1.3rem; line-height: 1; cursor: pointer; }
+    .mobile-close { width: 34px; height: 34px; border-radius: var(--radius-xs); background: var(--color-primary-soft); color: var(--color-primary-dark); border: none; font-size: 1.3rem; line-height: 1; cursor: pointer; }
     .mobile-nav { display: flex; flex-direction: column; padding: 12px; gap: 4px; }
-    .mobile-nav a { padding: 13px 14px; border-radius: 12px; }
+    .mobile-nav a { padding: 13px 14px; border-radius: var(--radius-md); }
     .mobile-nav a.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .mobile-actions { margin-top: auto; padding: 16px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 10px; }
 
-    .pub-footer { background: var(--color-text); color: #c9cdd1; padding: 40px 0; margin-top: 40px; }
+    /* Tanpa margin-top: margin ada DI LUAR background gelap footer, jadi
+       kalau diberi jarak lewat margin, warna putih halaman di belakangnya
+       akan terlihat sebagai garis/celah putih tepat sebelum footer.
+       Jarak sebelum footer sudah cukup dari padding section di atasnya. */
+    .pub-footer { background: var(--color-text); color: #c9cdd1; padding: 40px 0; }
     .foot-top { padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.1); flex-wrap: wrap; gap: 12px; }
     .foot-copy { margin-top: 20px; font-size: .85rem; color: var(--color-muted); }
 
@@ -168,18 +194,43 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
     }
   `],
 })
-export class PublicLayoutComponent {
+export class PublicLayoutComponent implements OnInit, OnDestroy {
   auth = inject(AuthRepository);
   private router = inject(Router);
+  private ngZone = inject(NgZone);
   year = new Date().getFullYear();
 
   scrolled = signal(false);
   mobileOpen = signal(false);
   userMenuOpen = signal(false);
 
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    this.scrolled.set(window.scrollY > 80);
+  // Dipasang manual di luar zone Angular (bukan @HostListener('window:scroll'))
+  // supaya event scroll yang sangat sering ini tidak memicu change detection
+  // di SETIAP tick — zone hanya dimasuki lagi saat status "scrolled" benar-
+  // benar berpindah (melewati ambang 80px). @HostListener selalu berjalan
+  // di dalam zone, jadi setiap event scroll sebelumnya memicu satu siklus
+  // CD penuh meski nilainya tidak berubah.
+  private onScroll = (): void => {
+    const isScrolled = window.scrollY > 80;
+    if (isScrolled !== this.scrolled()) {
+      this.ngZone.run(() => this.scrolled.set(isScrolled));
+    }
+  };
+
+  ngOnInit(): void {
+    // Sinkronkan sekali di awal — kalau halaman dibuka/di-refresh saat
+    // browser sudah memulihkan posisi scroll sebelumnya (scroll restoration),
+    // tidak ada event "scroll" baru yang terpicu untuk memberi tahu kita,
+    // jadi tanpa baris ini status header bisa "nyangkut" salah sampai
+    // pengguna scroll lagi.
+    if (window.scrollY > 80) this.scrolled.set(true);
+    this.ngZone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('scroll', this.onScroll);
   }
 
   @HostListener('document:click')

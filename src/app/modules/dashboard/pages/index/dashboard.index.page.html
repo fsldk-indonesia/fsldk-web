@@ -1,7 +1,18 @@
 <div class="page-head"><h1>Dashboard</h1><p class="text-muted">Ringkasan aktivitas konten & pengguna.</p></div>
 
-<div class="grid grid-3">
-  <div class="stat"><span class="stat-label">Total Berita</span><span class="stat-num">{{ summary()?.totalNews ?? '–' }}</span></div>
-  <div class="stat"><span class="stat-label">Total Artikel</span><span class="stat-num">{{ summary()?.totalArticles ?? '–' }}</span></div>
-  <div class="stat"><span class="stat-label">Total Pengguna</span><span class="stat-num">{{ summary()?.totalUsers ?? '–' }}</span></div>
-</div>
+@if (summary(); as s) {
+  <div class="grid grid-3">
+    <div class="stat"><span class="stat-label">Total Berita</span><span class="stat-num">{{ s.totalNews }}</span></div>
+    <div class="stat"><span class="stat-label">Total Artikel</span><span class="stat-num">{{ s.totalArticles }}</span></div>
+    <div class="stat"><span class="stat-label">Total Pengguna</span><span class="stat-num">{{ s.totalUsers }}</span></div>
+  </div>
+} @else {
+  <div class="grid grid-3">
+    @for (i of [1,2,3]; track i) {
+      <div class="stat">
+        <span class="skel skel-line" style="width:90px"></span>
+        <span class="skel skel-line" style="width:60px;height:32px;margin-top:8px"></span>
+      </div>
+    }
+  </div>
+}

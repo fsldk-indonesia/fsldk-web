@@ -6,15 +6,10 @@
 
   <div class="grid grid-2">
     <div class="form-group"><label class="form-label">Kategori</label>
-      <select class="form-control" [(ngModel)]="form.categoryID">
-        @for (c of categories(); track c.categoryID) { <option [value]="c.categoryID">{{ c.categoryName }}</option> }
-      </select>
+      <app-select [(ngModel)]="form.categoryID" [options]="categoryOptions()" placeholder="Pilih kategori" />
     </div>
     <div class="form-group"><label class="form-label">Status</label>
-      <select class="form-control" [(ngModel)]="form.status" [disabled]="!canPublish">
-        <option value="draft">Draft</option>
-        <option value="published">Published</option>
-      </select>
+      <app-select [(ngModel)]="form.status" [options]="statusOptions" [disabled]="!canPublish" />
       @if (!canPublish) { <p class="form-hint">Hanya Editor/Super Admin yang dapat mempublikasikan.</p> }
       @if (publishedDate()) { <p class="form-hint">Dipublikasikan pertama kali: {{ publishedDate() | date:'d MMMM yyyy, HH:mm' }}</p> }
     </div>

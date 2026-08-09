@@ -10,6 +10,7 @@ import { ToastService } from '../core/services/toast.service';
       @for (t of toast.toasts(); track t.id) {
         <div class="toast" [class.toast-success]="t.type === 'success'"
              [class.toast-error]="t.type === 'error'" [class.toast-info]="t.type === 'info'"
+             [class.toast-warning]="t.type === 'warning'"
              (click)="toast.dismiss(t.id)">
           {{ t.message }}
         </div>
@@ -18,11 +19,17 @@ import { ToastService } from '../core/services/toast.service';
   `,
   styles: [`
     .toast-stack { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; max-width: 360px; }
-    .toast { padding: 14px 18px; border-radius: 10px; color: #fff; font-weight: 600; font-size: .9rem; box-shadow: 0 10px 30px rgba(0,0,0,.18); cursor: pointer; animation: slidein .2s ease; }
-    .toast-success { background: #00933b; }
-    .toast-error { background: #e62129; }
-    .toast-info { background: #14171a; }
+    .toast {
+      padding: 14px 18px; border-radius: var(--radius, 13px); color: #fff; font-family: var(--font-body, inherit);
+      font-weight: 600; font-size: .9rem; box-shadow: var(--shadow-lg, 0 10px 30px rgba(0,0,0,.18)); cursor: pointer;
+      animation: slidein var(--motion-base, 200ms) var(--ease-out, ease);
+    }
+    .toast-success { background: var(--color-primary, #00933b); }
+    .toast-error { background: var(--color-danger, #d93a3a); }
+    .toast-info { background: var(--color-info, #3573a6); }
+    .toast-warning { background: var(--color-warning, #b8790a); }
     @keyframes slidein { from { transform: translateX(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
   `],
 })
 export class ToastComponent {

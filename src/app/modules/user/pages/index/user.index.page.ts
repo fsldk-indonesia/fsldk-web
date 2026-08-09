@@ -1,8 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../repositories/auth.repository';
 import { UserRow } from '../../entities/user';
 import { Role } from '../../../role/entities/role';
+import { IconComponent } from '../../../../shared/icon.component';
+import { PaginationComponent } from '../../../../shared/pagination.component';
+import { SelectComponent } from '../../../../shared/select.component';
 import { UserFormValue, UserIndexPresenter } from './user.index.presenter';
 import { UserIndexView } from './user.index.view';
 
@@ -10,7 +13,7 @@ import { UserIndexView } from './user.index.view';
   selector: 'app-user-index-page',
   standalone: true,
   templateUrl: './user.index.page.html',
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent, PaginationComponent, SelectComponent],
   providers: [UserIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -24,11 +27,17 @@ export class UserIndexPage implements OnInit, UserIndexView {
 
   users = signal<UserRow[]>([]);
   roles = signal<Role[]>([]);
+  loading = signal(true);
   search = '';
+  page = signal(1);
+  count = signal(0);
+  readonly limit = 10;
   showForm = signal(false);
   saving = signal(false);
   editId: number | null = null;
   form: UserFormValue = { fullName: '', email: '', password: '', roleID: 0, isActive: true };
+
+  roleOptions = computed(() => this.roles().map((r) => ({ value: r.roleID, label: r.roleName })));
 
   canCreate = this.auth.hasPermission('user.create');
   canUpdate = this.auth.hasPermission('user.update');
@@ -40,7 +49,9 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.presenter.loadRoles();
   }
 
-  load(): void { this.presenter.loadUsers(this.search); }
+  load(): void { this.loading.set(true); this.presenter.loadUsers(this.page(), this.limit, this.search); }
+  applySearch(): void { this.page.set(1); this.load(); }
+  goPage(p: number): void { this.page.set(p); this.load(); }
 
   openCreate(): void {
     this.editId = null;
@@ -60,7 +71,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.presenter.remove(u.userID);
   }
 
-  setUsers(users: UserRow[]): void { this.users.set(users); }
+  setUsers(users: UserRow[], count: number): void { this.users.set(users); this.count.set(count); this.loading.set(false); }
   setRoles(roles: Role[]): void { this.roles.set(roles); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.showForm.set(false); this.load(); }

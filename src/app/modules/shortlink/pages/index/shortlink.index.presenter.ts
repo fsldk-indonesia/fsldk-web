@@ -14,9 +14,9 @@ export class ShortlinkIndexPresenter extends BasePresenter<ShortlinkIndexView> {
   private shortlinkRepo = inject(ShortlinkRepository);
   private toast = inject(ToastService);
 
-  load(search: string): void {
-    this.shortlinkRepo.list({ page: 1, limit: 50, search }).subscribe({
-      next: (p) => this.view.setShortlinks(p.data),
+  load(page: number, limit: number, search: string): void {
+    this.shortlinkRepo.list({ page, limit, search }).subscribe({
+      next: (p) => this.view.setShortlinks(p.data, p.count),
       error: () => {},
     });
   }

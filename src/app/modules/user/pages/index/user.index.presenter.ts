@@ -19,9 +19,9 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
   private roleRepo = inject(RoleRepository);
   private toast = inject(ToastService);
 
-  loadUsers(search: string): void {
-    this.userRepo.list({ page: 1, limit: 50, search }).subscribe({
-      next: (p) => this.view.setUsers(p.data),
+  loadUsers(page: number, limit: number, search: string): void {
+    this.userRepo.list({ page, limit, search }).subscribe({
+      next: (p) => this.view.setUsers(p.data, p.count),
       error: () => {},
     });
   }

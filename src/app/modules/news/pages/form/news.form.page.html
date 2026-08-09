@@ -6,15 +6,10 @@
 
   <div class="grid grid-2">
     <div class="form-group"><label class="form-label">Kategori</label>
-      <select class="form-control" [(ngModel)]="form.categoryID">
-        @for (c of categories(); track c.categoryID) { <option [value]="c.categoryID">{{ c.categoryName }}</option> }
-      </select>
+      <app-select [(ngModel)]="form.categoryID" [options]="categoryOptions()" placeholder="Pilih kategori" />
     </div>
     <div class="form-group"><label class="form-label">Status</label>
-      <select class="form-control" [(ngModel)]="form.status" [disabled]="!canPublish">
-        <option value="draft">Draft</option>
-        <option value="published">Published</option>
-      </select>
+      <app-select [(ngModel)]="form.status" [options]="statusOptions" [disabled]="!canPublish" />
       @if (!canPublish) { <p class="form-hint">Hanya Editor/Super Admin yang dapat mempublikasikan.</p> }
     </div>
   </div>
@@ -34,7 +29,7 @@
     <input class="form-control" [(ngModel)]="form.newsExcerpt" placeholder="Ringkasan singkat…"></div>
   <div class="form-group"><label class="form-label">Konten</label>
     <app-rich-text-editor [(value)]="form.newsContent" /></div>
-  <div class="form-group"><label class="form-label"><input type="checkbox" [(ngModel)]="form.isFeatured"> Jadikan berita unggulan</label></div>
+  <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isFeatured"> Jadikan berita unggulan</label></div>
 
   <div class="flex gap justify-between">
     <a routerLink="/cms/news" class="btn btn-ghost">Batal</a>

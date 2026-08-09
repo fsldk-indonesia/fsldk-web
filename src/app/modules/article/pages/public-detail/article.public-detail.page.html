@@ -1,7 +1,13 @@
 <article class="section">
   <div class="container narrow">
     @if (loading()) {
-      <div class="center-screen"><span class="spinner spinner-dark"></span></div>
+      <span class="skel skel-line" style="width:90px;height:22px;border-radius:999px"></span>
+      <span class="skel skel-line" style="width:80%;height:34px;margin-top:16px"></span>
+      <span class="skel skel-line" style="width:40%"></span>
+      <span class="skel skel-thumb" style="margin:20px 0 28px"></span>
+      <span class="skel skel-line"></span>
+      <span class="skel skel-line"></span>
+      <span class="skel skel-line" style="width:70%"></span>
     } @else {
       @if (item(); as a) {
         <nav class="crumb"><a routerLink="/">Beranda</a> / <a routerLink="/artikel">Artikel</a> / <span>Detail</span></nav>

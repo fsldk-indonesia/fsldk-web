@@ -5,34 +5,58 @@
 
 <div class="card">
   <div class="card-pad">
-    <input class="form-control" [(ngModel)]="search" (keyup.enter)="load()" placeholder="Cari berdasarkan kunci atau tujuan…">
+    <input class="form-control" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari berdasarkan kunci atau tujuan…">
   </div>
   <div class="table-wrap">
     <table class="table">
       <thead><tr><th>Shortlink</th><th>Tujuan</th><th>Klik</th><th>Dibuat</th><th></th></tr></thead>
       <tbody>
-        @for (s of shortlinks(); track s.shortLinkID) {
-          <tr>
-            <td>
-              <div class="flex items-center gap-sm">
-                <code class="key">{{ s.shortURL }}</code>
-                <span class="link-action" (click)="copy(s.shortURL)">Salin</span>
+        @if (loading()) {
+          @for (i of [1,2,3,4]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:140px"></span></td>
+              <td><span class="skel skel-line" style="width:80%"></span></td>
+              <td><span class="skel skel-line" style="width:30px"></span></td>
+              <td><span class="skel skel-line" style="width:70px"></span></td>
+              <td><span class="skel skel-line" style="width:60px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (s of shortlinks(); track s.shortLinkID) {
+            <tr>
+              <td>
+                <div class="flex items-center gap-sm">
+                  <code class="key">{{ s.shortURL }}</code>
+                  <span class="link-action" (click)="copy(s.shortURL)">Salin</span>
+                </div>
+              </td>
+              <td class="text-muted destination" [title]="s.destinationURL">{{ s.destinationURL }}</td>
+              <td class="text-center">{{ s.visitCount }}</td>
+              <td class="text-muted">{{ s.createdDate | date:'d MMM yyyy' }}</td>
+              <td>
+                <div class="table-actions">
+                  @if (canUpdate) { <span class="link-action" (click)="openEdit(s)">Edit</span> }
+                  @if (canDelete) { <span class="link-danger" (click)="remove(s)">Hapus</span> }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="link" [size]="26" /></span>
+                <h4>Belum ada shortlink</h4>
+                <p>Buat tautan pendek untuk memudahkan berbagi tautan panjang.</p>
+                @if (canCreate) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Buat Shortlink</button> }
               </div>
-            </td>
-            <td class="text-muted destination" [title]="s.destinationURL">{{ s.destinationURL }}</td>
-            <td class="text-center">{{ s.visitCount }}</td>
-            <td class="text-muted">{{ s.createdDate | date:'d MMM yyyy' }}</td>
-            <td>
-              <div class="table-actions">
-                @if (canUpdate) { <span class="link-action" (click)="openEdit(s)">Edit</span> }
-                @if (canDelete) { <span class="link-danger" (click)="remove(s)">Hapus</span> }
-              </div>
-            </td>
-          </tr>
-        } @empty { <tr><td colspan="5" class="text-muted">Belum ada shortlink.</td></tr> }
+            </td></tr>
+          }
+        }
       </tbody>
     </table>
   </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
 </div>
 
 @if (showForm()) {

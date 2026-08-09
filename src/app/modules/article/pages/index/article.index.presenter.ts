@@ -10,8 +10,8 @@ export class ArticleIndexPresenter extends BasePresenter<ArticleIndexView> {
   private articleRepo = inject(ArticleRepository);
   private toast = inject(ToastService);
 
-  load(status: string): void {
-    this.articleRepo.cmsList({ page: 1, limit: 50, status }).subscribe({ next: (p) => this.view.setArticles(p.data), error: () => {} });
+  load(page: number, limit: number, status: string): void {
+    this.articleRepo.cmsList({ page, limit, status }).subscribe({ next: (p) => this.view.setArticles(p.data, p.count), error: () => {} });
   }
 
   togglePublish(a: Article): void {

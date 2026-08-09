@@ -5,29 +5,53 @@
 
 <div class="card">
   <div class="card-pad flex gap">
-    <input class="form-control" [(ngModel)]="search" (keyup.enter)="load()" placeholder="Cari pengguna…">
+    <input class="form-control" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari pengguna…">
   </div>
   <div class="table-wrap">
     <table class="table">
       <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
       <tbody>
-        @for (u of users(); track u.userID) {
-          <tr>
-            <td><strong>{{ u.fullName }}</strong></td>
-            <td class="text-muted">{{ u.email }}</td>
-            <td><span class="chip chip-green">{{ u.role }}</span></td>
-            <td><span class="badge" [class.badge-active]="u.isActive" [class.badge-inactive]="!u.isActive">{{ u.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
-            <td>
-              <div class="table-actions">
-                @if (canUpdate) { <span class="link-action" (click)="openEdit(u)">Edit</span> }
-                @if (canDelete) { <span class="link-danger" (click)="remove(u)">Hapus</span> }
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:80%"></span></td>
+              <td><span class="skel skel-line" style="width:70px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:70px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:60px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (u of users(); track u.userID) {
+            <tr>
+              <td><strong>{{ u.fullName }}</strong></td>
+              <td class="text-muted">{{ u.email }}</td>
+              <td><span class="chip chip-green">{{ u.role }}</span></td>
+              <td><span class="badge" [class.badge-active]="u.isActive" [class.badge-inactive]="!u.isActive">{{ u.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
+              <td>
+                <div class="table-actions">
+                  @if (canUpdate) { <span class="link-action" (click)="openEdit(u)">Edit</span> }
+                  @if (canDelete) { <span class="link-danger" (click)="remove(u)">Hapus</span> }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="user-group" [size]="26" /></span>
+                <h4>Belum ada pengguna</h4>
+                <p>Tambahkan akun pengguna untuk mengakses CMS.</p>
+                @if (canCreate) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Tambah Pengguna</button> }
               </div>
-            </td>
-          </tr>
-        } @empty { <tr><td colspan="5" class="text-muted">Tidak ada pengguna.</td></tr> }
+            </td></tr>
+          }
+        }
       </tbody>
     </table>
   </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
 </div>
 
 @if (showForm()) {
@@ -41,11 +65,9 @@
         <input class="form-control" type="password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
       </div>
       <div class="form-group"><label class="form-label">Role</label>
-        <select class="form-control" [(ngModel)]="form.roleID">
-          @for (r of roles(); track r.roleID) { <option [value]="r.roleID">{{ r.roleName }}</option> }
-        </select>
+        <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" placeholder="Pilih role" />
       </div>
-      <div class="form-group"><label class="form-label"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div>
+      <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div>
       <div class="flex gap justify-between">
         <button class="btn btn-ghost" (click)="close()">Batal</button>
         <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>

@@ -9,10 +9,21 @@
   <link rel="icon" type="image/png" href="assets/logo-fsldk-radius.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Newsreader:ital,wght@1,500;1,600&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <!-- Loader statis ini tampil sebelum Angular selesai bootstrap (paint
+         pertama) dan otomatis lenyap begitu app-root diisi Angular. -->
+    <div class="page-loader">
+      <div class="page-loader-ring">
+        <div class="page-loader-orbit"><span class="page-loader-planet"></span></div>
+        <div class="page-loader-orbit reverse"><span class="page-loader-planet"></span></div>
+        <img src="assets/logo-fsldk-removebg.png" alt="" class="page-loader-mark">
+      </div>
+      <span class="page-loader-label">Memuat FSLDK Indonesia…</span>
+    </div>
+  </app-root>
 </body>
 </html>

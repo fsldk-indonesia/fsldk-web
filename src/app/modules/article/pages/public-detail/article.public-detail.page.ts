@@ -17,7 +17,7 @@ import { ArticlePublicDetailView } from './article.public-detail.view';
     h1 { margin: 12px 0; }
     .meta { color: var(--color-muted); font-size: .92rem; }
     .cover { width: 100%; border-radius: var(--radius-lg); margin: 20px 0 28px; aspect-ratio: 16/9; object-fit: cover; }
-    .content { font-size: 1.08rem; line-height: 1.85; color: #2a2d33; }
+    .content { font-size: 1.08rem; line-height: 1.85; color: var(--color-text); }
     .pdf-cta { margin-top: 32px; padding: 24px; background: var(--color-bg-warm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); text-align: center; }
     .pdf-cta p { margin: 0 0 14px; color: var(--color-text-secondary); }
     .pdf-missing { margin-top: 32px; color: var(--color-muted); font-size: .9rem; font-style: italic; }
