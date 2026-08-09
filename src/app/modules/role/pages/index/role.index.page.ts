@@ -37,7 +37,7 @@ import { RoleIndexView } from './role.index.view';
        dicentang memakai tint hijau --color-primary-soft yang sama dipakai
        chip/badge/form-check di seluruh app — sebelumnya kartu abu-abu +
        hover putih terasa lepas dari pola warna itu. */
-    .perm-mod { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 14px; }
+    .perm-mod { display: flex; flex-direction: column; gap: 6px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 14px; }
     .perm-mod strong { text-transform: capitalize; display: block; margin-bottom: 8px; padding: 0 4px; font-size: .95rem; }
     .perm-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: .9rem; cursor: pointer; transition: background var(--motion-fast) ease; }
     .perm-item:hover, .perm-item:has(input:checked) { background: var(--color-primary-soft); }
