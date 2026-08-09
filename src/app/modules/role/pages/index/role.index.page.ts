@@ -17,22 +17,33 @@ import { RoleIndexView } from './role.index.view';
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
     .perm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(20,23,26,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    /* Modal jadi kolom flex dengan tinggi tetap: judul, Nama Role, Deskripsi,
-       Aktif, dan judul "Centang permission..." tetap di alur normal (tidak
-       ikut scroll), hanya .perm-list yang jadi area scroll sendiri (flex:1,
-       overflow-y:auto), sementara footer Batal/Simpan dikunci di bawah
-       (flex-shrink:0) supaya tidak pernah ikut hilang saat scroll. */
-    .modal { background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 560px; max-height: 86vh; display: flex; flex-direction: column; }
-    .perm-list { display: flex; flex-direction: column; gap: 14px; margin: 16px 0; flex: 1 1 auto; min-height: 80px; overflow-y: auto; padding-right: 4px; }
+    /* Modal jadi kolom flex dengan tinggi tetap: judul tetap di alur normal
+       (tidak ikut scroll), .modal-columns mengisi sisa tinggi yang ada, dan
+       footer Batal/Simpan dikunci di bawah (flex-shrink:0) supaya tidak
+       pernah ikut hilang saat scroll. Modal dilebarkan (820px) supaya field
+       role (kiri) dan daftar permission (kanan) bisa berdampingan sebagai
+       dua kolom terpisah dalam satu popup yang sama — permission jadi lebih
+       leluasa, tidak lagi berdesakan di bawah field yang sempit. */
+    .modal { background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 820px; max-height: 86vh; display: flex; flex-direction: column; }
+    .modal-columns { display: flex; gap: 28px; flex: 1 1 auto; min-height: 0; margin-top: 18px; }
+    .modal-col-left { width: 260px; flex-shrink: 0; }
+    .modal-col-right { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid var(--color-border); padding-left: 28px; }
+    .perm-col-title { margin-bottom: 12px; }
+    .perm-list { display: flex; flex-direction: column; gap: 14px; flex: 1 1 auto; min-height: 80px; overflow-y: auto; padding-right: 4px; }
     /* Tiap modul jadi satu kartu, dan tiap baris permission di dalamnya jadi
        satu field yang menyatu (padding, radius, hover) alih-alih checkbox +
        teks lepas — senada dengan gaya baris pada app-select. */
-    .perm-mod { border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: var(--color-bg-alt); padding: 12px; }
-    .perm-mod strong { text-transform: capitalize; display: block; margin-bottom: 6px; padding: 0 4px; font-size: .95rem; }
-    .perm-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; font-size: .9rem; cursor: pointer; transition: background var(--motion-fast) ease; }
+    .perm-mod { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-alt); padding: 14px; }
+    .perm-mod strong { text-transform: capitalize; display: block; margin-bottom: 8px; padding: 0 4px; font-size: .95rem; }
+    .perm-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: .9rem; cursor: pointer; transition: background var(--motion-fast) ease; }
     .perm-item:hover { background: #fff; }
     .perm-item code { margin-left: auto; color: var(--color-muted); font-size: .76rem; background: #fff; padding: 3px 7px; border-radius: 6px; flex-shrink: 0; }
     .modal-footer { flex-shrink: 0; padding-top: 16px; }
+    @media (max-width: 720px) {
+      .modal-columns { flex-direction: column; overflow-y: auto; }
+      .modal-col-left { width: 100%; }
+      .modal-col-right { border-left: none; padding-left: 0; }
+    }
     .card-actions { display: flex; align-items: center; gap: 14px; }
     .link-danger[aria-disabled="true"] { color: var(--color-muted); cursor: not-allowed; pointer-events: none; }
   `],
