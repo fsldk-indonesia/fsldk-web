@@ -261,7 +261,8 @@ input[type="checkbox"]:disabled { opacity: .5; cursor: not-allowed; }
 .link-danger { cursor: pointer; font-weight: 600; font-size: .88rem; color: var(--color-danger); }
 
 /* ---------- Avatar ---------- */
-.avatar { width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); }
+.avatar { width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; }
+img.avatar { object-fit: cover; }
 
 /* ---------- Spinner (loading & feedback system) ---------- */
 .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: var(--radius-full); animation: spin .7s linear infinite; display:inline-block; flex-shrink: 0; }

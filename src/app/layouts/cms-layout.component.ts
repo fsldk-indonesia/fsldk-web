@@ -44,7 +44,11 @@ import { IconComponent } from '../shared/icon.component';
           </a>
           <div class="user-dropdown">
             <button class="user-chip" type="button" (click)="toggleDropdown($event)">
-              <span class="avatar">{{ initials() }}</span>
+              @if (auth.user()?.photoURL) {
+                <img class="avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
+              } @else {
+                <span class="avatar">{{ initials() }}</span>
+              }
               <div class="user-meta">
                 <strong>{{ auth.user()?.fullName }}</strong>
                 <small>{{ auth.user()?.role }}</small>

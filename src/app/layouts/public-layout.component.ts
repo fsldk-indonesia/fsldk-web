@@ -32,7 +32,12 @@ import { IconComponent } from '../shared/icon.component';
           @if (auth.isLoggedIn()) {
             <div class="user-fun-wrap" (mouseenter)="openUserMenu()" (mouseleave)="closeUserMenu()">
               <button class="btn btn-outline btn-sm btn-user-fun account-chip" type="button" (click)="toggleUserMenu($event)">
-                <span class="chip-avatar">{{ initials() }}</span> {{ auth.user()?.fullName }}
+                @if (auth.user()?.photoURL) {
+                  <img class="chip-avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
+                } @else {
+                  <span class="chip-avatar">{{ initials() }}</span>
+                }
+                {{ auth.user()?.fullName }}
               </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
                 @if (auth.hasAnyCmsAccess()) {
@@ -76,7 +81,14 @@ import { IconComponent } from '../shared/icon.component';
       </nav>
       <div class="mobile-actions">
         @if (auth.isLoggedIn()) {
-          <div class="mobile-account"><span class="chip-avatar">{{ initials() }}</span> {{ auth.user()?.fullName }}</div>
+          <div class="mobile-account">
+            @if (auth.user()?.photoURL) {
+              <img class="chip-avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
+            } @else {
+              <span class="chip-avatar">{{ initials() }}</span>
+            }
+            {{ auth.user()?.fullName }}
+          </div>
           @if (auth.hasAnyCmsAccess()) {
             <a routerLink="/cms/dashboard" class="btn btn-primary btn-block" (click)="closeMobile()"><app-icon name="dashboard" [size]="17" />Masuk CMS</a>
           }
@@ -153,6 +165,7 @@ import { IconComponent } from '../shared/icon.component';
     .account-chip { display: flex; align-items: center; gap: 8px; }
     .chip-avatar { width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
     .chip-avatar.guest { background: var(--color-bg-alt); color: var(--color-text-secondary); }
+    img.chip-avatar { object-fit: cover; }
     .dropdown-fun { position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), visibility var(--motion-base); z-index: 70; }
     .dropdown-fun-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; color: var(--color-text); font-family: var(--font-body); font-weight: 600; font-size: .9rem; white-space: nowrap; cursor: pointer; transition: background var(--motion-fast) ease; }
     .dropdown-fun-item svg { opacity: .7; flex-shrink: 0; }
