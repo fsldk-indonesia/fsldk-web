@@ -32,12 +32,16 @@ import { RoleIndexView } from './role.index.view';
     .perm-list { display: flex; flex-direction: column; gap: 14px; flex: 1 1 auto; min-height: 80px; overflow-y: auto; padding-right: 4px; }
     /* Tiap modul jadi satu kartu, dan tiap baris permission di dalamnya jadi
        satu field yang menyatu (padding, radius, hover) alih-alih checkbox +
-       teks lepas — senada dengan gaya baris pada app-select. */
-    .perm-mod { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-alt); padding: 14px; }
+       teks lepas — senada dengan gaya baris pada app-select. Kartu dibuat
+       putih bersih (senada .card di tempat lain) dan hover/baris yang sudah
+       dicentang memakai tint hijau --color-primary-soft yang sama dipakai
+       chip/badge/form-check di seluruh app — sebelumnya kartu abu-abu +
+       hover putih terasa lepas dari pola warna itu. */
+    .perm-mod { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 14px; }
     .perm-mod strong { text-transform: capitalize; display: block; margin-bottom: 8px; padding: 0 4px; font-size: .95rem; }
     .perm-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: .9rem; cursor: pointer; transition: background var(--motion-fast) ease; }
-    .perm-item:hover { background: #fff; }
-    .perm-item code { margin-left: auto; color: var(--color-muted); font-size: .76rem; background: #fff; padding: 3px 7px; border-radius: 6px; flex-shrink: 0; }
+    .perm-item:hover, .perm-item:has(input:checked) { background: var(--color-primary-soft); }
+    .perm-item code { margin-left: auto; color: var(--color-muted); font-size: .76rem; background: var(--color-bg-alt); padding: 3px 7px; border-radius: 6px; flex-shrink: 0; }
     .modal-footer { flex-shrink: 0; padding-top: 16px; }
     @media (max-width: 720px) {
       .modal-columns { flex-direction: column; overflow-y: auto; }
