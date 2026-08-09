@@ -1,5 +1,8 @@
 # FSLDK Web (`fsldk-web`)
 
+[![CI](https://github.com/fsldk-indonesia/fsldk-web/actions/workflows/ci.yml/badge.svg)](https://github.com/fsldk-indonesia/fsldk-web/actions/workflows/ci.yml)
+[![Deploy](https://github.com/fsldk-indonesia/fsldk-web/actions/workflows/deploy.yml/badge.svg)](https://github.com/fsldk-indonesia/fsldk-web/actions/workflows/deploy.yml)
+
 Frontend Website FSLDK Indonesia, dibangun dengan **Angular 19 (standalone components)** dan **SCSS**, mengikuti design system resmi FSLDK (hijau `#00933b`, tipografi Poppins + Manrope). Mengonsumsi REST API dari backend `fsldk-api` (repositori terpisah).
 
 📖 **Dokumentasi lengkap:**
