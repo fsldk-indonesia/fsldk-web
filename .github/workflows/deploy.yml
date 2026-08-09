@@ -1,0 +1,34 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd /var/www/fsldk-web-src
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci
+            npm run build
+            rm -rf /var/www/fsldk-web/*
+            cp -r dist/fsldk-web/browser/* /var/www/fsldk-web
+
+      - name: Health check
+        run: |
+          curl -sf http://${{ secrets.SSH_HOST }}/ -o /dev/null
+          echo "Frontend OK"
