@@ -11,10 +11,10 @@ export class ArticlePublicIndexPresenter extends BasePresenter<ArticlePublicInde
     this.articleRepo.categories().subscribe({ next: (c) => this.view.setCategories(c), error: () => {} });
   }
 
-  load(search: string, category: string): void {
+  load(page: number, limit: number, search: string, category: string): void {
     this.view.setLoading(true);
-    this.articleRepo.publicList({ page: 1, limit: 9, search, category }).subscribe({
-      next: (p) => { this.view.setArticles(p.data); this.view.setLoading(false); },
+    this.articleRepo.publicList({ page, limit, search, category }).subscribe({
+      next: (p) => { this.view.setArticles(p.data, p.count); this.view.setLoading(false); },
       error: () => this.view.setLoading(false),
     });
   }
