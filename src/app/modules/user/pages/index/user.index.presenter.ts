@@ -47,8 +47,8 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
 
   remove(id: number): void {
     this.userRepo.remove(id).subscribe({
-      next: () => { this.toast.success('Pengguna dihapus'); this.view.onRemoveSuccess(); },
-      error: () => {},
+      next: () => { this.toast.success('Pengguna dihapus'); this.view.onRemoveSuccess(); this.view.onActionSettled(id); },
+      error: () => this.view.onActionSettled(id),
     });
   }
 }

@@ -38,6 +38,7 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   readonly limit = 10;
   showForm = signal(false);
   saving = signal(false);
+  busy = signal<ReadonlySet<number>>(new Set());
   editId: number | null = null;
   form: ShortlinkFormValue = { destinationURL: '', shortKey: '' };
 
@@ -68,11 +69,16 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
     this.presenter.save(this.editId, this.form);
   }
 
+  isBusy(id: number): boolean { return this.busy().has(id); }
+  private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }
+  private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
+
   async remove(s: ShortLink): Promise<void> {
     const ok = await this.alert.confirm(`Hapus shortlink "${s.shortKey}"? Tindakan ini tidak dapat dibatalkan.`, {
       title: 'Hapus Shortlink', confirmLabel: 'Ya, Hapus', variant: 'danger',
     });
     if (!ok) return;
+    this.setBusy(s.shortLinkID);
     this.presenter.remove(s.shortLinkID);
   }
 
@@ -87,4 +93,5 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.close(); this.load(); }
   onRemoveSuccess(): void { this.load(); }
+  onActionSettled(id: number): void { this.clearBusy(id); }
 }

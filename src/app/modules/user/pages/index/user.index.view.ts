@@ -7,4 +7,5 @@ export interface UserIndexView {
   setSaving(saving: boolean): void;
   onSaveSuccess(): void;
   onRemoveSuccess(): void;
+  onActionSettled(id: number): void;
 }

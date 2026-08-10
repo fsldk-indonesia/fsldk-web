@@ -40,8 +40,8 @@ export class ShortlinkIndexPresenter extends BasePresenter<ShortlinkIndexView> {
 
   remove(id: number): void {
     this.shortlinkRepo.remove(id).subscribe({
-      next: () => { this.toast.success('Shortlink dihapus'); this.view.onRemoveSuccess(); },
-      error: () => {},
+      next: () => { this.toast.success('Shortlink dihapus'); this.view.onRemoveSuccess(); this.view.onActionSettled(id); },
+      error: () => this.view.onActionSettled(id),
     });
   }
 }

@@ -36,6 +36,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
   readonly limit = 10;
   showForm = signal(false);
   saving = signal(false);
+  busy = signal<ReadonlySet<number>>(new Set());
   editId: number | null = null;
   form: UserFormValue = { fullName: '', email: '', password: '', roleID: 0, isActive: true };
 
@@ -67,12 +68,17 @@ export class UserIndexPage implements OnInit, UserIndexView {
   }
   close(): void { this.showForm.set(false); }
 
+  isBusy(id: number): boolean { return this.busy().has(id); }
+  private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }
+  private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
+
   save(): void { this.presenter.save(this.editId, this.form); }
   async remove(u: UserRow): Promise<void> {
     const ok = await this.alert.confirm(`Hapus pengguna ${u.fullName}? Tindakan ini tidak dapat dibatalkan.`, {
       title: 'Hapus Pengguna', confirmLabel: 'Ya, Hapus', variant: 'danger',
     });
     if (!ok) return;
+    this.setBusy(u.userID);
     this.presenter.remove(u.userID);
   }
 
@@ -81,4 +87,5 @@ export class UserIndexPage implements OnInit, UserIndexView {
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.showForm.set(false); this.load(); }
   onRemoveSuccess(): void { this.load(); }
+  onActionSettled(id: number): void { this.clearBusy(id); }
 }

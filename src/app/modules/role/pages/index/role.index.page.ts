@@ -51,6 +51,15 @@ import { RoleIndexView } from './role.index.view';
     }
     .card-actions { display: flex; align-items: center; gap: 14px; }
     .link-danger[aria-disabled="true"] { color: var(--color-muted); cursor: not-allowed; pointer-events: none; }
+    /* Grid menyamakan TINGGI kartu (perilaku default CSS Grid), tapi baris
+       Hapus/Edit Role di dalamnya tetap mengikuti alur konten biasa — kartu
+       dengan sedikit konten (mis. role tanpa daftar permission) jadi punya
+       baris aksi yang lebih tinggi posisinya daripada kartu lain, tidak
+       sejajar. Kartu dijadikan flex-column dan footer dikunci ke bawah lewat
+       margin-top:auto supaya baris aksi selalu sejajar lintas kartu terlepas
+       dari seberapa banyak kontennya. */
+    .grid-2 > .card { display: flex; flex-direction: column; }
+    .card-footer { margin-top: auto; padding-top: 16px; }
   `],
 })
 export class RoleIndexPage implements OnInit, RoleIndexView {

@@ -16,15 +16,15 @@ export class NewsIndexPresenter extends BasePresenter<NewsIndexView> {
 
   togglePublish(n: News): void {
     this.newsRepo.publish(n.newsID, !n.isPublished).subscribe({
-      next: () => { this.toast.success(n.isPublished ? 'Publikasi ditarik' : 'Berita dipublikasikan'); this.view.onPublishToggleSuccess(n.isPublished); },
-      error: () => {},
+      next: () => { this.toast.success(n.isPublished ? 'Publikasi ditarik' : 'Berita dipublikasikan'); this.view.onPublishToggleSuccess(n.isPublished); this.view.onActionSettled(n.newsID); },
+      error: () => this.view.onActionSettled(n.newsID),
     });
   }
 
   remove(n: News): void {
     this.newsRepo.remove(n.newsID).subscribe({
-      next: () => { this.toast.success('Berita dihapus'); this.view.onRemoveSuccess(); },
-      error: () => {},
+      next: () => { this.toast.success('Berita dihapus'); this.view.onRemoveSuccess(); this.view.onActionSettled(n.newsID); },
+      error: () => this.view.onActionSettled(n.newsID),
     });
   }
 }
