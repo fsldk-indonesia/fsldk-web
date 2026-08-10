@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { AlertService } from '../../../../core/services/alert.service';
 import { Role } from '../../entities/role';
 import { Permission } from '../../../permission/entities/permission';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -55,6 +56,7 @@ import { RoleIndexView } from './role.index.view';
 export class RoleIndexPage implements OnInit, RoleIndexView {
   private presenter = inject(RoleIndexPresenter);
   private auth = inject(AuthRepository);
+  private alert = inject(AlertService);
 
   roles = signal<Role[]>([]);
   permissions = signal<Permission[]>([]);
@@ -103,9 +105,12 @@ export class RoleIndexPage implements OnInit, RoleIndexView {
 
   save(): void { this.presenter.save(this.editId, this.form, [...this.selected]); }
 
-  remove(r: Role): void {
+  async remove(r: Role): Promise<void> {
     if (r.isSystemRole || r.userCount > 0) return;
-    if (!confirm(`Hapus role "${r.roleName}"?`)) return;
+    const ok = await this.alert.confirm(`Hapus role "${r.roleName}"? Tindakan ini tidak dapat dibatalkan.`, {
+      title: 'Hapus Role', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    });
+    if (!ok) return;
     this.presenter.remove(r.roleID);
   }
 

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { AlertService } from '../../../../core/services/alert.service';
 import { News } from '../../entities/news';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
@@ -19,6 +20,7 @@ import { NewsIndexView } from './news.index.view';
 export class NewsIndexPage implements OnInit, NewsIndexView {
   private presenter = inject(NewsIndexPresenter);
   private auth = inject(AuthRepository);
+  private alert = inject(AlertService);
 
   news = signal<News[]>([]);
   loading = signal(true);
@@ -38,8 +40,11 @@ export class NewsIndexPage implements OnInit, NewsIndexView {
   filter(s: string): void { this.status = s; this.page.set(1); this.load(); }
   goPage(p: number): void { this.page.set(p); this.load(); }
   togglePublish(n: News): void { this.presenter.togglePublish(n); }
-  remove(n: News): void {
-    if (!confirm(`Hapus berita "${n.newsTitle}"?`)) return;
+  async remove(n: News): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus berita "${n.newsTitle}"? Tindakan ini tidak dapat dibatalkan.`, {
+      title: 'Hapus Berita', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    });
+    if (!ok) return;
     this.presenter.remove(n);
   }
 

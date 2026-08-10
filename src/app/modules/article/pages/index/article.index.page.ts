@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { AlertService } from '../../../../core/services/alert.service';
 import { Article } from '../../entities/article';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
@@ -19,6 +20,7 @@ import { ArticleIndexView } from './article.index.view';
 export class ArticleIndexPage implements OnInit, ArticleIndexView {
   private presenter = inject(ArticleIndexPresenter);
   private auth = inject(AuthRepository);
+  private alert = inject(AlertService);
 
   articles = signal<Article[]>([]);
   loading = signal(true);
@@ -38,8 +40,11 @@ export class ArticleIndexPage implements OnInit, ArticleIndexView {
   filter(s: string): void { this.status = s; this.page.set(1); this.load(); }
   goPage(p: number): void { this.page.set(p); this.load(); }
   togglePublish(a: Article): void { this.presenter.togglePublish(a); }
-  remove(a: Article): void {
-    if (!confirm(`Hapus artikel "${a.articleTitle}"?`)) return;
+  async remove(a: Article): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus artikel "${a.articleTitle}"? Tindakan ini tidak dapat dibatalkan.`, {
+      title: 'Hapus Artikel', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    });
+    if (!ok) return;
     this.presenter.remove(a);
   }
 
