@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { PasswordFieldComponent } from '../../../../shared/password-field.component';
 import { ResetPasswordPresenter } from './reset-password.presenter';
 import { ResetPasswordView } from './reset-password.view';
 
@@ -8,7 +9,7 @@ import { ResetPasswordView } from './reset-password.view';
   selector: 'app-reset-password-page',
   standalone: true,
   templateUrl: './reset-password.page.html',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, PasswordFieldComponent],
   providers: [ResetPasswordPresenter],
   styles: [`
     h2 { margin-bottom: 4px; } .subtitle { color: var(--color-text-secondary); margin: 0 0 24px; }

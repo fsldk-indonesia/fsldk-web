@@ -23,12 +23,12 @@ import { IconComponent } from '../shared/icon.component';
           <span>FSLDK <b>CMS</b></span>
         </div>
         <nav class="side-nav">
-          <a routerLink="/cms/dashboard" routerLinkActive="active" (click)="close()">
+          <a routerLink="/cms/dashboard" routerLinkActive="active" (click)="close()" class="stagger-in" style="--stagger-i:0">
             <span class="icon-badge sm icon-badge-soft"><app-icon name="dashboard" [size]="17" /></span> Dashboard
             <span class="side-nav-dot"></span>
           </a>
-          @for (m of menus(); track m.menuRoute) {
-            <a [routerLink]="m.menuRoute" routerLinkActive="active" (click)="close()">
+          @for (m of menus(); track m.menuRoute; let i = $index) {
+            <a [routerLink]="m.menuRoute" routerLinkActive="active" (click)="close()" class="stagger-in" [style.--stagger-i]="i + 1">
               <span class="icon-badge sm icon-badge-soft"><app-icon [name]="m.menuIcon" [size]="17" /></span> {{ m.menuLabel }}
               <span class="side-nav-dot"></span>
             </a>
@@ -98,10 +98,10 @@ import { IconComponent } from '../shared/icon.component';
     .brand-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); overflow: hidden; flex-shrink: 0; }
     .brand-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .side-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .side-nav a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
-    .side-nav a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; }
+    .side-nav a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .side-nav a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; transform: translateX(3px); }
     .side-nav a.active { background: var(--color-primary); color: #fff; }
-    .side-nav a.active:hover { background: var(--color-primary-dark); color: #fff; }
+    .side-nav a.active:hover { background: var(--color-primary-dark); color: #fff; transform: translateX(3px); }
     .side-nav a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
     /* Ikon di item aktif: lingkaran kaca-buram di atas hijau solid, bukan
        gradasi terang yang justru tenggelam di latar hijau. */
