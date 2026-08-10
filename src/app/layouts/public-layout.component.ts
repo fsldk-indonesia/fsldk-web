@@ -192,11 +192,21 @@ import { IconComponent } from '../shared/icon.component';
     .chip-avatar { width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
     .chip-avatar.guest { background: var(--color-bg-alt); color: var(--color-text-secondary); }
     img.chip-avatar { object-fit: cover; }
-    .dropdown-fun { position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), visibility var(--motion-base); z-index: 70; }
+    /* Tumbuh dari sudut kanan-atas (persis di ujung tombol akun yang
+       memicunya) — bukan cuma translateY, supaya terasa "ditarik keluar"
+       dari tombol, bukan muncul lepas dari langit-langit. */
+    .dropdown-fun {
+      position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px;
+      opacity: 0; visibility: hidden; transform-origin: top right; transform: scale(.85) translateY(-4px);
+      transition: opacity var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), visibility var(--motion-base);
+      z-index: 70;
+    }
     .dropdown-fun-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; color: var(--color-text); font-family: var(--font-body); font-weight: 600; font-size: .9rem; white-space: nowrap; cursor: pointer; transition: background var(--motion-fast) ease; }
     .dropdown-fun-item svg { opacity: .7; flex-shrink: 0; }
     .dropdown-fun-item:hover { background: var(--color-bg-warm); text-decoration: none; }
-    .dropdown-fun.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-fun.open { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+    @media (prefers-reduced-motion: reduce) { .dropdown-fun { transition: opacity var(--motion-base) ease, visibility var(--motion-base); transform: none !important; } }
     .mobile-account { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-weight: 600; color: var(--color-text); }
 
     .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: var(--radius-xs); cursor: pointer; padding: 0; }

@@ -43,7 +43,7 @@
                     </button>
                   }
                   @if (canDelete) {
-                    <button type="button" class="icon-action danger" [disabled]="isBusy(n.newsID)" (click)="remove(n)" title="Hapus">
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(n.newsID)" (click)="remove(n, $event)" title="Hapus">
                       @if (isBusy(n.newsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
                     </button>
                   }

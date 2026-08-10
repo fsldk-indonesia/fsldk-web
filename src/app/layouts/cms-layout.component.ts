@@ -123,7 +123,17 @@ import { IconComponent } from '../shared/icon.component';
     .user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
     .user-meta small { color: var(--color-muted); font-size: .78rem; }
     .caret { font-size: .7rem; color: var(--color-muted); }
-    .dropdown-panel { position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px; display: flex; flex-direction: column; z-index: 30; }
+    /* Dropdown ini di-toggle lewat @if (bukan class .open), jadi elemennya
+       baru dibuat browser persis saat dibuka — animasi "tumbuh dari sudut
+       tombol" cukup lewat keyframe sekali jalan, tanpa perlu state open/closed. */
+    .dropdown-panel {
+      position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px;
+      display: flex; flex-direction: column; z-index: 30;
+      transform-origin: top right; animation: dropdown-panel-in var(--motion-base) var(--ease-out) both;
+    }
+    @keyframes dropdown-panel-in { from { opacity: 0; transform: scale(.85) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
     .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; color: var(--color-text); transition: background var(--motion-fast) ease; }
     .dropdown-panel svg { opacity: .7; flex-shrink: 0; }
     .dropdown-panel a:hover, .dropdown-panel button:hover { background: var(--color-bg-warm); text-decoration: none; }

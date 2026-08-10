@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { PopupOrigin, popupOriginFromEvent } from '../utils/popup-origin';
 
 export interface ConfirmRequest {
   title: string;
@@ -6,6 +7,7 @@ export interface ConfirmRequest {
   confirmLabel: string;
   cancelLabel: string;
   variant: 'default' | 'danger';
+  origin: PopupOrigin;
 }
 
 /** Layanan dialog konfirmasi reusable — pengganti `confirm()` bawaan browser
@@ -20,6 +22,7 @@ export class AlertService {
   confirm(
     message: string,
     opts?: Partial<Pick<ConfirmRequest, 'title' | 'confirmLabel' | 'cancelLabel' | 'variant'>>,
+    event?: Event,
   ): Promise<boolean> {
     this.request.set({
       title: opts?.title ?? 'Konfirmasi',
@@ -27,6 +30,7 @@ export class AlertService {
       confirmLabel: opts?.confirmLabel ?? 'Ya, Lanjutkan',
       cancelLabel: opts?.cancelLabel ?? 'Batal',
       variant: opts?.variant ?? 'default',
+      origin: popupOriginFromEvent(event),
     });
     return new Promise<boolean>((resolve) => { this.resolver = resolve; });
   }

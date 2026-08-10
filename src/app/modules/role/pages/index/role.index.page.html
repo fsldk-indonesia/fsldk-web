@@ -1,6 +1,6 @@
 <div class="flex justify-between items-center page-head">
   <div><h1>Manajemen Role</h1><p class="text-muted">Atur peran dan hak akses (permission) pengguna.</p></div>
-  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Tambah Role</button> }
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate($event)">+ Tambah Role</button> }
 </div>
 
 @if (loading()) {
@@ -41,9 +41,9 @@
                 class="link-danger"
                 [attr.aria-disabled]="r.isSystemRole || r.userCount > 0 ? true : null"
                 [title]="r.isSystemRole ? 'Role bawaan sistem tidak dapat dihapus' : (r.userCount > 0 ? 'Role masih dipakai pengguna, tidak dapat dihapus' : '')"
-                (click)="remove(r)">Hapus</span>
+                (click)="remove(r, $event)">Hapus</span>
             }
-            @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openEdit(r)">Edit Role</button> }
+            @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openEdit(r, $event)">Edit Role</button> }
           </div>
         </div>
       </div>
@@ -53,7 +53,7 @@
 
 @if (showForm()) {
   <div class="modal-backdrop" (click)="close()">
-    <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ editId ? 'Ubah Role' : 'Tambah Role' }}</h3>
       <div class="modal-columns">
         <div class="modal-col-left">
