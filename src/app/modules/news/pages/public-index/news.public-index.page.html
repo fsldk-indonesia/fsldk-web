@@ -43,9 +43,15 @@
           </a>
         } @empty {
           <div class="empty-state" style="grid-column:1/-1; min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
-            <span class="icon-badge lg icon-badge-neutral" style="margin:0 auto 14px"><app-icon name="search" [size]="26" /></span>
-            <h4>Tidak ada berita ditemukan</h4>
-            <p>Coba ubah kata kunci pencarian atau kategori yang dipilih.</p>
+            @if (search || activeCat) {
+              <span class="icon-badge lg icon-badge-neutral" style="margin:0 auto 14px"><app-icon name="search" [size]="26" /></span>
+              <h4>Tidak ada berita ditemukan</h4>
+              <p>Coba ubah kata kunci pencarian atau kategori yang dipilih.</p>
+            } @else {
+              <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="newspaper" [size]="26" /></span>
+              <h4>Belum ada berita</h4>
+              <p>Berita yang dipublikasikan akan muncul di sini.</p>
+            }
           </div>
         }
       </div>
