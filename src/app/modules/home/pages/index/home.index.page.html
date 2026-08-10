@@ -2,27 +2,47 @@
   <div class="hero-texture" aria-hidden="true"></div>
   <div class="container hero-grid">
     <div class="hero-copy">
-      <span class="hero-badge">● 40 Tahun Merajut Ukhuwah · Sejak 1986</span>
+      <span class="hero-badge"><span class="hero-badge-dot"></span> {{ yearsSinceFounding }} Tahun Merajut Ukhuwah · Sejak {{ foundedYear }}</span>
       <h1 class="hero-title">Menyatukan Langkah <span class="text-primary">Dakwah Kampus</span> se-Indonesia</h1>
       <p class="hero-sub">FSLDK Indonesia adalah forum silaturahmi dan pusat koordinasi bagi Lembaga Dakwah Kampus di seluruh negeri — merawat ukhuwah, membina kader, dan menggerakkan dakwah yang terpadu dan kompak.</p>
     </div>
-    <div class="hero-visual" aria-hidden="true">
-      <div class="hero-orbit-system">
-        <div class="hero-orbit-disc float-accent"></div>
-        <div class="hero-orbit-ring"></div>
-        <div class="hero-orbit-logo">
-          <img src="assets/logo-fsldk-removebg.png" alt="Logo FSLDK Indonesia">
-        </div>
-        <div class="hero-orbit-node node-1 float-accent" style="animation-delay:.2s">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c2.5.3 4.5 2.3 4.8 5.5"/></svg>
-        </div>
-        <div class="hero-orbit-node node-2 float-accent" style="animation-delay:.6s">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H11v16H5.5A1.5 1.5 0 014 18.5v-13Z"/><path d="M20 5.5c0-.8-.7-1.5-1.5-1.5H13v16h5.5a1.5 1.5 0 001.5-1.5v-13Z"/></svg>
-        </div>
-        <div class="hero-orbit-node node-3 float-accent" style="animation-delay:1s">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="12" cy="18" r="2.4"/><path d="M7.8 7.3 10.5 16M16.2 7.3 13.5 16M8.4 6h7.2"/></svg>
-        </div>
-      </div>
+    <div class="hero-network" aria-hidden="true">
+      <span class="hero-network-badge">
+        <img src="assets/logo-fsldk-removebg.png" alt="">
+        <span>Puskomnas<br><small>1986 · Yogyakarta</small></span>
+      </span>
+      <svg viewBox="0 0 640 240" class="hero-network-svg">
+        <!-- Siluet kepulauan Indonesia — proyeksi Mercator dari data pantai
+             asli (Natural Earth 1:110m via package `world-atlas` + `d3-geo`,
+             digenerate sekali lewat skrip Node, bukan digambar tangan),
+             supaya bentuknya benar-benar dikenali sebagai Indonesia. -->
+        <path class="island-silhouette" d="M629.561,121.863L629.805,166.155L630,210.707L617.946,199.45L604.185,196.714L600.818,200.609L583.64,201.026L589.399,189.882L597.939,186.087L594.425,171.254L587.886,159.815L561.632,148.3L550.457,147.149L530.107,134.592L526.105,141.191L520.884,142.387L517.81,137.419L517.761,131.512L507.415,124.849L522.006,119.957L531.669,120.209L530.546,116.627L510.685,116.604L505.317,108.524L493.214,106.022L487.505,99.298L505.756,96.017L512.686,91.612L534.45,97.164L536.597,102.212L540.404,124.137L554.409,132.27L565.731,117.867L581.298,109.694L593.351,109.671L604.966,114.4L615.018,119.268ZM412.256,207.617L413.622,210.335L413.866,214.496L405.033,224.763L393.419,227.794L391.809,226.138L393.029,221.454L398.836,213.078ZM537.525,180.284L536.207,170.008L538.598,165.117L541.429,160.506L544.503,164.495L544.503,171ZM316.169,30.465L308.459,42.719L318.414,55.582L316.072,61.827L331.297,74.358L315.242,75.964L310.704,85.21L311.289,97.485L298.26,106.756L297.918,120.278L292.697,141.03L290.696,136.201L275.275,142.318L269.907,134.017L260.245,133.236L253.462,128.892L237.358,133.764L232.429,127.215L223.547,127.95L212.372,126.388L210.274,108.179L203.54,104.415L197,92.828L195.146,80.966L196.708,68.391L204.76,59.394L207.053,68.46L216.325,76.125L225.06,73.348L233.698,74.335L241.603,67.473L248.094,66.28L260.928,70.09L271.957,67.198L278.935,48.325L284.157,43.615L288.841,28.164L304.409,28.164ZM471.938,124.596L486.822,128.547L491.75,138.937L480.331,133.327L469.01,132.201L461.348,133.098L451.979,132.615L455.151,125.147ZM438.071,138.017L428.701,135.534L426.066,129.696L439.779,129.03L443.146,133.511ZM452.418,57.121L453.394,64.513L461.397,65.706L462.666,71.237L461.934,83.1L454.956,81.769L452.906,90.005L458.469,97.164L454.663,98.793L449.197,90.212L445.196,72.889L447.928,62.057ZM384.586,74.725L400.153,74.151L413.573,64.306L415.916,67.336L405.033,80.805L394.834,83.398L381.805,80.759L359.211,81.425L347.352,83.375L345.449,93.631L357.551,105.701L364.871,99.55L390.15,94.938L389.076,101.18L383.171,99.206L377.266,107.169L365.311,112.426L378.145,129.811L375.705,134.477L387.856,150.165L387.758,159.101L380.536,163.088L375.217,158.317L381.756,147.172L368.434,152.444L365.067,148.668L366.823,143.422L357.063,135.465L358.088,122.23L349.011,126.342L350.183,142.18L350.719,161.659L342.131,163.618L336.323,159.631L340.179,147.103L338.08,133.994L332.371,133.902L328.174,124.596L333.786,115.709L335.738,104.943L342.521,84.499L345.351,78.924L356.917,68.85L367.506,72.843ZM348.865,226.394L330.907,216.752L343.546,214.054L350.671,218.241L355.404,222.433L354.575,226.138ZM363.066,202.743L372.094,201.699L384.245,196.691L382.244,204.298L361.895,208.198L343.839,206.503L343.839,201.49L354.575,198.638ZM321.293,200.354L329.687,199.241L333.054,205.063L317.389,207.826L307.971,209.661L300.7,209.545L305.336,201.653L312.802,201.537L316.413,196.691ZM188.802,173.839L190.656,178.689L216.667,180.053L219.643,174.416L244.775,180.977L249.704,189.836L270.054,192.336L286.694,200.47L271.225,205.69L256.292,200.168L244.043,200.539L229.989,199.519L217.301,197.062L201.588,191.85L191.632,190.484L185.972,192.197L161.279,186.573L158.937,180.7L146.493,179.683L155.813,166.662L172.259,167.47L183.19,172.8ZM133.024,101.294L135.318,110.75L140.051,118.326L150.006,119.52L156.594,128.111L153.178,145.009L152.641,166.063L137.611,166.34L126.192,154.954L108.819,143.859L103.012,135.626L92.764,124.573L86.03,114.4L75.684,95.42L63.777,84.109L59.824,72.453L54.798,61.873L42.598,53.332L35.522,41.708L25.323,34.122L11.171,19.118L10,12.206L18.686,12.759L39.67,15.386L51.675,28.671L62.167,37.893L69.633,43.546L82.468,58.131L96.278,58.338L107.648,67.634L115.505,78.993L125.802,85.187L120.385,96.246L128.144,100.95Z" />
+
+        <!-- Garis koneksi: dari Puskomnas (Yogyakarta, di Jawa) menjangkau simpul
+             daerah di tiap pulau (koordinat kota asli, hasil proyeksi yang sama
+             dengan siluetnya) — Medan/Sumatera, Pontianak/Kalimantan,
+             Makassar/Sulawesi, Denpasar/Bali, Ambon/Maluku, Jayapura/Papua. -->
+        <path class="network-line thick" d="M214,193 L56,38" style="animation-delay:.1s" />
+        <path class="network-line thick" d="M214,193 L200,87" style="animation-delay:.2s" />
+        <path class="network-line thick" d="M214,193 L280,205" style="animation-delay:.3s" />
+        <path class="network-line thick" d="M214,193 L337,157" style="animation-delay:.4s" />
+        <path class="network-line thick" d="M214,193 L456,137" style="animation-delay:.5s" />
+        <path class="network-line thick" d="M214,193 L626,121" style="animation-delay:.6s" />
+        <path class="network-line" d="M200,87 L337,157" style="animation-delay:.8s" />
+        <path class="network-line" d="M337,157 L456,137" style="animation-delay:1s" />
+        <path class="network-line" d="M456,137 L626,121" style="animation-delay:1.2s" />
+
+        <!-- Simpul: Puskomnas di Jawa (besar, tempat FSLDK berdiri 1986), simpul
+             daerah/LDK menyebar di tiap pulau — diperbesar & dicerahkan supaya
+             jaringan ini jadi elemen hero utama, bukan detail kecil yang tenggelam. -->
+        <circle class="network-node" cx="214" cy="193" r="15" style="animation-delay:0s" />
+        <circle class="network-node gold" cx="56" cy="38" r="11" style="animation-delay:.2s" />
+        <circle class="network-node ember" cx="200" cy="87" r="10" style="animation-delay:.5s" />
+        <circle class="network-node" cx="280" cy="205" r="8" style="animation-delay:.7s" />
+        <circle class="network-node gold" cx="337" cy="157" r="10" style="animation-delay:.3s" />
+        <circle class="network-node ember" cx="456" cy="137" r="9" style="animation-delay:.9s" />
+        <circle class="network-node" cx="626" cy="121" r="11" style="animation-delay:.6s" />
+      </svg>
     </div>
   </div>
 </section>
@@ -30,9 +50,9 @@
 <section class="section stats-strip">
   <div class="container">
     <div class="stats-row">
-      <div class="stat-item"><b>1986</b><span>Tahun berdiri, di Yogyakarta</span></div>
-      <div class="stat-item"><b>{{ orgStructure.length }}</b><span>Tingkatan jaringan nasional</span></div>
-      <div class="stat-item"><b>{{ missionList.length }}</b><span>Misi utama perjuangan</span></div>
+      <div class="stat-item reveal"><b>1986</b><span>Tahun berdiri, di Yogyakarta</span></div>
+      <div class="stat-item reveal"><b>{{ orgStructure.length }}</b><span>Tingkatan jaringan nasional</span></div>
+      <div class="stat-item reveal"><b>{{ missionList.length }}</b><span>Misi utama perjuangan</span></div>
     </div>
   </div>
 </section>
@@ -60,7 +80,7 @@
       } @else {
         <div class="grid grid-3">
           @for (n of news(); track n.newsID) {
-            <a class="news-card" [routerLink]="['/berita', n.newsSlug]">
+            <a class="news-card reveal" [routerLink]="['/berita', n.newsSlug]">
               <div class="news-thumb">@if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <span>FOTO BERITA</span> }</div>
               <div class="news-body">
                 <span class="chip chip-green">{{ n.categoryName }}</span>
@@ -128,7 +148,7 @@
     <div class="text-center" style="margin-bottom:32px"><span class="eyebrow">Struktur Organisasi</span><h2>Jaringan FSLDK Indonesia</h2></div>
     <div class="grid grid-3">
       @for (o of orgStructure; track o.position) {
-        <div class="card card-pad org">
+        <div class="card card-pad org reveal">
           <div class="avatar big-av">{{ o.memberName.charAt(0) }}</div>
           <h3>{{ o.memberName }}</h3>
           <p class="text-muted">{{ o.position }}</p>
@@ -140,29 +160,13 @@
 </section>
 
 <section class="section cta-band">
-  <div class="container cta-inner reveal">
-    <div>
-      <h2>Siap jadi bagian gerakan ini?</h2>
-      <p class="text-muted" style="color:rgba(255,255,255,.85)">Ikuti kabar terbaru dan silaturahmi bersama FSLDK Indonesia.</p>
-    </div>
-    <a routerLink="/berita" class="btn cta-btn">Baca Berita Terbaru</a>
-  </div>
-</section>
-
-<section class="section" id="kontak">
-  <div class="container narrow text-center">
-    <span class="eyebrow">Kontak</span>
-    <h2>Hubungi FSLDK Indonesia</h2>
-    <p class="text-muted">Sampaikan pertanyaan, kolaborasi, atau silaturahmi bersama kami.</p>
-    <div class="grid grid-2 mt-lg">
-      <div class="card card-pad">
-        <h3>Email</h3>
-        <p><a [href]="'mailto:' + contactEmail">{{ contactEmail }}</a></p>
+  <div class="container">
+    <div class="cta-inner reveal">
+      <div>
+        <h2>Siap jadi bagian gerakan ini?</h2>
+        <p class="text-muted" style="color:rgba(255,255,255,.85)">Ikuti kabar terbaru dan silaturahmi bersama FSLDK Indonesia.</p>
       </div>
-      <div class="card card-pad">
-        <h3>Instagram</h3>
-        <p><a [href]="'https://instagram.com/' + contactInstagram" target="_blank" rel="noopener">&#64;{{ contactInstagram }}</a></p>
-      </div>
+      <a routerLink="/berita" class="btn cta-btn">Baca Berita Terbaru</a>
     </div>
   </div>
 </section>
