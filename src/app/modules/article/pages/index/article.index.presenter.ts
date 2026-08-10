@@ -16,15 +16,15 @@ export class ArticleIndexPresenter extends BasePresenter<ArticleIndexView> {
 
   togglePublish(a: Article): void {
     this.articleRepo.publish(a.articleID, !a.isPublished).subscribe({
-      next: () => { this.toast.success(a.isPublished ? 'Publikasi ditarik' : 'Artikel dipublikasikan'); this.view.onPublishToggleSuccess(); },
-      error: () => {},
+      next: () => { this.toast.success(a.isPublished ? 'Publikasi ditarik' : 'Artikel dipublikasikan'); this.view.onPublishToggleSuccess(); this.view.onActionSettled(a.articleID); },
+      error: () => this.view.onActionSettled(a.articleID),
     });
   }
 
   remove(a: Article): void {
     this.articleRepo.remove(a.articleID).subscribe({
-      next: () => { this.toast.success('Artikel dihapus'); this.view.onRemoveSuccess(); },
-      error: () => {},
+      next: () => { this.toast.success('Artikel dihapus'); this.view.onRemoveSuccess(); this.view.onActionSettled(a.articleID); },
+      error: () => this.view.onActionSettled(a.articleID),
     });
   }
 }

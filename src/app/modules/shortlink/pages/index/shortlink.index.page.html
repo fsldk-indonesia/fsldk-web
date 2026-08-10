@@ -27,7 +27,7 @@
               <td>
                 <div class="flex items-center gap-sm">
                   <code class="key">{{ s.shortURL }}</code>
-                  <span class="link-action" (click)="copy(s.shortURL)">Salin</span>
+                  <button type="button" class="icon-action" (click)="copy(s.shortURL)" title="Salin tautan"><app-icon name="copy" [size]="13" /></button>
                 </div>
               </td>
               <td class="text-muted destination" [title]="s.destinationURL">{{ s.destinationURL }}</td>
@@ -35,8 +35,14 @@
               <td class="text-muted">{{ s.createdDate | date:'d MMM yyyy' }}</td>
               <td>
                 <div class="table-actions">
-                  @if (canUpdate) { <span class="link-action" (click)="openEdit(s)">Edit</span> }
-                  @if (canDelete) { <span class="link-danger" (click)="remove(s)">Hapus</span> }
+                  @if (canUpdate) {
+                    <button type="button" class="icon-action" (click)="openEdit(s)" title="Edit"><app-icon name="edit" [size]="14" /></button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(s.shortLinkID)" (click)="remove(s)" title="Hapus">
+                      @if (isBusy(s.shortLinkID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

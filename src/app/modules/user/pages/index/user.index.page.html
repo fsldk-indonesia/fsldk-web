@@ -30,8 +30,14 @@
               <td><span class="badge" [class.badge-active]="u.isActive" [class.badge-inactive]="!u.isActive">{{ u.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
               <td>
                 <div class="table-actions">
-                  @if (canUpdate) { <span class="link-action" (click)="openEdit(u)">Edit</span> }
-                  @if (canDelete) { <span class="link-danger" (click)="remove(u)">Hapus</span> }
+                  @if (canUpdate) {
+                    <button type="button" class="icon-action" (click)="openEdit(u)" title="Edit"><app-icon name="edit" [size]="14" /></button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(u.userID)" (click)="remove(u)" title="Hapus">
+                      @if (isBusy(u.userID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

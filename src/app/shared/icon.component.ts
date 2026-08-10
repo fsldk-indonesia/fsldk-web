@@ -38,6 +38,11 @@ const ICONS: Record<string, string> = {
   'alert-triangle': 'fas fa-triangle-exclamation',
   'help-circle': 'fas fa-circle-question',
   trash: 'fas fa-trash-can',
+  // Aksi tabel CMS (app-icon di tombol ikon Edit/Publish/Salin).
+  edit: 'fas fa-pen',
+  eye: 'fas fa-eye',
+  'eye-off': 'fas fa-eye-slash',
+  copy: 'fas fa-copy',
 };
 
 /**
