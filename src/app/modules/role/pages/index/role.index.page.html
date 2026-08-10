@@ -33,7 +33,7 @@
           @for (p of r.permissions.slice(0, 6); track p) { <span class="chip chip-green">{{ p }}</span> }
           @if (r.permissions.length > 6) { <span class="chip">+{{ r.permissions.length - 6 }}</span> }
         </div>
-        <div class="flex justify-between items-center mt">
+        <div class="flex justify-between items-center card-footer">
           <span class="text-muted">{{ r.userCount }} pengguna</span>
           <div class="card-actions">
             @if (canDelete) {
