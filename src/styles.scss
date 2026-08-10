@@ -489,13 +489,29 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 }
 @keyframes stagger-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
+/* ---------- Popup "ditarik keluar dari tombolnya" ----------
+   Dipakai pada modal/dialog yang di-center lewat flexbox (posisi akhirnya
+   baru diketahui setelah layout) — bukan transform-origin CSS biasa.
+   --dx/--dy (offset piksel dari pusat viewport ke tombol yang diklik,
+   dihitung lewat popupOriginFromEvent()) dipasang sebagai inline style di
+   elemen modal; tanpa nilai itu popup tetap tumbuh dari titik tengahnya
+   sendiri (fallback 0,0), tidak pernah pecah kalau originnya tak tersedia. */
+.modal-pop {
+  animation: modal-pop-in var(--motion-slow) var(--ease-out) both;
+}
+@keyframes modal-pop-in {
+  from { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25); }
+  to { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+
 /* ---------- Aksesibilitas: hormati preferensi pengurangan gerak ---------- */
 @media (prefers-reduced-motion: reduce) {
   .spinner, .skel, .btn, .chip, .card-hover, .form-control,
-  .network-node, .network-line, .stagger-in {
+  .network-node, .network-line, .stagger-in, .modal-pop {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
   }
   .stagger-in { opacity: 1; transform: none; }
+  .modal-pop { opacity: 1; transform: none; }
 }

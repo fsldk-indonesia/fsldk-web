@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
+import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { Role } from '../../entities/role';
 import { Permission } from '../../../permission/entities/permission';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -75,6 +76,7 @@ export class RoleIndexPage implements OnInit, RoleIndexView {
   editingSystemRole = false;
   selected = new Set<number>();
   saving = signal(false);
+  popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
   form: RoleFormValue = { roleName: '', roleDescription: '', isActive: true };
   canCreate = this.auth.hasPermission('role.create');
   canUpdate = this.auth.hasPermission('role.update');
@@ -95,14 +97,16 @@ export class RoleIndexPage implements OnInit, RoleIndexView {
   }
   moduleKeys(): string[] { return Object.keys(this.grouped()); }
 
-  openCreate(): void {
+  openCreate(event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
     this.editId = null;
     this.editingSystemRole = false;
     this.form = { roleName: '', roleDescription: '', isActive: true };
     this.selected = new Set();
     this.showForm.set(true);
   }
-  openEdit(r: Role): void {
+  openEdit(r: Role, event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
     this.editId = r.roleID;
     this.editingSystemRole = r.isSystemRole;
     this.form = { roleName: r.roleName, roleDescription: r.roleDescription, isActive: r.isActive };
@@ -114,11 +118,11 @@ export class RoleIndexPage implements OnInit, RoleIndexView {
 
   save(): void { this.presenter.save(this.editId, this.form, [...this.selected]); }
 
-  async remove(r: Role): Promise<void> {
+  async remove(r: Role, event?: Event): Promise<void> {
     if (r.isSystemRole || r.userCount > 0) return;
     const ok = await this.alert.confirm(`Hapus role "${r.roleName}"? Tindakan ini tidak dapat dibatalkan.`, {
       title: 'Hapus Role', confirmLabel: 'Ya, Hapus', variant: 'danger',
-    });
+    }, event);
     if (!ok) return;
     this.presenter.remove(r.roleID);
   }

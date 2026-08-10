@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
+import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { UserRow } from '../../entities/user';
 import { Role } from '../../../role/entities/role';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -37,6 +38,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
   showForm = signal(false);
   saving = signal(false);
   busy = signal<ReadonlySet<number>>(new Set());
+  popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
   editId: number | null = null;
   form: UserFormValue = { fullName: '', email: '', password: '', roleID: 0, isActive: true };
 
@@ -56,12 +58,14 @@ export class UserIndexPage implements OnInit, UserIndexView {
   applySearch(): void { this.page.set(1); this.load(); }
   goPage(p: number): void { this.page.set(p); this.load(); }
 
-  openCreate(): void {
+  openCreate(event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
     this.editId = null;
     this.form = { fullName: '', email: '', password: '', roleID: this.roles()[0]?.roleID ?? 0, isActive: true };
     this.showForm.set(true);
   }
-  openEdit(u: UserRow): void {
+  openEdit(u: UserRow, event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
     this.editId = u.userID;
     this.form = { fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive };
     this.showForm.set(true);
@@ -73,10 +77,10 @@ export class UserIndexPage implements OnInit, UserIndexView {
   private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
 
   save(): void { this.presenter.save(this.editId, this.form); }
-  async remove(u: UserRow): Promise<void> {
+  async remove(u: UserRow, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus pengguna ${u.fullName}? Tindakan ini tidak dapat dibatalkan.`, {
       title: 'Hapus Pengguna', confirmLabel: 'Ya, Hapus', variant: 'danger',
-    });
+    }, event);
     if (!ok) return;
     this.setBusy(u.userID);
     this.presenter.remove(u.userID);

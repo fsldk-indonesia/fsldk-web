@@ -23,12 +23,12 @@ import { IconComponent } from '../shared/icon.component';
           <span>FSLDK <b>CMS</b></span>
         </div>
         <nav class="side-nav">
-          <a routerLink="/cms/dashboard" routerLinkActive="active" (click)="close()">
+          <a routerLink="/cms/dashboard" routerLinkActive="active" (click)="close()" class="stagger-in" style="--stagger-i:0">
             <span class="icon-badge sm icon-badge-soft"><app-icon name="dashboard" [size]="17" /></span> Dashboard
             <span class="side-nav-dot"></span>
           </a>
-          @for (m of menus(); track m.menuRoute) {
-            <a [routerLink]="m.menuRoute" routerLinkActive="active" (click)="close()">
+          @for (m of menus(); track m.menuRoute; let i = $index) {
+            <a [routerLink]="m.menuRoute" routerLinkActive="active" (click)="close()" class="stagger-in" [style.--stagger-i]="i + 1">
               <span class="icon-badge sm icon-badge-soft"><app-icon [name]="m.menuIcon" [size]="17" /></span> {{ m.menuLabel }}
               <span class="side-nav-dot"></span>
             </a>
@@ -98,10 +98,10 @@ import { IconComponent } from '../shared/icon.component';
     .brand-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); overflow: hidden; flex-shrink: 0; }
     .brand-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .side-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .side-nav a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
-    .side-nav a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; }
+    .side-nav a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .side-nav a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; transform: translateX(3px); }
     .side-nav a.active { background: var(--color-primary); color: #fff; }
-    .side-nav a.active:hover { background: var(--color-primary-dark); color: #fff; }
+    .side-nav a.active:hover { background: var(--color-primary-dark); color: #fff; transform: translateX(3px); }
     .side-nav a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
     /* Ikon di item aktif: lingkaran kaca-buram di atas hijau solid, bukan
        gradasi terang yang justru tenggelam di latar hijau. */
@@ -123,7 +123,17 @@ import { IconComponent } from '../shared/icon.component';
     .user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
     .user-meta small { color: var(--color-muted); font-size: .78rem; }
     .caret { font-size: .7rem; color: var(--color-muted); }
-    .dropdown-panel { position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px; display: flex; flex-direction: column; z-index: 30; }
+    /* Dropdown ini di-toggle lewat @if (bukan class .open), jadi elemennya
+       baru dibuat browser persis saat dibuka — animasi "tumbuh dari sudut
+       tombol" cukup lewat keyframe sekali jalan, tanpa perlu state open/closed. */
+    .dropdown-panel {
+      position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px;
+      display: flex; flex-direction: column; z-index: 30;
+      transform-origin: top right; animation: dropdown-panel-in var(--motion-base) var(--ease-out) both;
+    }
+    @keyframes dropdown-panel-in { from { opacity: 0; transform: scale(.85) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
     .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; color: var(--color-text); transition: background var(--motion-fast) ease; }
     .dropdown-panel svg { opacity: .7; flex-shrink: 0; }
     .dropdown-panel a:hover, .dropdown-panel button:hover { background: var(--color-bg-warm); text-decoration: none; }

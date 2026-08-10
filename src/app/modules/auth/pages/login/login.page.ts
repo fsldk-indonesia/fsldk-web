@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GoogleButtonComponent } from '../../../../shared/google-button.component';
+import { PasswordFieldComponent } from '../../../../shared/password-field.component';
 import { environment } from '../../../../../environments/environment';
 import { LoginPresenter } from './login.presenter';
 import { LoginView } from './login.view';
@@ -10,7 +11,7 @@ import { LoginView } from './login.view';
   selector: 'app-login-page',
   standalone: true,
   templateUrl: './login.page.html',
-  imports: [FormsModule, RouterLink, GoogleButtonComponent],
+  imports: [FormsModule, RouterLink, GoogleButtonComponent, PasswordFieldComponent],
   providers: [LoginPresenter],
   styles: [`
     h2 { margin-bottom: 4px; } .subtitle { color: var(--color-text-secondary); margin: 0 0 24px; }

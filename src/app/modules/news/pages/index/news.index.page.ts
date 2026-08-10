@@ -45,10 +45,10 @@ export class NewsIndexPage implements OnInit, NewsIndexView {
   private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
 
   togglePublish(n: News): void { this.setBusy(n.newsID); this.presenter.togglePublish(n); }
-  async remove(n: News): Promise<void> {
+  async remove(n: News, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus berita "${n.newsTitle}"? Tindakan ini tidak dapat dibatalkan.`, {
       title: 'Hapus Berita', confirmLabel: 'Ya, Hapus', variant: 'danger',
-    });
+    }, event);
     if (!ok) return;
     this.setBusy(n.newsID);
     this.presenter.remove(n);

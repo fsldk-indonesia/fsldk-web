@@ -50,8 +50,9 @@ export interface SelectOption {
       position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs);
       box-shadow: var(--shadow-lg); list-style: none; margin: 0; padding: 6px; max-height: 240px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 3px;
     }
-    .app-select-menu li { padding: 10px 12px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
+    .app-select-menu li { padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
     .app-select-menu li:hover { background: var(--color-bg-alt); }
     .app-select-menu li.selected { background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; }
     .app-select-menu li.empty { color: var(--color-muted); cursor: default; }

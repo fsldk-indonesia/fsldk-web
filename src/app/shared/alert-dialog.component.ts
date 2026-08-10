@@ -14,7 +14,8 @@ import { IconComponent } from './icon.component';
   template: `
     @if (alert.request(); as req) {
       <div class="alert-backdrop" (click)="cancel()">
-        <div class="alert-card" [class.danger]="req.variant === 'danger'" role="alertdialog" aria-modal="true"
+        <div class="alert-card modal-pop" [class.danger]="req.variant === 'danger'" role="alertdialog" aria-modal="true"
+             [style.--dx.px]="req.origin.dx" [style.--dy.px]="req.origin.dy"
              [attr.aria-label]="req.title" (click)="$event.stopPropagation()">
           <div class="alert-header pattern-motif pattern-motif-light">
             <svg class="alert-glyph" width="30" height="22" viewBox="0 0 30 22" aria-hidden="true">
@@ -55,10 +56,8 @@ import { IconComponent } from './icon.component';
     .alert-card {
       width: 100%; max-width: 380px; background: #fff; border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg); overflow: hidden;
-      animation: alert-card-in var(--motion-slow) var(--ease-out) both;
     }
-    @keyframes alert-card-in { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
-    @media (prefers-reduced-motion: reduce) { .alert-backdrop, .alert-card { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .alert-backdrop { animation: none; } }
 
     .alert-header {
       position: relative; display: flex; justify-content: center; padding: 28px 0 34px;
