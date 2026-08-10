@@ -8,23 +8,36 @@ import { NgClass } from '@angular/common';
  *  backend (lk_permission.menuIcon: newspaper, file-text, users,
  *  shield-check, link). */
 const ICONS: Record<string, string> = {
-  dashboard: 'fa-tachometer-alt',
-  newspaper: 'fa-newspaper',
-  'file-text': 'fa-file-alt',
-  users: 'fa-users',
-  'user-group': 'fa-users',
-  'shield-check': 'fa-user-shield',
-  link: 'fa-link',
-  home: 'fa-home',
-  book: 'fa-book',
-  globe: 'fa-globe',
-  'empty-box': 'fa-box-open',
-  error: 'fa-exclamation-triangle',
-  search: 'fa-search',
-  guest: 'fa-user',
-  'user-plus': 'fa-user-plus',
-  'log-in': 'fa-sign-in-alt',
-  'log-out': 'fa-sign-out-alt',
+  dashboard: 'fas fa-tachometer-alt',
+  newspaper: 'fas fa-newspaper',
+  'file-text': 'fas fa-file-alt',
+  users: 'fas fa-users',
+  'user-group': 'fas fa-users',
+  'shield-check': 'fas fa-user-shield',
+  link: 'fas fa-link',
+  home: 'fas fa-home',
+  book: 'fas fa-book',
+  globe: 'fas fa-globe',
+  'empty-box': 'fas fa-box-open',
+  error: 'fas fa-exclamation-triangle',
+  search: 'fas fa-search',
+  guest: 'fas fa-user',
+  'user-plus': 'fas fa-user-plus',
+  'log-in': 'fas fa-sign-in-alt',
+  'log-out': 'fas fa-sign-out-alt',
+  // Ikon merek (butuh set "fab", bukan "fas") — dipakai untuk tautan media sosial di footer.
+  instagram: 'fab fa-instagram',
+  facebook: 'fab fa-facebook',
+  tiktok: 'fab fa-tiktok',
+  'x-twitter': 'fab fa-x-twitter',
+  youtube: 'fab fa-youtube',
+  // Dipakai toast & dialog konfirmasi (app-toast, app-alert-dialog).
+  'check-circle': 'fas fa-circle-check',
+  'x-circle': 'fas fa-circle-xmark',
+  'info-circle': 'fas fa-circle-info',
+  'alert-triangle': 'fas fa-triangle-exclamation',
+  'help-circle': 'fas fa-circle-question',
+  trash: 'fas fa-trash-can',
 };
 
 /**
@@ -38,11 +51,11 @@ const ICONS: Record<string, string> = {
   selector: 'app-icon',
   standalone: true,
   imports: [NgClass],
-  template: `<i class="fas" [ngClass]="faClass" [style.fontSize.px]="size" aria-hidden="true"></i>`,
+  template: `<i [ngClass]="faClass" [style.fontSize.px]="size" aria-hidden="true"></i>`,
 })
 export class IconComponent {
-  @Input() set name(value: string) { this.faClass = ICONS[value] ?? 'fa-circle-question'; }
+  @Input() set name(value: string) { this.faClass = ICONS[value] ?? 'fas fa-circle-question'; }
   @Input() size = 16;
 
-  faClass = 'fa-circle-question';
+  faClass = 'fas fa-circle-question';
 }

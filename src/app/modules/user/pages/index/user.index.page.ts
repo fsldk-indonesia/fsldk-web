@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../repositories/auth.repository';
+import { AlertService } from '../../../../core/services/alert.service';
 import { UserRow } from '../../entities/user';
 import { Role } from '../../../role/entities/role';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -24,6 +25,7 @@ import { UserIndexView } from './user.index.view';
 export class UserIndexPage implements OnInit, UserIndexView {
   private presenter = inject(UserIndexPresenter);
   private auth = inject(AuthRepository);
+  private alert = inject(AlertService);
 
   users = signal<UserRow[]>([]);
   roles = signal<Role[]>([]);
@@ -66,8 +68,11 @@ export class UserIndexPage implements OnInit, UserIndexView {
   close(): void { this.showForm.set(false); }
 
   save(): void { this.presenter.save(this.editId, this.form); }
-  remove(u: UserRow): void {
-    if (!confirm(`Hapus pengguna ${u.fullName}?`)) return;
+  async remove(u: UserRow): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus pengguna ${u.fullName}? Tindakan ini tidak dapat dibatalkan.`, {
+      title: 'Hapus Pengguna', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    });
+    if (!ok) return;
     this.presenter.remove(u.userID);
   }
 

@@ -25,10 +25,12 @@ import { IconComponent } from '../shared/icon.component';
         <nav class="side-nav">
           <a routerLink="/cms/dashboard" routerLinkActive="active" (click)="close()">
             <span class="icon-badge sm icon-badge-soft"><app-icon name="dashboard" [size]="17" /></span> Dashboard
+            <span class="side-nav-dot"></span>
           </a>
           @for (m of menus(); track m.menuRoute) {
             <a [routerLink]="m.menuRoute" routerLinkActive="active" (click)="close()">
               <span class="icon-badge sm icon-badge-soft"><app-icon [name]="m.menuIcon" [size]="17" /></span> {{ m.menuLabel }}
+              <span class="side-nav-dot"></span>
             </a>
           }
         </nav>
@@ -73,7 +75,15 @@ import { IconComponent } from '../shared/icon.component';
     </div>
   `,
   styles: [`
-    .cms { min-height: 100dvh; background: var(--color-bg-warm); }
+    /* Motif batik Kawung yang sama dipakai di beranda, tapi opacity-nya
+       jauh lebih rendah di sini — CMS dioptimalkan untuk kecepatan kerja
+       staf (mode Operate), jadi teksturnya sekadar jejak halus, bukan
+       elemen yang ikut menarik perhatian dari data/tabel. */
+    .cms {
+      min-height: 100dvh; background-color: var(--color-bg-warm);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%2300933b' stroke-width='1' stroke-opacity='.02'%3E%3Cellipse cx='24' cy='12' rx='6' ry='10'/%3E%3Cellipse cx='24' cy='36' rx='6' ry='10'/%3E%3Cellipse cx='36' cy='24' rx='10' ry='6'/%3E%3Cellipse cx='12' cy='24' rx='10' ry='6'/%3E%3Ccircle cx='24' cy='24' r='2.4' fill='%2300933b' fill-opacity='.02' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 48px 48px;
+    }
     /* Sidebar terang mengikuti arah "Kolektif Cerah" light-first — status aktif
        dipikul penuh oleh isian hijau solid agar wayfinding tetap kuat walau
        chrome-nya sekarang terang, bukan gelap.
@@ -96,6 +106,10 @@ import { IconComponent } from '../shared/icon.component';
     /* Ikon di item aktif: lingkaran kaca-buram di atas hijau solid, bukan
        gradasi terang yang justru tenggelam di latar hijau. */
     .side-nav a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
+    /* Titik emas berdenyut di ujung item aktif — gema kecil dari motif
+       simpul jaringan yang sama dipakai di navbar publik & hero. */
+    .side-nav-dot { display: none; margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--color-gold); flex-shrink: 0; animation: node-pulse 2.4s ease-in-out infinite; }
+    .side-nav a.active .side-nav-dot { display: block; }
     .cms-main { margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; }
     .topbar { display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
     .spacer { flex: 1; }

@@ -19,55 +19,61 @@ interface OrgMember {
   imports: [RouterLink, DatePipe],
   providers: [HomeIndexPresenter],
   styles: [`
-    /* ---------- Kanvas: satu warna latar lembut untuk seluruh halaman,
-       kecuali navbar (putih, diatur sendiri), footer (gelap), dan hero
-       (tint hijau miliknya sendiri) — sesuai permintaan penyeragaman warna. ---------- */
-    .section { background: var(--color-bg-warm); }
+    /* ---------- Kanvas: satu warna latar lembut + motif batik Kawung yang
+       sama dipakai konsisten di SEMUA section polos di beranda (bukan lagi
+       flat color kosong), kecuali navbar (putih), footer (gelap, motifnya
+       sendiri via .pattern-motif-dark), dan hero (tint hijau→emas). Motif
+       ini identik dengan .pattern-motif di styles.scss global — opacity-nya
+       dibakar langsung di SVG (stroke-opacity) karena di sini dipakai sebagai
+       background-image langsung, bukan lewat ::before terpisah. ---------- */
+    .section {
+      background-color: var(--color-bg-warm);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%2300933b' stroke-width='1' stroke-opacity='.035'%3E%3Cellipse cx='24' cy='12' rx='6' ry='10'/%3E%3Cellipse cx='24' cy='36' rx='6' ry='10'/%3E%3Cellipse cx='36' cy='24' rx='10' ry='6'/%3E%3Cellipse cx='12' cy='24' rx='10' ry='6'/%3E%3Ccircle cx='24' cy='24' r='2.4' fill='%2300933b' fill-opacity='.035' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 48px 48px;
+    }
 
-    /* ---------- Hero: dua kolom, terang, tekstur titik geometris samar,
-       visual berupa komposisi ikon mengambang (bukan foto). ---------- */
-    .hero { position: relative; background: var(--color-primary-tint); padding: 56px 0 48px; overflow: hidden; }
+    /* ---------- Hero: dua kolom, latar hangat dua warna (hijau→emas) supaya
+       viewport pertama langsung "berbunyi" energic, bukan cuma tint pucat.
+       Motif geometris islami modern jadi tekstur, bukan sekadar titik. ---------- */
+    .hero { position: relative; background: linear-gradient(122deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 58%, var(--color-gold-soft) 100%); padding: 64px 0 56px; overflow: hidden; }
     .hero-texture {
-      position: absolute; inset: 0; opacity: .5; pointer-events: none;
+      position: absolute; inset: 0; opacity: .7; pointer-events: none;
       background-image: radial-gradient(circle, var(--color-primary-soft) 1.5px, transparent 1.6px);
       background-size: 26px 26px; background-position: 80% -10px;
       mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
       -webkit-mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
     }
-    .hero-grid { position: relative; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; }
-    .hero-badge { display: inline-block; background: #fff; border: 1px solid var(--color-border); color: var(--color-ember-dark); padding: 8px 18px; border-radius: var(--radius-full); font-weight: 600; font-size: .85rem; margin-bottom: 24px; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1fr 1.25fr; gap: 32px; align-items: center; }
+    /* hero-copy diberi stacking context sendiri di atas grafik jaringan —
+       cegah teks tertutup bila grafik/glow di kolom sebelah melebar. */
+    .hero-copy { position: relative; z-index: 2; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--color-gold); color: var(--color-gold-dark); padding: 8px 18px; border-radius: var(--radius-full); font-weight: 700; font-size: .85rem; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+    .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-gold); flex-shrink: 0; animation: node-pulse 2.4s ease-in-out infinite; }
     .hero-title { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.01em; max-width: 16ch; line-height: 1.08; }
     .hero-sub { max-width: 46ch; font-size: 1.05rem; color: var(--color-text-secondary); }
 
-    /* ---------- Visual hero: satu komposisi bulat menyatu — logo di pusat,
-       cincin orbit tipis, tiga ikon (ukhuwah/dakwah/jaringan) duduk persis
-       di atas cincin — bukan lagi elemen-elemen lepas yang tersebar. ---------- */
-    .hero-visual { position: relative; height: 320px; display: flex; align-items: center; justify-content: center; }
-    .hero-orbit-system { position: relative; width: 290px; height: 290px; }
-    .hero-orbit-disc {
-      position: absolute; inset: 18px; border-radius: 50%;
-      background: radial-gradient(circle at 34% 30%, #fff, var(--color-primary-soft) 78%);
-      box-shadow: 0 20px 44px rgba(4,100,40,.12);
+    /* ---------- Visual hero "Peta Silaturahmi Nusantara": siluet kepulauan
+       Indonesia sungguhan (bukan lagi diagram jaringan abstrak) — Puskomnas
+       ditandai persis di Jawa (Yogyakarta, 1986), simpul daerah/LDK tersebar
+       di tiap pulau, garis menyala menunjukkan koordinasi yang aktif. Aspek
+       rasio svg sengaja lebar (640:240) mengikuti bentang timur-barat
+       Nusantara yang sesungguhnya, bukan kotak persegi. ---------- */
+    .hero-network { position: relative; z-index: 1; height: 300px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .hero-network::before {
+      content: ""; position: absolute; inset: -4%; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 38% 78%, var(--color-gold-soft) 0%, var(--color-primary-soft) 45%, transparent 72%);
+      opacity: .85;
     }
-    .hero-orbit-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px dashed var(--color-primary-soft); }
-    .hero-orbit-logo {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 200px; height: 200px; display: flex; align-items: center; justify-content: center;
-      filter: drop-shadow(0 14px 26px rgba(4,100,40,.24));
+    .hero-network-svg { position: relative; z-index: 1; width: 100%; height: 100%; overflow: visible; }
+    .island-silhouette { fill: var(--color-primary-soft); stroke: var(--color-primary-bright); stroke-width: 1.3; stroke-linejoin: round; opacity: .95; }
+    .hero-network-badge {
+      position: absolute; bottom: 4px; left: 8px; top: auto; z-index: 2; display: flex; align-items: center; gap: 10px;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-full);
+      padding: 6px 16px 6px 6px; box-shadow: var(--shadow); font-size: .78rem; font-weight: 700;
+      color: var(--color-text); line-height: 1.3; animation: float-y 5s ease-in-out infinite;
     }
-    .hero-orbit-logo img { width: 100%; height: 100%; object-fit: contain; }
-    .hero-orbit-node {
-      position: absolute; width: 54px; height: 54px; border-radius: 50%; background: #fff;
-      display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow);
-    }
-    /* margin-left dipakai untuk memusatkan secara horizontal (bukan
-       transform: translateX) - node ini juga punya class .float-accent, dan
-       animasi CSS pada properti transform menimpa seluruhnya, bukan
-       digabung, jadi transform statis di sini akan hilang sesaat animasi
-       mulai (itulah penyebab glitch-nya). */
-    .hero-orbit-node.node-1 { top: -6px; left: 50%; margin-left: -27px; background: var(--color-primary); color: #fff; }
-    .hero-orbit-node.node-2 { bottom: 18px; left: -10px; color: var(--color-primary-dark); }
-    .hero-orbit-node.node-3 { bottom: 18px; right: -10px; background: var(--color-ember-soft); color: var(--color-ember-dark); }
+    .hero-network-badge img { width: 30px; height: 30px; object-fit: contain; border-radius: 50%; background: var(--color-primary-soft); padding: 4px; }
+    .hero-network-badge small { font-weight: 600; color: var(--color-muted); }
 
     /* ---------- Statistik ringkas — hanya angka yang benar-benar bisa
        dipertanggungjawabkan (bukan klaim keanggotaan yang belum terverifikasi). ---------- */
@@ -107,8 +113,8 @@ interface OrgMember {
 
     @media (max-width: 900px) {
       .hero-grid, .about-grid { grid-template-columns: 1fr; }
-      .hero-visual { height: 240px; margin-top: 8px; }
-      .hero-orbit-system { transform: scale(.82); }
+      .hero-network { height: 190px; margin-top: 8px; }
+      .hero-network-svg { width: 100%; height: 100%; }
       .stats-row { grid-template-columns: 1fr; gap: 16px; }
       .cta-inner { flex-direction: column; align-items: flex-start; }
     }
@@ -140,8 +146,8 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
     { memberName: 'IKA FSLDK', position: 'Ikatan Keluarga Alumni FSLDK — wadah berhimpun alumni aktivis dakwah kampus.', level: 'Alumni' },
   ];
 
-  readonly contactEmail = 'fsldkindonesia29@gmail.com';
-  readonly contactInstagram = 'fsldkindonesia';
+  readonly foundedYear = 1986;
+  readonly yearsSinceFounding = new Date().getFullYear() - this.foundedYear;
 
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
 

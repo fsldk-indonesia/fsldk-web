@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { ToastService } from '../../../../core/services/toast.service';
+import { AlertService } from '../../../../core/services/alert.service';
 import { ShortLink } from '../../entities/shortlink';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
@@ -27,6 +28,7 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   private presenter = inject(ShortlinkIndexPresenter);
   private auth = inject(AuthRepository);
   private toast = inject(ToastService);
+  private alert = inject(AlertService);
 
   shortlinks = signal<ShortLink[]>([]);
   loading = signal(true);
@@ -66,8 +68,11 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
     this.presenter.save(this.editId, this.form);
   }
 
-  remove(s: ShortLink): void {
-    if (!confirm(`Hapus shortlink "${s.shortKey}"?`)) return;
+  async remove(s: ShortLink): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus shortlink "${s.shortKey}"? Tindakan ini tidak dapat dibatalkan.`, {
+      title: 'Hapus Shortlink', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    });
+    if (!ok) return;
     this.presenter.remove(s.shortLinkID);
   }
 

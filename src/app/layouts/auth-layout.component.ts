@@ -14,7 +14,7 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   template: `
     <section class="auth-shell container">
-      <aside class="auth-visual">
+      <aside class="auth-visual pattern-motif">
         <blockquote class="auth-ayat">
           <p>"Dan hendaklah ada di antara kamu segolongan umat yang menyeru kepada kebajikan, menyuruh kepada yang ma'ruf dan mencegah dari yang munkar; merekalah orang-orang yang beruntung."</p>
           <cite>QS. Ali 'Imran: 104</cite>
@@ -38,7 +38,11 @@ import { RouterOutlet } from '@angular/router';
     .auth-ayat cite { color: var(--color-primary); font-weight: 600; font-size: .88rem; font-style: normal; }
     .auth-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
     .auth-points li { display: flex; align-items: center; gap: 10px; color: var(--color-text-secondary); font-size: .95rem; }
-    .auth-points li::before { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--color-primary); flex-shrink: 0; }
+    /* Titik simpul berdenyut bergantian hijau/emas/ember — gema motif
+       jaringan yang sama dipakai di hero & navbar, bukan bullet polos. */
+    .auth-points li::before { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--color-primary); flex-shrink: 0; animation: node-pulse 2.6s ease-in-out infinite; }
+    .auth-points li:nth-child(2)::before { background: var(--color-gold); animation-delay: .3s; }
+    .auth-points li:nth-child(3)::before { background: var(--color-ember); animation-delay: .6s; }
     .auth-card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 36px; }
     @media (max-width: 860px) { .auth-shell { grid-template-columns: 1fr; padding: 32px 20px; } .auth-visual { display: none; } .auth-card { max-width: 100%; margin: 0 auto; } }
   `],

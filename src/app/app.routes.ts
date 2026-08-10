@@ -24,8 +24,9 @@ import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/sh
  * halaman ini diperuntukkan bagi masyarakat umum, bukan hanya pengguna CMS.
  * AuthLayoutComponent kini hanya membingkai kartu form + panel visual.
  *
- * Tentang & Kontak tidak lagi punya rute sendiri — kontennya digabung sebagai
- * bagian dari Beranda (lihat modules/home), diakses lewat anchor #tentang / #kontak.
+ * Tentang tidak lagi punya rute sendiri — kontennya digabung sebagai bagian
+ * dari Beranda (lihat modules/home), diakses lewat anchor #tentang. Kontak
+ * juga tidak punya section sendiri lagi — akun media sosial dipindah ke footer.
  *
  * shortlinkRedirectRoutes() (path `:key`) WAJIB ditaruh setelah seluruh rute
  * bernama (publik/auth/cms) dan sebelum wildcard `**` — ia menangkap path

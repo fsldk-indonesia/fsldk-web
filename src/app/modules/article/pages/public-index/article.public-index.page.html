@@ -48,6 +48,14 @@
           </div>
         }
       </div>
+
+      @if (count() > limit) {
+        <div class="pager">
+          <button class="btn btn-outline btn-sm" [disabled]="page() <= 1" (click)="go(page() - 1)">Sebelumnya</button>
+          <span>Halaman {{ page() }} dari {{ totalPages() }}</span>
+          <button class="btn btn-outline btn-sm" [disabled]="page() >= totalPages()" (click)="go(page() + 1)">Berikutnya</button>
+        </div>
+      }
     }
   </div>
 </section>

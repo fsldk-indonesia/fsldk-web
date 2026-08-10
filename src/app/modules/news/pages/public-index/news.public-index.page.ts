@@ -15,6 +15,10 @@ import { NewsPublicIndexView } from './news.public-index.view';
   imports: [RouterLink, DatePipe, FormsModule, IconComponent],
   providers: [NewsPublicIndexPresenter],
   styles: [`
+    /* Gradien hijau lembut menutupi SELURUH section (bukan cuma wash atas
+       yang memudar ke putih) — halaman pendek (mis. hasil pencarian kosong)
+       tidak lagi berakhir di area putih polos di bawahnya. */
+    .section { background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-primary-tint) 100%); }
     .filters { display: flex; flex-direction: column; gap: 16px; align-items: center; }
     .search { max-width: 460px; }
     .chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
