@@ -12,6 +12,7 @@ import { userRoutes } from './modules/user/user.routes';
 import { roleRoutes } from './modules/role/role.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { commentCmsRoutes } from './modules/comment/comment.routes';
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
@@ -60,6 +61,7 @@ export const routes: Routes = [
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...shortlinkRoutes(),
+      ...commentCmsRoutes(),
     ],
   },
 

@@ -23,6 +23,8 @@
         @else { <div class="cover placeholder">FOTO BERITA</div> }
         <div class="content" [innerHTML]="n.newsContent"></div>
         <a routerLink="/berita" class="btn btn-outline mt-lg">← Kembali ke Berita</a>
+
+        <app-comment-section contentType="news" [contentID]="n.newsID" />
       } @else {
         <div class="text-center"><h2>Berita tidak ditemukan</h2><a routerLink="/berita" class="btn btn-primary mt">Kembali ke Berita</a></div>
       }
