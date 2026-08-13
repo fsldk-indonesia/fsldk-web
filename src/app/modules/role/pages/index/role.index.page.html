@@ -1,6 +1,6 @@
 <div class="flex justify-between items-center page-head">
   <div><h1>Manajemen Role</h1><p class="text-muted">Atur peran dan hak akses (permission) pengguna.</p></div>
-  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Tambah Role</button> }
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate($event)">+ Tambah Role</button> }
 </div>
 
 @if (loading()) {
@@ -33,7 +33,7 @@
           @for (p of r.permissions.slice(0, 6); track p) { <span class="chip chip-green">{{ p }}</span> }
           @if (r.permissions.length > 6) { <span class="chip">+{{ r.permissions.length - 6 }}</span> }
         </div>
-        <div class="flex justify-between items-center mt">
+        <div class="flex justify-between items-center card-footer">
           <span class="text-muted">{{ r.userCount }} pengguna</span>
           <div class="card-actions">
             @if (canDelete) {
@@ -41,9 +41,9 @@
                 class="link-danger"
                 [attr.aria-disabled]="r.isSystemRole || r.userCount > 0 ? true : null"
                 [title]="r.isSystemRole ? 'Role bawaan sistem tidak dapat dihapus' : (r.userCount > 0 ? 'Role masih dipakai pengguna, tidak dapat dihapus' : '')"
-                (click)="remove(r)">Hapus</span>
+                (click)="remove(r, $event)">Hapus</span>
             }
-            @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openEdit(r)">Edit Role</button> }
+            @if (canUpdate) { <button class="btn btn-outline btn-sm" (click)="openEdit(r, $event)">Edit Role</button> }
           </div>
         </div>
       </div>
@@ -53,29 +53,34 @@
 
 @if (showForm()) {
   <div class="modal-backdrop" (click)="close()">
-    <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ editId ? 'Ubah Role' : 'Tambah Role' }}</h3>
-      <div class="form-group">
-        <label class="form-label">Nama Role</label>
-        <input class="form-control" [(ngModel)]="form.roleName" [disabled]="editingSystemRole">
-        @if (editingSystemRole) { <small class="text-muted">Nama role bawaan sistem tidak dapat diubah.</small> }
-      </div>
-      <div class="form-group"><label class="form-label">Deskripsi</label><input class="form-control" [(ngModel)]="form.roleDescription"></div>
-      @if (editId) { <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div> }
-
-      <p class="text-muted">Centang permission yang diberikan ke role ini.</p>
-      <div class="perm-list">
-        @for (mod of moduleKeys(); track mod) {
-          <div class="perm-mod">
-            <strong>{{ mod }}</strong>
-            @for (p of grouped()[mod]; track p.permissionID) {
-              <label class="perm-item">
-                <input type="checkbox" [checked]="selected.has(p.permissionID)" (change)="toggle(p.permissionID)">
-                {{ p.permissionName }} <code>{{ p.permissionCode }}</code>
-              </label>
+      <div class="modal-columns">
+        <div class="modal-col-left">
+          <div class="form-group">
+            <label class="form-label">Nama Role</label>
+            <input class="form-control" [(ngModel)]="form.roleName" [disabled]="editingSystemRole">
+            @if (editingSystemRole) { <small class="text-muted">Nama role bawaan sistem tidak dapat diubah.</small> }
+          </div>
+          <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="4" [(ngModel)]="form.roleDescription"></textarea></div>
+          @if (editId) { <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div> }
+        </div>
+        <div class="modal-col-right">
+          <p class="text-muted perm-col-title">Centang permission yang diberikan ke role ini.</p>
+          <div class="perm-list">
+            @for (mod of moduleKeys(); track mod) {
+              <div class="perm-mod">
+                <strong>{{ mod }}</strong>
+                @for (p of grouped()[mod]; track p.permissionID) {
+                  <label class="perm-item">
+                    <input type="checkbox" [checked]="selected.has(p.permissionID)" (change)="toggle(p.permissionID)">
+                    {{ p.permissionName }} <code>{{ p.permissionCode }}</code>
+                  </label>
+                }
+              </div>
             }
           </div>
-        }
+        </div>
       </div>
       <div class="flex gap justify-between modal-footer">
         <button class="btn btn-ghost" (click)="close()">Batal</button>

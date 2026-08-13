@@ -15,6 +15,10 @@ import { ArticlePublicIndexView } from './article.public-index.view';
   imports: [RouterLink, DatePipe, FormsModule, IconComponent],
   providers: [ArticlePublicIndexPresenter],
   styles: [`
+    /* Wash gradien hijau di bagian atas halaman (bukan motif batik seperti
+       beranda) — memudar ke putih pada jarak piksel tetap, jadi tetap
+       terlihat rapi walau daftar artikelnya panjang. */
+    .section { background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-primary-tint) 220px, #fff 520px); }
     .filters { display: flex; flex-direction: column; gap: 16px; align-items: center; }
     .search { max-width: 460px; }
     .chips { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -25,6 +29,7 @@ import { ArticlePublicIndexView } from './article.public-index.view';
     .news-body { padding: 20px; } .news-body h3 { margin: 12px 0 8px; font-size: 1.12rem; }
     .meta { color: var(--color-muted); font-size: .85rem; margin: 8px 0 0; }
     .chip-pdf { display: inline-block; margin-top: 10px; font-size: .78rem; background: var(--color-primary-soft); color: var(--color-primary-dark); padding: 4px 10px; border-radius: var(--radius-full); font-weight: 600; }
+    .pager { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 36px; color: var(--color-text-secondary); font-size: .9rem; }
   `],
 })
 export class ArticlePublicIndexPage implements OnInit, ArticlePublicIndexView {
@@ -33,6 +38,9 @@ export class ArticlePublicIndexPage implements OnInit, ArticlePublicIndexView {
   items = signal<Article[]>([]);
   categories = signal<ArticleCategory[]>([]);
   loading = signal(true);
+  page = signal(1);
+  count = signal(0);
+  limit = 9;
   search = '';
   cat = '';
 
@@ -42,11 +50,13 @@ export class ArticlePublicIndexPage implements OnInit, ArticlePublicIndexView {
     this.load();
   }
 
-  load(): void { this.presenter.load(this.search, this.cat); }
-  apply(): void { this.load(); }
-  filter(s: string): void { this.cat = s; this.load(); }
+  load(): void { this.presenter.load(this.page(), this.limit, this.search, this.cat); }
+  apply(): void { this.page.set(1); this.load(); }
+  filter(s: string): void { this.cat = s; this.page.set(1); this.load(); }
+  go(p: number): void { this.page.set(p); this.load(); }
+  totalPages(): number { return Math.max(1, Math.ceil(this.count() / this.limit)); }
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
-  setArticles(articles: Article[]): void { this.items.set(articles); }
+  setArticles(articles: Article[], count: number): void { this.items.set(articles); this.count.set(count); }
   setCategories(categories: ArticleCategory[]): void { this.categories.set(categories); }
 }

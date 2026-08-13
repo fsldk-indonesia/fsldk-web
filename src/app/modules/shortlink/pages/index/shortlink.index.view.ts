@@ -5,4 +5,5 @@ export interface ShortlinkIndexView {
   setSaving(saving: boolean): void;
   onSaveSuccess(): void;
   onRemoveSuccess(): void;
+  onActionSettled(id: number): void;
 }

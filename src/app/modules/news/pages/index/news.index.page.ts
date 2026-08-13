@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { AlertService } from '../../../../core/services/alert.service';
 import { News } from '../../entities/news';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
@@ -19,6 +20,7 @@ import { NewsIndexView } from './news.index.view';
 export class NewsIndexPage implements OnInit, NewsIndexView {
   private presenter = inject(NewsIndexPresenter);
   private auth = inject(AuthRepository);
+  private alert = inject(AlertService);
 
   news = signal<News[]>([]);
   loading = signal(true);
@@ -26,6 +28,7 @@ export class NewsIndexPage implements OnInit, NewsIndexView {
   page = signal(1);
   count = signal(0);
   readonly limit = 10;
+  busy = signal<ReadonlySet<number>>(new Set());
 
   canCreate = this.auth.hasPermission('news.create');
   canUpdate = this.auth.hasPermission('news.update');
@@ -37,13 +40,22 @@ export class NewsIndexPage implements OnInit, NewsIndexView {
   load(): void { this.loading.set(true); this.presenter.load(this.page(), this.limit, this.status); }
   filter(s: string): void { this.status = s; this.page.set(1); this.load(); }
   goPage(p: number): void { this.page.set(p); this.load(); }
-  togglePublish(n: News): void { this.presenter.togglePublish(n); }
-  remove(n: News): void {
-    if (!confirm(`Hapus berita "${n.newsTitle}"?`)) return;
+  isBusy(id: number): boolean { return this.busy().has(id); }
+  private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }
+  private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
+
+  togglePublish(n: News): void { this.setBusy(n.newsID); this.presenter.togglePublish(n); }
+  async remove(n: News, event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus berita "${n.newsTitle}"? Tindakan ini tidak dapat dibatalkan.`, {
+      title: 'Hapus Berita', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    }, event);
+    if (!ok) return;
+    this.setBusy(n.newsID);
     this.presenter.remove(n);
   }
 
   setNews(news: News[], count: number): void { this.news.set(news); this.count.set(count); this.loading.set(false); }
   onPublishToggleSuccess(_wasPublished: boolean): void { this.load(); }
   onRemoveSuccess(): void { this.load(); }
+  onActionSettled(id: number): void { this.clearBusy(id); }
 }

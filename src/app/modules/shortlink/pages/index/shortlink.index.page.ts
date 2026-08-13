@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { ToastService } from '../../../../core/services/toast.service';
+import { AlertService } from '../../../../core/services/alert.service';
+import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { ShortLink } from '../../entities/shortlink';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
@@ -27,6 +29,7 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   private presenter = inject(ShortlinkIndexPresenter);
   private auth = inject(AuthRepository);
   private toast = inject(ToastService);
+  private alert = inject(AlertService);
 
   shortlinks = signal<ShortLink[]>([]);
   loading = signal(true);
@@ -36,6 +39,8 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   readonly limit = 10;
   showForm = signal(false);
   saving = signal(false);
+  busy = signal<ReadonlySet<number>>(new Set());
+  popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
   editId: number | null = null;
   form: ShortlinkFormValue = { destinationURL: '', shortKey: '' };
 
@@ -49,12 +54,14 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   applySearch(): void { this.page.set(1); this.load(); }
   goPage(p: number): void { this.page.set(p); this.load(); }
 
-  openCreate(): void {
+  openCreate(event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
     this.editId = null;
     this.form = { destinationURL: '', shortKey: '' };
     this.showForm.set(true);
   }
-  openEdit(s: ShortLink): void {
+  openEdit(s: ShortLink, event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
     this.editId = s.shortLinkID;
     this.form = { destinationURL: s.destinationURL, shortKey: s.shortKey };
     this.showForm.set(true);
@@ -66,8 +73,16 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
     this.presenter.save(this.editId, this.form);
   }
 
-  remove(s: ShortLink): void {
-    if (!confirm(`Hapus shortlink "${s.shortKey}"?`)) return;
+  isBusy(id: number): boolean { return this.busy().has(id); }
+  private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }
+  private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
+
+  async remove(s: ShortLink, event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus shortlink "${s.shortKey}"? Tindakan ini tidak dapat dibatalkan.`, {
+      title: 'Hapus Shortlink', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    }, event);
+    if (!ok) return;
+    this.setBusy(s.shortLinkID);
     this.presenter.remove(s.shortLinkID);
   }
 
@@ -82,4 +97,5 @@ export class ShortlinkIndexPage implements OnInit, ShortlinkIndexView {
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.close(); this.load(); }
   onRemoveSuccess(): void { this.load(); }
+  onActionSettled(id: number): void { this.clearBusy(id); }
 }

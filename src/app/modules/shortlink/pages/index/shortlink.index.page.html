@@ -1,6 +1,6 @@
 <div class="flex justify-between items-center page-head">
   <div><h1>Shortlink</h1><p class="text-muted">Pendekkan tautan panjang menjadi mudah dibagikan.</p></div>
-  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Buat Shortlink</button> }
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate($event)">+ Buat Shortlink</button> }
 </div>
 
 <div class="card">
@@ -27,7 +27,7 @@
               <td>
                 <div class="flex items-center gap-sm">
                   <code class="key">{{ s.shortURL }}</code>
-                  <span class="link-action" (click)="copy(s.shortURL)">Salin</span>
+                  <button type="button" class="icon-action" (click)="copy(s.shortURL)" title="Salin tautan"><app-icon name="copy" [size]="13" /></button>
                 </div>
               </td>
               <td class="text-muted destination" [title]="s.destinationURL">{{ s.destinationURL }}</td>
@@ -35,8 +35,14 @@
               <td class="text-muted">{{ s.createdDate | date:'d MMM yyyy' }}</td>
               <td>
                 <div class="table-actions">
-                  @if (canUpdate) { <span class="link-action" (click)="openEdit(s)">Edit</span> }
-                  @if (canDelete) { <span class="link-danger" (click)="remove(s)">Hapus</span> }
+                  @if (canUpdate) {
+                    <button type="button" class="icon-action" (click)="openEdit(s, $event)" title="Edit"><app-icon name="edit" [size]="14" /></button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(s.shortLinkID)" (click)="remove(s, $event)" title="Hapus">
+                      @if (isBusy(s.shortLinkID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
                 </div>
               </td>
             </tr>
@@ -61,7 +67,7 @@
 
 @if (showForm()) {
   <div class="modal-backdrop" (click)="close()">
-    <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ editId ? 'Ubah Shortlink' : 'Buat Shortlink' }}</h3>
       <div class="form-group"><label class="form-label">URL Tujuan</label>
         <input class="form-control" [(ngModel)]="form.destinationURL" placeholder="https://..."></div>

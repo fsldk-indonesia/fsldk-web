@@ -34,9 +34,19 @@
               <td class="text-muted">{{ a.publishedDate ? (a.publishedDate | date:'d MMM yyyy') : '–' }}</td>
               <td>
                 <div class="table-actions">
-                  @if (canUpdate) { <a class="link-action" [routerLink]="['/cms/articles/form', a.articleID]">Edit</a> }
-                  @if (canPublish) { <span class="link-action" (click)="togglePublish(a)">{{ a.isPublished ? 'Tarik' : 'Publish' }}</span> }
-                  @if (canDelete) { <span class="link-danger" (click)="remove(a)">Hapus</span> }
+                  @if (canUpdate) {
+                    <a class="icon-action" [routerLink]="['/cms/articles/form', a.articleID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+                  }
+                  @if (canPublish) {
+                    <button type="button" class="icon-action" [disabled]="isBusy(a.articleID)" (click)="togglePublish(a)" [title]="a.isPublished ? 'Tarik publikasi' : 'Publish'">
+                      @if (isBusy(a.articleID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="a.isPublished ? 'eye-off' : 'eye'" [size]="14" /> }
+                    </button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(a.articleID)" (click)="remove(a, $event)" title="Hapus">
+                      @if (isBusy(a.articleID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

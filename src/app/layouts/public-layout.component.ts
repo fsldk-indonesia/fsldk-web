@@ -103,12 +103,31 @@ import { IconComponent } from '../shared/icon.component';
 
     <main><router-outlet /></main>
 
-    <footer class="pub-footer">
+    <footer class="pub-footer pattern-motif pattern-motif-dark">
       <div class="container">
         <div class="flex items-center justify-between foot-top">
           <span class="brand-text light">FSLDK <b>Indonesia</b></span>
-          <span>Menyatukan Langkah Dakwah Kampus se-Indonesia</span>
+          <span class="foot-tagline">
+            <svg class="foot-glyph" width="34" height="26" viewBox="0 0 34 26" aria-hidden="true">
+              <path class="network-line" d="M17,13 L4,4 M17,13 L4,22 M17,13 L30,4 M17,13 L30,22" style="stroke:rgba(255,255,255,.35)" />
+              <circle class="network-node" cx="17" cy="13" r="4" />
+              <circle class="network-node gold" cx="4" cy="4" r="2.3" style="animation-delay:.3s" />
+              <circle class="network-node ember" cx="4" cy="22" r="2.3" style="animation-delay:.6s" />
+              <circle class="network-node gold" cx="30" cy="4" r="2.3" style="animation-delay:.9s" />
+              <circle class="network-node ember" cx="30" cy="22" r="2.3" style="animation-delay:1.2s" />
+            </svg>
+            Menyatukan Langkah Dakwah Kampus se-Indonesia
+          </span>
         </div>
+
+        <nav class="foot-social" aria-label="Media sosial FSLDK Indonesia">
+          @for (s of socialLinks; track s.href) {
+            <a [href]="s.href" target="_blank" rel="noopener" class="foot-social-link">
+              <app-icon [name]="s.icon" [size]="15" />{{ s.handle }}
+            </a>
+          }
+        </nav>
+
         <p class="foot-copy">&copy; {{ year }} Perkumpulan Forum Silaturahmi Lembaga Dakwah Kampus Indonesia. Sejak 1986.</p>
       </div>
     </footer>
@@ -151,13 +170,22 @@ import { IconComponent } from '../shared/icon.component';
     .brand-text b { color: var(--color-primary); display: inline; }
     .brand-text.light { color: #fff; } .brand-text.light b { color: var(--color-primary-bright); }
 
-    .pub-nav { display: flex; gap: 28px; }
-    .pub-nav a, .mobile-nav a { display: flex; align-items: center; gap: 7px; color: var(--color-text); font-weight: 600; transition: color var(--motion-fast) ease; }
+    .pub-nav { display: flex; gap: 6px; }
+    .mobile-nav a { position: relative; display: flex; align-items: center; gap: 7px; color: var(--color-text); font-weight: 600; transition: color var(--motion-fast) ease; }
     .pub-nav a svg, .mobile-nav a svg { opacity: .75; }
     .pub-nav a.active svg, .mobile-nav a.active svg { opacity: 1; }
-    .pub-nav a:hover, .mobile-nav a:hover { text-decoration: none; color: var(--color-primary-dark); }
-    .pub-nav a { font-size: .95rem; }
-    .pub-nav a.active { color: var(--color-primary); }
+    .mobile-nav a:hover { text-decoration: none; color: var(--color-primary-dark); }
+    /* Tautan aktif jadi pill solid hijau (bukan lagi cuma titik kecil di bawah
+       teks) — lebih jelas kelihatan "sedang di halaman ini", senada dengan
+       aksen hijau solid yang dipakai di menu aktif sidebar CMS. */
+    .pub-nav a {
+      position: relative; display: flex; align-items: center; gap: 7px;
+      padding: 9px 16px; border-radius: var(--radius-full); color: var(--color-text); font-weight: 600; font-size: .95rem;
+      transition: color var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .pub-nav a:hover { text-decoration: none; color: var(--color-primary-dark); background: var(--color-primary-soft); transform: translateY(-1px); }
+    .pub-nav a.active { color: #fff; background: var(--color-primary); box-shadow: 0 4px 12px rgba(0,147,59,.28); }
+    .pub-nav a.active:hover { color: #fff; background: var(--color-primary-dark); }
     .pub-nav a:focus-visible, .mobile-nav a:focus-visible, .btn-user-fun:focus-visible, .mobile-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-xs); }
 
     .user-fun-wrap { position: relative; }
@@ -166,11 +194,21 @@ import { IconComponent } from '../shared/icon.component';
     .chip-avatar { width: 24px; height: 24px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; flex-shrink: 0; }
     .chip-avatar.guest { background: var(--color-bg-alt); color: var(--color-text-secondary); }
     img.chip-avatar { object-fit: cover; }
-    .dropdown-fun { position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), visibility var(--motion-base); z-index: 70; }
+    /* Tumbuh dari sudut kanan-atas (persis di ujung tombol akun yang
+       memicunya) — bukan cuma translateY, supaya terasa "ditarik keluar"
+       dari tombol, bukan muncul lepas dari langit-langit. */
+    .dropdown-fun {
+      position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 180px; padding: 8px;
+      opacity: 0; visibility: hidden; transform-origin: top right; transform: scale(.85) translateY(-4px);
+      transition: opacity var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), visibility var(--motion-base);
+      z-index: 70;
+    }
     .dropdown-fun-item { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; color: var(--color-text); font-family: var(--font-body); font-weight: 600; font-size: .9rem; white-space: nowrap; cursor: pointer; transition: background var(--motion-fast) ease; }
     .dropdown-fun-item svg { opacity: .7; flex-shrink: 0; }
     .dropdown-fun-item:hover { background: var(--color-bg-warm); text-decoration: none; }
-    .dropdown-fun.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-fun.open { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+    @media (prefers-reduced-motion: reduce) { .dropdown-fun { transition: opacity var(--motion-base) ease, visibility var(--motion-base); transform: none !important; } }
     .mobile-account { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-weight: 600; color: var(--color-text); }
 
     .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: var(--radius-xs); cursor: pointer; padding: 0; }
@@ -196,6 +234,17 @@ import { IconComponent } from '../shared/icon.component';
        Jarak sebelum footer sudah cukup dari padding section di atasnya. */
     .pub-footer { background: var(--color-text); color: #c9cdd1; padding: 40px 0; }
     .foot-top { padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.1); flex-wrap: wrap; gap: 12px; }
+    .foot-tagline { display: flex; align-items: center; gap: 10px; }
+    .foot-glyph { flex-shrink: 0; overflow: visible; }
+    .foot-social { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+    .foot-social-link {
+      display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px;
+      border-radius: var(--radius-full); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+      color: #fff; font-weight: 600; font-size: .82rem;
+      transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .foot-social-link app-icon { color: var(--color-primary-bright); }
+    .foot-social-link:hover { background: rgba(255,255,255,.14); border-color: var(--color-gold); text-decoration: none; transform: translateY(-2px); }
     .foot-copy { margin-top: 20px; font-size: .85rem; color: var(--color-muted); }
 
     @media (max-width: 900px) {
@@ -212,6 +261,14 @@ export class PublicLayoutComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private ngZone = inject(NgZone);
   year = new Date().getFullYear();
+
+  readonly socialLinks = [
+    { icon: 'instagram', handle: 'fsldkindonesia', href: 'https://instagram.com/fsldkindonesia' },
+    { icon: 'facebook', handle: 'fsldkindonesia', href: 'https://facebook.com/fsldkindonesia' },
+    { icon: 'tiktok', handle: 'fsldkindonesia', href: 'https://tiktok.com/@fsldkindonesia' },
+    { icon: 'x-twitter', handle: 'fsldkindonesia_', href: 'https://x.com/fsldkindonesia_' },
+    { icon: 'youtube', handle: 'fsldkindonesia5655', href: 'https://youtube.com/@fsldkindonesia5655' },
+  ];
 
   scrolled = signal(false);
   mobileOpen = signal(false);

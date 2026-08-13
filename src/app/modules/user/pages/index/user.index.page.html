@@ -1,6 +1,6 @@
 <div class="flex justify-between items-center page-head">
   <div><h1>Manajemen Pengguna</h1><p class="text-muted">Kelola akun & peran pengguna CMS.</p></div>
-  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Tambah Pengguna</button> }
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate($event)">+ Tambah Pengguna</button> }
 </div>
 
 <div class="card">
@@ -30,8 +30,14 @@
               <td><span class="badge" [class.badge-active]="u.isActive" [class.badge-inactive]="!u.isActive">{{ u.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
               <td>
                 <div class="table-actions">
-                  @if (canUpdate) { <span class="link-action" (click)="openEdit(u)">Edit</span> }
-                  @if (canDelete) { <span class="link-danger" (click)="remove(u)">Hapus</span> }
+                  @if (canUpdate) {
+                    <button type="button" class="icon-action" (click)="openEdit(u, $event)" title="Edit"><app-icon name="edit" [size]="14" /></button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(u.userID)" (click)="remove(u, $event)" title="Hapus">
+                      @if (isBusy(u.userID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
                 </div>
               </td>
             </tr>
@@ -56,7 +62,7 @@
 
 @if (showForm()) {
   <div class="modal-backdrop" (click)="close()">
-    <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ editId ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h3>
       <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName"></div>
       <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email"></div>
