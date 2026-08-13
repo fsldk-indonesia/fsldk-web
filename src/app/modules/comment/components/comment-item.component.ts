@@ -4,7 +4,7 @@ import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../user/repositories/auth.repository';
 import { ToastService } from '../../../core/services/toast.service';
 import { UploadService } from '../../../core/services/upload.service';
-import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
+import { AlertService } from '../../../core/services/alert.service';
 import { CommentRepository } from '../repositories/comment.repository';
 import { Comment, MediaType, ReactionType } from '../entities/comment';
 import { REACTIONS } from '../comment.constants';
@@ -57,7 +57,7 @@ import { GifPickerComponent } from './gif-picker.component';
             </span>
             @if (canReply) { <span class="link-action" (click)="openReply()">Balas</span> }
             @if (canEdit) { <span class="link-action" (click)="openEdit()">Edit</span> }
-            @if (canDelete) { <span class="link-danger" (click)="remove()">Hapus</span> }
+            @if (canDelete) { <span class="link-danger" (click)="remove($event)">Hapus</span> }
           </div>
 
           @if (activeReactionTypes().length) {
@@ -154,7 +154,7 @@ export class CommentItemComponent implements OnDestroy {
   private toast = inject(ToastService);
   private uploadService = inject(UploadService);
   private commentRepo = inject(CommentRepository);
-  private confirmDialog = inject(ConfirmDialogService);
+  private alert = inject(AlertService);
 
   @Input({ required: true }) comment!: Comment;
   @Input() level = 0;
@@ -330,13 +330,10 @@ export class CommentItemComponent implements OnDestroy {
     });
   }
 
-  async remove(): Promise<void> {
-    const ok = await this.confirmDialog.confirm({
-      title: 'Hapus Komentar',
-      message: 'Hapus komentar ini? Balasan & reaksi ikut terhapus.',
-      confirmLabel: 'Hapus',
-      danger: true,
-    });
+  async remove(event?: Event): Promise<void> {
+    const ok = await this.alert.confirm('Hapus komentar ini? Balasan & reaksi ikut terhapus.', {
+      title: 'Hapus Komentar', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    }, event);
     if (!ok) return;
     this.commentRepo.remove(this.comment.commentID).subscribe({
       next: () => { this.toast.success('Komentar dihapus'); this.removed.emit(this.comment.commentID); },

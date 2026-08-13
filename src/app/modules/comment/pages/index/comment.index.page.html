@@ -14,7 +14,7 @@
     <button type="button" class="btn btn-outline btn-sm" (click)="applySearch()">Cari</button>
     <span class="grow"></span>
     @if (canDelete && selected.size > 0) {
-      <button type="button" class="btn btn-danger btn-sm" (click)="bulkDelete()">Hapus {{ selected.size }} Terpilih</button>
+      <button type="button" class="btn btn-danger btn-sm" (click)="bulkDelete($event)">Hapus {{ selected.size }} Terpilih</button>
     }
   </div>
 
@@ -57,7 +57,7 @@
               <td>
                 <div class="table-actions">
                   <a class="link-action" [routerLink]="['/cms/comments', c.commentID]">Lihat</a>
-                  @if (canDelete) { <span class="link-danger" (click)="remove(c)">Hapus</span> }
+                  @if (canDelete) { <span class="link-danger" (click)="remove(c, $event)">Hapus</span> }
                 </div>
               </td>
             </tr>

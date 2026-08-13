@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { DatePipe, SlicePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
-import { ConfirmDialogService } from '../../../../core/services/confirm-dialog.service';
+import { AlertService } from '../../../../core/services/alert.service';
 import { Comment } from '../../entities/comment';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
@@ -23,7 +23,7 @@ import { CommentIndexView } from './comment.index.view';
 export class CommentIndexPage implements OnInit, CommentIndexView {
   private presenter = inject(CommentIndexPresenter);
   private auth = inject(AuthRepository);
-  private confirmDialog = inject(ConfirmDialogService);
+  private alert = inject(AlertService);
 
   readonly contentTypeOptions = CONTENT_TYPE_OPTIONS;
 
@@ -50,25 +50,19 @@ export class CommentIndexPage implements OnInit, CommentIndexView {
   }
   isSelected(id: number): boolean { return this.selected.has(id); }
 
-  async remove(c: Comment): Promise<void> {
-    const ok = await this.confirmDialog.confirm({
-      title: 'Hapus Komentar',
-      message: `Hapus komentar dari "${c.author.name}"? Balasan & reaksi ikut terhapus.`,
-      confirmLabel: 'Hapus',
-      danger: true,
-    });
+  async remove(c: Comment, event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus komentar dari "${c.author.name}"? Balasan & reaksi ikut terhapus.`, {
+      title: 'Hapus Komentar', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    }, event);
     if (!ok) return;
     this.presenter.remove(c.commentID);
   }
 
-  async bulkDelete(): Promise<void> {
+  async bulkDelete(event?: Event): Promise<void> {
     if (this.selected.size === 0) return;
-    const ok = await this.confirmDialog.confirm({
-      title: 'Hapus Komentar Terpilih',
-      message: `Hapus ${this.selected.size} komentar terpilih? Balasan & reaksi ikut terhapus.`,
-      confirmLabel: 'Hapus',
-      danger: true,
-    });
+    const ok = await this.alert.confirm(`Hapus ${this.selected.size} komentar terpilih? Balasan & reaksi ikut terhapus.`, {
+      title: 'Hapus Komentar Terpilih', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    }, event);
     if (!ok) return;
     this.presenter.bulkDelete([...this.selected]);
   }
