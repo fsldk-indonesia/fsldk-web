@@ -1,0 +1,120 @@
+﻿<div class="page-head">
+  <a routerLink="/cms/events" class="back">← Kembali</a>
+  <h1>{{ editId ? 'Ubah Event' : 'Tambah Event' }}</h1>
+</div>
+
+<div class="card card-pad form-card">
+  <!-- Basic info -->
+  <p class="section-title">Informasi Utama</p>
+  <div class="form-group">
+    <label class="form-label">Judul Event <span style="color:red">*</span></label>
+    <input class="form-control" [(ngModel)]="form.eventTitle" placeholder="Nama/judul event…">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Divisi Penyelenggara <span style="color:red">*</span></label>
+    <input class="form-control" [(ngModel)]="form.eventDivision" placeholder="Contoh: FSLDK Nasional">
+  </div>
+  <div class="form-group">
+    <label class="form-label">Poster / Gambar</label>
+    <app-image-upload [(value)]="form.eventImage" />
+  </div>
+  <div class="form-group">
+    <label class="form-label">Tag <span style="color:var(--color-muted); font-weight:400">(pisahkan dengan koma)</span></label>
+    <input class="form-control" [(ngModel)]="form.tag" placeholder="muktamar,nasional,…">
+  </div>
+
+  <!-- Schedule -->
+  <p class="section-title">Jadwal</p>
+  <div class="grid grid-3">
+    <div class="form-group">
+      <label class="form-label">Tanggal Mulai</label>
+      <input class="form-control" type="datetime-local" [(ngModel)]="form.startDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tanggal Selesai</label>
+      <input class="form-control" type="datetime-local" [(ngModel)]="form.endDate">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tutup Pendaftaran</label>
+      <input class="form-control" type="datetime-local" [(ngModel)]="form.closeRegistDate">
+    </div>
+  </div>
+
+  <!-- Location -->
+  <p class="section-title">Lokasi</p>
+  <div class="grid grid-2">
+    <div class="form-group">
+      <label class="form-label">Kota / Platform</label>
+      <input class="form-control" [(ngModel)]="form.location" placeholder="Yogyakarta / Online">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Venue / Gedung</label>
+      <input class="form-control" [(ngModel)]="form.place" placeholder="Hotel Grand Keisha…">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Link Google Maps</label>
+    <input class="form-control" [(ngModel)]="form.locationLink" placeholder="https://maps.google.com/…">
+  </div>
+
+  <!-- Registration & docs -->
+  <p class="section-title">Pendaftaran &amp; Dokumentasi</p>
+  <div class="form-group">
+    <label class="form-label">Link Pendaftaran</label>
+    <input class="form-control" [(ngModel)]="form.registrationLink" placeholder="https://bit.ly/daftar-…">
+  </div>
+  <div class="grid grid-2">
+    <div class="form-group">
+      <label class="form-label">Link Dokumentasi (Drive)</label>
+      <input class="form-control" [(ngModel)]="form.documentLink" placeholder="https://drive.google.com/…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Link Presentasi/Materi (Drive)</label>
+      <input class="form-control" [(ngModel)]="form.presentationLink" placeholder="https://drive.google.com/…">
+    </div>
+  </div>
+
+  <!-- Contact persons -->
+  <p class="section-title">Contact Person</p>
+  <div class="grid grid-2">
+    <div class="form-group">
+      <label class="form-label">Nama CP 1</label>
+      <input class="form-control" [(ngModel)]="form.nameCp1" placeholder="Nama lengkap…">
+    </div>
+    <div class="form-group">
+      <label class="form-label">No WA CP 1 <span style="color:var(--color-muted);font-weight:400">(tanpa +62)</span></label>
+      <input class="form-control" [(ngModel)]="form.contactPerson1" placeholder="81234567890">
+    </div>
+  </div>
+  <div class="grid grid-2">
+    <div class="form-group">
+      <label class="form-label">Nama CP 2</label>
+      <input class="form-control" [(ngModel)]="form.nameCp2" placeholder="Nama lengkap (opsional)">
+    </div>
+    <div class="form-group">
+      <label class="form-label">No WA CP 2</label>
+      <input class="form-control" [(ngModel)]="form.contactPerson2" placeholder="81234567890">
+    </div>
+  </div>
+
+  <!-- Content -->
+  <p class="section-title">Deskripsi Event</p>
+  <div class="form-group">
+    <app-rich-text-editor [(value)]="form.eventContent" />
+  </div>
+
+  <!-- Publish toggle -->
+  <p class="section-title">Pengaturan Publikasi</p>
+  <div class="form-group" style="display:flex; align-items:center; gap:12px">
+    <input type="checkbox" id="isPublished" [(ngModel)]="form.isPublished" style="width:20px;height:20px;cursor:pointer">
+    <label for="isPublished" style="margin:0;cursor:pointer;font-weight:600">Publikasikan event ini</label>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex gap justify-between" style="margin-top:32px; padding-top:20px; border-top:1px solid var(--color-border)">
+    <a routerLink="/cms/events" class="btn btn-ghost">Batal</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } @else { Simpan Event }
+    </button>
+  </div>
+</div>

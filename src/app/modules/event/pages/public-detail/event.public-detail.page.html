@@ -1,0 +1,196 @@
+﻿<article class="section">
+  <div class="container">
+    @if (loading()) {
+      <div class="narrow" style="max-width:760px; margin:0 auto">
+        <span class="skel skel-line" style="width:90px;height:22px;border-radius:999px"></span>
+        <span class="skel skel-line" style="width:80%;height:34px;margin-top:16px"></span>
+        <span class="skel skel-line" style="width:40%"></span>
+        <span class="skel skel-thumb" style="margin:20px 0 28px"></span>
+        <span class="skel skel-line"></span>
+        <span class="skel skel-line"></span>
+        <span class="skel skel-line" style="width:70%"></span>
+      </div>
+    } @else {
+      @if (item(); as e) {
+        <nav class="crumb"><a routerLink="/">Beranda</a> / <a routerLink="/event">Event</a> / <span>Detail</span></nav>
+        <span class="chip chip-green">{{ e.eventDivision }}</span>
+        <h1>{{ e.eventTitle }}</h1>
+        <p class="meta">
+          @if (e.startDate) {
+            <span>📅 {{ e.startDate | date:'d MMMM yyyy' }}{{ e.endDate ? ' – ' + (e.endDate | date:'d MMMM yyyy') : '' }}</span>
+          }
+          @if (e.location) {
+            <span>· 📍 {{ e.location }}{{ e.place ? ', ' + e.place : '' }}</span>
+          }
+          <span>· 👁 {{ e.viewCount }} kali dilihat</span>
+        </p>
+
+        @if (e.eventImage) {
+          <img class="cover" [src]="e.eventImage" [alt]="e.eventTitle">
+        } @else {
+          <div class="cover placeholder">POSTER EVENT</div>
+        }
+
+        <div class="detail-grid">
+          <!-- Main Content -->
+          <main>
+            <div class="tab-bar">
+              <button class="tab-btn" [class.active]="activeTab() === 'description'" (click)="activeTab.set('description')">Deskripsi</button>
+              @if (e.documentLink || e.presentationLink) {
+                <button class="tab-btn" [class.active]="activeTab() === 'docs'" (click)="activeTab.set('docs')">Dokumentasi &amp; Materi</button>
+              }
+            </div>
+
+            @if (activeTab() === 'description') {
+              <div class="content-html" [innerHTML]="e.eventContent"></div>
+            }
+
+            @if (activeTab() === 'docs') {
+              <div>
+                @if (e.documentLink) {
+                  <a [href]="e.documentLink" target="_blank" rel="noopener" class="doc-link">
+                    <span style="font-size:1.6rem">📁</span>
+                    <div>
+                      <strong>Foto &amp; Video Dokumentasi</strong><br>
+                      <span style="font-size:.82rem; color:var(--color-muted)">Buka folder dokumentasi di Google Drive</span>
+                    </div>
+                  </a>
+                }
+                @if (e.presentationLink) {
+                  <a [href]="e.presentationLink" target="_blank" rel="noopener" class="doc-link">
+                    <span style="font-size:1.6rem">📊</span>
+                    <div>
+                      <strong>Materi &amp; Presentasi</strong><br>
+                      <span style="font-size:.82rem; color:var(--color-muted)">Buka materi presentasi di Google Drive</span>
+                    </div>
+                  </a>
+                }
+              </div>
+            }
+
+            <!-- Share box -->
+            <div class="share-box">
+              <p style="font-weight:600; margin:0 0 4px; font-size:.9rem">Bagikan Event</p>
+              <div class="share-row">
+                <button class="share-btn" (click)="copyUrl()">🔗 Salin Tautan</button>
+                <a class="share-btn" [href]="whatsappUrl()" target="_blank" rel="noopener">💬 WhatsApp</a>
+                <a class="share-btn" [href]="twitterUrl()" target="_blank" rel="noopener">🐦 Twitter/X</a>
+              </div>
+              @if (copied()) { <p class="copied-msg">✓ Tautan berhasil disalin ke clipboard!</p> }
+            </div>
+
+            <a routerLink="/event" class="btn btn-outline mt-lg">← Kembali ke Event</a>
+          </main>
+
+          <!-- Sidebar -->
+          <aside>
+            <!-- Countdown (upcoming only) -->
+            @if (e.status === 'upcoming' && e.startDate) {
+              <div class="info-card" style="text-align:center">
+                <h4>Dimulai Dalam</h4>
+                <div class="countdown">
+                  <div class="cd-unit"><span class="cd-val">{{ pad(countdown().d) }}</span><span class="cd-lbl">Hari</span></div>
+                  <div class="cd-unit"><span class="cd-val">{{ pad(countdown().h) }}</span><span class="cd-lbl">Jam</span></div>
+                  <div class="cd-unit"><span class="cd-val">{{ pad(countdown().m) }}</span><span class="cd-lbl">Menit</span></div>
+                  <div class="cd-unit"><span class="cd-val">{{ pad(countdown().s) }}</span><span class="cd-lbl">Detik</span></div>
+                </div>
+              </div>
+            }
+
+            <!-- Registration Card -->
+            <div class="info-card">
+              <h4>Pendaftaran</h4>
+              @if (e.closeRegistDate) {
+                <div class="regist-deadline">
+                  <span class="text-muted">Batas: {{ e.closeRegistDate | date:'d MMM yyyy, HH:mm' }}</span>
+                  @if (isUrgent()) {
+                    <span class="urgent-badge">⚡ {{ deadlineDaysLeft() }} hari lagi!</span>
+                  }
+                </div>
+              }
+              @if (canRegist()) {
+                <a [href]="e.registrationLink" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%; text-align:center">
+                  Daftar Sekarang →
+                </a>
+              } @else {
+                <button class="btn btn-outline" style="width:100%; cursor:not-allowed; opacity:.6" disabled>
+                  {{ e.status === 'past' ? 'Event Telah Selesai' : 'Pendaftaran Ditutup' }}
+                </button>
+              }
+            </div>
+
+            <!-- Event info card -->
+            <div class="info-card">
+              <h4>Informasi Kegiatan</h4>
+              @if (e.startDate) {
+                <div class="info-row">
+                  <span class="info-icon">📅</span>
+                  <div>
+                    <strong>Waktu</strong><br>
+                    <span>{{ e.startDate | date:'EEEE, d MMMM yyyy' }}{{ e.endDate ? ' s/d ' + (e.endDate | date:'d MMMM yyyy') : '' }}</span>
+                  </div>
+                </div>
+              }
+              @if (e.location) {
+                <div class="info-row">
+                  <span class="info-icon">📍</span>
+                  <div>
+                    <strong>Lokasi</strong><br>
+                    <span>{{ e.location }}{{ e.place ? ' — ' + e.place : '' }}</span>
+                    @if (e.locationLink) {
+                      <br><a [href]="e.locationLink" target="_blank" rel="noopener" style="color:var(--color-primary); font-size:.82rem">Buka Google Maps →</a>
+                    }
+                  </div>
+                </div>
+              }
+              @if (e.tag) {
+                <div class="info-row">
+                  <span class="info-icon">🏷</span>
+                  <div>
+                    <strong>Kategori / Tag</strong><br>
+                    <span>{{ e.tag }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Contact person -->
+            @if (e.contactPerson1 || e.contactPerson2) {
+              <div class="info-card">
+                <h4>Narahubung (CP)</h4>
+                @if (e.contactPerson1) {
+                  <div class="info-row">
+                    <span class="info-icon">📱</span>
+                    <div>
+                      @if (e.nameCp1) { <strong>{{ e.nameCp1 }}</strong><br> }
+                      <a [href]="'https://wa.me/62' + e.contactPerson1" target="_blank" rel="noopener" style="color:var(--color-primary)">
+                        +62 {{ e.contactPerson1 }} (WhatsApp)
+                      </a>
+                    </div>
+                  </div>
+                }
+                @if (e.contactPerson2) {
+                  <div class="info-row">
+                    <span class="info-icon">📱</span>
+                    <div>
+                      @if (e.nameCp2) { <strong>{{ e.nameCp2 }}</strong><br> }
+                      <a [href]="'https://wa.me/62' + e.contactPerson2" target="_blank" rel="noopener" style="color:var(--color-primary)">
+                        +62 {{ e.contactPerson2 }} (WhatsApp)
+                      </a>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </aside>
+        </div>
+      } @else {
+        <div class="text-center" style="padding:60px 0">
+          <h2>Event tidak ditemukan</h2>
+          <p style="color:var(--color-muted)">Event yang Anda cari mungkin telah dihapus atau belum dipublikasikan.</p>
+          <a routerLink="/event" class="btn btn-primary mt">Kembali ke Event</a>
+        </div>
+      }
+    }
+  </div>
+</article>
