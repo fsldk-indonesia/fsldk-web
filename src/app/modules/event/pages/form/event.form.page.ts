@@ -1,8 +1,9 @@
-﻿import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
+import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { EventFormPresenter, EventFormValue, emptyEventForm } from './event.form.presenter';
 import { EventFormView } from './event.form.view';
 
@@ -10,7 +11,7 @@ import { EventFormView } from './event.form.view';
   selector: 'app-event-form-page',
   standalone: true,
   templateUrl: './event.form.page.html',
-  imports: [FormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent],
+  imports: [FormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent, DateTimePickerComponent],
   providers: [EventFormPresenter],
   styles: [`
     .page-head { max-width: 900px; margin: 0 auto 24px; }
