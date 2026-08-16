@@ -19,4 +19,5 @@ export const CONTENT_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'Semua Tipe Konten' },
   { value: 'article', label: 'Artikel' },
   { value: 'news', label: 'Berita' },
+  { value: 'event', label: 'Event' },
 ];

@@ -6,13 +6,16 @@ import { ToastService } from '../../../core/services/toast.service';
 import { UploadService } from '../../../core/services/upload.service';
 import { AlertService } from '../../../core/services/alert.service';
 import { CommentRepository } from '../repositories/comment.repository';
-import { Comment, MediaType, ReactionType } from '../entities/comment';
+import { Comment, MediaType, MentionRef, ReactionType } from '../entities/comment';
 import { REACTIONS } from '../comment.constants';
+import { MentionHighlightPipe } from '../mention-highlight.pipe';
 import { GifPickerComponent } from './gif-picker.component';
+import { MentionTextareaComponent } from './mention-textarea.component';
 
 /**
- * Satu komentar + rekursi balasannya (maks 2 level, ditegakkan juga di
- * server — lihat comment_service.Create). Reply/edit/react semuanya
+ * Satu komentar + rekursi balasannya (maks 1 level — tidak bisa membalas
+ * balasan, ditegakkan juga di server — lihat comment_service.Create).
+ * Reply/edit/react semuanya
  * ditangani secara LOKAL — API selalu mengembalikan data lengkap komentar
  * yang bersangkutan, jadi hasilnya diterapkan langsung ke state komponen
  * (push ke `comment.replies`, atau timpa field `comment` untuk edit/react)
@@ -24,7 +27,7 @@ import { GifPickerComponent } from './gif-picker.component';
 @Component({
   selector: 'app-comment-item',
   standalone: true,
-  imports: [FormsModule, DatePipe, GifPickerComponent, CommentItemComponent],
+  imports: [FormsModule, DatePipe, GifPickerComponent, CommentItemComponent, MentionTextareaComponent, MentionHighlightPipe],
   template: `
     <div class="cmt" [class.cmt-nested]="level > 0">
       <div class="cmt-avatar">
@@ -41,7 +44,7 @@ import { GifPickerComponent } from './gif-picker.component';
         </div>
 
         @if (!editing()) {
-          @if (comment.commentText) { <p class="cmt-text">{{ comment.commentText }}</p> }
+          @if (comment.commentText) { <p class="cmt-text" [innerHTML]="comment.commentText | mentionHighlight:comment.mentions"></p> }
           @if (comment.mediaURL) { <img class="cmt-media" [src]="comment.mediaURL" [alt]="comment.mediaType"> }
 
           <div class="cmt-actions">
@@ -70,7 +73,7 @@ import { GifPickerComponent } from './gif-picker.component';
             </div>
           }
         } @else {
-          <textarea class="form-control" rows="3" [(ngModel)]="editText" placeholder="Ubah komentar…" (keydown.control.enter)="submitEdit()"></textarea>
+          <app-mention-textarea [rows]="3" placeholder="Ubah komentar…" [(ngModel)]="editText" [initialMentions]="editMentions" (mentionsChange)="editMentions = $event" (ctrlEnter)="submitEdit()" />
           @if (editMedia) {
             <div class="cmt-media-preview">
               <img [src]="editMedia.url" [alt]="editMedia.type">
@@ -92,7 +95,7 @@ import { GifPickerComponent } from './gif-picker.component';
 
         @if (replying()) {
           <div class="cmt-reply-form">
-            <textarea class="form-control" rows="2" [(ngModel)]="replyText" placeholder="Tulis balasan… (Ctrl+Enter untuk kirim)" (keydown.control.enter)="submitReply()"></textarea>
+            <app-mention-textarea [rows]="2" placeholder="Tulis balasan… (Ctrl+Enter untuk kirim)" [(ngModel)]="replyText" [initialMentions]="replyMentions" (mentionsChange)="replyMentions = $event" (ctrlEnter)="submitReply()" />
             @if (replyMedia) {
               <div class="cmt-media-preview">
                 <img [src]="replyMedia.url" [alt]="replyMedia.type">
@@ -131,6 +134,7 @@ import { GifPickerComponent } from './gif-picker.component';
     .cmt-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
     .cmt-time { color: var(--color-muted); font-size: .82rem; }
     .cmt-text { margin: 0 0 8px; white-space: pre-wrap; word-break: break-word; }
+    .cmt-text ::ng-deep .mention-pill { display: inline-flex; align-items: center; background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; line-height: 1.5; padding: 3px 10px; border-radius: var(--radius-full); vertical-align: middle; }
     .cmt-media { max-width: 260px; max-height: 260px; border-radius: var(--radius-md); display: block; margin-bottom: 8px; }
     .cmt-actions { display: flex; align-items: center; gap: 14px; font-size: .85rem; margin-bottom: 6px; }
     .cmt-react-trigger { position: relative; cursor: pointer; font-weight: 600; color: var(--color-primary-dark); }
@@ -168,11 +172,13 @@ export class CommentItemComponent implements OnDestroy {
   @ViewChild('reactWrap') reactWrapRef?: ElementRef<HTMLElement>;
 
   readonly reactions = REACTIONS;
-  canModerate = this.auth.hasPermission('comment.delete');
+  canModerateDelete = this.auth.hasPermission('comment.delete');
+  canModerateEdit = this.auth.hasPermission('comment.update');
 
   replying = signal(false);
   replyText = '';
   replyMedia: { url: string; type: MediaType } | null = null;
+  replyMentions: MentionRef[] = [];
   replyUploading = signal(false);
   replyGifOpen = signal(false);
   replySubmitting = signal(false);
@@ -180,6 +186,7 @@ export class CommentItemComponent implements OnDestroy {
   editing = signal(false);
   editText = '';
   editMedia: { url: string; type: MediaType } | null = null;
+  editMentions: MentionRef[] = [];
   editUploading = signal(false);
   editGifOpen = signal(false);
   editSubmitting = signal(false);
@@ -189,9 +196,9 @@ export class CommentItemComponent implements OnDestroy {
   // Getters (bukan field diinisialisasi sekali) karena `level`/`comment` di-set
   // Angular lewat @Input SETELAH constructor selesai — field initializer akan
   // membaca nilai default (level=0), bukan nilai yang benar-benar di-bind.
-  get canReply(): boolean { return this.level < 2; }
-  get canEdit(): boolean { return this.comment.isOwner; }
-  get canDelete(): boolean { return this.comment.isOwner || this.canModerate; }
+  get canReply(): boolean { return this.level < 1; }
+  get canEdit(): boolean { return this.comment.isOwner || this.canModerateEdit; }
+  get canDelete(): boolean { return this.comment.isOwner || this.canModerateDelete; }
 
   /**
    * Tutup picker reaksi saat klik di luar area trigger+picker-nya (capture
@@ -249,7 +256,7 @@ export class CommentItemComponent implements OnDestroy {
     if (!this.auth.isLoggedIn()) { this.toast.error('Masuk untuk membalas komentar'); return; }
     this.replying.set(true);
   }
-  cancelReply(): void { this.replying.set(false); this.replyText = ''; this.replyMedia = null; }
+  cancelReply(): void { this.replying.set(false); this.replyText = ''; this.replyMedia = null; this.replyMentions = []; }
 
   onReplyFileSelected(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
@@ -274,6 +281,7 @@ export class CommentItemComponent implements OnDestroy {
       commentText: this.replyText.trim(),
       mediaURL: this.replyMedia?.url,
       mediaType: this.replyMedia?.type,
+      mentionedUserIDs: this.replyMentions.map((m) => m.userID),
     }).subscribe({
       next: (created) => {
         this.replySubmitting.set(false);
@@ -291,6 +299,7 @@ export class CommentItemComponent implements OnDestroy {
   openEdit(): void {
     this.editText = this.comment.commentText;
     this.editMedia = this.comment.mediaURL ? { url: this.comment.mediaURL, type: this.comment.mediaType ?? 'image' } : null;
+    this.editMentions = (this.comment.mentions ?? []).map((m) => ({ userID: m.userID, fullName: m.name }));
     this.editing.set(true);
   }
   cancelEdit(): void { this.editing.set(false); }
@@ -315,6 +324,7 @@ export class CommentItemComponent implements OnDestroy {
       commentText: this.editText.trim(),
       mediaURL: this.editMedia?.url,
       mediaType: this.editMedia?.type,
+      mentionedUserIDs: this.editMentions.map((m) => m.userID),
     }).subscribe({
       next: (updated) => {
         this.editSubmitting.set(false);
@@ -325,6 +335,7 @@ export class CommentItemComponent implements OnDestroy {
         this.comment.commentText = updated.commentText;
         this.comment.mediaURL = updated.mediaURL;
         this.comment.mediaType = updated.mediaType;
+        this.comment.mentions = updated.mentions;
       },
       error: () => this.editSubmitting.set(false),
     });

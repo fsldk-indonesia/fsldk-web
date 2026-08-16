@@ -9,6 +9,13 @@ export interface UserProfile {
   photoURL?: string;
 }
 
+/** Ringkasan pengguna minimal untuk autocomplete @mention pada komentar. */
+export interface MentionUser {
+  userID: number;
+  fullName: string;
+  photoURL?: string;
+}
+
 /** Baris pengguna pada tabel manajemen pengguna CMS. */
 export interface UserRow {
   userID: number;

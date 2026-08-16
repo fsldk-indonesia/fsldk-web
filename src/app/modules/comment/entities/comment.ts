@@ -14,6 +14,13 @@ export interface CommentReactions {
   userTypes: ReactionType[];
 }
 
+/** Minimal reference to a mentioned user — {@link CommentAuthor} shape reused
+ *  from the compose side (autocomplete picks) and the API response side. */
+export interface MentionRef {
+  userID: number;
+  fullName: string;
+}
+
 export interface Comment {
   commentID: number;
   contentType: string;
@@ -26,6 +33,7 @@ export interface Comment {
   createdDate: string;
   author: CommentAuthor;
   reactions: CommentReactions;
+  mentions: CommentAuthor[];
   replies: Comment[];
 }
 
@@ -36,12 +44,14 @@ export interface CreateCommentRequest {
   commentText?: string;
   mediaURL?: string;
   mediaType?: MediaType;
+  mentionedUserIDs?: number[];
 }
 
 export interface UpdateCommentRequest {
   commentText?: string;
   mediaURL?: string;
   mediaType?: MediaType;
+  mentionedUserIDs?: number[];
 }
 
 export interface GifItem {

@@ -58,11 +58,13 @@ modules/news/
 | Modul | Isi |
 |---|---|
 | `auth` | Halaman login, daftar, verifikasi email, lupa password, reset password |
-| `user` | `AuthRepository` (sesi/token — lihat §5), manajemen pengguna CMS |
+| `user` | `AuthRepository` (sesi/token — lihat §5), manajemen pengguna CMS, pencarian @mention komentar (`UserRepository.searchMentionable`) |
 | `role` | Manajemen role & penetapan permission |
 | `permission` | Menu sidebar dinamis (`GET /me/menus`) & daftar permission |
 | `news` | Berita — publik (list/detail) & CMS (manajemen/form) |
 | `article` | Artikel — publik (list/detail) & CMS (manajemen/form) |
+| `event` | Event — publik (list/detail, countdown, tab dokumentasi) & CMS (manajemen/form) |
+| `comment` | Komentar — widget publik (`comment-section`/`comment-item`, dipakai lintas modul `article`/`news`/`event`) & CMS moderasi (lihat §9) |
 | `shortlink` | Manajemen shortlink CMS — buat/lihat/ubah/hapus, salin tautan pendek |
 | `dashboard` | Ringkasan statistik CMS |
 | `home` | Beranda — hero, berita terbaru, serta section Tentang & Kontak (teks tetap/hardcoded, bukan dari API) |
@@ -241,6 +243,24 @@ Sesuai desain backend, sidebar CMS **tidak hardcode** (kecuali item Dashboard). 
 ## 8. Konvensi Styling & Design System
 
 [`src/styles.scss`](../src/styles.scss) berisi token desain global (warna hijau FSLDK `#00933b`, tipografi Poppins + Manrope, komponen `.card`/`.btn`/`.badge`/`.chip`/`.table`, dsb.) yang dipakai lintas seluruh Page — komponen individual hanya menambah style spesifik-halaman di blok `styles: []`-nya sendiri (co-located dengan `*.page.ts`, bukan file `.scss` terpisah, mengikuti bentuk file pada gambar referensi struktur modul).
+
+---
+
+## 9. Sistem Komentar: Widget Lintas Modul, Reply Depth, dan @Mention
+
+`modules/comment/components/` (`comment-section.component.ts` top-level + `comment-item.component.ts` rekursif) adalah widget yang **di-embed langsung** oleh halaman detail publik `article`, `news`, dan `event` (`<app-comment-section [contentType]="'event'" [contentID]="e.eventID" />`) — bukan komponen milik salah satu modul tersebut, melainkan cross-module import dari `modules/comment` sesuai konvensi §2. Halaman CMS `comment.index`/`comment.detail` merender ulang komponen yang sama persis untuk moderasi, sehingga UI publik dan admin selalu konsisten.
+
+**Batas balasan 1 level** ditegakkan ganda: `CommentItemComponent.canReply` (`level < 1`) menyembunyikan tombol "Balas" di level 1, dan server menolak (`400`) kalau tetap dipaksa lewat API langsung — lihat `fsldk-api` `docs/ARCHITECTURE.md §11`.
+
+**Edit/Hapus**: `canEdit`/`canDelete` selalu `true` untuk pemilik (`comment.isOwner`, dihitung server-side dari token, bukan dipercaya dari client sepenuhnya — endpoint tetap memvalidasi ulang), ditambah override `canModerateEdit`/`canModerateDelete` dari `AuthRepository.hasPermission('comment.update'|'comment.delete')`.
+
+**@Mention** (`MentionTextareaComponent`, `mention-textarea.component.ts`) adalah drop-in pengganti `<textarea>` yang mengimplementasikan `ControlValueAccessor` sehingga tetap dipakai lewat `[(ngModel)]` seperti sebelumnya, dipasang di tiga tempat: compose komentar baru, balas, dan edit.
+
+- Mengetik `@` memicu pencarian (debounce 200ms) ke `GET /users/mention-search`; memilih hasil menyisipkan teks polos `@Nama Lengkap ` (**tanpa** tanda kurung kurawal) di posisi kursor.
+- Popup saran diposisikan **di atas** textarea (`bottom: 100%`) dan setiap barisnya adalah `<button>` yang dipilih lewat `(mousedown)` + `preventDefault()` — bukan `(click)` biasa — supaya textarea tidak kehilangan fokus saat memilih (tombol native selalu bisa menerima fokus, `mousedown` yang di-`preventDefault()` mencegah perpindahan fokus itu sebelum event `pick()` sempat berjalan).
+- Mention yang benar-benar dipilih dilacak terpisah sebagai `MentionRef[]` (bukan di-parse ulang dari teks) dan dipancarkan lewat `(mentionsChange)`; komponen pemanggil mengirimkannya sebagai `mentionedUserIDs` saat submit. Setiap keystroke, `MentionTextareaComponent` mencocokkan ulang teks saat ini terhadap daftar mention yang sudah dikonfirmasi — kalau teks `@Nama`-nya sudah tidak ada lagi (dihapus/diedit), mention itu otomatis gugur dari daftar.
+- Mode edit di-seed dari mention yang sudah ada (`[initialMentions]="editMentions"`, diisi `openEdit()` dari `comment.mentions`) supaya mention lama tidak hilang saat menyimpan perubahan yang tidak menyentuh teks mention-nya.
+- **Pill di tampilan**: `MentionHighlightPipe` (`comment.commentText | mentionHighlight:comment.mentions`) merender `@Nama` sebagai pill hanya untuk nama yang benar-benar ada di `comment.mentions` (daftar terkonfirmasi dari server) — teks `@sesuatu` bebas yang diketik tanpa memilih dari autocomplete **tidak pernah** dianggap mention. Teks di-escape HTML dulu sebelum dicocokkan/disisipi `<span class="mention-pill">`, sehingga tetap aman dipakai lewat `[innerHTML]`.
 
 ---
 

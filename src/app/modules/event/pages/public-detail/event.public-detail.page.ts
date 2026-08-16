@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Event } from '../../entities/event';
+import { CommentSectionComponent } from '../../../comment/components/comment-section.component';
 import { EventPublicDetailPresenter } from './event.public-detail.presenter';
 import { EventPublicDetailView } from './event.public-detail.view';
 
@@ -10,7 +11,7 @@ import { EventPublicDetailView } from './event.public-detail.view';
   selector: 'app-event-public-detail-page',
   standalone: true,
   templateUrl: './event.public-detail.page.html',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, CommentSectionComponent],
   providers: [EventPublicDetailPresenter],
   styles: [`
     /* Clean layout consistent with news & article detail pages */

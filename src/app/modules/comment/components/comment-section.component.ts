@@ -5,9 +5,10 @@ import { AuthRepository } from '../../user/repositories/auth.repository';
 import { ToastService } from '../../../core/services/toast.service';
 import { UploadService } from '../../../core/services/upload.service';
 import { CommentRepository } from '../repositories/comment.repository';
-import { Comment, MediaType } from '../entities/comment';
+import { Comment, MediaType, MentionRef } from '../entities/comment';
 import { CommentItemComponent } from './comment-item.component';
 import { GifPickerComponent } from './gif-picker.component';
+import { MentionTextareaComponent } from './mention-textarea.component';
 
 /**
  * Widget komentar publik yang di-embed di halaman detail Artikel & Berita
@@ -18,14 +19,14 @@ import { GifPickerComponent } from './gif-picker.component';
 @Component({
   selector: 'app-comment-section',
   standalone: true,
-  imports: [FormsModule, RouterLink, CommentItemComponent, GifPickerComponent],
+  imports: [FormsModule, RouterLink, CommentItemComponent, GifPickerComponent, MentionTextareaComponent],
   template: `
     <section class="cmt-section" id="cmt-section">
       <h3 class="cmt-section-title">Komentar</h3>
 
       @if (isLoggedIn()) {
         <div class="cmt-compose">
-          <textarea class="form-control" rows="3" [(ngModel)]="text" placeholder="Tulis komentar… (Ctrl+Enter untuk kirim)" (keydown.control.enter)="submit()"></textarea>
+          <app-mention-textarea [rows]="3" placeholder="Tulis komentar… (Ctrl+Enter untuk kirim)" [(ngModel)]="text" [initialMentions]="mentions" (mentionsChange)="mentions = $event" (ctrlEnter)="submit()" />
           @if (media) {
             <div class="cmt-media-preview">
               <img [src]="media.url" [alt]="media.type">
@@ -92,6 +93,7 @@ export class CommentSectionComponent implements OnInit {
 
   text = '';
   media: { url: string; type: MediaType } | null = null;
+  mentions: MentionRef[] = [];
   uploading = signal(false);
   gifOpen = signal(false);
   submitting = signal(false);
@@ -133,11 +135,13 @@ export class CommentSectionComponent implements OnInit {
       commentText: this.text.trim(),
       mediaURL: this.media?.url,
       mediaType: this.media?.type,
+      mentionedUserIDs: this.mentions.map((m) => m.userID),
     }).subscribe({
       next: (created) => {
         this.submitting.set(false);
         this.text = '';
         this.media = null;
+        this.mentions = [];
         // Backend mengurutkan thread ASC berdasarkan createdDate — tambahkan
         // di akhir daftar lokal supaya urutannya tetap konsisten tanpa reload.
         this.comments.update((list) => [...list, created]);
