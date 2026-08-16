@@ -1,4 +1,4 @@
-import { Component, HostListener, NgZone, OnDestroy, OnInit, inject, signal } from '@angular/core';
+﻿import { Component, HostListener, NgZone, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { IconComponent } from '../shared/icon.component';
@@ -6,7 +6,7 @@ import { IconComponent } from '../shared/icon.component';
 /**
  * Layout Landing Page publik: navbar mengikuti alur halaman di posisi atas,
  * baru berubah jadi kartu mengambang (position: fixed) setelah melewati
- * ambang scroll — bukan sticky sejak awal — plus drawer mobile + konten + footer.
+ * ambang scroll â€” bukan sticky sejak awal â€” plus drawer mobile + konten + footer.
  */
 @Component({
   selector: 'app-public-layout',
@@ -26,6 +26,7 @@ import { IconComponent } from '../shared/icon.component';
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Beranda</a>
           <a routerLink="/berita" routerLinkActive="active">Berita</a>
           <a routerLink="/artikel" routerLinkActive="active">Artikel</a>
+          <a routerLink="/event" routerLinkActive="active">Event</a>
         </nav>
 
         <div class="flex items-center gap-sm pub-actions">
@@ -78,6 +79,7 @@ import { IconComponent } from '../shared/icon.component';
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobile()">Beranda</a>
         <a routerLink="/berita" routerLinkActive="active" (click)="closeMobile()">Berita</a>
         <a routerLink="/artikel" routerLinkActive="active" (click)="closeMobile()">Artikel</a>
+        <a routerLink="/event" routerLinkActive="active" (click)="closeMobile()">Event</a>
       </nav>
       <div class="mobile-actions">
         @if (auth.isLoggedIn()) {
@@ -139,7 +141,7 @@ import { IconComponent } from '../shared/icon.component';
        tinggi halaman berkonten pendek (mis. hasil pencarian kosong) mendarat
        PAS di 100dvh, sehingga jarak yang bisa di-scroll jadi nyaris nol.
        Browser menangani jarak scroll yang nyaris-nol itu dengan buruk saat
-       scroll momentum/trackpad — terasa "tersangkut"/tidak bisa mentok ke
+       scroll momentum/trackpad â€” terasa "tersangkut"/tidak bisa mentok ke
        bawah. Alur dokumen biasa di sini menghindari itu; konsekuensinya
        halaman yang sangat pendek bisa punya sedikit ruang kosong di bawah
        footer, yang jauh lebih ringan daripada scroll yang terasa rusak. */
@@ -147,7 +149,7 @@ import { IconComponent } from '../shared/icon.component';
 
     /* Mengikuti pola ldksyahid-app: header normal (ikut alur halaman, ikut ter-scroll)
        di posisi atas, baru berubah jadi kartu mengambang (position: fixed) setelah
-       melewati ambang scroll tertentu — bukan sticky sejak piksel pertama. */
+       melewati ambang scroll tertentu â€” bukan sticky sejak piksel pertama. */
     .nav-placeholder { height: 0; transition: height .2s ease; }
     .nav-placeholder.active { height: 78px; }
 
@@ -176,7 +178,7 @@ import { IconComponent } from '../shared/icon.component';
     .pub-nav a.active svg, .mobile-nav a.active svg { opacity: 1; }
     .mobile-nav a:hover { text-decoration: none; color: var(--color-primary-dark); }
     /* Tautan aktif jadi pill solid hijau (bukan lagi cuma titik kecil di bawah
-       teks) — lebih jelas kelihatan "sedang di halaman ini", senada dengan
+       teks) â€” lebih jelas kelihatan "sedang di halaman ini", senada dengan
        aksen hijau solid yang dipakai di menu aktif sidebar CMS. */
     .pub-nav a {
       position: relative; display: flex; align-items: center; gap: 7px;
@@ -195,7 +197,7 @@ import { IconComponent } from '../shared/icon.component';
     .chip-avatar.guest { background: var(--color-bg-alt); color: var(--color-text-secondary); }
     img.chip-avatar { object-fit: cover; }
     /* Tumbuh dari sudut kanan-atas (persis di ujung tombol akun yang
-       memicunya) — bukan cuma translateY, supaya terasa "ditarik keluar"
+       memicunya) â€” bukan cuma translateY, supaya terasa "ditarik keluar"
        dari tombol, bukan muncul lepas dari langit-langit. */
     .dropdown-fun {
       position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border);
@@ -276,7 +278,7 @@ export class PublicLayoutComponent implements OnInit, OnDestroy {
 
   // Dipasang manual di luar zone Angular (bukan @HostListener('window:scroll'))
   // supaya event scroll yang sangat sering ini tidak memicu change detection
-  // di SETIAP tick — zone hanya dimasuki lagi saat status "scrolled" benar-
+  // di SETIAP tick â€” zone hanya dimasuki lagi saat status "scrolled" benar-
   // benar berpindah (melewati ambang 80px). @HostListener selalu berjalan
   // di dalam zone, jadi setiap event scroll sebelumnya memicu satu siklus
   // CD penuh meski nilainya tidak berubah.
@@ -288,7 +290,7 @@ export class PublicLayoutComponent implements OnInit, OnDestroy {
   };
 
   ngOnInit(): void {
-    // Sinkronkan sekali di awal — kalau halaman dibuka/di-refresh saat
+    // Sinkronkan sekali di awal â€” kalau halaman dibuka/di-refresh saat
     // browser sudah memulihkan posisi scroll sebelumnya (scroll restoration),
     // tidak ada event "scroll" baru yang terpicu untuk memberi tahu kita,
     // jadi tanpa baris ini status header bisa "nyangkut" salah sampai
