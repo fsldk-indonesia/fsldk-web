@@ -1,0 +1,18 @@
+<div class="page-head">
+  <h1>Profil LDK</h1>
+  <p class="text-muted">Kelola identitas & informasi dasar organisasi Anda.</p>
+</div>
+
+<div class="card card-pad profile-card">
+  @if (loading()) {
+    <span class="skel skel-line" style="width:60%"></span>
+  } @else {
+    <div class="form-group"><label class="form-label">Kode Organisasi</label><input class="form-control" [value]="organization()?.organizationCode" disabled></div>
+    <div class="form-group"><label class="form-label">Nama Organisasi</label><input class="form-control" [(ngModel)]="form.organizationName"></div>
+    <div class="form-group"><label class="form-label">Provinsi</label><input class="form-control" [(ngModel)]="form.provinceName"></div>
+    <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input class="form-control" [(ngModel)]="form.cityName"></div>
+    <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" type="email" [(ngModel)]="form.contactEmail"></div>
+    <div class="form-group"><label class="form-label">Telepon Kontak</label><input class="form-control" [(ngModel)]="form.contactPhone"></div>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan Perubahan</button>
+  }
+</div>

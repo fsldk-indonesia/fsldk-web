@@ -7,6 +7,9 @@ export interface UserProfile {
   role: string;
   permissions: string[];
   photoURL?: string;
+  organizationID?: number;
+  organizationTypeCode?: string;
+  wildcardTierAccess?: string[];
 }
 
 /** Baris pengguna pada tabel manajemen pengguna CMS. */
@@ -20,4 +23,7 @@ export interface UserRow {
   isActive: boolean;
   hasGoogle: boolean;
   hasPassword: boolean;
+  organizationID?: number;
+  organizationTypeCode?: string;
+  wildcardTierAccess?: string[];
 }

@@ -73,6 +73,23 @@
       <div class="form-group"><label class="form-label">Role</label>
         <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" placeholder="Pilih role" />
       </div>
+      @if (showOrganizationPicker()) {
+        <div class="form-group"><label class="form-label">Organisasi</label>
+          <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" placeholder="Pilih organisasi" />
+        </div>
+      }
+      @if (isFreeTierCaller()) {
+        <div class="form-group">
+          <label class="form-label">Akses Lintas Tier (opsional)</label>
+          <div class="wildcard-tiers">
+            @for (tier of wildcardTiers; track tier) {
+              <label class="form-check">
+                <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" (change)="toggleWildcardTier(tier)"> {{ tier }}
+              </label>
+            }
+          </div>
+        </div>
+      }
       <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div>
       <div class="flex gap justify-between">
         <button class="btn btn-ghost" (click)="close()">Batal</button>

@@ -10,6 +10,7 @@ import { articlePublicRoutes, articleCmsRoutes } from './modules/article/article
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { roleRoutes } from './modules/role/role.routes';
+import { organizationRoutes } from './modules/organization/organization.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 
@@ -58,6 +59,7 @@ export const routes: Routes = [
       ...dashboardRoutes(),
       ...userRoutes(),
       ...roleRoutes(),
+      ...organizationRoutes(),
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...shortlinkRoutes(),

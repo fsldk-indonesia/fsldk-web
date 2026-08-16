@@ -1,7 +1,8 @@
-import { Component, HostListener, OnInit, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { PermissionRepository } from '../modules/permission/repositories/permission.repository';
+import { OrganizationRepository } from '../modules/organization/repositories/organization.repository';
 import { MenuItem } from '../modules/permission/entities/menu-item';
 import { IconComponent } from '../shared/icon.component';
 
@@ -16,7 +17,7 @@ import { IconComponent } from '../shared/icon.component';
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
   template: `
-    <div class="cms">
+    <div class="cms" [class.tier-ldk]="tierClass() === 'tier-ldk'" [class.tier-puskomda]="tierClass() === 'tier-puskomda'" [class.tier-puskomnas]="tierClass() === 'tier-puskomnas'">
       <aside class="sidebar" [class.open]="sidebarOpen()">
         <div class="side-brand">
           <span class="brand-icon"><img src="assets/logo-fsldk.svg" alt="Logo FSLDK"></span>
@@ -39,6 +40,25 @@ import { IconComponent } from '../shared/icon.component';
       <div class="cms-main">
         <header class="topbar">
           <button class="hamburger" (click)="toggle()" aria-label="Menu">&#9776;</button>
+          @if (orgRepo.hasMultiple()) {
+            <div class="org-switcher">
+              <button class="org-switcher-btn" type="button" (click)="toggleOrgDropdown($event)">
+                <app-icon name="building" [size]="14" />
+                <span>{{ orgRepo.activeOrganization()?.organizationName ?? 'Pilih Organisasi' }}</span>
+                <app-icon name="chevron-down" [size]="12" />
+              </button>
+              @if (orgDropdownOpen()) {
+                <div class="dropdown-panel org-dropdown-panel">
+                  @for (o of orgRepo.accessible(); track o.organizationID) {
+                    <button type="button" [class.active]="o.organizationID === orgRepo.activeOrganization()?.organizationID" (click)="selectOrganization(o.organizationID)">
+                      {{ o.organizationName }}
+                      <small class="text-muted">{{ o.organizationTypeCode }}</small>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          }
           <div class="spacer"></div>
           <a routerLink="/" class="nav-website-link">
             <span class="icon-badge sm icon-badge-neutral"><app-icon name="globe" [size]="15" /></span>
@@ -113,6 +133,16 @@ import { IconComponent } from '../shared/icon.component';
     .cms-main { margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; }
     .topbar { display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
     .spacer { flex: 1; }
+    /* Dashboard switcher (Section 11.2) — hanya tampil bila caller punya
+       akses ke lebih dari satu organisasi (Puskomda/Puskomnas/wildcard);
+       bergantung ke chevron-down/chevrons-up-down dari ikon terbaru. */
+    .org-switcher { position: relative; }
+    .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: var(--color-bg-warm); color: var(--color-text); font-weight: 600; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
+    .org-switcher-btn:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
+    .org-switcher-btn span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .org-dropdown-panel { left: 0; right: auto; min-width: 260px; max-height: 320px; overflow-y: auto; }
+    .org-dropdown-panel button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+    .org-dropdown-panel button.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .hamburger { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; }
     .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
     .nav-website-link:hover { background: var(--color-bg-warm); color: var(--color-primary-dark); text-decoration: none; }
@@ -146,30 +176,73 @@ import { IconComponent } from '../shared/icon.component';
       .hamburger { display: block; color: var(--color-text); }
       .cms-main { margin-left: 0; }
     }
+    /* Tema per tier organisasi (Section 17 TechSpec) — mengganti nilai
+       --color-primary* di root ".cms" saja, jadi seluruh komponen turunan
+       (tombol, badge aktif sidebar, focus ring) ikut berubah otomatis lewat
+       cascade CSS custom property, tanpa perlu disentuh satu per satu.
+       Kader sengaja TIDAK diberi kelas di sini — tetap warna hijau dasar
+       bawaan (:root), bukan salah satu dari 3 warna tier resmi (DL-12). */
+    .cms.tier-ldk {
+      --color-primary: #063c84; --color-primary-dark: #042c61; --color-primary-darker: #021a3a;
+      --color-primary-bright: #1f5db3; --color-primary-soft: #e2e9f5; --color-primary-tint: #f4f7fc;
+    }
+    .cms.tier-puskomda {
+      --color-primary: #186541; --color-primary-dark: #0f4a30; --color-primary-darker: #092e1d;
+      --color-primary-bright: #2f9161; --color-primary-soft: #e0f0e6; --color-primary-tint: #f4faf6;
+    }
+    .cms.tier-puskomnas {
+      --color-primary: #55408f; --color-primary-dark: #3e2f6b; --color-primary-darker: #291f47;
+      --color-primary-bright: #7a63b8; --color-primary-soft: #ece8f7; --color-primary-tint: #f8f6fc;
+    }
   `],
 })
 export class CmsLayoutComponent implements OnInit {
   auth = inject(AuthRepository);
+  orgRepo = inject(OrganizationRepository);
   private permissionRepo = inject(PermissionRepository);
   private router = inject(Router);
 
   menus = signal<MenuItem[]>([]);
   sidebarOpen = signal(false);
   dropdownOpen = signal(false);
+  orgDropdownOpen = signal(false);
   year = new Date().getFullYear();
+
+  /** Warna chrome CMS mengikuti tier organisasi yang sedang dilihat (switcher)
+   *  — Kader tidak masuk sini (bukan tier CMS), tetap warna hijau dasar bawaan. */
+  tierClass = computed(() => {
+    switch (this.orgRepo.activeOrganization()?.organizationTypeCode) {
+      case 'LDK': return 'tier-ldk';
+      case 'PUSKOMDA': return 'tier-puskomda';
+      case 'PUSKOMNAS': return 'tier-puskomnas';
+      default: return '';
+    }
+  });
 
   ngOnInit(): void {
     this.permissionRepo.getMenus().subscribe({ next: (m) => this.menus.set(m), error: () => {} });
+    this.orgRepo.loadAccessible().subscribe({ error: () => {} });
   }
 
   @HostListener('document:click')
   onDocumentClick(): void {
     this.dropdownOpen.set(false);
+    this.orgDropdownOpen.set(false);
   }
 
   toggleDropdown(event: Event): void {
     event.stopPropagation();
     this.dropdownOpen.update((v) => !v);
+  }
+
+  toggleOrgDropdown(event: Event): void {
+    event.stopPropagation();
+    this.orgDropdownOpen.update((v) => !v);
+  }
+
+  selectOrganization(id: number): void {
+    this.orgRepo.setActive(id);
+    this.orgDropdownOpen.set(false);
   }
 
   initials(): string {
