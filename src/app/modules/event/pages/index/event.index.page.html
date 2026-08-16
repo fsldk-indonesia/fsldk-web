@@ -1,0 +1,89 @@
+﻿<div class="flex justify-between items-center page-head">
+  <div><h1>Manajemen Event</h1><p class="text-muted">Kelola kegiatan dan agenda organisasi.</p></div>
+  @if (canCreate) { <a routerLink="/cms/events/form" class="btn btn-primary">+ Tambah Event</a> }
+</div>
+
+<!-- Search / filter bar -->
+<div class="card card-pad" style="margin-bottom:16px">
+  <div class="flex gap" style="flex-wrap:wrap">
+    <input class="form-control" style="max-width:280px" [(ngModel)]="search" (keyup.enter)="apply()" placeholder="Cari event…">
+    <input class="form-control" style="max-width:200px" [(ngModel)]="division" (keyup.enter)="apply()" placeholder="Filter divisi…">
+    <button class="btn btn-outline btn-sm" (click)="apply()">Cari</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Judul Event</th>
+          <th>Divisi</th>
+          <th>Tanggal Mulai</th>
+          <th>Status</th>
+          <th>Publik</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:80px"></span></td>
+              <td><span class="skel skel-line" style="width:90px"></span></td>
+              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:50px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:80px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (e of events(); track e.eventID) {
+            <tr>
+              <td><strong>{{ e.eventTitle }}</strong></td>
+              <td class="text-muted">{{ e.eventDivision }}</td>
+              <td class="text-muted">{{ e.startDate ? (e.startDate | date:'d MMM yyyy') : '–' }}</td>
+              <td>
+                <span class="badge"
+                  [class.badge-published]="e.status === 'ongoing'"
+                  [class.badge-draft]="e.status === 'past'"
+                  style="text-transform:capitalize">
+                  {{ statusLabel(e.status) }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.badge-published]="e.isPublished" [class.badge-draft]="!e.isPublished">
+                  {{ e.isPublished ? 'Ya' : 'Tidak' }}
+                </span>
+              </td>
+              <td>
+                <div class="table-actions">
+                  @if (canUpdate) {
+                    <a class="icon-action" [routerLink]="['/cms/events/form', e.eventID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(e.eventID)" (click)="remove(e, $event)" title="Hapus">
+                      @if (isBusy(e.eventID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="calendar-days" [size]="26" /></span>
+                <h4>Belum ada event</h4>
+                <p>Event yang Anda tambahkan akan muncul di sini.</p>
+                @if (canCreate) { <a routerLink="/cms/events/form" class="btn btn-primary btn-sm">+ Tambah Event</a> }
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

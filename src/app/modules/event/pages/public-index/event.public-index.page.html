@@ -1,0 +1,81 @@
+﻿<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:32px">
+      <span class="eyebrow">Agenda &amp; Kegiatan</span>
+      <h1>Event &amp; Syiar Dakwah Kampus</h1>
+    </div>
+
+    <div class="filters">
+      <input class="form-control search" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari event…">
+      <div class="chips">
+        @for (c of statusChips; track c.value) {
+          <span class="chip" [class.active]="status === c.value" (click)="filterStatus(c.value)">{{ c.label }}</span>
+        }
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="grid grid-3 mt-lg">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="card" style="overflow:hidden">
+            <span class="skel skel-thumb" style="border-radius:0"></span>
+            <div class="card-pad">
+              <span class="skel skel-line" style="width:80px;height:20px;border-radius:999px"></span>
+              <span class="skel skel-title" style="margin-top:12px"></span>
+              <span class="skel skel-line" style="width:90%"></span>
+              <span class="skel skel-line" style="width:50%"></span>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="grid grid-3 mt-lg">
+        @for (e of items(); track e.eventID) {
+          <a class="news-card" [routerLink]="['/event', e.eventSlug]">
+            <div class="news-thumb">
+              @if (e.eventImage) {
+                <img [src]="e.eventImage" [alt]="e.eventTitle">
+              } @else {
+                <span>EVENT</span>
+              }
+              <span class="status-tag"
+                [class.status-upcoming]="e.status === 'upcoming'"
+                [class.status-ongoing]="e.status === 'ongoing'"
+                [class.status-past]="e.status === 'past'">
+                {{ statusLabel(e.status) }}
+              </span>
+            </div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ e.eventDivision }}</span>
+              <h3>{{ e.eventTitle }}</h3>
+              <p class="meta">
+                @if (e.startDate) { 📅 {{ e.startDate | date:'d MMM yyyy' }} }
+                @if (e.location) { · 📍 {{ e.location }} }
+              </p>
+            </div>
+          </a>
+        } @empty {
+          <div class="empty-state" style="grid-column:1/-1; min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
+            @if (search || status) {
+              <span class="icon-badge lg icon-badge-neutral" style="margin:0 auto 14px"><app-icon name="search" [size]="26" /></span>
+              <h4>Tidak ada event ditemukan</h4>
+              <p>Coba ubah kata kunci pencarian atau filter status yang dipilih.</p>
+            } @else {
+              <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="calendar-days" [size]="26" /></span>
+              <h4>Belum ada event</h4>
+              <p>Event dan agenda kegiatan akan muncul di sini setelah dipublikasikan.</p>
+            }
+          </div>
+        }
+      </div>
+
+      @if (count() > limit) {
+        <div class="pager">
+          <button class="btn btn-outline btn-sm" [disabled]="page() <= 1" (click)="go(page() - 1)">Sebelumnya</button>
+          <span>Halaman {{ page() }} dari {{ totalPages() }}</span>
+          <button class="btn btn-outline btn-sm" [disabled]="page() >= totalPages()" (click)="go(page() + 1)">Berikutnya</button>
+        </div>
+      }
+    }
+  </div>
+</section>
