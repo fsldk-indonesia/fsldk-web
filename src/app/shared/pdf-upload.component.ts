@@ -2,25 +2,24 @@ import { Component, Input, inject, output, signal } from '@angular/core';
 import { UploadService } from '../core/services/upload.service';
 import { ToastService } from '../core/services/toast.service';
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024;
-
 /**
- * Input berkas PDF berbasis unggah langsung — dipakai oleh form Artikel CMS
- * untuk naskah lengkap (dibaca via PDF di landing page). Mengunggah ke
- * POST /uploads/document lalu memancarkan URL hasil unggahan lewat `[(value)]`.
+ * Input berkas dokumen berbasis unggah langsung — dipakai oleh form Artikel
+ * CMS (naskah PDF) dan field FILE_DOCUMENT submission (pdf/docx/xlsx, OQ-07).
+ * Mengunggah ke POST /uploads/document lalu memancarkan URL hasil unggahan
+ * lewat `[(value)]`.
  */
 @Component({
   selector: 'app-pdf-upload',
   standalone: true,
   template: `
-    <input #fileInput type="file" accept="application/pdf" hidden (change)="onFileSelected($event)">
+    <input #fileInput type="file" [attr.accept]="accept" hidden (change)="onFileSelected($event)">
 
     @if (value) {
       <div class="pdf-chip">
         <span class="pdf-icon">📄</span>
-        <a [href]="value" target="_blank" rel="noopener" class="pdf-name">Lihat PDF saat ini</a>
+        <a [href]="value" target="_blank" rel="noopener" class="pdf-name">Lihat berkas saat ini</a>
         <div class="pdf-actions">
-          <button type="button" class="btn btn-outline btn-sm" (click)="fileInput.click()" [disabled]="uploading()">Ganti PDF</button>
+          <button type="button" class="btn btn-outline btn-sm" (click)="fileInput.click()" [disabled]="uploading()">Ganti Berkas</button>
           <button type="button" class="btn btn-ghost btn-sm" (click)="remove()" [disabled]="uploading()">Hapus</button>
         </div>
         @if (uploading()) { <div class="pdf-overlay"><span class="spinner spinner-dark"></span></div> }
@@ -31,8 +30,8 @@ const MAX_FILE_SIZE = 20 * 1024 * 1024;
           <span class="spinner spinner-dark"></span><span>Mengunggah…</span>
         } @else {
           <span class="dropzone-icon">&#8593;</span>
-          <span>Klik untuk unggah PDF</span>
-          <small>Format PDF — maks. 20MB</small>
+          <span>Klik untuk unggah {{ label }}</span>
+          <small>Format {{ allowedExtensions.join('/') }} — maks. {{ maxSizeMB }}MB</small>
         }
       </button>
     }
@@ -52,6 +51,12 @@ const MAX_FILE_SIZE = 20 * 1024 * 1024;
 })
 export class PdfUploadComponent {
   @Input() value: string | null = null;
+  /** Ekstensi yang diterima (dipakai untuk validasi & atribut `accept`).
+   *  Default PDF saja — form Artikel CMS tetap seperti semula; field dokumen
+   *  submission (OQ-07) melewatkan set yang lebih luas (pdf/docx/xlsx). */
+  @Input() allowedExtensions: string[] = ['.pdf'];
+  @Input() maxSizeMB = 20;
+  @Input() label = 'PDF';
   readonly valueChange = output<string>();
 
   private uploadService = inject(UploadService);
@@ -59,18 +64,22 @@ export class PdfUploadComponent {
 
   uploading = signal(false);
 
+  get accept(): string { return this.allowedExtensions.join(','); }
+
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
     input.value = '';
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
-      this.toast.error('Format berkas tidak didukung (hanya PDF)');
+    const ext = '.' + (file.name.split('.').pop()?.toLowerCase() ?? '');
+    if (!this.allowedExtensions.includes(ext)) {
+      this.toast.error(`Format berkas tidak didukung (hanya ${this.allowedExtensions.join(', ')})`);
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      this.toast.error('Ukuran berkas melebihi 20MB');
+    const maxBytes = this.maxSizeMB * 1024 * 1024;
+    if (file.size > maxBytes) {
+      this.toast.error(`Ukuran berkas melebihi ${this.maxSizeMB}MB`);
       return;
     }
 
