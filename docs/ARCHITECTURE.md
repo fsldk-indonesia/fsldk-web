@@ -64,7 +64,11 @@ modules/news/
 | `news` | Berita — publik (list/detail) & CMS (manajemen/form) |
 | `article` | Artikel — publik (list/detail) & CMS (manajemen/form) |
 | `shortlink` | Manajemen shortlink CMS — buat/lihat/ubah/hapus, salin tautan pendek |
-| `dashboard` | Ringkasan statistik CMS |
+| `dashboard` | Ringkasan **tier-aware** (LDK/Puskomda/Puskomnas) — bentuk widget berbeda sesuai `organizationTypeCode` pengguna |
+| `organization` | Hierarki LDK/Puskomda/Puskomnas — profil, daftar wilayah/nasional, `OrganizationRepository` sekaligus pemilik state dashboard switcher (§7) |
+| `submission-form` | Form builder (Super Admin) — form/version/section/field/option pendataan Levelisasi & Sensus Kader |
+| `submission` | Pengisian, status, & review pendataan — satu modul dipakai LDK (isi form, lihat status), Puskomda/Puskomnas (verifikasi/persetujuan/penetapan level/publikasi), dan LDK lagi (persetujuan kader) sekaligus, dibedakan lewat permission dari `/me/menus`, bukan role hardcode di komponen |
+| `report` | Laporan Wilayah/Nasional — tabel submission + ekspor Excel/CSV |
 | `home` | Beranda — hero, berita terbaru, serta section Tentang & Kontak (teks tetap/hardcoded, bukan dari API) |
 
 > Konten Landing Page (visi/misi/struktur organisasi/kontak) sengaja **tidak** dikelola via CMS/database — sesuai keputusan produk, teksnya statis langsung di `modules/home/pages/index/home.index.page.ts`. Tidak ada lagi modul `content`, `about`, atau `contact` terpisah.
@@ -222,7 +226,7 @@ Guard dipasang berlapis, berurutan (`canActivate: [verifiedGuard, permissionGuar
 | `verifiedGuard` | Wajib email terverifikasi (redirect ke `/verifikasi-email` bila belum) |
 | `permissionGuard` | Cek `route.data.permission` terhadap `AuthRepository.hasPermission(code)` |
 
-**Redirect pasca-login** (`LoginPresenter`/`RegisterPresenter` → `LoginView.navigateAfterLogin(hasCmsAccess)`): bila `AuthResult.user.permissions.length > 0` (punya akses CMS), arahkan ke `/cms/dashboard`; bila tidak, arahkan ke query param `returnUrl` (diisi `authGuard` saat pengguna diarahkan ke `/login` dari halaman terproteksi) atau `/` bila kosong — pengguna umum yang cuma daftar/login untuk membaca konten kembali ke halaman sebelumnya, bukan dipaksa ke CMS.
+**Redirect pasca-login** (`LoginPresenter`/`RegisterPresenter` → `LoginView.navigateAfterLogin(cmsPath)`) diresolusi lewat `AuthRepository.defaultCmsPath()` — bukan selalu `/cms/dashboard`: akun tanpa tier organisasi (Kader) yang punya `submission.create` diarahkan ke Pendataan (Dashboard tidak punya widget untuk tier ini, lihat `modules/dashboard` di §2 dan API §12 di `fsldk-api`); akun ber-tier organisasi tetap ke `/cms/dashboard`; akun tanpa permission sama sekali (`null`) diarahkan ke query param `returnUrl` (diisi `authGuard`) atau `/` bila kosong. `loginGuard` dan `permissionGuard` (tabel di bawah) memakai helper yang sama untuk fallback redirect-nya, supaya keputusan "ke mana pengguna ini seharusnya mendarat di CMS" hanya didefinisikan sekali.
 
 ### Rute catch-all `/:key` (redirect shortlink)
 
@@ -232,15 +236,19 @@ Guard dipasang berlapis, berurutan (`canActivate: [verifiedGuard, permissionGuar
 
 ---
 
-## 7. Menu Sidebar CMS Dinamis
+## 7. Menu Sidebar CMS Dinamis & Organization Switcher
 
 Sesuai desain backend, sidebar CMS **tidak hardcode** (kecuali item Dashboard). [`layouts/cms-layout.component.ts`](../src/app/layouts/cms-layout.component.ts) memanggil `PermissionRepository.getMenus()` (`GET /me/menus`) saat `ngOnInit`, lalu merender `MenuItem[]` (`menuLabel`/`menuIcon`/`menuRoute`) hasil query permission×role pengguna yang login dari backend.
+
+**Organization switcher** (topbar) hanya muncul bila `OrganizationRepository.hasMultiple()` — akun dengan lebih dari satu organisasi terjangkau (`GET /me/organizations`, hasil cascade §11 `fsldk-api`/ARCHITECTURE.md). LDK murni (selalu tepat satu organisasi) tidak pernah melihatnya. Memilih organisasi lain di switcher **tidak** mengubah token/sesi (`OrganizationRepository.setActive()` murni state UI lokal) — hanya mengganti kelas tier pada root `.cms` (`tier-ldk`/`tier-puskomda`/`tier-puskomnas`), yang meng-override custom property CSS (`--color-primary` dkk., lihat §8) sehingga seluruh child (tombol, badge, item sidebar aktif) otomatis ikut berubah warna tanpa disentuh satu per satu — custom property CSS mengalir mengikuti pohon DOM, bukan batas komponen Angular. Kader sengaja tidak diberi kelas tier apa pun (tetap warna hijau dasar `:root`) — bukan tier CMS resmi.
 
 ---
 
 ## 8. Konvensi Styling & Design System
 
 [`src/styles.scss`](../src/styles.scss) berisi token desain global (warna hijau FSLDK `#00933b`, tipografi Poppins + Manrope, komponen `.card`/`.btn`/`.badge`/`.chip`/`.table`, dsb.) yang dipakai lintas seluruh Page — komponen individual hanya menambah style spesifik-halaman di blok `styles: []`-nya sendiri (co-located dengan `*.page.ts`, bukan file `.scss` terpisah, mengikuti bentuk file pada gambar referensi struktur modul).
+
+**Tema per-tier organisasi**: 3 warna resmi (LDK `#063c84`, Puskomda `#186541`, Puskomnas `#55408f`) didefinisikan sebagai override `--color-primary`/`-dark`/`-darker`/`-bright`/`-soft`/`-tint` lewat kelas `tier-ldk`/`tier-puskomda`/`tier-puskomnas` pada root `.cms` (lihat §7) — komponen individual (termasuk `shared/stat-bar.component.ts` untuk widget dashboard) tidak pernah hardcode salah satu dari 3 warna ini, selalu lewat `var(--color-primary)` supaya otomatis mengikuti tier organisasi yang sedang aktif.
 
 ---
 
