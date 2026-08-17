@@ -26,6 +26,11 @@ export class SubmissionRepository {
     return this.api.listQueue({ formCode, status, page, limit });
   }
 
+  /** Seluruh submission satu form dalam cakupan akses caller, tanpa filter status — dipakai halaman laporan. */
+  listAll(formCode: string, page = 1, limit = 200): Observable<Pagination<SubmissionResponse>> {
+    return this.api.listQueue({ formCode, page, limit });
+  }
+
   review(id: number, body: ReviewRequest): Observable<SubmissionResponse> { return this.api.review(id, body); }
   establishLevel(id: number, body: EstablishLevelRequest): Observable<SubmissionResponse> { return this.api.establishLevel(id, body); }
   publish(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.publish(id, body); }

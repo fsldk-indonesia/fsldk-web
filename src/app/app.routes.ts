@@ -13,6 +13,7 @@ import { roleRoutes } from './modules/role/role.routes';
 import { organizationRoutes } from './modules/organization/organization.routes';
 import { submissionFormRoutes } from './modules/submission-form/submission-form.routes';
 import { submissionRoutes } from './modules/submission/submission.routes';
+import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 
@@ -64,6 +65,7 @@ export const routes: Routes = [
       ...organizationRoutes(),
       ...submissionFormRoutes(),
       ...submissionRoutes(),
+      ...reportRoutes(),
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...shortlinkRoutes(),

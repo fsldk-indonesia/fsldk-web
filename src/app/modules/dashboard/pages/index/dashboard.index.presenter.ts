@@ -8,6 +8,10 @@ export class DashboardIndexPresenter extends BasePresenter<DashboardIndexView> {
   private dashboardRepo = inject(DashboardRepository);
 
   load(): void {
-    this.dashboardRepo.summary().subscribe({ next: (d) => this.view.setSummary(d), error: () => {} });
+    this.view.setLoading(true);
+    this.dashboardRepo.summary().subscribe({
+      next: (d) => { this.view.setSummary(d); this.view.setLoading(false); },
+      error: () => this.view.setLoading(false),
+    });
   }
 }
