@@ -1,0 +1,64 @@
+<div class="page-head">
+  <h1>{{ title }}</h1>
+  <p class="text-muted">Daftar Levelisasi LDK yang menunggu keputusan Anda.</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
+} @else {
+  <div class="layout">
+    <div class="queue-list">
+      @for (item of queue(); track item.submissionID) {
+        <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
+          <strong>{{ orgName(item.organizationID) }}</strong>
+          <span class="chip">{{ statusLabel(item.status) }}</span>
+        </button>
+      } @empty {
+        <div class="card card-pad"><p class="text-muted">Tidak ada submission menunggu keputusan.</p></div>
+      }
+    </div>
+
+    <div>
+      @if (detail(); as d) {
+        <div class="detail-card">
+          <div class="flex justify-between items-center">
+            <h3>{{ orgName(d.organizationID) }}</h3>
+            <span class="chip">{{ statusLabel(d.status) }}</span>
+          </div>
+          <p class="text-muted">Terkirim: {{ d.submittedDate }}</p>
+
+          <app-submission-answers-view [version]="version()" [answers]="d.answers" />
+
+          <div class="decision-form">
+            <h4>Keputusan</h4>
+            <div class="form-group">
+              <label class="form-label">Keputusan</label>
+              <app-select [options]="decisionOptions" [(ngModel)]="decision" />
+            </div>
+            <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" rows="3" [(ngModel)]="note" placeholder="Catatan untuk LDK (wajib bila meminta revisi)"></textarea></div>
+
+            @if (version()?.sections?.length) {
+              <div class="form-group">
+                <label class="form-label">Checklist Verifikasi</label>
+                <div class="checklist">
+                  @for (s of version()!.sections; track s.sectionID) {
+                    <label class="form-check">
+                      <input type="checkbox" [checked]="checklist[s.sectionCode]" (change)="toggleChecklist(s.sectionCode)">
+                      {{ s.sectionLabel }} lengkap &amp; sesuai
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="actions-bar">
+              <button class="btn btn-primary" (click)="submitDecision()" [disabled]="busy()">Kirim Keputusan</button>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <div class="card card-pad"><p class="text-muted">Pilih submission dari daftar untuk melihat detail &amp; memberi keputusan.</p></div>
+      }
+    </div>
+  </div>
+}

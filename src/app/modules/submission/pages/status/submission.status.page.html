@@ -27,6 +27,11 @@
       @if (level.justificationNote) { <p class="text-muted">{{ level.justificationNote }}</p> }
       <p class="text-muted">Ditetapkan: {{ level.establishedDate | date:'medium' }}</p>
       @if (level.isPublished) { <span class="chip chip-green">Dipublikasikan</span> }
+      @if (canReassess && submission()!.status === 'PUBLISHED') {
+        <div style="margin-top:14px">
+          <button class="btn btn-outline btn-sm" (click)="reassess($event)" [disabled]="busy()">Ajukan Reassessment</button>
+        </div>
+      }
     </div>
   }
 

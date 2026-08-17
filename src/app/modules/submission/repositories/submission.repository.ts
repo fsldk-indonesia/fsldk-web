@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { SubmissionApiService } from '../services/submission-api.service';
-import { SubmissionResponse, SubmissionDetail } from '../entities/submission';
+import { Pagination } from '../../../core/entities/pagination';
+import {
+  SubmissionResponse, SubmissionDetail, ReviewRequest, EstablishLevelRequest, VersionedRequest, ReopenRequest,
+} from '../entities/submission';
 
 @Injectable({ providedIn: 'root' })
 export class SubmissionRepository {
@@ -17,4 +20,15 @@ export class SubmissionRepository {
     return this.api.list(formCode).pipe(map((page) => page.data[0] ?? null));
   }
   get(id: number): Observable<SubmissionDetail> { return this.api.get(id); }
+
+  /** Antrean submission untuk satu status (dipanggil beberapa kali & digabung untuk beberapa status sekaligus). */
+  listByStatus(formCode: string, status: string, page = 1, limit = 50): Observable<Pagination<SubmissionResponse>> {
+    return this.api.listQueue({ formCode, status, page, limit });
+  }
+
+  review(id: number, body: ReviewRequest): Observable<SubmissionResponse> { return this.api.review(id, body); }
+  establishLevel(id: number, body: EstablishLevelRequest): Observable<SubmissionResponse> { return this.api.establishLevel(id, body); }
+  publish(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.publish(id, body); }
+  reopen(id: number, body: ReopenRequest): Observable<SubmissionResponse> { return this.api.reopen(id, body); }
+  reassess(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.reassess(id, body); }
 }

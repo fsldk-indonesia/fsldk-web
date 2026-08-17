@@ -2,20 +2,12 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { AlertService } from '../../../../core/services/alert.service';
 import { IconComponent } from '../../../../shared/icon.component';
-import { SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER } from '../../entities/submission';
+import { SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
 import { submissionPath } from '../../submission.path';
 import { SubmissionStatusPresenter } from './submission.status.presenter';
 import { SubmissionStatusView } from './submission.status.view';
-
-const STATUS_LABELS: Record<string, string> = {
-  DRAFT: 'Draf', SUBMITTED: 'Terkirim', CANCELLED: 'Dibatalkan', REJECTED: 'Ditolak',
-  PUSKOMDA_REVIEW: 'Verifikasi Puskomda', REVISION_REQUESTED_PUSKOMDA: 'Revisi Diminta (Puskomda)',
-  APPROVED_PUSKOMDA: 'Disetujui Puskomda', PUSKOMNAS_REVIEW: 'Verifikasi Puskomnas',
-  REVISION_REQUESTED_PUSKOMNAS: 'Revisi Diminta (Puskomnas)', LEVEL_ESTABLISHED: 'Level Ditetapkan',
-  PUBLISHED: 'Dipublikasikan', LDK_REVIEW: 'Verifikasi LDK', REVISION_REQUESTED_LDK: 'Revisi Diminta (LDK)',
-  APPROVED_LDK: 'Disetujui LDK', CODE_ISSUED: 'Kode Terbit', ACTIVE: 'Aktif',
-};
 
 @Component({
   selector: 'app-submission-status-page',
@@ -38,15 +30,18 @@ const STATUS_LABELS: Record<string, string> = {
 export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   private presenter = inject(SubmissionStatusPresenter);
   private auth = inject(AuthRepository);
+  private alert = inject(AlertService);
 
   readonly submissionPath = submissionPath;
-  readonly statusLabels = STATUS_LABELS;
+  readonly statusLabels = SUBMISSION_STATUS_LABELS;
 
   formCode = computed(() => (this.auth.user()?.organizationTypeCode === 'LDK' ? FORM_CODE_LEVELISASI : FORM_CODE_SENSUS_KADER));
   isKaderSubject = computed(() => this.formCode() === FORM_CODE_SENSUS_KADER);
+  canReassess = this.auth.hasPermission('submission.reassess');
 
   submission = signal<SubmissionDetail | null>(null);
   loading = signal(true);
+  busy = signal(false);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
@@ -55,6 +50,17 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
 
   statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
 
+  async reassess(event?: Event): Promise<void> {
+    const s = this.submission();
+    if (!s) return;
+    const ok = await this.alert.confirm('Ajukan siklus reassessment baru? Anda akan mengisi ulang form Levelisasi dari awal.', {
+      title: 'Ajukan Reassessment', confirmLabel: 'Ya, Ajukan',
+    }, event);
+    if (!ok) return;
+    this.presenter.reassess(s.submissionID, s.version);
+  }
+
   setSubmission(detail: SubmissionDetail | null): void { this.submission.set(detail); }
   setLoading(loading: boolean): void { this.loading.set(loading); }
+  setBusy(busy: boolean): void { this.busy.set(busy); }
 }

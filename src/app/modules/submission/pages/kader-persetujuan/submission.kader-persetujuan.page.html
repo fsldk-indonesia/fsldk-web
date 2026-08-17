@@ -1,0 +1,63 @@
+<div class="page-head">
+  <h1>Persetujuan Kader</h1>
+  <p class="text-muted">Tinjau pendaftaran kader yang memilih LDK Anda. Keputusan bersifat final.</p>
+</div>
+
+<div class="tabs">
+  <button type="button" class="tab-btn" [class.active]="tab() === 'pending'" (click)="tab.set('pending')">Menunggu Persetujuan</button>
+  <button type="button" class="tab-btn" [class.active]="tab() === 'active'" (click)="tab.set('active')">Kader Aktif</button>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
+} @else if (tab() === 'pending') {
+  <div class="layout">
+    <div class="queue-list">
+      @for (k of pending(); track k.kaderID) {
+        <button type="button" class="queue-row" [class.active-row]="detail()?.submissionID === k.submissionID" (click)="select(k)">
+          <strong>{{ k.fullName }}</strong>
+          <span class="chip">{{ k.status }}</span>
+        </button>
+      } @empty {
+        <div class="card card-pad"><p class="text-muted">Tidak ada pendaftaran menunggu persetujuan.</p></div>
+      }
+    </div>
+
+    <div>
+      @if (detail(); as d) {
+        <div class="detail-card">
+          <div class="flex justify-between items-center">
+            <h3>{{ d.kader?.fullName }}</h3>
+            <span class="chip">{{ d.status }}</span>
+          </div>
+
+          <app-submission-answers-view [version]="version()" [answers]="d.answers" />
+
+          <div class="decision-form">
+            <h4>Keputusan</h4>
+            <div class="form-group">
+              <label class="form-label">Keputusan</label>
+              <app-select [options]="decisionOptions" [(ngModel)]="decision" />
+            </div>
+            <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" rows="3" [(ngModel)]="note" placeholder="Catatan untuk kader (wajib bila meminta revisi/menolak)"></textarea></div>
+            <button class="btn btn-primary" (click)="submitDecision()" [disabled]="busy()">Kirim Keputusan</button>
+          </div>
+        </div>
+      } @else {
+        <div class="card card-pad"><p class="text-muted">Pilih pendaftar dari daftar untuk melihat detail &amp; memberi keputusan.</p></div>
+      }
+    </div>
+  </div>
+} @else {
+  @for (k of active(); track k.kaderID) {
+    <div class="active-item">
+      <div>
+        <strong>{{ k.fullName }}</strong>
+        <p class="text-muted">{{ k.uniqueCode }}</p>
+      </div>
+      <button class="btn btn-outline btn-sm" (click)="deactivate(k, $event)">Nonaktifkan</button>
+    </div>
+  } @empty {
+    <div class="card card-pad"><p class="text-muted">Belum ada kader aktif dari LDK ini.</p></div>
+  }
+}
