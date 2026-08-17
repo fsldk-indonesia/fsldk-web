@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Article } from '../../entities/article';
+import { CommentSectionComponent } from '../../../comment/components/comment-section.component';
 import { ArticlePublicDetailPresenter } from './article.public-detail.presenter';
 import { ArticlePublicDetailView } from './article.public-detail.view';
 
@@ -9,7 +10,7 @@ import { ArticlePublicDetailView } from './article.public-detail.view';
   selector: 'app-article-public-detail-page',
   standalone: true,
   templateUrl: './article.public-detail.page.html',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, CommentSectionComponent],
   providers: [ArticlePublicDetailPresenter],
   styles: [`
     .narrow { max-width: 760px; }

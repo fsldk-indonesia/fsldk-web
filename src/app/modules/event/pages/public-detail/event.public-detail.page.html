@@ -80,6 +80,8 @@
             </div>
 
             <a routerLink="/event" class="btn btn-outline mt-lg">← Kembali ke Event</a>
+
+            <app-comment-section contentType="event" [contentID]="e.eventID" />
           </main>
 
           <!-- Sidebar -->
