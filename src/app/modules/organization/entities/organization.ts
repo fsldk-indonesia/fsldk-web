@@ -21,3 +21,11 @@ export interface MeOrganization {
   organizationName: string;
   parentOrganizationID?: number;
 }
+
+/** Entri direktori organisasi aktif lintas cakupan akses (GET /organizations/directory). */
+export interface OrganizationDirectoryEntry {
+  organizationID: number;
+  organizationName: string;
+  provinceName?: string;
+  cityName?: string;
+}

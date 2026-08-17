@@ -57,6 +57,8 @@ const ICONS: Record<string, string> = {
   'file-bar-chart': 'fas fa-chart-column',
   'chevron-down': 'fas fa-chevron-down',
   'chevrons-up-down': 'fas fa-sort',
+  'arrow-left': 'fas fa-arrow-left',
+  info: 'fas fa-circle-info',
 };
 
 /**

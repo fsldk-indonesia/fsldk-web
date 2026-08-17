@@ -17,7 +17,7 @@ export const loginGuard: CanActivateFn = () => {
   const auth = inject(AuthRepository);
   const router = inject(Router);
   if (!auth.isLoggedIn()) return true;
-  router.navigate(['/cms/dashboard']);
+  router.navigateByUrl(auth.defaultCmsPath() ?? '/');
   return false;
 };
 
@@ -42,6 +42,6 @@ export const permissionGuard: CanActivateFn = (route) => {
   const required = route.data?.['permission'] as string | undefined;
   if (!required || auth.hasPermission(required)) return true;
   toast.error('Anda tidak memiliki hak akses untuk halaman ini');
-  router.navigate(['/cms/dashboard']);
+  router.navigateByUrl(auth.defaultCmsPath() ?? '/');
   return false;
 };

@@ -42,8 +42,8 @@ export class LoginPage implements OnInit, LoginView {
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   navigateToVerifyEmail(): void { this.router.navigate(['/verifikasi-email']); }
-  navigateAfterLogin(hasCmsAccess: boolean): void {
-    if (hasCmsAccess) { this.router.navigate(['/cms/dashboard']); return; }
+  navigateAfterLogin(cmsPath: string | null): void {
+    if (cmsPath) { this.router.navigateByUrl(cmsPath); return; }
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
     this.router.navigateByUrl(returnUrl || '/');
   }

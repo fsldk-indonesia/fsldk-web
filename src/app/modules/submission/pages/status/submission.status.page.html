@@ -1,0 +1,63 @@
+<div class="page-head">
+  <h1>Status Pendataan</h1>
+  <p class="text-muted">{{ isKaderSubject() ? 'Status pendaftaran Sensus Kader Anda.' : 'Status Levelisasi LDK organisasi Anda.' }}</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
+} @else if (!submission()) {
+  <div class="card card-pad">
+    <h3>Belum ada pendataan</h3>
+    <p class="text-muted">Anda belum memulai pendataan.</p>
+    <a class="btn btn-primary" style="margin-top:10px" [routerLink]="submissionPath.pendataan">Mulai Pendataan</a>
+  </div>
+} @else {
+  <div class="status-card">
+    <div>
+      <p class="text-muted" style="margin-bottom:4px">Status Saat Ini</p>
+      <h2>{{ statusLabel(submission()!.status) }}</h2>
+    </div>
+    <app-icon name="clipboard-check" [size]="32" />
+  </div>
+
+  @if (submission()!.levelResult; as level) {
+    <div class="result-card">
+      <h3>Hasil Levelisasi</h3>
+      <p class="code-display">{{ level.levelLabel || level.levelCode }}</p>
+      @if (level.justificationNote) { <p class="text-muted">{{ level.justificationNote }}</p> }
+      <p class="text-muted">Ditetapkan: {{ level.establishedDate | date:'medium' }}</p>
+      @if (level.isPublished) { <span class="chip chip-green">Dipublikasikan</span> }
+    </div>
+  }
+
+  @if (submission()!.kader; as kader) {
+    <div class="result-card">
+      <h3>Kartu Kader</h3>
+      @if (kader.uniqueCode) {
+        <p class="code-display">{{ kader.uniqueCode }}</p>
+        <p class="text-muted">Terbit: {{ kader.issuedDate | date:'medium' }}</p>
+      } @else {
+        <p class="text-muted">Kode kader belum diterbitkan — menunggu persetujuan LDK.</p>
+      }
+      <span class="chip" [class.chip-green]="kader.status === 'ACTIVE'">{{ kader.status }}</span>
+    </div>
+  }
+
+  <div class="section-card" style="margin-top:20px">
+    <h3>Riwayat Status</h3>
+    <div class="timeline">
+      @for (h of submission()!.statusHistory; track $index) {
+        <div class="timeline-item">
+          <span class="timeline-dot"></span>
+          <div>
+            <strong>{{ statusLabel(h.toStatus) }}</strong>
+            <p class="text-muted">{{ h.createdDate | date:'medium' }}</p>
+            @if (h.note) { <p>{{ h.note }}</p> }
+          </div>
+        </div>
+      } @empty {
+        <p class="text-muted">Belum ada riwayat.</p>
+      }
+    </div>
+  </div>
+}

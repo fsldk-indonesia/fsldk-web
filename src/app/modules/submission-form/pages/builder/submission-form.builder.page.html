@@ -1,0 +1,163 @@
+<a class="back-link" [routerLink]="submissionFormPath.index"><app-icon name="arrow-left" [size]="14" /> Kembali ke Form Pendataan</a>
+
+@if (form(); as f) {
+  <div class="page-head">
+    <h1>{{ f.formName }}</h1>
+    <p class="text-muted"><code>{{ f.formCode }}</code> — {{ f.description || 'Tanpa deskripsi' }}</p>
+  </div>
+
+  <div class="version-bar">
+    <app-select [options]="versionOptions()" [ngModel]="selectedVersionID()" (ngModelChange)="onVersionOptionChange($event)" placeholder="Pilih versi" />
+    @if (version(); as v) { <span class="chip" [class.chip-green]="v.status === 'PUBLISHED'">{{ v.status }}</span> }
+    @if (canManage) {
+      <button class="btn btn-outline btn-sm" (click)="newVersion()" [disabled]="busy()">+ Versi Baru</button>
+      @if (version()?.status === 'DRAFT') {
+        <button class="btn btn-primary btn-sm" (click)="publish()" [disabled]="busy()">Publikasikan</button>
+      }
+    }
+  </div>
+
+  @if (version(); as v) {
+    @let editable = canManage && v.status === 'DRAFT';
+
+    @for (s of v.sections; track s.sectionID) {
+      <div class="section-card">
+        <div class="section-head">
+          <div>
+            <h3>{{ s.sectionLabel }}</h3>
+            @if (s.description) { <p class="text-muted">{{ s.description }}</p> }
+          </div>
+          @if (editable) {
+            <div class="field-actions">
+              <button class="btn btn-outline btn-sm" (click)="openCreateField(s.sectionID, s.fields.length + 1, $event)">+ Field</button>
+              <button class="btn btn-ghost btn-sm" (click)="openEditSection(s, $event)">Edit</button>
+              <span class="link-danger" (click)="removeSection(s, $event)">Hapus</span>
+            </div>
+          }
+        </div>
+        <div class="section-body">
+          @for (field of s.fields; track field.fieldID) {
+            <div class="field-row">
+              <div class="field-meta">
+                <strong>{{ field.fieldLabel }} @if (field.isRequired) { <span class="text-muted">*wajib</span> }</strong>
+                <span class="text-muted">{{ field.fieldType }} — <code>{{ field.fieldCode }}</code></span>
+                @if (isOptionType(field.fieldType)) {
+                  <div class="option-list">
+                    @for (opt of field.options; track opt.optionID) {
+                      <span class="chip" [class.chip-green]="opt.isActive" (click)="editable && openEditOption(opt, field.fieldID, $event)">{{ opt.optionLabel }}</span>
+                    }
+                    @if (editable) { <button class="btn btn-ghost btn-sm" (click)="openCreateOption(field.fieldID, field.options.length + 1, $event)">+ Pilihan</button> }
+                  </div>
+                }
+              </div>
+              @if (editable) {
+                <div class="field-actions">
+                  <button class="btn btn-ghost btn-sm" (click)="openEditField(field, $event)">Edit</button>
+                  <span class="link-danger" (click)="removeField(field, $event)">Hapus</span>
+                </div>
+              }
+            </div>
+          } @empty {
+            <p class="text-muted">Belum ada field pada section ini.</p>
+          }
+        </div>
+      </div>
+    } @empty {
+      <div class="card"><div class="empty-state">
+        <h4>Belum ada section</h4>
+        <p>Tambahkan section untuk mulai menyusun form.</p>
+      </div></div>
+    }
+
+    @if (editable) {
+      <button class="btn btn-outline" (click)="openCreateSection($event)">+ Tambah Section</button>
+    }
+  }
+}
+
+@if (showSectionForm()) {
+  <div class="modal-backdrop" (click)="closeSectionForm()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
+      <h3>{{ sectionEditID ? 'Ubah Section' : 'Tambah Section' }}</h3>
+      @if (!sectionEditID) {
+        <div class="form-group"><label class="form-label">Kode Section</label><input class="form-control" [(ngModel)]="sectionForm.sectionCode"></div>
+      }
+      <div class="form-group"><label class="form-label">Label Section</label><input class="form-control" [(ngModel)]="sectionForm.sectionLabel"></div>
+      <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="sectionForm.sortOrder"></div>
+      <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="2" [(ngModel)]="sectionForm.description"></textarea></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeSectionForm()">Batal</button>
+        <button class="btn btn-primary" (click)="saveSection()" [disabled]="busy()">Simpan</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showFieldForm()) {
+  <div class="modal-backdrop" (click)="closeFieldForm()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
+      <h3>{{ fieldEditID ? 'Ubah Field' : 'Tambah Field' }}</h3>
+      @if (!fieldEditID) {
+        <div class="form-group"><label class="form-label">Kode Field</label><input class="form-control" [(ngModel)]="fieldForm.fieldCode"></div>
+      }
+      <div class="form-group"><label class="form-label">Label Field</label><input class="form-control" [(ngModel)]="fieldForm.fieldLabel"></div>
+      <div class="form-group">
+        <label class="form-label">Tipe Field</label>
+        <app-select [options]="fieldTypeOptions" [(ngModel)]="fieldForm.fieldType" [disabled]="!!fieldEditID" />
+      </div>
+      <div class="grid-cols-2">
+        <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="fieldForm.sortOrder"></div>
+        <div class="form-group"><label class="form-check" style="margin-top:34px"><input type="checkbox" [(ngModel)]="fieldForm.isRequired"> Wajib diisi</label></div>
+      </div>
+      <div class="form-group"><label class="form-label">Teks Bantuan</label><input class="form-control" [(ngModel)]="fieldForm.helpText"></div>
+
+      @if (isLengthType(fieldForm.fieldType)) {
+        <div class="grid-cols-2">
+          <div class="form-group"><label class="form-label">Panjang Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.minLength"></div>
+          <div class="form-group"><label class="form-label">Panjang Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.maxLength"></div>
+        </div>
+      }
+      @if (isRangeType(fieldForm.fieldType)) {
+        <div class="grid-cols-2">
+          <div class="form-group"><label class="form-label">Nilai Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.min"></div>
+          <div class="form-group"><label class="form-label">Nilai Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.max"></div>
+        </div>
+      }
+
+      <div class="form-group">
+        <label class="form-label">Tampilkan Hanya Jika (opsional)</label>
+        <app-select [options]="otherFieldOptions(fieldEditID)" [(ngModel)]="fieldForm.conditionalOnFieldID" placeholder="Tidak ada syarat" />
+      </div>
+      @if (fieldForm.conditionalOnFieldID) {
+        <div class="grid-cols-2">
+          <div class="form-group">
+            <label class="form-label">Operator</label>
+            <app-select [options]="conditionalOperatorOptions" [(ngModel)]="fieldForm.conditionalOperator" />
+          </div>
+          <div class="form-group"><label class="form-label">Nilai</label><input class="form-control" [(ngModel)]="fieldForm.conditionalValue"></div>
+        </div>
+      }
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeFieldForm()">Batal</button>
+        <button class="btn btn-primary" (click)="saveField()" [disabled]="busy()">Simpan</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (showOptionForm()) {
+  <div class="modal-backdrop" (click)="closeOptionForm()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
+      <h3>{{ optionEditID ? 'Ubah Pilihan' : 'Tambah Pilihan' }}</h3>
+      <div class="form-group"><label class="form-label">Nilai (value)</label><input class="form-control" [(ngModel)]="optionForm.optionValue"></div>
+      <div class="form-group"><label class="form-label">Label</label><input class="form-control" [(ngModel)]="optionForm.optionLabel"></div>
+      <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="optionForm.sortOrder"></div>
+      @if (optionEditID) { <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="optionForm.isActive"> Aktif</label></div> }
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="closeOptionForm()">Batal</button>
+        <button class="btn btn-primary" (click)="saveOption()" [disabled]="busy()">Simpan</button>
+      </div>
+    </div>
+  </div>
+}

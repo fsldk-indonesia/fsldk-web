@@ -1,5 +1,5 @@
 export interface RegisterView {
   setLoading(loading: boolean): void;
   navigateToVerifyEmail(email: string): void;
-  navigateAfterLogin(hasCmsAccess: boolean): void;
+  navigateAfterLogin(cmsPath: string | null): void;
 }

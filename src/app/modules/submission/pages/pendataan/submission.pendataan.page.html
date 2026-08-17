@@ -1,0 +1,119 @@
+<div class="page-head">
+  <h1>Pendataan</h1>
+  <p class="text-muted">{{ isKaderSubject() ? 'Formulir pendaftaran Sensus Kader.' : 'Formulir Levelisasi LDK organisasi Anda.' }}</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span><span class="skel skel-line" style="width:90%;margin-top:10px"></span></div>
+} @else if (!submission()) {
+  <div class="card card-pad">
+    <h3>Belum ada pendataan</h3>
+    <p class="text-muted">Mulai isi form untuk {{ isKaderSubject() ? 'mendaftar sebagai kader' : 'levelisasi LDK Anda' }}.</p>
+    @if (isKaderSubject()) {
+      <div class="form-group" style="max-width:360px;margin-top:14px">
+        <label class="form-label">LDK Tujuan</label>
+        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" placeholder="Pilih LDK" />
+      </div>
+    }
+    <button class="btn btn-primary" style="margin-top:10px" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi</button>
+  </div>
+} @else if (!isEditable()) {
+  <div class="status-banner">
+    <app-icon name="info" [size]="18" />
+    <span>Status pendataan Anda saat ini: <strong>{{ submission()!.status }}</strong>. Tidak dapat diubah pada tahap ini.</span>
+  </div>
+  <a class="btn btn-outline" [routerLink]="submissionPath.status">Lihat Status Pendataan</a>
+
+  <div class="section-card" style="margin-top:20px">
+    <h3>Jawaban Tersimpan</h3>
+    <dl>
+      @for (field of allFields(); track field.fieldID) {
+        @if (isFieldVisible(field)) {
+          <div class="answer-view">
+            <dt>{{ field.fieldLabel }}</dt>
+            <dd>{{ answerAsString(field, answers()[field.fieldID]) || '—' }}</dd>
+          </div>
+        }
+      }
+    </dl>
+  </div>
+} @else {
+  @for (section of version()?.sections ?? []; track section.sectionID) {
+    <div class="section-card">
+      <h3>{{ section.sectionLabel }}</h3>
+      @if (section.description) { <p class="text-muted">{{ section.description }}</p> }
+
+      @for (field of section.fields; track field.fieldID) {
+        @if (isFieldVisible(field)) {
+          <div class="field-group">
+            <label class="field-label">{{ field.fieldLabel }} @if (field.isRequired) { <span class="text-muted">*</span> }</label>
+
+            @switch (field.fieldType) {
+              @case ('TEXT') {
+                <input class="form-control" [(ngModel)]="answers()[field.fieldID].text">
+              }
+              @case ('TEXTAREA') {
+                <textarea class="form-control" rows="3" [(ngModel)]="answers()[field.fieldID].text"></textarea>
+              }
+              @case ('NUMBER') {
+                <input type="number" class="form-control" [(ngModel)]="answers()[field.fieldID].number">
+              }
+              @case ('DATE') {
+                <input type="date" class="form-control" [(ngModel)]="answers()[field.fieldID].date">
+              }
+              @case ('SELECT') {
+                <app-select [options]="optionSelectOptions(field)" [(ngModel)]="answers()[field.fieldID].optionID" placeholder="Pilih…" />
+              }
+              @case ('RADIO') {
+                <div class="radio-list">
+                  @for (opt of field.options; track opt.optionID) {
+                    <label class="form-check">
+                      <input type="radio" [name]="'field-' + field.fieldID" [value]="opt.optionID" [(ngModel)]="answers()[field.fieldID].optionID">
+                      {{ opt.optionLabel }}
+                    </label>
+                  }
+                </div>
+              }
+              @case ('MULTISELECT') {
+                <div class="check-list">
+                  @for (opt of field.options; track opt.optionID) {
+                    <label class="form-check">
+                      <input type="checkbox" [checked]="answers()[field.fieldID].optionIDs.includes(opt.optionID)" (change)="toggleMultiOption(field, opt.optionID)">
+                      {{ opt.optionLabel }}
+                    </label>
+                  }
+                </div>
+              }
+              @case ('CHECKBOX') {
+                <div class="check-list">
+                  @for (opt of field.options; track opt.optionID) {
+                    <label class="form-check">
+                      <input type="checkbox" [checked]="answers()[field.fieldID].optionIDs.includes(opt.optionID)" (change)="toggleMultiOption(field, opt.optionID)">
+                      {{ opt.optionLabel }}
+                    </label>
+                  }
+                </div>
+              }
+              @case ('FILE_DOCUMENT') {
+                <app-pdf-upload [value]="answers()[field.fieldID].fileURL" [allowedExtensions]="['.pdf','.docx','.xlsx']" label="Dokumen" (valueChange)="onFileChange(field, $event)" />
+              }
+              @case ('FILE_IMAGE') {
+                <app-image-upload [value]="answers()[field.fieldID].fileURL" (valueChange)="onFileChange(field, $event)" />
+              }
+            }
+
+            @if (field.helpText) { <p class="field-help">{{ field.helpText }}</p> }
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <div class="actions-bar">
+    <button class="btn btn-outline" (click)="saveDraft()" [disabled]="busy()">Simpan Draf</button>
+    <button class="btn btn-primary" (click)="submitForm()" [disabled]="busy()">Kirim</button>
+    @if (submission()!.status === 'DRAFT') {
+      <button class="btn btn-ghost" style="margin-left:auto" (click)="cancel($event)" [disabled]="busy()">Batalkan</button>
+    }
+  </div>
+}

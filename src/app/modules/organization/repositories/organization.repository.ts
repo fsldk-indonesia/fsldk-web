@@ -3,7 +3,7 @@ import { Observable, tap } from 'rxjs';
 import { OrganizationApiService } from '../services/organization-api.service';
 import { AuthRepository } from '../../user/repositories/auth.repository';
 import { Pagination } from '../../../core/entities/pagination';
-import { Organization, MeOrganization } from '../entities/organization';
+import { Organization, MeOrganization, OrganizationDirectoryEntry } from '../entities/organization';
 
 /**
  * Data organisasi + state dashboard switcher (Section 11.2 TechSpec — switcher
@@ -39,6 +39,7 @@ export class OrganizationRepository {
     this.activeID.set(id);
   }
 
+  directory(organizationTypeCode: string): Observable<OrganizationDirectoryEntry[]> { return this.api.directory(organizationTypeCode); }
   list(q: Record<string, unknown>): Observable<Pagination<Organization>> { return this.api.list(q); }
   get(id: number): Observable<Organization> { return this.api.get(id); }
   children(id: number): Observable<Organization[]> { return this.api.children(id); }

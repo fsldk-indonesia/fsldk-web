@@ -4,6 +4,7 @@ import { AuthApiService } from '../services/auth-api.service';
 import { AuthSessionService } from '../services/auth-session.service';
 import { AuthResult } from '../entities/auth-result';
 import { UserProfile } from '../entities/user';
+import { submissionPath } from '../../submission/submission.path';
 
 /**
  * Sumber kebenaran sesi pengguna aplikasi: menyimpan token & profil,
@@ -66,6 +67,21 @@ export class AuthRepository {
   /** Apakah pengguna memiliki akses ke CMS (setidaknya satu permission). */
   hasAnyCmsAccess(): boolean {
     return (this.user()?.permissions.length ?? 0) > 0;
+  }
+
+  /**
+   * Halaman CMS tujuan setelah login — null bila akun tidak punya akses CMS
+   * sama sekali. Dashboard dirancang per tier organisasi (LDK/Puskomda/
+   * Puskomnas); akun tanpa tier organisasi (Kader — self-service, bukan
+   * tier CMS resmi, lihat DL-12) diarahkan ke Pendataan alih-alih Dashboard
+   * yang tidak punya widget untuknya (backend menolaknya dengan 403).
+   */
+  defaultCmsPath(): string | null {
+    const u = this.user();
+    if (!u || u.permissions.length === 0) return null;
+    const hasOrganizationTier = !!u.organizationTypeCode || (u.wildcardTierAccess?.length ?? 0) > 0;
+    if (!hasOrganizationTier && u.permissions.includes('submission.create')) return submissionPath.pendataan;
+    return '/cms/dashboard';
   }
 
   logout(): void {
