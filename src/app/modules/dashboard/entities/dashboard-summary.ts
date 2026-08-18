@@ -50,9 +50,19 @@ export interface PuskomnasSummary extends StatusCounts {
   perPuskomda: PuskomdaBreakdown[];
 }
 
-/** Response GET /dashboard/summary — hanya satu dari ldk/puskomda/puskomnas terisi. */
+/** Ringkasan dashboard khusus CMS Utama — metrik administrasi sistem, terpisah
+ *  dari metrik Levelisasi/Kader Puskomnas. */
+export interface UtamaSummary {
+  totalUsers: number;
+  totalNews: number;
+  totalArticles: number;
+  totalShortlinks: number;
+}
+
+/** Response GET /dashboard/summary — hanya satu dari utama/ldk/puskomda/puskomnas terisi. */
 export interface DashboardSummary {
   organizationTypeCode: string;
+  utama?: UtamaSummary;
   ldk?: LDKSummary;
   puskomda?: PuskomdaSummary;
   puskomnas?: PuskomnasSummary;

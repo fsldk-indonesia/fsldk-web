@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
+import { OrgContextService } from '../../../../core/services/org-context.service';
 import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
 import { SubmissionStatusPresenter } from './submission.status.presenter';
@@ -30,6 +31,7 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   private presenter = inject(SubmissionStatusPresenter);
   private auth = inject(AuthRepository);
   private route = inject(ActivatedRoute);
+  private orgContext = inject(OrgContextService);
   private alert = inject(AlertService);
 
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
@@ -46,7 +48,11 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.presenter.load(this.formCode());
+    if (this.isKaderSubject()) {
+      this.presenter.load(this.formCode());
+    } else {
+      this.orgContext.organizationID$(this.route).subscribe((id) => this.presenter.load(this.formCode(), id));
+    }
   }
 
   statusLabel(code: string): string { return this.statusLabels[code] ?? code; }

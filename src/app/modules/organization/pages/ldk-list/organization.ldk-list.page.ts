@@ -1,7 +1,9 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
+import { OrgContextService } from '../../../../core/services/org-context.service';
 import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { Organization } from '../../entities/organization';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -30,6 +32,13 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   private presenter = inject(OrganizationLdkListPresenter);
   private auth = inject(AuthRepository);
   private alert = inject(AlertService);
+  private route = inject(ActivatedRoute);
+  private orgContext = inject(OrgContextService);
+
+  /** organizationID Puskomda yang sedang aktif di org-switcher shell
+   *  cms-puskomda — dipakai untuk mengunci Puskomda Induk otomatis saat
+   *  membuat LDK dari shell ini (miss-development-prompt-3.md poin 4). */
+  private currentPuskomdaID: number | undefined;
 
   organizations = signal<Organization[]>([]);
   loading = signal(true);
@@ -44,10 +53,17 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   puskomdaOptions = signal<SelectOption[]>([]);
   form: LdkFormValue = emptyForm();
 
-  isNational = computed(() => {
-    const u = this.auth.user();
-    return u?.organizationTypeCode === 'PUSKOMNAS' || (u?.wildcardTierAccess?.length ?? 0) > 0;
-  });
+  /**
+   * "Nasional" ditentukan oleh SHELL yang memuat halaman ini (cms-puskomda
+   * vs cms-puskomnas — route data `tier`, diwariskan dari shell lewat
+   * paramsInheritanceStrategy:'always' di app.config.ts), BUKAN identitas
+   * caller. Sebelumnya berbasis identitas (organizationTypeCode/wildcard),
+   * jadi akun wildcard (Super Admin) SELALU melihat picker "Puskomda Induk"
+   * walau sedang berada di CMS Puskomda yang konteksnya sudah jelas — harus
+   * pilih manual padahal semestinya otomatis (miss-development-prompt-3.md
+   * poin 4).
+   */
+  isNational = computed(() => (this.route.snapshot.data['tier'] as string | undefined) === 'PUSKOMNAS');
   pageTitle = computed(() => (this.isNational() ? 'Seluruh LDK Nasional' : 'LDK Wilayah'));
   canCreate = this.auth.hasPermission('organization.create');
   canDeactivate = this.auth.hasPermission('organization.deactivate');
@@ -55,7 +71,11 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.load();
-    if (this.isNational()) this.presenter.loadPuskomdaOptions();
+    if (this.isNational()) {
+      this.presenter.loadPuskomdaOptions();
+    } else {
+      this.orgContext.organizationID$(this.route).subscribe((id) => { this.currentPuskomdaID = id; });
+    }
   }
 
   load(): void { this.loading.set(true); this.presenter.load(this.page(), this.limit, this.search); }
@@ -68,7 +88,10 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
     this.showForm.set(true);
   }
   close(): void { this.showForm.set(false); }
-  save(): void { this.presenter.create(this.form); }
+  save(): void {
+    if (!this.isNational() && this.currentPuskomdaID) this.form.parentOrganizationID = this.currentPuskomdaID;
+    this.presenter.create(this.form);
+  }
 
   isBusy(id: number): boolean { return this.busy().has(id); }
   private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }

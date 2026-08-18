@@ -1,4 +1,4 @@
 export const submissionFormPath = {
-  index: '/cms/submission-forms',
-  builder: (formID: number) => `/cms/submission-forms/${formID}`,
+  index: '/cms-puskomnas/submission-forms',
+  builder: (formID: number) => `/cms-puskomnas/submission-forms/${formID}`,
 };

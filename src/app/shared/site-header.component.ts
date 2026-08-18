@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { SubmissionRepository } from '../modules/submission/repositories/submission.repository';
 import { FORM_CODE_SENSUS_KADER } from '../modules/submission/entities/submission';
+import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
 
 const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_LDK'];
@@ -46,10 +47,9 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
                 {{ auth.user()?.fullName }}
               </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
-                @if (auth.hasUtamaCmsAccess()) { <a routerLink="/cms/dashboard" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="dashboard" [size]="16" />FSLDK CMS</a> }
-                @if (auth.hasPuskomnasCmsAccess()) { <a routerLink="/cms-puskomnas/dashboard" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="landmark" [size]="16" />Puskomnas CMS</a> }
-                @if (auth.hasPuskomdaCmsAccess()) { <a routerLink="/cms-puskomda/dashboard" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="building-2" [size]="16" />Puskomda CMS</a> }
-                @if (auth.hasLdkCmsAccess()) { <a routerLink="/cms-ldk/dashboard" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="building" [size]="16" />LDK CMS</a> }
+                @for (t of auth.accessibleCmsTiers(); track t) {
+                  <a [routerLink]="shellBase(t) + '/dashboard'" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon [name]="shellIcon(t)" [size]="16" />{{ shellLabel(t) }}</a>
+                }
                 @if (auth.isKaderSelfService()) {
                   <a [routerLink]="kaderNavLink()" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="id-card" [size]="16" />{{ kaderNavLabel() }}</a>
                 }
@@ -99,10 +99,9 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
             }
             {{ auth.user()?.fullName }}
           </div>
-          @if (auth.hasUtamaCmsAccess()) { <a routerLink="/cms/dashboard" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="dashboard" [size]="17" />FSLDK CMS</a> }
-          @if (auth.hasPuskomnasCmsAccess()) { <a routerLink="/cms-puskomnas/dashboard" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="landmark" [size]="17" />Puskomnas CMS</a> }
-          @if (auth.hasPuskomdaCmsAccess()) { <a routerLink="/cms-puskomda/dashboard" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="building-2" [size]="17" />Puskomda CMS</a> }
-          @if (auth.hasLdkCmsAccess()) { <a routerLink="/cms-ldk/dashboard" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="building" [size]="17" />LDK CMS</a> }
+          @for (t of auth.accessibleCmsTiers(); track t) {
+            <a [routerLink]="shellBase(t) + '/dashboard'" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon [name]="shellIcon(t)" [size]="17" />{{ shellLabel(t) }}</a>
+          }
           @if (auth.isKaderSelfService()) {
             <a [routerLink]="kaderNavLink()" class="btn btn-primary btn-block" (click)="closeMobile()"><app-icon name="id-card" [size]="17" />{{ kaderNavLabel() }}</a>
           }
@@ -275,6 +274,10 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     const name = this.auth.user()?.fullName ?? '';
     return name.split(' ').map((s) => s[0]).slice(0, 2).join('').toUpperCase();
   }
+
+  shellBase(t: CmsTier): string { return CMS_SHELL_BASE[t]; }
+  shellLabel(t: CmsTier): string { return CMS_SHELL_LABEL[t]; }
+  shellIcon(t: CmsTier): string { return CMS_SHELL_ICON[t]; }
 
   logout(): void {
     this.auth.logout();

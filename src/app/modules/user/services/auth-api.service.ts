@@ -44,4 +44,8 @@ export class AuthApiService {
   me(): Observable<UserProfile> {
     return this.api.get<UserProfile>('/auth/me');
   }
+
+  refreshToken(refreshToken: string): Observable<AuthResult> {
+    return this.api.post<AuthResult>('/auth/refresh-token', { refreshToken });
+  }
 }

@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
+import { OrgContextService } from '../../../../core/services/org-context.service';
 import { IconComponent } from '../../../../shared/icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
@@ -47,7 +48,14 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
 export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView {
   private presenter = inject(SubmissionPendataanPresenter);
   private route = inject(ActivatedRoute);
+  private orgContext = inject(OrgContextService);
   private alert = inject(AlertService);
+
+  /** LDK yang sedang dibuka lewat org-switcher (shell cms-ldk) — relevan
+   *  hanya untuk subjek Levelisasi (bukan Kader, yang memilih LDK Tujuan
+   *  sendiri lewat selectedOrgID). Dipakai Puskomda/Puskomnas mengisi
+   *  Pendataan atas nama LDK di bawahnya (2026-08-18). */
+  private targetOrganizationID: number | undefined;
 
   /** formCode ditentukan oleh shell/route yang memuat halaman ini (data:
    *  {formCode}) — cms-ldk selalu Levelisasi LDK, kader selalu Sensus Kader —
@@ -75,8 +83,15 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.presenter.loadAll(this.formCode());
-    if (this.isKaderSubject()) this.presenter.loadLdkOptions();
+    if (this.isKaderSubject()) {
+      this.presenter.loadAll(this.formCode());
+      this.presenter.loadLdkOptions();
+    } else {
+      this.orgContext.organizationID$(this.route).subscribe((id) => {
+        this.targetOrganizationID = id;
+        this.presenter.loadAll(this.formCode(), id);
+      });
+    }
   }
 
   allFields(): FormField[] {
@@ -163,7 +178,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   }
 
   start(): void {
-    this.presenter.create(this.formCode(), this.isKaderSubject() ? this.selectedOrgID : null);
+    this.presenter.create(this.formCode(), this.isKaderSubject() ? this.selectedOrgID : null, this.targetOrganizationID);
   }
 
   saveDraft(): void {
@@ -218,5 +233,5 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   setLdkOptions(options: SelectOption[]): void { this.ldkOptions.set(options); }
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
-  reload(): void { this.loading.set(true); this.presenter.loadAll(this.formCode()); }
+  reload(): void { this.loading.set(true); this.presenter.loadAll(this.formCode(), this.targetOrganizationID); }
 }

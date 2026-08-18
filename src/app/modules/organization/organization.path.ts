@@ -1,6 +1,6 @@
 export const organizationPath = {
-  profile: '/cms/organization/profile',
-  ldkList: '/cms/organizations/ldk',
-  ldkNational: '/cms/organizations/ldk-nasional',
-  puskomdaList: '/cms/organizations/puskomda',
+  profile: '/cms-ldk/organization/profile',
+  ldkList: '/cms-puskomda/organizations/ldk',
+  ldkNational: '/cms-puskomnas/organizations/ldk-nasional',
+  puskomdaList: '/cms-puskomnas/organizations/puskomda',
 };

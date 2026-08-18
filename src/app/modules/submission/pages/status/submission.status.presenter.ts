@@ -10,9 +10,12 @@ export class SubmissionStatusPresenter extends BasePresenter<SubmissionStatusVie
   private submissionRepo = inject(SubmissionRepository);
   private toast = inject(ToastService);
 
-  load(formCode: string): void {
+  private lastOrganizationID: number | undefined;
+
+  load(formCode: string, organizationID?: number): void {
+    this.lastOrganizationID = organizationID;
     this.view.setLoading(true);
-    this.submissionRepo.findMine(formCode).pipe(
+    this.submissionRepo.findMine(formCode, organizationID).pipe(
       switchMap((mine) => (mine ? this.submissionRepo.get(mine.submissionID) : of(null))),
     ).subscribe({
       next: (detail) => { this.view.setSubmission(detail); this.view.setLoading(false); },
@@ -26,7 +29,7 @@ export class SubmissionStatusPresenter extends BasePresenter<SubmissionStatusVie
       next: (res) => {
         this.view.setBusy(false);
         this.toast.success('Reassessment diajukan — silakan isi ulang form Levelisasi');
-        this.load(res.formCode);
+        this.load(res.formCode, this.lastOrganizationID);
       },
       error: () => this.view.setBusy(false),
     });

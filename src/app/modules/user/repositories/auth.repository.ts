@@ -4,6 +4,7 @@ import { AuthApiService } from '../services/auth-api.service';
 import { AuthSessionService } from '../services/auth-session.service';
 import { AuthResult } from '../entities/auth-result';
 import { UserProfile } from '../entities/user';
+import { CmsTier, CMS_SHELL_BASE } from '../../../shared/cms-tier';
 
 /** Peringkat tier organisasi tertinggi (0 = tidak ada) — dipakai untuk
  *  visibilitas link CMS hierarkis ke bawah (miss-development-clarification.md
@@ -38,6 +39,24 @@ export class AuthRepository {
 
   loginGoogle(idToken: string): Observable<AuthResult> {
     return this.api.loginGoogle(idToken).pipe(tap((res) => this.applySession(res)));
+  }
+
+  /**
+   * Menerbitkan ulang access token DENGAN klaim terbaru dari DB (termasuk
+   * emailVerified) — TANPA logout/login ulang. Dipakai verifiedGuard: sekadar
+   * refreshMe() (GET /auth/me) memperbarui tampilan `user()` di memori, tapi
+   * TIDAK memperbarui access token itu sendiri — token lama yang masih
+   * membawa klaim emailVerified=false (di-embed saat token pertama terbit)
+   * tetap dipakai untuk request API berikutnya, sehingga endpoint yang
+   * dijaga RequireVerified() di backend (mis. GET/POST /submissions) tetap
+   * menolak dengan 403 EMAIL_NOT_VERIFIED walau DB & tampilan sudah benar —
+   * inilah sebab asli "harus logout dulu" (miss-development-prompt-3.md
+   * poin 8): logout-login memaksa token baru terbit, sekadar refresh
+   * profil tidak. refreshSession() memakai /auth/refresh-token yang memang
+   * sudah menerbitkan token baru dari data user terkini di backend.
+   */
+  refreshSession(): Observable<AuthResult> {
+    return this.api.refreshToken(this.refreshToken ?? '').pipe(tap((res) => this.applySession(res)));
   }
 
   verifyEmail(token: string): Observable<unknown> {
@@ -88,6 +107,18 @@ export class AuthRepository {
     return this.hasUtamaCmsAccess() || this.hasLdkCmsAccess();
   }
 
+  /** Daftar shell CMS yang bisa diakses akun ini, urut dari tertinggi — dipakai
+   *  navbar akun (site-header) & dropdown CMS-switcher untuk merender link
+   *  dari SATU sumber data, bukan 4 blok @if yang digandakan di tiap tempat. */
+  accessibleCmsTiers(): CmsTier[] {
+    const out: CmsTier[] = [];
+    if (this.hasUtamaCmsAccess()) out.push('FSLDK');
+    if (this.hasPuskomnasCmsAccess()) out.push('PUSKOMNAS');
+    if (this.hasPuskomdaCmsAccess()) out.push('PUSKOMDA');
+    if (this.hasLdkCmsAccess()) out.push('LDK');
+    return out;
+  }
+
   /**
    * Apakah akun ini akun self-service Kader (Pengunjung/Kader — tanpa tier
    * organisasi, tanpa akses CMS Utama, tapi punya izin isi Sensus Kader).
@@ -108,10 +139,8 @@ export class AuthRepository {
   defaultCmsPath(): string | null {
     const u = this.user();
     if (!u) return null;
-    if (this.hasUtamaCmsAccess()) return '/cms/dashboard';
-    if (this.hasPuskomnasCmsAccess()) return '/cms-puskomnas/dashboard';
-    if (this.hasPuskomdaCmsAccess()) return '/cms-puskomda/dashboard';
-    if (this.hasLdkCmsAccess()) return '/cms-ldk/dashboard';
+    const [tier] = this.accessibleCmsTiers();
+    if (tier) return `${CMS_SHELL_BASE[tier]}/dashboard`;
     if (this.isKaderSelfService()) return '/kader/ringkasan';
     return null;
   }

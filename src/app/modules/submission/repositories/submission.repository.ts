@@ -10,14 +10,17 @@ import {
 export class SubmissionRepository {
   private api = inject(SubmissionApiService);
 
-  create(formCode: string, organizationID?: number | null): Observable<SubmissionResponse> {
-    return this.api.create({ formCode, organizationID });
+  /** `organizationID` = LDK Tujuan (Kader). `targetOrganizationID` = LDK yang
+   *  sedang dibuka lewat org-switcher (delegasi Puskomda/Puskomnas mengisi
+   *  Pendataan atas nama LDK) — lihat catatan di submission-api.service.ts. */
+  create(formCode: string, organizationID?: number | null, targetOrganizationID?: number): Observable<SubmissionResponse> {
+    return this.api.create({ formCode, organizationID }, targetOrganizationID);
   }
   saveAnswers(id: number, body: unknown): Observable<SubmissionDetail> { return this.api.saveAnswers(id, body); }
   submit(id: number): Observable<SubmissionResponse> { return this.api.submit(id); }
   cancel(id: number): Observable<unknown> { return this.api.cancel(id); }
-  findMine(formCode: string): Observable<SubmissionResponse | null> {
-    return this.api.list(formCode).pipe(map((page) => page.data[0] ?? null));
+  findMine(formCode: string, organizationID?: number): Observable<SubmissionResponse | null> {
+    return this.api.list(formCode, organizationID).pipe(map((page) => page.data[0] ?? null));
   }
   get(id: number): Observable<SubmissionDetail> { return this.api.get(id); }
 

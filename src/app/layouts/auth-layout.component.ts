@@ -54,7 +54,14 @@ import { RouterOutlet } from '@angular/router';
     .auth-points li::before { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--color-primary); flex-shrink: 0; animation: node-pulse 2.6s ease-in-out infinite; }
     .auth-points li:nth-child(2)::before { background: var(--color-gold); animation-delay: .3s; }
     .auth-points li:nth-child(3)::before { background: var(--color-ember); animation-delay: .6s; }
-    .auth-card { width: 100%; max-width: 420px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 36px; }
+    /* min-height + flex-center: tiap halaman auth (login/daftar/lupa-password/
+       reset-password/verifikasi-email) punya jumlah field/konten yang beda-beda,
+       sebelumnya kartu ikut memendek/memanjang mengikuti kontennya masing-masing
+       sehingga terasa "loncat" tinggi saat pindah halaman (miss-development-
+       prompt-3.md poin 7). Disamakan ke satu tinggi minimum (berdasar halaman
+       terpanjang, Daftar Akun) — halaman yang lebih pendek center secara vertikal
+       di dalamnya alih-alih menempel ke atas dengan sisa ruang kosong di bawah. */
+    .auth-card { width: 100%; max-width: 420px; min-height: 560px; display: flex; flex-direction: column; justify-content: center; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 36px; }
     @media (max-width: 860px) { .auth-shell { grid-template-columns: 1fr; padding: 32px 20px; } .auth-visual { display: none; } .auth-card { max-width: 100%; margin: 0 auto; } }
   `],
 })

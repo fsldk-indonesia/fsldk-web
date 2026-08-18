@@ -12,6 +12,15 @@
 } @else {
   @if (summary(); as s) {
 
+    @if (s.utama; as u) {
+      <div class="grid grid-4">
+        <div class="stat"><span class="stat-label">Jumlah Pengguna</span><span class="stat-num">{{ u.totalUsers }}</span></div>
+        <div class="stat"><span class="stat-label">Jumlah Berita</span><span class="stat-num">{{ u.totalNews }}</span></div>
+        <div class="stat"><span class="stat-label">Jumlah Artikel</span><span class="stat-num">{{ u.totalArticles }}</span></div>
+        <div class="stat"><span class="stat-label">Jumlah Shortlink</span><span class="stat-num">{{ u.totalShortlinks }}</span></div>
+      </div>
+    }
+
     @if (s.ldk; as ldk) {
       <div class="grid grid-3">
         <div class="stat"><span class="stat-label">Status Pendataan</span><span class="stat-num" style="font-size:1.6rem">{{ statusLabel(ldk.submissionStatus) }}</span></div>
@@ -96,7 +105,7 @@
       </div>
     }
 
-    @if (!s.ldk && !s.puskomda && !s.puskomnas) {
+    @if (!s.utama && !s.ldk && !s.puskomda && !s.puskomnas) {
       <div class="card card-pad"><p class="text-muted">Tidak ada ringkasan dashboard untuk akun ini.</p></div>
     }
   }

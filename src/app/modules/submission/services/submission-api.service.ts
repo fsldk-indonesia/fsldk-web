@@ -11,8 +11,16 @@ import {
 export class SubmissionApiService {
   private api = inject(ApiService);
 
-  create(body: { formCode: string; organizationID?: number | null }): Observable<SubmissionResponse> {
-    return this.api.post('/submissions', body);
+  /**
+   * `body.organizationID` (opsional) = LDK Tujuan yang dipilih Kader saat
+   * mendaftar Sensus Kader. `targetOrganizationID` (opsional, TERPISAH,
+   * dikirim sebagai query) = LDK yang sedang dibuka Puskomda/Puskomnas lewat
+   * org-switcher shell cms-ldk saat mengisi Pendataan ATAS NAMA LDK itu —
+   * dua hal berbeda yang kebetulan sama-sama "organizationID", sengaja tidak
+   * digabung supaya tidak tertukar (lihat submission_service_impl.go Create()).
+   */
+  create(body: { formCode: string; organizationID?: number | null }, targetOrganizationID?: number): Observable<SubmissionResponse> {
+    return this.api.post('/submissions', body, { organizationID: targetOrganizationID });
   }
   saveAnswers(id: number, body: unknown): Observable<SubmissionDetail> { return this.api.put(`/submissions/${id}/answers`, body); }
   submit(id: number): Observable<SubmissionResponse> { return this.api.post(`/submissions/${id}/submit`); }

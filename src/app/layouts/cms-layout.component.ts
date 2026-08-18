@@ -7,15 +7,9 @@ import { OrgContextService } from '../core/services/org-context.service';
 import { MenuItem } from '../modules/permission/entities/menu-item';
 import { MeOrganization } from '../modules/organization/entities/organization';
 import { IconComponent } from '../shared/icon.component';
+import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from '../shared/cms-tier';
 
-type Tier = 'FSLDK' | 'LDK' | 'PUSKOMDA' | 'PUSKOMNAS';
-
-const SHELL_BASE: Record<Tier, string> = {
-  FSLDK: '/cms', LDK: '/cms-ldk', PUSKOMDA: '/cms-puskomda', PUSKOMNAS: '/cms-puskomnas',
-};
-const SHELL_LABEL: Record<Tier, string> = {
-  FSLDK: 'FSLDK CMS', LDK: 'LDK CMS', PUSKOMDA: 'Puskomda CMS', PUSKOMNAS: 'Puskomnas CMS',
-};
+type Tier = CmsTier;
 
 /**
  * Shell CMS — dipakai untuk 4 route tree terpisah (cms/cms-ldk/cms-puskomda/
@@ -58,7 +52,7 @@ const SHELL_LABEL: Record<Tier, string> = {
           @if (showOrgSwitcher()) {
             <div class="org-switcher">
               <button class="org-switcher-btn" type="button" (click)="toggleOrgDropdown($event)">
-                <app-icon name="building" [size]="14" />
+                <app-icon [name]="switcherIcon()" [size]="14" />
                 <span>{{ currentOrgName() ?? 'Pilih Organisasi' }}</span>
                 <app-icon name="chevron-down" [size]="12" />
               </button>
@@ -96,10 +90,9 @@ const SHELL_LABEL: Record<Tier, string> = {
             </button>
             @if (dropdownOpen()) {
               <div class="dropdown-panel">
-                @if (auth.hasUtamaCmsAccess()) { <a routerLink="/cms/dashboard" (click)="closeAllDropdowns()"><app-icon name="dashboard" [size]="16" />FSLDK CMS</a> }
-                @if (auth.hasPuskomnasCmsAccess()) { <a routerLink="/cms-puskomnas/dashboard" (click)="closeAllDropdowns()"><app-icon name="landmark" [size]="16" />Puskomnas CMS</a> }
-                @if (auth.hasPuskomdaCmsAccess()) { <a routerLink="/cms-puskomda/dashboard" (click)="closeAllDropdowns()"><app-icon name="building-2" [size]="16" />Puskomda CMS</a> }
-                @if (auth.hasLdkCmsAccess()) { <a routerLink="/cms-ldk/dashboard" (click)="closeAllDropdowns()"><app-icon name="building" [size]="16" />LDK CMS</a> }
+                @for (t of auth.accessibleCmsTiers(); track t) {
+                  <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"><app-icon [name]="shellIconOf(t)" [size]="16" />{{ shellLabelOf(t) }}</a>
+                }
                 <button type="button" (click)="logout()"><app-icon name="log-out" [size]="16" />Keluar</button>
               </div>
             }
@@ -220,9 +213,14 @@ export class CmsLayoutComponent implements OnInit {
   private router = inject(Router);
 
   tier = signal<Tier>('FSLDK');
-  shellBase = computed(() => SHELL_BASE[this.tier()]);
-  brandLabel = computed(() => (this.tier() === 'FSLDK' ? 'FSLDK CMS' : SHELL_LABEL[this.tier()]));
+  shellBase = computed(() => CMS_SHELL_BASE[this.tier()]);
+  brandLabel = computed(() => CMS_SHELL_LABEL[this.tier()]);
   showOrgSwitcher = computed(() => this.tier() === 'LDK' || this.tier() === 'PUSKOMDA');
+  switcherIcon = computed(() => CMS_SHELL_ICON[this.tier()]);
+
+  shellBaseOf(t: CmsTier): string { return CMS_SHELL_BASE[t]; }
+  shellLabelOf(t: CmsTier): string { return CMS_SHELL_LABEL[t]; }
+  shellIconOf(t: CmsTier): string { return CMS_SHELL_ICON[t]; }
 
   allMenus = signal<MenuItem[]>([]);
   menus = computed(() => this.allMenus().filter((m) => m.menuRoute.startsWith(this.shellBase() + '/')));
@@ -253,7 +251,17 @@ export class CmsLayoutComponent implements OnInit {
   private loadOrgOptions(): void {
     const q = this.orgSearch().trim();
     this.orgRepo.switcherList(this.tier(), q ? undefined : this.currentOrgID(), q || undefined).subscribe({
-      next: (list) => this.orgOptions.set(list),
+      next: (list) => {
+        this.orgOptions.set(list);
+        // Belum ada organizationID eksplisit di URL (mis. baru pindah ke shell
+        // ini dari dropdown akun) — jangan biarkan switcher "lepas" menampilkan
+        // placeholder "Pilih Organisasi" (miss-development-prompt-3.md poin 2),
+        // langsung kunci ke organisasi pertama yang tersedia lewat URL supaya
+        // seluruh halaman (dashboard, kader, dst.) konsisten ikut ter-scope.
+        if (this.currentOrgID() === undefined && list.length > 0) {
+          this.selectOrganization(list[0].organizationID);
+        }
+      },
       error: () => {},
     });
   }

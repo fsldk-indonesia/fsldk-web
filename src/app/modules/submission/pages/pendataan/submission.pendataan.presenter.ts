@@ -14,11 +14,11 @@ export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendat
   private submissionRepo = inject(SubmissionRepository);
   private toast = inject(ToastService);
 
-  loadAll(formCode: string): void {
+  loadAll(formCode: string, organizationID?: number): void {
     this.view.setLoading(true);
     forkJoin({
       version: this.formRepo.getPublishedByFormCode(formCode),
-      mine: this.submissionRepo.findMine(formCode),
+      mine: this.submissionRepo.findMine(formCode, organizationID),
     }).pipe(
       switchMap(({ version, mine }) =>
         mine ? this.submissionRepo.get(mine.submissionID).pipe(map((detail) => ({ version, detail }))) : of({ version, detail: null }),
@@ -43,9 +43,9 @@ export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendat
     });
   }
 
-  create(formCode: string, organizationID: number | null): void {
+  create(formCode: string, organizationID: number | null, targetOrganizationID?: number): void {
     this.view.setBusy(true);
-    this.submissionRepo.create(formCode, organizationID).subscribe({
+    this.submissionRepo.create(formCode, organizationID, targetOrganizationID).subscribe({
       next: () => { this.view.setBusy(false); this.toast.success('Pendataan dimulai'); this.view.reload(); },
       error: () => this.view.setBusy(false),
     });

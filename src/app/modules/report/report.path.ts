@@ -1,4 +1,4 @@
 export const reportPath = {
-  wilayah: '/cms/reports/wilayah',
-  nasional: '/cms/reports/nasional',
+  wilayah: '/cms-puskomda/reports/wilayah',
+  nasional: '/cms-puskomnas/reports/nasional',
 };

@@ -7,5 +7,5 @@ import { DashboardSummary } from '../entities/dashboard-summary';
 export class DashboardRepository {
   private api = inject(DashboardApiService);
 
-  summary(organizationID?: number): Observable<DashboardSummary> { return this.api.summary(organizationID); }
+  summary(organizationID?: number, tier?: string): Observable<DashboardSummary> { return this.api.summary(organizationID, tier); }
 }
