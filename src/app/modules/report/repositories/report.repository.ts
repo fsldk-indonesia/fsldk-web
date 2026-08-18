@@ -8,8 +8,8 @@ export class ReportRepository {
   private api = inject(ReportApiService);
 
   /** Mengunduh & langsung memicu penyimpanan berkas di browser. */
-  export(formCode: string, status: string | undefined, format: ExportFormat): Observable<{ blob: Blob; filename: string }> {
-    return this.api.exportSubmissions(formCode, status, format).pipe(tap((result) => this.triggerDownload(result)));
+  export(formCode: string, status: string | undefined, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
+    return this.api.exportSubmissions(formCode, status, format, organizationID).pipe(tap((result) => this.triggerDownload(result)));
   }
 
   private triggerDownload(result: { blob: Blob; filename: string }): void {

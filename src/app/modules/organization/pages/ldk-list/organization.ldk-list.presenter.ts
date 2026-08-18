@@ -19,8 +19,8 @@ export class OrganizationLdkListPresenter extends BasePresenter<OrganizationLdkL
   private orgRepo = inject(OrganizationRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, search: string): void {
-    this.orgRepo.list({ organizationTypeCode: 'LDK', page, limit, search }).subscribe({
+  load(page: number, limit: number, search: string, organizationID?: number): void {
+    this.orgRepo.list({ organizationTypeCode: 'LDK', page, limit, search, organizationID }).subscribe({
       next: (p) => this.view.setOrganizations(p.data, p.count),
       error: () => {},
     });

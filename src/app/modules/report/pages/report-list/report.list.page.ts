@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { OrgContextService } from '../../../../core/services/org-context.service';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { SubmissionAnswersViewComponent } from '../../../submission/components/submission-answers-view.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
@@ -35,6 +36,7 @@ export class ReportListPage implements OnInit, ReportListView {
   private presenter = inject(ReportListPresenter);
   private auth = inject(AuthRepository);
   private route = inject(ActivatedRoute);
+  private orgContext = inject(OrgContextService);
 
   title = this.route.snapshot.data['title'] as string;
   canExport = this.auth.hasPermission(this.route.snapshot.data['exportPermission'] as string);
@@ -63,7 +65,7 @@ export class ReportListPage implements OnInit, ReportListView {
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.presenter.loadAll();
+    this.orgContext.organizationID$(this.route).subscribe((id) => this.presenter.loadAll(id));
   }
 
   orgName(id: number): string { return this.orgNames()[id] ?? `Organisasi #${id}`; }

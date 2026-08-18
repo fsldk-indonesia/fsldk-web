@@ -8,7 +8,7 @@ import { ExportFormat } from '../entities/report';
 export class ReportApiService {
   private api = inject(ApiService);
 
-  exportSubmissions(formCode: string, status: string | undefined, format: ExportFormat): Observable<{ blob: Blob; filename: string }> {
-    return this.api.getBlob('/reports/submissions/export', { formCode, status, format });
+  exportSubmissions(formCode: string, status: string | undefined, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
+    return this.api.getBlob('/reports/submissions/export', { formCode, status, format, organizationID });
   }
 }

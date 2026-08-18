@@ -17,13 +17,16 @@ export class ReportListPresenter extends BasePresenter<ReportListView> {
   private reportRepo = inject(ReportRepository);
   private toast = inject(ToastService);
 
-  loadAll(): void {
+  private lastOrganizationID: number | undefined;
+
+  loadAll(organizationID?: number): void {
+    this.lastOrganizationID = organizationID;
     this.view.setLoading(true);
-    this.submissionRepo.listAll(FORM_CODE_LEVELISASI).subscribe({
+    this.submissionRepo.listAll(FORM_CODE_LEVELISASI, organizationID).subscribe({
       next: (page) => { this.view.setRows(page.data); this.view.setLoading(false); },
       error: () => this.view.setLoading(false),
     });
-    this.orgRepo.list({ limit: 200 }).subscribe({
+    this.orgRepo.list({ limit: 200, organizationID }).subscribe({
       next: (page) => {
         const names: Record<number, string> = {};
         for (const o of page.data) names[o.organizationID] = o.organizationName;
@@ -40,7 +43,7 @@ export class ReportListPresenter extends BasePresenter<ReportListView> {
 
   export(status: string | undefined, format: ExportFormat): void {
     this.view.setExporting(true);
-    this.reportRepo.export(FORM_CODE_LEVELISASI, status, format).subscribe({
+    this.reportRepo.export(FORM_CODE_LEVELISASI, status, format, this.lastOrganizationID).subscribe({
       next: () => { this.view.setExporting(false); this.toast.success('Laporan berhasil diunduh'); },
       error: () => this.view.setExporting(false),
     });

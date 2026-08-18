@@ -37,7 +37,10 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
 
   /** organizationID Puskomda yang sedang aktif di org-switcher shell
    *  cms-puskomda — dipakai untuk mengunci Puskomda Induk otomatis saat
-   *  membuat LDK dari shell ini (miss-development-prompt-3.md poin 4). */
+   *  membuat LDK dari shell ini (miss-development-prompt-3.md poin 4) DAN
+   *  untuk mempersempit daftar LDK ke Puskomda yang sedang dipilih (sebelumnya
+   *  selalu menampilkan seluruh cascade accessible caller — utuh nasional
+   *  untuk Puskomnas/wildcard — walau org-switcher sudah diganti). */
   private currentPuskomdaID: number | undefined;
 
   organizations = signal<Organization[]>([]);
@@ -70,15 +73,18 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.load();
     if (this.isNational()) {
+      this.load();
       this.presenter.loadPuskomdaOptions();
     } else {
-      this.orgContext.organizationID$(this.route).subscribe((id) => { this.currentPuskomdaID = id; });
+      this.orgContext.organizationID$(this.route).subscribe((id) => {
+        this.currentPuskomdaID = id;
+        this.load();
+      });
     }
   }
 
-  load(): void { this.loading.set(true); this.presenter.load(this.page(), this.limit, this.search); }
+  load(): void { this.loading.set(true); this.presenter.load(this.page(), this.limit, this.search, this.currentPuskomdaID); }
   applySearch(): void { this.page.set(1); this.load(); }
   goPage(p: number): void { this.page.set(p); this.load(); }
 
