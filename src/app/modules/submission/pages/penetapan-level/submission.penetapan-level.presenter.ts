@@ -8,7 +8,7 @@ import { OrganizationRepository } from '../../../organization/repositories/organ
 import { EstablishLevelRequest, FORM_CODE_LEVELISASI } from '../../entities/submission';
 import { SubmissionPenetapanLevelView } from './submission.penetapan-level.view';
 
-const QUEUE_STATUSES = ['APPROVED_PUSKOMDA', 'PUSKOMNAS_REVIEW'];
+const QUEUE_STATUSES = ['APPROVED_PUSKOMNAS'];
 
 @Injectable()
 export class SubmissionPenetapanLevelPresenter extends BasePresenter<SubmissionPenetapanLevelView> {

@@ -52,7 +52,7 @@ export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueV
 
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
 
-  decisionOptions: SelectOption[] = this.reviewTier === 'PUSKOMDA' && this.canApprove
+  decisionOptions: SelectOption[] = this.canApprove
     ? [{ value: 'APPROVED', label: 'Setujui' }, { value: 'REVISION_REQUESTED', label: 'Minta Revisi' }]
     : [{ value: 'REVISION_REQUESTED', label: 'Minta Revisi' }];
 

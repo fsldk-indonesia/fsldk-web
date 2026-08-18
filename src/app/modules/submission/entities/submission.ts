@@ -20,7 +20,8 @@ export const SUBMISSION_STATUS_LABELS: Record<string, string> = {
   DRAFT: 'Draf', SUBMITTED: 'Terkirim', CANCELLED: 'Dibatalkan', REJECTED: 'Ditolak',
   PUSKOMDA_REVIEW: 'Verifikasi Puskomda', REVISION_REQUESTED_PUSKOMDA: 'Revisi Diminta (Puskomda)',
   APPROVED_PUSKOMDA: 'Disetujui Puskomda', PUSKOMNAS_REVIEW: 'Verifikasi Puskomnas',
-  REVISION_REQUESTED_PUSKOMNAS: 'Revisi Diminta (Puskomnas)', LEVEL_ESTABLISHED: 'Level Ditetapkan',
+  REVISION_REQUESTED_PUSKOMNAS: 'Revisi Diminta (Puskomnas)', APPROVED_PUSKOMNAS: 'Disetujui Puskomnas',
+  LEVEL_ESTABLISHED: 'Level Ditetapkan',
   PUBLISHED: 'Dipublikasikan', LDK_REVIEW: 'Verifikasi LDK', REVISION_REQUESTED_LDK: 'Revisi Diminta (LDK)',
   APPROVED_LDK: 'Disetujui LDK', CODE_ISSUED: 'Kode Terbit', ACTIVE: 'Aktif',
 };

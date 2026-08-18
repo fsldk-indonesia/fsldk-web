@@ -45,7 +45,7 @@ export const submissionRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: {
       permission: 'submission.review.tier2', reviewTier: 'PUSKOMNAS', statuses: ['APPROVED_PUSKOMDA', 'PUSKOMNAS_REVIEW'],
-      title: 'Verifikasi Akhir Nasional', canApprove: false,
+      title: 'Verifikasi Akhir Nasional', canApprove: true,
     },
     loadComponent: () => import('./pages/review-queue/submission.review-queue.page').then((m) => m.SubmissionReviewQueuePage),
   },
