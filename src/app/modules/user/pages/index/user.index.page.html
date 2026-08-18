@@ -74,8 +74,9 @@
         <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" placeholder="Pilih role" />
       </div>
       @if (showOrganizationPicker()) {
-        <div class="form-group"><label class="form-label">Organisasi</label>
-          <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" placeholder="Pilih organisasi" />
+        <div class="form-group"><label class="form-label">LDK</label>
+          <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" placeholder="Pilih LDK" />
+          <p class="form-hint">Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.</p>
         </div>
       }
       @if (isFreeTierCaller()) {

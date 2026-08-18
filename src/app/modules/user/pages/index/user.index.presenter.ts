@@ -34,9 +34,22 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
     this.roleRepo.list().subscribe({ next: (r) => this.view.setRoles(r), error: () => {} });
   }
 
+  /**
+   * Organisasi yang di-assign ke akun kini SELALU sebuah LDK, untuk role
+   * berjenjang organisasi manapun (LDK Admin, Puskomda Verifikator, Puskomnas
+   * Verifikator) — bukan lagi organisasi bertipe campuran (LDK/Puskomda/
+   * Puskomnas) yang harus dicocokkan manual dengan role yang dipilih.
+   * Cakupan akses Puskomda/Puskomnas diturunkan backend dari rantai induk LDK
+   * ini (lihat auth_service_impl.go resolveEffectiveOrg) — dikonfirmasi
+   * 2026-08-19: akses ditentukan oleh ROLE, bukan tipe organisasi yang dipilih
+   * di sini.
+   */
   loadOrganizations(): void {
-    this.orgRepo.list({ limit: 200 }).subscribe({
-      next: (p) => this.view.setOrganizationOptions(p.data.map((o) => ({ value: o.organizationID, label: `${o.organizationName} (${o.organizationTypeCode})` }))),
+    this.orgRepo.list({ organizationTypeCode: 'LDK', limit: 200 }).subscribe({
+      next: (p) => this.view.setOrganizationOptions(p.data.map((o) => ({
+        value: o.organizationID,
+        label: o.provinceName ? `${o.organizationName} — ${o.provinceName}` : o.organizationName,
+      }))),
       error: () => {},
     });
   }
