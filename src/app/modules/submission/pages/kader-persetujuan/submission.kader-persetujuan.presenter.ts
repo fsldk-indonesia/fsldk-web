@@ -1,6 +1,8 @@
 import { Injectable, inject } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
+import { OrgContextService } from '../../../../core/services/org-context.service';
 import { SubmissionRepository } from '../../repositories/submission.repository';
 import { KaderRepository } from '../../repositories/kader.repository';
 import { SubmissionFormRepository } from '../../../submission-form/repositories/submission-form.repository';
@@ -12,15 +14,22 @@ export class SubmissionKaderPersetujuanPresenter extends BasePresenter<Submissio
   private submissionRepo = inject(SubmissionRepository);
   private kaderRepo = inject(KaderRepository);
   private formRepo = inject(SubmissionFormRepository);
+  private orgContext = inject(OrgContextService);
+  private route = inject(ActivatedRoute);
   private toast = inject(ToastService);
 
+  private currentOrganizationID: number | undefined;
+
   loadAll(): void {
-    this.view.setLoading(true);
-    this.kaderRepo.list('PENDING').subscribe({
-      next: (page) => { this.view.setPending(page.data); this.view.setLoading(false); },
-      error: () => this.view.setLoading(false),
+    this.orgContext.organizationID$(this.route).subscribe((organizationID) => {
+      this.currentOrganizationID = organizationID;
+      this.view.setLoading(true);
+      this.kaderRepo.list('PENDING', organizationID).subscribe({
+        next: (page) => { this.view.setPending(page.data); this.view.setLoading(false); },
+        error: () => this.view.setLoading(false),
+      });
+      this.kaderRepo.list('ACTIVE', organizationID).subscribe({ next: (page) => this.view.setActive(page.data), error: () => {} });
     });
-    this.kaderRepo.list('ACTIVE').subscribe({ next: (page) => this.view.setActive(page.data), error: () => {} });
     this.formRepo.getPublishedByFormCode(FORM_CODE_SENSUS_KADER).subscribe({
       next: (v) => this.view.setVersion(v),
       error: () => {},

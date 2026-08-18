@@ -22,13 +22,13 @@ export class SubmissionRepository {
   get(id: number): Observable<SubmissionDetail> { return this.api.get(id); }
 
   /** Antrean submission untuk satu status (dipanggil beberapa kali & digabung untuk beberapa status sekaligus). */
-  listByStatus(formCode: string, status: string, page = 1, limit = 50): Observable<Pagination<SubmissionResponse>> {
-    return this.api.listQueue({ formCode, status, page, limit });
+  listByStatus(formCode: string, status: string, organizationID?: number, page = 1, limit = 50): Observable<Pagination<SubmissionResponse>> {
+    return this.api.listQueue({ formCode, status, page, limit, organizationID });
   }
 
   /** Seluruh submission satu form dalam cakupan akses caller, tanpa filter status — dipakai halaman laporan. */
-  listAll(formCode: string, page = 1, limit = 200): Observable<Pagination<SubmissionResponse>> {
-    return this.api.listQueue({ formCode, page, limit });
+  listAll(formCode: string, organizationID?: number, page = 1, limit = 200): Observable<Pagination<SubmissionResponse>> {
+    return this.api.listQueue({ formCode, page, limit, organizationID });
   }
 
   review(id: number, body: ReviewRequest): Observable<SubmissionResponse> { return this.api.review(id, body); }

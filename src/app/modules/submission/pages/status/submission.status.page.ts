@@ -1,11 +1,10 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
 import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
-import { submissionPath } from '../../submission.path';
 import { SubmissionStatusPresenter } from './submission.status.presenter';
 import { SubmissionStatusView } from './submission.status.view';
 
@@ -30,12 +29,14 @@ import { SubmissionStatusView } from './submission.status.view';
 export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   private presenter = inject(SubmissionStatusPresenter);
   private auth = inject(AuthRepository);
+  private route = inject(ActivatedRoute);
   private alert = inject(AlertService);
 
-  readonly submissionPath = submissionPath;
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
 
-  formCode = computed(() => (this.auth.user()?.organizationTypeCode === 'LDK' ? FORM_CODE_LEVELISASI : FORM_CODE_SENSUS_KADER));
+  /** Lihat catatan di submission.pendataan.page.ts — formCode datang dari
+   *  route data (shell), bukan tier akun pemanggil. */
+  formCode = computed(() => (this.route.snapshot.data['formCode'] as string | undefined) ?? FORM_CODE_LEVELISASI);
   isKaderSubject = computed(() => this.formCode() === FORM_CODE_SENSUS_KADER);
   canReassess = this.auth.hasPermission('submission.reassess');
 

@@ -1,7 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
 import { IconComponent } from '../../../../shared/icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
@@ -9,7 +8,6 @@ import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { FormField, FormVersionDetail } from '../../../submission-form/entities/submission-form';
 import { SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, EDITABLE_STATUSES } from '../../entities/submission';
-import { submissionPath } from '../../submission.path';
 import { SubmissionPendataanPresenter } from './submission.pendataan.presenter';
 import { SubmissionPendataanView } from './submission.pendataan.view';
 
@@ -48,12 +46,17 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
 })
 export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView {
   private presenter = inject(SubmissionPendataanPresenter);
-  private auth = inject(AuthRepository);
+  private route = inject(ActivatedRoute);
   private alert = inject(AlertService);
 
-  readonly submissionPath = submissionPath;
-
-  formCode = computed(() => (this.auth.user()?.organizationTypeCode === 'LDK' ? FORM_CODE_LEVELISASI : FORM_CODE_SENSUS_KADER));
+  /** formCode ditentukan oleh shell/route yang memuat halaman ini (data:
+   *  {formCode}) — cms-ldk selalu Levelisasi LDK, kader selalu Sensus Kader —
+   *  BUKAN dari tier akun pemanggil. Sebelumnya dihitung dari
+   *  auth.user()?.organizationTypeCode, yang salah untuk Super Admin/wildcard
+   *  (organizationTypeCode kosong) sehingga cms-ldk/submissions/pendataan
+   *  ikut menampilkan form Sensus Kader alih-alih Levelisasi LDK (miss-
+   *  development-prompt-2.md poin 7). */
+  formCode = computed(() => (this.route.snapshot.data['formCode'] as string | undefined) ?? FORM_CODE_LEVELISASI);
   isKaderSubject = computed(() => this.formCode() === FORM_CODE_SENSUS_KADER);
 
   version = signal<FormVersionDetail | null>(null);

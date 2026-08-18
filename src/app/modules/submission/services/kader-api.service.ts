@@ -9,7 +9,7 @@ import { KaderInfo } from '../entities/submission';
 export class KaderApiService {
   private api = inject(ApiService);
 
-  list(q: { status?: string; page?: number; limit?: number }): Observable<Pagination<KaderInfo>> {
+  list(q: { status?: string; page?: number; limit?: number; organizationID?: number }): Observable<Pagination<KaderInfo>> {
     return this.api.get('/kaders', q);
   }
   getCode(id: number): Observable<KaderInfo> { return this.api.get(`/kaders/${id}/code`); }

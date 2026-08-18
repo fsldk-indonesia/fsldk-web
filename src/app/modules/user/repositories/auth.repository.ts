@@ -4,7 +4,11 @@ import { AuthApiService } from '../services/auth-api.service';
 import { AuthSessionService } from '../services/auth-session.service';
 import { AuthResult } from '../entities/auth-result';
 import { UserProfile } from '../entities/user';
-import { submissionPath } from '../../submission/submission.path';
+
+/** Peringkat tier organisasi tertinggi (0 = tidak ada) — dipakai untuk
+ *  visibilitas link CMS hierarkis ke bawah (miss-development-clarification.md
+ *  bagian C): tier sendiri + seluruh tier di bawahnya. */
+const TIER_RANK: Record<string, number> = { LDK: 1, PUSKOMDA: 2, PUSKOMNAS: 3 };
 
 /**
  * Sumber kebenaran sesi pengguna aplikasi: menyimpan token & profil,
@@ -64,24 +68,52 @@ export class AuthRepository {
     return this.user()?.permissions.includes(code) ?? false;
   }
 
-  /** Apakah pengguna memiliki akses ke CMS (setidaknya satu permission). */
+  /** Peringkat tier tertinggi yang dapat diakses akun (0 = tidak ada tier organisasi). */
+  private tierRank(): number {
+    const u = this.user();
+    if (!u) return 0;
+    let rank = TIER_RANK[u.organizationTypeCode ?? ''] ?? 0;
+    for (const t of u.wildcardTierAccess ?? []) rank = Math.max(rank, TIER_RANK[t] ?? 0);
+    return rank;
+  }
+
+  /** Akses CMS Utama (FSLDK) — ditandai permission admin sistem yang hanya dimiliki Super Admin. */
+  hasUtamaCmsAccess(): boolean { return this.hasPermission('role.view'); }
+  hasPuskomnasCmsAccess(): boolean { return this.tierRank() >= 3; }
+  hasPuskomdaCmsAccess(): boolean { return this.tierRank() >= 2; }
+  hasLdkCmsAccess(): boolean { return this.tierRank() >= 1; }
+
+  /** Apakah pengguna memiliki akses ke setidaknya satu CMS (Utama atau ber-tier). */
   hasAnyCmsAccess(): boolean {
-    return (this.user()?.permissions.length ?? 0) > 0;
+    return this.hasUtamaCmsAccess() || this.hasLdkCmsAccess();
   }
 
   /**
-   * Halaman CMS tujuan setelah login — null bila akun tidak punya akses CMS
-   * sama sekali. Dashboard dirancang per tier organisasi (LDK/Puskomda/
-   * Puskomnas); akun tanpa tier organisasi (Kader — self-service, bukan
-   * tier CMS resmi, lihat DL-12) diarahkan ke Pendataan alih-alih Dashboard
-   * yang tidak punya widget untuknya (backend menolaknya dengan 403).
+   * Apakah akun ini akun self-service Kader (Pengunjung/Kader — tanpa tier
+   * organisasi, tanpa akses CMS Utama, tapi punya izin isi Sensus Kader).
+   * Dipakai navbar akun untuk menampilkan "Daftar Kader"/"Lihat Status
+   * Kader"/"Portal Kader" (lihat KaderNavState di public-layout).
+   */
+  isKaderSelfService(): boolean {
+    return !this.hasAnyCmsAccess() && this.hasPermission('submission.create');
+  }
+
+  /**
+   * Halaman tujuan setelah login — null bila akun tidak punya akses ke
+   * CMS/Portal Kader manapun. Tiap tier organisasi punya shell CMS-nya
+   * sendiri (poin 1-4 miss-development); akun tanpa tier organisasi tapi
+   * berhak isi Sensus Kader diarahkan ke Portal Kader (kader/ringkasan),
+   * bukan Dashboard CMS yang tidak punya widget untuknya.
    */
   defaultCmsPath(): string | null {
     const u = this.user();
-    if (!u || u.permissions.length === 0) return null;
-    const hasOrganizationTier = !!u.organizationTypeCode || (u.wildcardTierAccess?.length ?? 0) > 0;
-    if (!hasOrganizationTier && u.permissions.includes('submission.create')) return submissionPath.pendataan;
-    return '/cms/dashboard';
+    if (!u) return null;
+    if (this.hasUtamaCmsAccess()) return '/cms/dashboard';
+    if (this.hasPuskomnasCmsAccess()) return '/cms-puskomnas/dashboard';
+    if (this.hasPuskomdaCmsAccess()) return '/cms-puskomda/dashboard';
+    if (this.hasLdkCmsAccess()) return '/cms-ldk/dashboard';
+    if (this.isKaderSelfService()) return '/kader/ringkasan';
+    return null;
   }
 
   logout(): void {

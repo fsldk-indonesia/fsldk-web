@@ -17,12 +17,24 @@
     }
     <button class="btn btn-primary" style="margin-top:10px" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi</button>
   </div>
+} @else if (submission()!.status === 'CANCELLED') {
+  <div class="card card-pad">
+    <h3>Pendataan sebelumnya dibatalkan</h3>
+    <p class="text-muted">Anda dapat mulai isi lagi kapan saja — jawaban sebelumnya tidak dipakai lagi, form dimulai dari awal.</p>
+    @if (isKaderSubject()) {
+      <div class="form-group" style="max-width:360px;margin-top:14px">
+        <label class="form-label">LDK Tujuan</label>
+        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" placeholder="Pilih LDK" />
+      </div>
+    }
+    <button class="btn btn-primary" style="margin-top:10px" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi Lagi</button>
+  </div>
 } @else if (!isEditable()) {
   <div class="status-banner">
     <app-icon name="info" [size]="18" />
     <span>Status pendataan Anda saat ini: <strong>{{ submission()!.status }}</strong>. Tidak dapat diubah pada tahap ini.</span>
   </div>
-  <a class="btn btn-outline" [routerLink]="submissionPath.status">Lihat Status Pendataan</a>
+  <a class="btn btn-outline" [routerLink]="['../status']">Lihat Status Pendataan</a>
 
   <div class="section-card" style="margin-top:20px">
     <h3>Jawaban Tersimpan</h3>

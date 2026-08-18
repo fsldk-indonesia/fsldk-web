@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { PublicLayoutComponent } from './layouts/public-layout.component';
 import { AuthLayoutComponent } from './layouts/auth-layout.component';
 import { CmsLayoutComponent } from './layouts/cms-layout.component';
+import { KaderLayoutComponent } from './layouts/kader-layout.component';
 import { authGuard } from './core/guards/guards';
 
 import { homeRoutes } from './modules/home/home.routes';
@@ -16,6 +17,7 @@ import { submissionRoutes } from './modules/submission/submission.routes';
 import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { kaderRoutes } from './modules/submission/kader.routes';
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
@@ -53,23 +55,75 @@ export const routes: Routes = [
   },
 
   // ---------- CMS (terproteksi) ----------
+  // 4 shell terpisah (miss-development-clarification.md poin 1-4): CMS Utama
+  // (FSLDK, tema default) + 3 CMS ber-tier (LDK/Puskomda/Puskomnas, tema &
+  // org-switcher lokal sendiri-sendiri — lihat CmsLayoutComponent). Menu
+  // sidebar tiap shell difilter dari /me/menus berdasarkan prefix route ini
+  // (lk_permission.menuRoute sudah di-set per shell lewat migration 0010),
+  // jadi array child routes di bawah boleh dipakai bersama lintas shell
+  // (mis. dashboardRoutes()) tanpa perlu 4 salinan *.routes.ts — akses tetap
+  // dijaga permissionGuard per halaman, bukan oleh shell mana yang dipakai.
   {
     path: 'cms',
     component: CmsLayoutComponent,
     canActivate: [authGuard],
+    data: { tier: 'FSLDK' },
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       ...dashboardRoutes(),
       ...userRoutes(),
       ...roleRoutes(),
-      ...organizationRoutes(),
-      ...submissionFormRoutes(),
-      ...submissionRoutes(),
-      ...reportRoutes(),
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...shortlinkRoutes(),
     ],
+  },
+  {
+    path: 'cms-ldk',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'LDK' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomda',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMDA' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomnas',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMNAS' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+      ...submissionFormRoutes(),
+    ],
+  },
+
+  // ---------- Kader (self-service, tema landing page + sidebar ringkas) ----------
+  {
+    path: 'kader',
+    component: KaderLayoutComponent,
+    canActivate: [authGuard],
+    children: [...kaderRoutes()],
   },
 
   ...shortlinkRedirectRoutes(),

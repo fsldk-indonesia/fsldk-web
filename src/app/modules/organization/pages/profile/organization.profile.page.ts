@@ -45,6 +45,7 @@ export class OrganizationProfilePage implements OnInit, OrganizationProfileView 
     };
     this.loading.set(false);
   }
+  setLoading(loading: boolean): void { this.loading.set(loading); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void {}
 }

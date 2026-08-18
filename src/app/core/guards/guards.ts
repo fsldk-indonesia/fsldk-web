@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { Observable, catchError, map, of } from 'rxjs';
 import { AuthRepository } from '../../modules/user/repositories/auth.repository';
 import { ToastService } from '../services/toast.service';
 
@@ -21,17 +22,33 @@ export const loginGuard: CanActivateFn = () => {
   return false;
 };
 
-/** Memastikan email pengguna sudah terverifikasi. */
-export const verifiedGuard: CanActivateFn = () => {
+/**
+ * Memastikan email pengguna sudah terverifikasi. Signal `user()` di memori
+ * bisa basi (mis. link verifikasi dibuka di tab/perangkat lain, tanpa
+ * memicu refreshMe() di tab ini — lihat verify-email.presenter.ts) — jadi
+ * SEBELUM memutuskan redirect ke halaman verifikasi, sinkronkan dulu ke
+ * /auth/me. Ini menghilangkan kebutuhan logout-login ulang supaya status
+ * terverifikasi "kebaca" (miss-development-prompt-2.md poin 3).
+ */
+export const verifiedGuard: CanActivateFn = (): Observable<boolean> => {
   const auth = inject(AuthRepository);
   const router = inject(Router);
-  if (auth.isLoggedIn() && auth.isVerified()) return true;
-  if (auth.isLoggedIn()) {
-    router.navigate(['/verifikasi-email']);
-  } else {
+  if (!auth.isLoggedIn()) {
     router.navigate(['/login']);
+    return of(false);
   }
-  return false;
+  if (auth.isVerified()) return of(true);
+  return auth.refreshMe().pipe(
+    map(() => {
+      if (auth.isVerified()) return true;
+      router.navigate(['/verifikasi-email']);
+      return false;
+    }),
+    catchError(() => {
+      router.navigate(['/verifikasi-email']);
+      return of(false);
+    }),
+  );
 };
 
 /** Memastikan pengguna memiliki permission tertentu (data: { permission }). */

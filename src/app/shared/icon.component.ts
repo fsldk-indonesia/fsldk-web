@@ -59,6 +59,9 @@ const ICONS: Record<string, string> = {
   'chevrons-up-down': 'fas fa-sort',
   'arrow-left': 'fas fa-arrow-left',
   info: 'fas fa-circle-info',
+  settings: 'fas fa-gear',
+  lock: 'fas fa-lock',
+  'id-card': 'fas fa-id-card',
 };
 
 /**

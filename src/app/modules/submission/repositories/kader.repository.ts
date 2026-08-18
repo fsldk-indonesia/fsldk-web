@@ -8,8 +8,8 @@ import { KaderInfo } from '../entities/submission';
 export class KaderRepository {
   private api = inject(KaderApiService);
 
-  list(status: string, page = 1, limit = 50): Observable<Pagination<KaderInfo>> {
-    return this.api.list({ status, page, limit });
+  list(status: string, organizationID?: number, page = 1, limit = 50): Observable<Pagination<KaderInfo>> {
+    return this.api.list({ status, page, limit, organizationID });
   }
   getCode(id: number): Observable<KaderInfo> { return this.api.getCode(id); }
   deactivate(id: number): Observable<unknown> { return this.api.deactivate(id); }

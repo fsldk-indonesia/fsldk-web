@@ -1,42 +1,25 @@
-import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { OrganizationApiService } from '../services/organization-api.service';
-import { AuthRepository } from '../../user/repositories/auth.repository';
 import { Pagination } from '../../../core/entities/pagination';
 import { Organization, MeOrganization, OrganizationDirectoryEntry } from '../entities/organization';
 
-/**
- * Data organisasi + state dashboard switcher (Section 11.2 TechSpec — switcher
- * bersifat stateless di backend, jadi organizationID "sedang dilihat" murni
- * state UI di sini, tidak pernah mengubah token/sesi). Disuntik langsung oleh
- * layout & halaman lain yang butuh tahu organisasi mana yang sedang aktif.
- */
 @Injectable({ providedIn: 'root' })
 export class OrganizationRepository {
   private api = inject(OrganizationApiService);
-  private auth = inject(AuthRepository);
 
-  readonly accessible = signal<MeOrganization[]>([]);
-  private readonly activeID = signal<number | null>(null);
-  readonly activeOrganization = computed(() => this.accessible().find((o) => o.organizationID === this.activeID()) ?? null);
-  /** Apakah caller punya lebih dari satu organisasi (perlu tampilkan switcher). */
-  readonly hasMultiple = computed(() => this.accessible().length > 1);
-
-  loadAccessible(): Observable<MeOrganization[]> {
-    return this.api.me().pipe(
-      tap((list) => {
-        this.accessible.set(list);
-        if (this.activeID() === null || !list.some((o) => o.organizationID === this.activeID())) {
-          const home = this.auth.user()?.organizationID;
-          const initial = list.find((o) => o.organizationID === home) ?? list[0] ?? null;
-          this.activeID.set(initial?.organizationID ?? null);
-        }
-      }),
-    );
-  }
-
-  setActive(id: number): void {
-    this.activeID.set(id);
+  /**
+   * Daftar organisasi untuk context switcher lokal (TechSpec Section 19.6) -
+   * dipanggil oleh CmsLayoutComponent di shell cms-ldk/cms-puskomda saja.
+   * `organizationTypeCode` WAJIB diisi shell tier saat ini (LDK/PUSKOMDA) —
+   * ini yang mencegah LDK ikut muncul saat berada di CMS Puskomda dan
+   * sebaliknya (miss-development-prompt-2.md poin 2). `siblingOf` (default):
+   * sesama organisasi di bawah parent yang sama dengan organizationID yang
+   * sedang dibuka. `q`: search lintas seluruh accessible set caller pada
+   * tipe yang sama (mengalahkan siblingOf).
+   */
+  switcherList(organizationTypeCode: string, siblingOf?: number, q?: string): Observable<MeOrganization[]> {
+    return this.api.me(organizationTypeCode, siblingOf, q);
   }
 
   directory(organizationTypeCode: string): Observable<OrganizationDirectoryEntry[]> { return this.api.directory(organizationTypeCode); }

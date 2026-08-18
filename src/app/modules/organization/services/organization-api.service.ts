@@ -9,7 +9,9 @@ import { Organization, MeOrganization, OrganizationDirectoryEntry } from '../ent
 export class OrganizationApiService {
   private api = inject(ApiService);
 
-  me(): Observable<MeOrganization[]> { return this.api.get('/me/organizations'); }
+  me(organizationTypeCode?: string, siblingOf?: number, q?: string): Observable<MeOrganization[]> {
+    return this.api.get('/me/organizations', { organizationTypeCode, siblingOf, q });
+  }
   directory(organizationTypeCode: string): Observable<OrganizationDirectoryEntry[]> {
     return this.api.get('/organizations/directory', { organizationTypeCode });
   }

@@ -17,9 +17,11 @@ export class SubmissionApiService {
   saveAnswers(id: number, body: unknown): Observable<SubmissionDetail> { return this.api.put(`/submissions/${id}/answers`, body); }
   submit(id: number): Observable<SubmissionResponse> { return this.api.post(`/submissions/${id}/submit`); }
   cancel(id: number): Observable<unknown> { return this.api.post(`/submissions/${id}/cancel`); }
-  list(formCode: string): Observable<Pagination<SubmissionResponse>> { return this.api.get('/submissions', { formCode, limit: 1 }); }
+  list(formCode: string, organizationID?: number): Observable<Pagination<SubmissionResponse>> {
+    return this.api.get('/submissions', { formCode, limit: 1, organizationID });
+  }
   /** Daftar terpaginasi untuk antrean reviewer — satu status per panggilan (backend tidak mendukung filter IN-list). */
-  listQueue(q: { formCode?: string; status?: string; page?: number; limit?: number }): Observable<Pagination<SubmissionResponse>> {
+  listQueue(q: { formCode?: string; status?: string; page?: number; limit?: number; organizationID?: number }): Observable<Pagination<SubmissionResponse>> {
     return this.api.get('/submissions', q);
   }
   get(id: number): Observable<SubmissionDetail> { return this.api.get(`/submissions/${id}`); }
