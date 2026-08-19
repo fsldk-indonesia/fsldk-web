@@ -36,6 +36,20 @@ import { SubmissionKaderRingkasanView } from './submission.kader-ringkasan.view'
         }
         <a class="btn btn-outline" style="margin-top:10px" routerLink="/kader/status">Lihat Detail Status</a>
       </div>
+    } @else if (isRejected()) {
+      <div class="card card-pad tone-danger">
+        <span class="badge badge-rejected" style="margin-bottom:10px">Ditolak</span>
+        <h3>Pendaftaran Anda ditolak LDK</h3>
+        <p class="text-muted">Hubungi LDK tujuan Anda bila ingin didaftarkan ulang — LDK dapat memutihkan kembali data Anda untuk mendaftar dari awal.</p>
+        <a class="btn btn-outline" style="margin-top:10px" routerLink="/kader/status">Lihat Detail Status</a>
+      </div>
+    } @else if (isRevision()) {
+      <div class="card card-pad tone-warning">
+        <span class="badge badge-revision" style="margin-bottom:10px">Perlu Revisi</span>
+        <h3>LDK meminta Anda melengkapi/memperbaiki data</h3>
+        <p class="text-muted">Silakan buka Formulir Pendataan untuk memperbaiki jawaban Anda, lalu kirim ulang.</p>
+        <a class="btn btn-primary" style="margin-top:10px" routerLink="/kader/pendataan">Lengkapi Formulir Pendataan</a>
+      </div>
     } @else {
       <div class="card card-pad">
         <span class="badge badge-draft" style="margin-bottom:10px">{{ statusLabel() }}</span>
@@ -48,6 +62,10 @@ import { SubmissionKaderRingkasanView } from './submission.kader-ringkasan.view'
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
     .code-display { font-size: 1.4rem; font-weight: 700; letter-spacing: .5px; color: var(--color-primary-dark); }
+    .tone-danger { background: #fdecec; }
+    .tone-warning { background: var(--color-ember-soft); }
+    .badge-rejected { background: #f6c9c9; color: #9a1c1c; }
+    .badge-revision { background: var(--color-ember-soft); color: var(--color-ember-dark); }
   `],
 })
 export class SubmissionKaderRingkasanPage implements OnInit, SubmissionKaderRingkasanView {
@@ -58,6 +76,8 @@ export class SubmissionKaderRingkasanPage implements OnInit, SubmissionKaderRing
   loading = signal(true);
 
   isActive = computed(() => this.submission()?.status === 'ACTIVE');
+  isRejected = computed(() => this.submission()?.status === 'REJECTED');
+  isRevision = computed(() => this.submission()?.status === 'REVISION_REQUESTED_LDK');
   statusLabel = computed(() => {
     const s = this.submission();
     if (!s) return '';

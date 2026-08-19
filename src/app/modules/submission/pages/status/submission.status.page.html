@@ -12,12 +12,13 @@
     <a class="btn btn-primary" style="margin-top:10px" [routerLink]="['../pendataan']">Mulai Pendataan</a>
   </div>
 } @else {
-  <div class="status-card">
+  <div class="status-card" [class.tone-danger]="statusTone(submission()!.status) === 'danger'"
+       [class.tone-warning]="statusTone(submission()!.status) === 'warning'">
     <div>
       <p class="text-muted" style="margin-bottom:4px">Status Saat Ini</p>
       <h2>{{ statusLabel(submission()!.status) }}</h2>
     </div>
-    <app-icon name="clipboard-check" [size]="32" />
+    <app-icon [name]="statusTone(submission()!.status) === 'danger' ? 'x-circle' : 'clipboard-check'" [size]="32" />
   </div>
 
   @if (submission()!.levelResult; as level) {
@@ -41,10 +42,14 @@
       @if (kader.uniqueCode) {
         <p class="code-display">{{ kader.uniqueCode }}</p>
         <p class="text-muted">Terbit: {{ kader.issuedDate | date:'medium' }}</p>
+      } @else if (kader.status === 'REJECTED') {
+        <p class="text-muted">Pendaftaran Anda ditolak LDK. Hubungi LDK tujuan Anda bila ingin didaftarkan ulang.</p>
       } @else {
         <p class="text-muted">Kode kader belum diterbitkan — menunggu persetujuan LDK.</p>
       }
-      <span class="chip" [class.chip-green]="kader.status === 'ACTIVE'">{{ kader.status }}</span>
+      <span class="chip" [class.chip-green]="kaderStatusTone(kader.status) === 'success'"
+            [class.chip-red]="kaderStatusTone(kader.status) === 'danger'"
+            [class.chip-ember]="kaderStatusTone(kader.status) === 'warning'">{{ kaderStatusLabel(kader.status) }}</span>
     </div>
   }
 

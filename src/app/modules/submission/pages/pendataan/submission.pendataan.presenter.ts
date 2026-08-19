@@ -79,4 +79,12 @@ export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendat
       error: () => this.view.setBusy(false),
     });
   }
+
+  reassessKader(id: number, version: number): void {
+    this.view.setBusy(true);
+    this.submissionRepo.reassessKader(id, { version }).subscribe({
+      next: () => { this.view.setBusy(false); this.toast.success('Silakan isi ulang data terbaru Anda'); this.view.reload(); },
+      error: () => this.view.setBusy(false),
+    });
+  }
 }

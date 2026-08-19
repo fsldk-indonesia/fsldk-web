@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../repositories/auth.repository';
 import { PasswordFieldComponent } from '../../../../shared/password-field.component';
 import { IconComponent } from '../../../../shared/icon.component';
+import { KaderInfo } from '../../../submission/entities/submission';
 import { UserMyProfilePresenter } from './user.my-profile.presenter';
 import { UserMyProfileView } from './user.my-profile.view';
 
@@ -29,6 +30,31 @@ import { UserMyProfileView } from './user.my-profile.view';
           <p class="text-muted" style="margin:0">{{ auth.user()?.email }}</p>
         </div>
       </div>
+    </div>
+
+    @if (kader(); as k) {
+      @if (k.status === 'ACTIVE') {
+        <div class="card card-pad profile-card" style="margin-top:16px">
+          <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="id-card" [size]="16" /> Info Kekaderan</h3>
+          <div class="form-group"><label class="form-label">Nama LDK</label>
+            <input class="form-control" [value]="k.organizationName ?? '—'" readonly></div>
+          <div class="form-group"><label class="form-label">Nama Puskomda</label>
+            <input class="form-control" [value]="k.parentOrganizationName ?? '—'" readonly></div>
+        </div>
+      }
+    }
+
+    <div class="card card-pad profile-card" style="margin-top:16px">
+      <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="phone" [size]="16" /> Kontak</h3>
+      <form (ngSubmit)="submitContact()">
+        <div class="form-group"><label class="form-label">No Whatsapp</label>
+          <input class="form-control" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="08xxxxxxxxxx"></div>
+        <div class="form-group"><label class="form-label">Alamat</label>
+          <textarea class="form-control" name="address" rows="2" [(ngModel)]="address" placeholder="Alamat domisili"></textarea></div>
+        <button class="btn btn-primary" type="submit" [disabled]="contactSaving()">
+          @if (contactSaving()) { <span class="spinner"></span> } @else { Simpan Kontak }
+        </button>
+      </form>
     </div>
 
     <div class="card card-pad profile-card" style="margin-top:16px">
@@ -60,8 +86,15 @@ export class UserMyProfilePage implements OnInit, UserMyProfileView {
   newPassword = '';
   saving = signal(false);
 
+  phoneNumber = this.auth.user()?.phoneNumber ?? '';
+  address = this.auth.user()?.address ?? '';
+  contactSaving = signal(false);
+
+  kader = signal<KaderInfo | null>(null);
+
   ngOnInit(): void {
     this.presenter.attachView(this);
+    this.presenter.loadKaderInfo();
   }
 
   initials(): string {
@@ -74,6 +107,12 @@ export class UserMyProfilePage implements OnInit, UserMyProfileView {
     this.presenter.changePassword(this.oldPassword, this.newPassword);
   }
 
+  submitContact(): void {
+    this.presenter.updateContact(this.phoneNumber.trim(), this.address.trim());
+  }
+
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onChangePasswordSuccess(): void { this.oldPassword = ''; this.newPassword = ''; }
+  setKader(kader: KaderInfo | null): void { this.kader.set(kader); }
+  setContactSaving(saving: boolean): void { this.contactSaving.set(saving); }
 }

@@ -5,7 +5,10 @@ import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
 import { OrgContextService } from '../../../../core/services/org-context.service';
 import { IconComponent } from '../../../../shared/icon.component';
-import { SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
+import {
+  SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS,
+  KADER_STATUS_LABELS, statusTone, kaderStatusTone,
+} from '../../entities/submission';
 import { SubmissionStatusPresenter } from './submission.status.presenter';
 import { SubmissionStatusView } from './submission.status.view';
 
@@ -18,6 +21,8 @@ import { SubmissionStatusView } from './submission.status.view';
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
     .status-card { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-radius: var(--radius-md); background: var(--color-primary-soft); margin-bottom: 20px; }
+    .status-card.tone-danger { background: #fdecec; color: #9a1c1c; }
+    .status-card.tone-warning { background: var(--color-ember-soft); color: var(--color-ember-dark); }
     .timeline { display: flex; flex-direction: column; gap: 0; }
     .timeline-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
     .timeline-item:last-child { border-bottom: none; }
@@ -35,6 +40,7 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   private alert = inject(AlertService);
 
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
+  readonly kaderStatusLabels = KADER_STATUS_LABELS;
 
   /** Lihat catatan di submission.pendataan.page.ts — formCode datang dari
    *  route data (shell), bukan tier akun pemanggil. */
@@ -56,6 +62,9 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   }
 
   statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
+  kaderStatusLabel(code: string): string { return this.kaderStatusLabels[code] ?? code; }
+  statusTone(code: string): string { return statusTone(code); }
+  kaderStatusTone(code: string): string { return kaderStatusTone(code); }
 
   async reassess(event?: Event): Promise<void> {
     const s = this.submission();

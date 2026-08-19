@@ -39,4 +39,5 @@ export class SubmissionRepository {
   publish(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.publish(id, body); }
   reopen(id: number, body: ReopenRequest): Observable<SubmissionResponse> { return this.api.reopen(id, body); }
   reassess(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.reassess(id, body); }
+  reassessKader(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.reassessKader(id, body); }
 }

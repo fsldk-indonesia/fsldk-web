@@ -7,6 +7,8 @@ export interface UserProfile {
   role: string;
   permissions: string[];
   photoURL?: string;
+  phoneNumber?: string;
+  address?: string;
   organizationID?: number;
   organizationTypeCode?: string;
   wildcardTierAccess?: string[];

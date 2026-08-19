@@ -62,6 +62,7 @@ const ICONS: Record<string, string> = {
   settings: 'fas fa-gear',
   lock: 'fas fa-lock',
   'id-card': 'fas fa-id-card',
+  phone: 'fas fa-phone',
 };
 
 /**

@@ -79,6 +79,10 @@ export class AuthRepository {
     return this.api.changePassword(body);
   }
 
+  updateContact(body: { phoneNumber: string; address: string }): Observable<UserProfile> {
+    return this.api.updateContact(body).pipe(tap((u) => { this.session.persistUser(u); this.user.set(u); }));
+  }
+
   refreshMe(): Observable<UserProfile> {
     return this.api.me().pipe(tap((u) => { this.session.persistUser(u); this.user.set(u); }));
   }

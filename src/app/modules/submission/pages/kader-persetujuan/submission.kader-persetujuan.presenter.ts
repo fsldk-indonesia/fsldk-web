@@ -29,6 +29,7 @@ export class SubmissionKaderPersetujuanPresenter extends BasePresenter<Submissio
         error: () => this.view.setLoading(false),
       });
       this.kaderRepo.list('ACTIVE', organizationID).subscribe({ next: (page) => this.view.setActive(page.data), error: () => {} });
+      this.kaderRepo.list('REJECTED', organizationID).subscribe({ next: (page) => this.view.setRejected(page.data), error: () => {} });
     });
     this.formRepo.getPublishedByFormCode(FORM_CODE_SENSUS_KADER).subscribe({
       next: (v) => this.view.setVersion(v),
@@ -56,6 +57,13 @@ export class SubmissionKaderPersetujuanPresenter extends BasePresenter<Submissio
   deactivate(kaderID: number): void {
     this.kaderRepo.deactivate(kaderID).subscribe({
       next: () => { this.toast.success('Kader dinonaktifkan'); this.view.onDeactivateSuccess(); this.loadAll(); },
+      error: () => {},
+    });
+  }
+
+  reinstate(kaderID: number): void {
+    this.kaderRepo.reinstate(kaderID).subscribe({
+      next: () => { this.toast.success('Data kader berhasil diputihkan kembali'); this.view.onReinstateSuccess(); this.loadAll(); },
       error: () => {},
     });
   }

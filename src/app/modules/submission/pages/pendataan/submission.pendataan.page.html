@@ -30,11 +30,18 @@
     <button class="btn btn-primary" style="margin-top:10px" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi Lagi</button>
   </div>
 } @else if (!isEditable()) {
-  <div class="status-banner">
-    <app-icon name="info" [size]="18" />
-    <span>Status pendataan Anda saat ini: <strong>{{ submission()!.status }}</strong>. Tidak dapat diubah pada tahap ini.</span>
+  <div class="status-banner" [class.tone-danger]="statusTone(submission()!.status) === 'danger'"
+       [class.tone-warning]="statusTone(submission()!.status) === 'warning'"
+       [class.tone-success]="statusTone(submission()!.status) === 'success'">
+    <app-icon [name]="statusTone(submission()!.status) === 'danger' ? 'x-circle' : 'info'" [size]="18" />
+    <span>Status pendataan Anda saat ini: <strong>{{ statusLabel(submission()!.status) }}</strong>. Tidak dapat diubah pada tahap ini.</span>
   </div>
-  <a class="btn btn-outline" [routerLink]="['../status']">Lihat Status Pendataan</a>
+  <div class="flex gap">
+    <a class="btn btn-outline" [routerLink]="['../status']">Lihat Status Pendataan</a>
+    @if (canReassessKader()) {
+      <button class="btn btn-primary" (click)="reassessKader()" [disabled]="busy()">Isi Ulang Pendataan</button>
+    }
+  </div>
 
   <div class="section-card" style="margin-top:20px">
     <h3>Jawaban Tersimpan</h3>

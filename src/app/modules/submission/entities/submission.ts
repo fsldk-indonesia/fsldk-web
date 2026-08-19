@@ -26,6 +26,27 @@ export const SUBMISSION_STATUS_LABELS: Record<string, string> = {
   APPROVED_LDK: 'Disetujui LDK', CODE_ISSUED: 'Kode Terbit', ACTIVE: 'Aktif',
 };
 
+/** Status yang perlu ditonjolkan beda warna/nada (ditolak = merah, minta
+ *  revisi = kuning/amber) — dipakai banner/kartu status di Ringkasan,
+ *  Formulir Pendataan, Status Pendataan, & Profil Saya Portal Kader supaya
+ *  konsisten satu sumber kebenaran nada warna per status. */
+export type StatusTone = 'danger' | 'warning' | 'success' | 'neutral';
+export const STATUS_TONE: Record<string, StatusTone> = {
+  REJECTED: 'danger',
+  REVISION_REQUESTED_LDK: 'warning', REVISION_REQUESTED_PUSKOMDA: 'warning', REVISION_REQUESTED_PUSKOMNAS: 'warning',
+  ACTIVE: 'success', APPROVED_LDK: 'success', APPROVED_PUSKOMDA: 'success', APPROVED_PUSKOMNAS: 'success',
+  LEVEL_ESTABLISHED: 'success', PUBLISHED: 'success', CODE_ISSUED: 'success',
+};
+export function statusTone(status: string): StatusTone { return STATUS_TONE[status] ?? 'neutral'; }
+
+export const KADER_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Menunggu Persetujuan', ACTIVE: 'Aktif', REJECTED: 'Ditolak', INACTIVE: 'Nonaktif',
+};
+export const KADER_STATUS_TONE: Record<string, StatusTone> = {
+  PENDING: 'warning', ACTIVE: 'success', REJECTED: 'danger', INACTIVE: 'neutral',
+};
+export function kaderStatusTone(status: string): StatusTone { return KADER_STATUS_TONE[status] ?? 'neutral'; }
+
 export interface AnswerInput {
   fieldID: number;
   valueText?: string;
@@ -71,6 +92,9 @@ export interface KaderInfo {
   kaderID: number;
   submissionID: number;
   organizationID: number;
+  /** Hanya terisi saat status ACTIVE (disetujui) — lihat submission_service_impl.go Get(). */
+  organizationName?: string;
+  parentOrganizationName?: string;
   uniqueCode?: string;
   fullName: string;
   status: string;

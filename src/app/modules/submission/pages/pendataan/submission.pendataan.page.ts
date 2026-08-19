@@ -8,7 +8,10 @@ import { SelectComponent, SelectOption } from '../../../../shared/select.compone
 import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { FormField, FormVersionDetail } from '../../../submission-form/entities/submission-form';
-import { SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, EDITABLE_STATUSES } from '../../entities/submission';
+import {
+  SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, EDITABLE_STATUSES,
+  SUBMISSION_STATUS_LABELS, statusTone,
+} from '../../entities/submission';
 import { SubmissionPendataanPresenter } from './submission.pendataan.presenter';
 import { SubmissionPendataanView } from './submission.pendataan.view';
 
@@ -33,6 +36,9 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
     .status-banner { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: var(--radius-md); background: var(--color-bg-warm); margin-bottom: 20px; }
+    .status-banner.tone-danger { background: #fdecec; color: #9a1c1c; }
+    .status-banner.tone-warning { background: var(--color-ember-soft); color: var(--color-ember-dark); }
+    .status-banner.tone-success { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .section-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 18px; margin-bottom: 16px; }
     .section-card h3 { margin-bottom: 4px; }
     .field-group { margin-top: 16px; }
@@ -80,6 +86,25 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     const s = this.submission();
     return s !== null && EDITABLE_STATUSES.includes(s.status);
   });
+
+  readonly statusLabels = SUBMISSION_STATUS_LABELS;
+  statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
+  statusTone(code: string): string { return statusTone(code); }
+
+  /** "Isi Ulang Pendataan" (kader ACTIVE) hanya tampil bila Puskomnas sudah
+   *  mempublikasikan version form baru sejak submission ini terakhir diisi —
+   *  tanpa itu, tombol tidak relevan (data sudah versi terbaru). */
+  canReassessKader = computed(() => {
+    const s = this.submission();
+    const v = this.version();
+    return this.isKaderSubject() && s?.status === 'ACTIVE' && v !== null && v.versionID !== s.formVersionID;
+  });
+
+  reassessKader(): void {
+    const s = this.submission();
+    if (!s) return;
+    this.presenter.reassessKader(s.submissionID, s.version);
+  }
 
   ngOnInit(): void {
     this.presenter.attachView(this);

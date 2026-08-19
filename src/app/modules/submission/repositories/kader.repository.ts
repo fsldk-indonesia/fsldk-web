@@ -13,4 +13,5 @@ export class KaderRepository {
   }
   getCode(id: number): Observable<KaderInfo> { return this.api.getCode(id); }
   deactivate(id: number): Observable<unknown> { return this.api.deactivate(id); }
+  reinstate(id: number): Observable<unknown> { return this.api.reinstate(id); }
 }

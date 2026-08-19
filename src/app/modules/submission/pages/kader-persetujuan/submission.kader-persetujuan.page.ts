@@ -40,9 +40,10 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
   private presenter = inject(SubmissionKaderPersetujuanPresenter);
   private alert = inject(AlertService);
 
-  tab = signal<'pending' | 'active'>('pending');
+  tab = signal<'pending' | 'active' | 'rejected'>('pending');
   pending = signal<KaderInfo[]>([]);
   active = signal<KaderInfo[]>([]);
+  rejected = signal<KaderInfo[]>([]);
   version = signal<FormVersionDetail | null>(null);
   detail = signal<SubmissionDetail | null>(null);
   loading = signal(true);
@@ -77,12 +78,23 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
     this.presenter.deactivate(kader.kaderID);
   }
 
+  async reinstate(kader: KaderInfo, event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(
+      `Putihkan kembali "${kader.fullName}"? Data akan direset ke Draf agar bisa mendaftar ulang dari awal.`,
+      { title: 'Putihkan Kembali', confirmLabel: 'Ya, Putihkan' }, event,
+    );
+    if (!ok) return;
+    this.presenter.reinstate(kader.kaderID);
+  }
+
   setPending(items: KaderInfo[]): void { this.pending.set(items); }
   setActive(items: KaderInfo[]): void { this.active.set(items); }
+  setRejected(items: KaderInfo[]): void { this.rejected.set(items); }
   setVersion(version: FormVersionDetail): void { this.version.set(version); }
   setDetail(detail: SubmissionDetail): void { this.detail.set(detail); }
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
   onDecisionSuccess(): void { this.detail.set(null); }
   onDeactivateSuccess(): void {}
+  onReinstateSuccess(): void {}
 }
