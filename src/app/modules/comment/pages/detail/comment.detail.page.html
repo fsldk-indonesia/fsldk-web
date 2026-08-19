@@ -1,0 +1,16 @@
+<div class="page-head">
+  <a routerLink="/cms/comments" class="link-action">← Kembali ke Daftar Komentar</a>
+  <h1>Detail Komentar</h1>
+</div>
+
+@if (loading()) {
+  <span class="skel skel-line" style="width:60%"></span>
+} @else {
+  @if (item(); as c) {
+    <div class="card card-pad">
+      <app-comment-item [comment]="c" [level]="0" (removed)="onRootRemoved()" />
+    </div>
+  } @else {
+    <div class="empty-state"><h4>Komentar tidak ditemukan</h4></div>
+  }
+}

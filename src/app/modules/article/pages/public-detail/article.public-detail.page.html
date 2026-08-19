@@ -31,6 +31,8 @@
         }
 
         <a routerLink="/artikel" class="btn btn-outline mt-lg">← Kembali ke Artikel</a>
+
+        <app-comment-section contentType="article" [contentID]="a.articleID" />
       } @else {
         <div class="text-center"><h2>Artikel tidak ditemukan</h2><a routerLink="/artikel" class="btn btn-primary mt">Kembali</a></div>
       }
