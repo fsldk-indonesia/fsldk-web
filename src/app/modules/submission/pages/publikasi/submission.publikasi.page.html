@@ -1,0 +1,53 @@
+<div class="page-head">
+  <h1>Publikasi Hasil</h1>
+  <p class="text-muted">Publikasikan hasil levelisasi yang sudah ditetapkan, atau buka kembali hasil yang sudah terbit.</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
+} @else {
+  <div class="layout">
+    <div class="queue-list">
+      @for (item of queue(); track item.submissionID) {
+        <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
+          <strong>{{ orgName(item.organizationID) }}</strong>
+          <span class="chip" [class.chip-green]="item.status === 'PUBLISHED'">{{ statusLabel(item.status) }}</span>
+        </button>
+      } @empty {
+        <div class="card card-pad"><p class="text-muted">Tidak ada submission yang perlu dipublikasikan.</p></div>
+      }
+    </div>
+
+    <div>
+      @if (detail(); as d) {
+        <div class="detail-card">
+          <div class="flex justify-between items-center">
+            <h3>{{ orgName(d.organizationID) }}</h3>
+            <span class="chip" [class.chip-green]="d.status === 'PUBLISHED'">{{ statusLabel(d.status) }}</span>
+          </div>
+          @if (d.levelResult; as level) {
+            <p class="text-muted">Level ditetapkan: <strong>{{ level.levelLabel || level.levelCode }}</strong></p>
+          }
+
+          <app-submission-answers-view [version]="version()" [answers]="d.answers" />
+
+          <div class="action-bar">
+            @if (d.status === 'LEVEL_ESTABLISHED') {
+              <h4>Publikasi</h4>
+              <button class="btn btn-primary" (click)="publish()" [disabled]="busy()">Publikasikan Hasil</button>
+            } @else if (d.status === 'PUBLISHED') {
+              <h4>Aksi Koreksi</h4>
+              <div class="form-group"><label class="form-label">Alasan Buka Kembali</label><textarea class="form-control" rows="2" [(ngModel)]="reopenReason" placeholder="Wajib diisi untuk Buka Kembali untuk Koreksi"></textarea></div>
+              <div class="btn-row">
+                <button class="btn btn-outline" (click)="reopen()" [disabled]="busy() || !reopenReason.trim()">Buka Kembali untuk Koreksi</button>
+                <button class="btn btn-outline" (click)="reassess()" [disabled]="busy()">Ajukan Reassessment</button>
+              </div>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="card card-pad"><p class="text-muted">Pilih submission dari daftar untuk melihat detail.</p></div>
+      }
+    </div>
+  </div>
+}

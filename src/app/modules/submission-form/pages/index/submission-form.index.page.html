@@ -1,0 +1,53 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Form Pendataan</h1><p class="text-muted">Kelola template form Levelisasi LDK dan Sensus Kader.</p></div>
+  @if (canManage) { <button class="btn btn-primary" (click)="openCreate($event)">+ Tambah Form</button> }
+</div>
+
+@if (loading()) {
+  <div class="grid grid-2">
+    @for (i of [1,2]; track i) {
+      <div class="card card-pad">
+        <span class="skel skel-line" style="width:140px;height:20px"></span>
+        <span class="skel skel-line" style="width:90%;margin-top:10px"></span>
+      </div>
+    }
+  </div>
+} @else if (forms().length === 0) {
+  <div class="card"><div class="empty-state">
+    <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="file-sliders" [size]="26" /></span>
+    <h4>Belum ada form</h4>
+    <p>Buat form pendataan untuk Levelisasi LDK atau Sensus Kader.</p>
+    @if (canManage) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Tambah Form</button> }
+  </div></div>
+} @else {
+  <div class="grid grid-2">
+    @for (f of forms(); track f.formID) {
+      <div class="card card-pad">
+        <div class="flex justify-between items-center">
+          <h3>{{ f.formName }}</h3>
+          <span class="chip" [class.chip-green]="f.isActive">{{ f.isActive ? 'Aktif' : 'Nonaktif' }}</span>
+        </div>
+        <p class="text-muted">{{ f.description || '—' }}</p>
+        <code>{{ f.formCode }}</code>
+        <div class="flex justify-end card-footer">
+          <button class="btn btn-outline btn-sm" (click)="open(f)">Buka Form Builder</button>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+@if (showForm()) {
+  <div class="modal-backdrop" (click)="close()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
+      <h3>Tambah Form</h3>
+      <div class="form-group"><label class="form-label">Kode Form</label><input class="form-control" [(ngModel)]="form.formCode" placeholder="mis. LEVELISASI_LDK"></div>
+      <div class="form-group"><label class="form-label">Nama Form</label><input class="form-control" [(ngModel)]="form.formName"></div>
+      <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="3" [(ngModel)]="form.description"></textarea></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="close()">Batal</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
+      </div>
+    </div>
+  </div>
+}

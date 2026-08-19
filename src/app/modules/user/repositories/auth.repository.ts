@@ -4,6 +4,12 @@ import { AuthApiService } from '../services/auth-api.service';
 import { AuthSessionService } from '../services/auth-session.service';
 import { AuthResult } from '../entities/auth-result';
 import { UserProfile } from '../entities/user';
+import { CmsTier, CMS_SHELL_BASE } from '../../../shared/cms-tier';
+
+/** Peringkat tier organisasi tertinggi (0 = tidak ada) — dipakai untuk
+ *  visibilitas link CMS hierarkis ke bawah (miss-development-clarification.md
+ *  bagian C): tier sendiri + seluruh tier di bawahnya. */
+const TIER_RANK: Record<string, number> = { LDK: 1, PUSKOMDA: 2, PUSKOMNAS: 3 };
 
 /**
  * Sumber kebenaran sesi pengguna aplikasi: menyimpan token & profil,
@@ -35,6 +41,24 @@ export class AuthRepository {
     return this.api.loginGoogle(idToken).pipe(tap((res) => this.applySession(res)));
   }
 
+  /**
+   * Menerbitkan ulang access token DENGAN klaim terbaru dari DB (termasuk
+   * emailVerified) — TANPA logout/login ulang. Dipakai verifiedGuard: sekadar
+   * refreshMe() (GET /auth/me) memperbarui tampilan `user()` di memori, tapi
+   * TIDAK memperbarui access token itu sendiri — token lama yang masih
+   * membawa klaim emailVerified=false (di-embed saat token pertama terbit)
+   * tetap dipakai untuk request API berikutnya, sehingga endpoint yang
+   * dijaga RequireVerified() di backend (mis. GET/POST /submissions) tetap
+   * menolak dengan 403 EMAIL_NOT_VERIFIED walau DB & tampilan sudah benar —
+   * inilah sebab asli "harus logout dulu" (miss-development-prompt-3.md
+   * poin 8): logout-login memaksa token baru terbit, sekadar refresh
+   * profil tidak. refreshSession() memakai /auth/refresh-token yang memang
+   * sudah menerbitkan token baru dari data user terkini di backend.
+   */
+  refreshSession(): Observable<AuthResult> {
+    return this.api.refreshToken(this.refreshToken ?? '').pipe(tap((res) => this.applySession(res)));
+  }
+
   verifyEmail(token: string): Observable<unknown> {
     return this.api.verifyEmail(token);
   }
@@ -55,6 +79,10 @@ export class AuthRepository {
     return this.api.changePassword(body);
   }
 
+  updateContact(body: { phoneNumber: string; address: string }): Observable<UserProfile> {
+    return this.api.updateContact(body).pipe(tap((u) => { this.session.persistUser(u); this.user.set(u); }));
+  }
+
   refreshMe(): Observable<UserProfile> {
     return this.api.me().pipe(tap((u) => { this.session.persistUser(u); this.user.set(u); }));
   }
@@ -63,9 +91,62 @@ export class AuthRepository {
     return this.user()?.permissions.includes(code) ?? false;
   }
 
-  /** Apakah pengguna memiliki akses ke CMS (setidaknya satu permission). */
+  /** Peringkat tier tertinggi yang dapat diakses akun (0 = tidak ada tier organisasi). */
+  private tierRank(): number {
+    const u = this.user();
+    if (!u) return 0;
+    let rank = TIER_RANK[u.organizationTypeCode ?? ''] ?? 0;
+    for (const t of u.wildcardTierAccess ?? []) rank = Math.max(rank, TIER_RANK[t] ?? 0);
+    return rank;
+  }
+
+  /** Akses CMS Utama (FSLDK) — ditandai permission admin sistem yang hanya dimiliki Super Admin. */
+  hasUtamaCmsAccess(): boolean { return this.hasPermission('role.view'); }
+  hasPuskomnasCmsAccess(): boolean { return this.tierRank() >= 3; }
+  hasPuskomdaCmsAccess(): boolean { return this.tierRank() >= 2; }
+  hasLdkCmsAccess(): boolean { return this.tierRank() >= 1; }
+
+  /** Apakah pengguna memiliki akses ke setidaknya satu CMS (Utama atau ber-tier). */
   hasAnyCmsAccess(): boolean {
-    return (this.user()?.permissions.length ?? 0) > 0;
+    return this.hasUtamaCmsAccess() || this.hasLdkCmsAccess();
+  }
+
+  /** Daftar shell CMS yang bisa diakses akun ini, urut dari tertinggi — dipakai
+   *  navbar akun (site-header) & dropdown CMS-switcher untuk merender link
+   *  dari SATU sumber data, bukan 4 blok @if yang digandakan di tiap tempat. */
+  accessibleCmsTiers(): CmsTier[] {
+    const out: CmsTier[] = [];
+    if (this.hasUtamaCmsAccess()) out.push('FSLDK');
+    if (this.hasPuskomnasCmsAccess()) out.push('PUSKOMNAS');
+    if (this.hasPuskomdaCmsAccess()) out.push('PUSKOMDA');
+    if (this.hasLdkCmsAccess()) out.push('LDK');
+    return out;
+  }
+
+  /**
+   * Apakah akun ini akun self-service Kader (Pengunjung/Kader — tanpa tier
+   * organisasi, tanpa akses CMS Utama, tapi punya izin isi Sensus Kader).
+   * Dipakai navbar akun untuk menampilkan "Daftar Kader"/"Lihat Status
+   * Kader"/"Portal Kader" (lihat KaderNavState di public-layout).
+   */
+  isKaderSelfService(): boolean {
+    return !this.hasAnyCmsAccess() && this.hasPermission('submission.create');
+  }
+
+  /**
+   * Halaman tujuan setelah login — null bila akun tidak punya akses ke
+   * CMS/Portal Kader manapun. Tiap tier organisasi punya shell CMS-nya
+   * sendiri (poin 1-4 miss-development); akun tanpa tier organisasi tapi
+   * berhak isi Sensus Kader diarahkan ke Portal Kader (kader/ringkasan),
+   * bukan Dashboard CMS yang tidak punya widget untuknya.
+   */
+  defaultCmsPath(): string | null {
+    const u = this.user();
+    if (!u) return null;
+    const [tier] = this.accessibleCmsTiers();
+    if (tier) return `${CMS_SHELL_BASE[tier]}/dashboard`;
+    if (this.isKaderSelfService()) return '/kader/ringkasan';
+    return null;
   }
 
   logout(): void {

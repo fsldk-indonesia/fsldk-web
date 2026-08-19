@@ -31,7 +31,7 @@ export class LoginPresenter extends BasePresenter<LoginView> {
   private onSuccess(res: AuthResult): void {
     this.view.setLoading(false);
     this.toast.success('Selamat datang, ' + res.user.fullName);
-    if (res.user.emailVerified) this.view.navigateAfterLogin(res.user.permissions.length > 0);
+    if (res.user.emailVerified) this.view.navigateAfterLogin(this.authRepo.defaultCmsPath());
     else this.view.navigateToVerifyEmail();
   }
 }

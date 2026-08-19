@@ -1,12 +1,6 @@
-<div class="page-head"><h1>Dashboard</h1><p class="text-muted">Ringkasan aktivitas konten & pengguna.</p></div>
+<div class="page-head"><h1>Dashboard</h1><p class="text-muted">Ringkasan pendataan sesuai organisasi Anda.</p></div>
 
-@if (summary(); as s) {
-  <div class="grid grid-3">
-    <div class="stat"><span class="stat-label">Total Berita</span><span class="stat-num">{{ s.totalNews }}</span></div>
-    <div class="stat"><span class="stat-label">Total Artikel</span><span class="stat-num">{{ s.totalArticles }}</span></div>
-    <div class="stat"><span class="stat-label">Total Pengguna</span><span class="stat-num">{{ s.totalUsers }}</span></div>
-  </div>
-} @else {
+@if (loading()) {
   <div class="grid grid-3">
     @for (i of [1,2,3]; track i) {
       <div class="stat">
@@ -15,4 +9,104 @@
       </div>
     }
   </div>
+} @else {
+  @if (summary(); as s) {
+
+    @if (s.utama; as u) {
+      <div class="grid grid-4">
+        <div class="stat"><span class="stat-label">Jumlah Pengguna</span><span class="stat-num">{{ u.totalUsers }}</span></div>
+        <div class="stat"><span class="stat-label">Jumlah Berita</span><span class="stat-num">{{ u.totalNews }}</span></div>
+        <div class="stat"><span class="stat-label">Jumlah Artikel</span><span class="stat-num">{{ u.totalArticles }}</span></div>
+        <div class="stat"><span class="stat-label">Jumlah Shortlink</span><span class="stat-num">{{ u.totalShortlinks }}</span></div>
+      </div>
+    }
+
+    @if (s.ldk; as ldk) {
+      <div class="grid grid-3">
+        <div class="stat"><span class="stat-label">Status Pendataan</span><span class="stat-num" style="font-size:1.6rem">{{ statusLabel(ldk.submissionStatus) }}</span></div>
+        <div class="stat"><span class="stat-label">Level Saat Ini</span><span class="stat-num" style="font-size:1.6rem">{{ ldk.levelLabel || ldk.levelCode || '—' }}</span></div>
+        <div class="stat"><span class="stat-label">Terakhir Diperbarui</span><span class="stat-num" style="font-size:1.2rem">{{ (ldk.lastUpdatedDate | date:'d MMM yyyy, HH:mm') || '—' }}</span></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:20px">
+        <div class="stat"><span class="stat-label">Kader Menunggu Persetujuan</span><span class="stat-num">{{ ldk.kaderPending }}</span></div>
+        <div class="stat"><span class="stat-label">Kader Aktif</span><span class="stat-num">{{ ldk.kaderActive }}</span></div>
+      </div>
+      <div class="card-section">
+        <h3>Catatan Terbaru</h3>
+        <div class="notes-list">
+          @for (n of ldk.recentNotes; track $index) {
+            <div class="note-item">
+              <p>{{ n.note }}</p>
+              <span class="note-date">{{ n.createdDate | date:'d MMM yyyy, HH:mm' }}</span>
+            </div>
+          } @empty {
+            <p class="text-muted">Belum ada catatan.</p>
+          }
+        </div>
+      </div>
+    }
+
+    @if (s.puskomda; as p) {
+      <div class="grid grid-3">
+        <div class="stat"><span class="stat-label">Total LDK Wilayah</span><span class="stat-num">{{ p.totalLDK }}</span></div>
+        <div class="stat"><span class="stat-label">Total Kader Aktif</span><span class="stat-num">{{ p.totalKaderAktif }}</span></div>
+        <div class="stat"><span class="stat-label">Terverifikasi</span><span class="stat-num">{{ p.terverifikasi }}</span></div>
+      </div>
+      <div class="card-section">
+        <h3>Rekap Status Pendataan Wilayah</h3>
+        <app-stat-bar label="Belum Mengisi" [value]="p.belumMengisi" [max]="puskomdaMax()" />
+        <app-stat-bar label="Menunggu Verifikasi" [value]="p.menungguVerifikasi" [max]="puskomdaMax()" />
+        <app-stat-bar label="Perlu Revisi" [value]="p.perluRevisi" [max]="puskomdaMax()" />
+        <app-stat-bar label="Terverifikasi" [value]="p.terverifikasi" [max]="puskomdaMax()" />
+      </div>
+    }
+
+    @if (s.puskomnas; as p) {
+      <div class="grid grid-4">
+        <div class="stat"><span class="stat-label">Total LDK Nasional</span><span class="stat-num">{{ p.totalLDKNasional }}</span></div>
+        <div class="stat"><span class="stat-label">Total Puskomda</span><span class="stat-num">{{ p.totalPuskomda }}</span></div>
+        <div class="stat"><span class="stat-label">Level Ditetapkan</span><span class="stat-num">{{ p.levelEstablishedCount }}</span></div>
+        <div class="stat"><span class="stat-label">Kader Aktif Nasional</span><span class="stat-num">{{ p.totalKaderAktifNasional }}</span></div>
+      </div>
+
+      <div class="card-section">
+        <h3>Rekap Status Pendataan Nasional</h3>
+        <app-stat-bar label="Belum Mengisi" [value]="p.belumMengisi" [max]="puskomnasMax()" />
+        <app-stat-bar label="Menunggu Verifikasi" [value]="p.menungguVerifikasi" [max]="puskomnasMax()" />
+        <app-stat-bar label="Perlu Revisi" [value]="p.perluRevisi" [max]="puskomnasMax()" />
+        <app-stat-bar label="Terverifikasi" [value]="p.terverifikasi" [max]="puskomnasMax()" />
+      </div>
+
+      <div class="card-section">
+        <h3>Distribusi Level</h3>
+        @for (l of p.levelDistribution; track l.levelCode) {
+          <app-stat-bar [label]="l.levelLabel || l.levelCode" [value]="l.count" [max]="levelDistMax()" />
+        } @empty {
+          <p class="text-muted">Belum ada LDK dengan level ditetapkan.</p>
+        }
+      </div>
+
+      <div class="card-section">
+        <h3>Sebaran per Puskomda</h3>
+        <table class="breakdown-table">
+          <thead><tr><th>Puskomda</th><th>Total LDK</th><th>Kader Aktif</th></tr></thead>
+          <tbody>
+            @for (row of p.perPuskomda; track row.organizationID) {
+              <tr>
+                <td>{{ row.organizationName }}</td>
+                <td>{{ row.totalLDK }}</td>
+                <td>{{ row.kaderAktif }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="3" class="text-muted">Belum ada data Puskomda.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (!s.utama && !s.ldk && !s.puskomda && !s.puskomnas) {
+      <div class="card card-pad"><p class="text-muted">Tidak ada ringkasan dashboard untuk akun ini.</p></div>
+    }
+  }
 }

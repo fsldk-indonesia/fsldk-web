@@ -41,7 +41,15 @@ export class AuthApiService {
     return this.api.post('/auth/change-password', body);
   }
 
+  updateContact(body: { phoneNumber: string; address: string }): Observable<UserProfile> {
+    return this.api.put<UserProfile>('/auth/me/contact', body);
+  }
+
   me(): Observable<UserProfile> {
     return this.api.get<UserProfile>('/auth/me');
+  }
+
+  refreshToken(refreshToken: string): Observable<AuthResult> {
+    return this.api.post<AuthResult>('/auth/refresh-token', { refreshToken });
   }
 }

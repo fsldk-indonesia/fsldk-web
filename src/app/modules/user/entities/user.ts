@@ -7,6 +7,11 @@ export interface UserProfile {
   role: string;
   permissions: string[];
   photoURL?: string;
+  phoneNumber?: string;
+  address?: string;
+  organizationID?: number;
+  organizationTypeCode?: string;
+  wildcardTierAccess?: string[];
 }
 
 /** Ringkasan pengguna minimal untuk autocomplete @mention pada komentar. */
@@ -27,4 +32,7 @@ export interface UserRow {
   isActive: boolean;
   hasGoogle: boolean;
   hasPassword: boolean;
+  organizationID?: number;
+  organizationTypeCode?: string;
+  wildcardTierAccess?: string[];
 }

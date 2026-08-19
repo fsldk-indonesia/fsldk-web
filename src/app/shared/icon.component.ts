@@ -44,6 +44,26 @@ const ICONS: Record<string, string> = {
   eye: 'fas fa-eye',
   'eye-off': 'fas fa-eye-slash',
   copy: 'fas fa-copy',
+  // Menu modul organization/submission/report (menuIcon dari lk_permission).
+  building: 'fas fa-building',
+  'building-2': 'fas fa-city',
+  landmark: 'fas fa-landmark',
+  'file-sliders': 'fas fa-sliders-h',
+  'clipboard-list': 'fas fa-clipboard-list',
+  'list-checks': 'fas fa-list-check',
+  'user-check': 'fas fa-user-check',
+  'clipboard-check': 'fas fa-clipboard-check',
+  award: 'fas fa-award',
+  megaphone: 'fas fa-bullhorn',
+  'file-bar-chart': 'fas fa-chart-column',
+  'chevron-down': 'fas fa-chevron-down',
+  'chevrons-up-down': 'fas fa-sort',
+  'arrow-left': 'fas fa-arrow-left',
+  info: 'fas fa-circle-info',
+  settings: 'fas fa-gear',
+  lock: 'fas fa-lock',
+  'id-card': 'fas fa-id-card',
+  phone: 'fas fa-phone',
 };
 
 /**
