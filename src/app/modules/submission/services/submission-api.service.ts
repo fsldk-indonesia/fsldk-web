@@ -4,6 +4,7 @@ import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import {
   SubmissionResponse, SubmissionDetail, ReviewRequest, EstablishLevelRequest, VersionedRequest, ReopenRequest,
+  SaveFieldScoresRequest,
 } from '../entities/submission';
 
 /** Panggilan HTTP mentah untuk pengisian, status, & review pendataan (/submissions). */
@@ -40,4 +41,6 @@ export class SubmissionApiService {
   reopen(id: number, body: ReopenRequest): Observable<SubmissionResponse> { return this.api.post(`/submissions/${id}/reopen`, body); }
   reassess(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.post(`/submissions/${id}/reassess`, body); }
   reassessKader(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.post(`/submissions/${id}/reassess-kader`, body); }
+  /** Skor manual (Puskomnas) — enhancement Flexible Scoring, murni informatif. */
+  saveFieldScores(id: number, body: SaveFieldScoresRequest): Observable<SubmissionDetail> { return this.api.put(`/submissions/${id}/scores`, body); }
 }

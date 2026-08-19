@@ -8,7 +8,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import {
   SubmissionFormDetail, FormVersionDetail, FormSection, FormField, FormOption,
-  FieldType, FIELD_TYPE_OPTIONS, OPTION_FIELD_TYPES,
+  FieldType, FIELD_TYPE_OPTIONS, OPTION_FIELD_TYPES, SINGLE_CHOICE_FIELD_TYPES, ScoringMethod,
 } from '../../entities/submission-form';
 import { submissionFormPath } from '../../submission-form.path';
 import { SubmissionFormBuilderPresenter } from './submission-form.builder.presenter';
@@ -20,17 +20,19 @@ interface FieldFormValue {
   fieldCode: string; fieldLabel: string; fieldType: FieldType; isRequired: boolean; sortOrder: number; helpText: string;
   minLength: number | null; maxLength: number | null; min: number | null; max: number | null;
   conditionalOnFieldID: number | null; conditionalOperator: 'equals' | 'notEquals'; conditionalValue: string;
+  useScoring: boolean; scoringMethod: ScoringMethod; minScore: number | null; maxScore: number | null; weight: number | null;
 }
 
-interface OptionFormValue { optionValue: string; optionLabel: string; sortOrder: number; isActive: boolean; }
+interface OptionFormValue { optionValue: string; optionLabel: string; sortOrder: number; isActive: boolean; score: number | null; }
 
 const emptySectionForm = (sortOrder = 0): SectionFormValue => ({ sectionCode: '', sectionLabel: '', sortOrder, description: '' });
 const emptyFieldForm = (sortOrder = 0): FieldFormValue => ({
   fieldCode: '', fieldLabel: '', fieldType: 'TEXT', isRequired: false, sortOrder, helpText: '',
   minLength: null, maxLength: null, min: null, max: null,
   conditionalOnFieldID: null, conditionalOperator: 'equals', conditionalValue: '',
+  useScoring: false, scoringMethod: 'MANUAL', minScore: null, maxScore: null, weight: null,
 });
-const emptyOptionForm = (sortOrder = 0): OptionFormValue => ({ optionValue: '', optionLabel: '', sortOrder, isActive: true });
+const emptyOptionForm = (sortOrder = 0): OptionFormValue => ({ optionValue: '', optionLabel: '', sortOrder, isActive: true, score: null });
 
 @Component({
   selector: 'app-submission-form-builder-page',
@@ -105,6 +107,37 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
   isOptionType(t: FieldType): boolean { return OPTION_FIELD_TYPES.includes(t); }
   isLengthType(t: FieldType): boolean { return t === 'TEXT' || t === 'TEXTAREA'; }
   isRangeType(t: FieldType): boolean { return t === 'NUMBER'; }
+  isSingleChoice(t: FieldType): boolean { return SINGLE_CHOICE_FIELD_TYPES.includes(t); }
+  scoringMethodOptions: SelectOption[] = [{ value: 'AUTOMATIC', label: 'Otomatis (dari pilihan)' }, { value: 'MANUAL', label: 'Manual (dinilai Puskomnas)' }];
+
+  /** Total bobot seluruh field UseScoring pada version yang sedang dibuka —
+   *  ditampilkan sebagai progress indikator menuju 100% sebelum publish
+   *  ditolak backend karena validasi total weight (lihat PublishVersion). */
+  totalWeight(): number {
+    const v = this.version();
+    if (!v) return 0;
+    let total = 0;
+    for (const s of v.sections) for (const f of s.fields) if (f.useScoring && f.weight != null) total += f.weight;
+    return Math.round(total * 100) / 100;
+  }
+
+  /** Cari field (beserta konfigurasi scoring-nya) dari fieldID — dipakai modal
+   *  opsi untuk menentukan apakah input Score perlu ditampilkan (hanya saat
+   *  field induk useScoring && scoringMethod==='AUTOMATIC'). */
+  findField(fieldID: number): FormField | undefined {
+    const v = this.version();
+    if (!v) return undefined;
+    for (const s of v.sections) {
+      const f = s.fields.find((x) => x.fieldID === fieldID);
+      if (f) return f;
+    }
+    return undefined;
+  }
+
+  isAutomaticScoringField(fieldID: number): boolean {
+    const f = this.findField(fieldID);
+    return !!f && f.useScoring && f.scoringMethod === 'AUTOMATIC';
+  }
 
   otherFieldOptions(excludeFieldID: number | null): SelectOption[] {
     const v = this.version();
@@ -194,6 +227,8 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
       conditionalOnFieldID: f.conditionalOnFieldID ?? null,
       conditionalOperator: f.conditionalRule?.operator ?? 'equals',
       conditionalValue: f.conditionalRule?.value ?? '',
+      useScoring: f.useScoring, scoringMethod: f.scoringMethod ?? 'MANUAL',
+      minScore: f.minScore ?? null, maxScore: f.maxScore ?? null, weight: f.weight ?? null,
     };
     this.showFieldForm.set(true);
   }
@@ -217,6 +252,11 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
       validationRule: Object.keys(validationRule).length ? validationRule : null,
       conditionalOnFieldID: this.fieldForm.conditionalOnFieldID,
       conditionalRule,
+      useScoring: this.fieldForm.useScoring,
+      scoringMethod: this.fieldForm.useScoring ? this.fieldForm.scoringMethod : null,
+      minScore: this.fieldForm.useScoring ? this.fieldForm.minScore : null,
+      maxScore: this.fieldForm.useScoring ? this.fieldForm.maxScore : null,
+      weight: this.fieldForm.useScoring ? this.fieldForm.weight : null,
     };
     if (!this.fieldEditID) body['fieldCode'] = this.fieldForm.fieldCode;
     this.presenter.saveField(this.fieldSectionID, this.fieldEditID, body);
@@ -242,7 +282,7 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
     this.popupOrigin.set(popupOriginFromEvent(event));
     this.optionEditID = o.optionID;
     this.optionFieldID = fieldID;
-    this.optionForm = { optionValue: o.optionValue, optionLabel: o.optionLabel, sortOrder: o.sortOrder, isActive: o.isActive };
+    this.optionForm = { optionValue: o.optionValue, optionLabel: o.optionLabel, sortOrder: o.sortOrder, isActive: o.isActive, score: o.score ?? null };
     this.showOptionForm.set(true);
   }
   closeOptionForm(): void { this.showOptionForm.set(false); }

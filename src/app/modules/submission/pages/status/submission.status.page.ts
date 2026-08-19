@@ -5,6 +5,7 @@ import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
 import { OrgContextService } from '../../../../core/services/org-context.service';
 import { IconComponent } from '../../../../shared/icon.component';
+import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import {
   SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS,
   KADER_STATUS_LABELS, statusTone, kaderStatusTone,
@@ -16,7 +17,7 @@ import { SubmissionStatusView } from './submission.status.view';
   selector: 'app-submission-status-page',
   standalone: true,
   templateUrl: './submission.status.page.html',
-  imports: [RouterLink, DatePipe, IconComponent],
+  imports: [RouterLink, DatePipe, IconComponent, SubmissionScoringPanelComponent],
   providers: [SubmissionStatusPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }

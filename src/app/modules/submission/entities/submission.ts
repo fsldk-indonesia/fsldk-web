@@ -114,11 +114,41 @@ export interface SubmissionResponse {
   createdDate: string;
 }
 
+/** Breakdown skor satu field UseScoring — enhancement Flexible Scoring, murni
+ *  informatif untuk Puskomnas (lihat ConsolidatedScoreResponse). */
+export interface FieldScoreResponse {
+  fieldID: number;
+  fieldCode: string;
+  fieldLabel: string;
+  hasScore: boolean;
+  rawScore?: number;
+  maxScore: number;
+  normalized?: number;
+  weight: number;
+  weightedScore?: number;
+  source: 'AUTOMATIC' | 'MANUAL';
+}
+
+export interface ConsolidatedScoreResponse {
+  fields: FieldScoreResponse[];
+  finalScore: number;
+  /** false bila ada field UseScoring yang belum dijawab/belum diberi skor —
+   *  finalScore belum final selama ini false. */
+  isComplete: boolean;
+}
+
 export interface SubmissionDetail extends SubmissionResponse {
   answers: AnswerResponse[];
   statusHistory: StatusHistoryEntry[];
   levelResult?: LevelResult;
   kader?: KaderInfo;
+  /** Hanya terisi untuk caller bertier Puskomnas pada submission Levelisasi
+   *  — LDK/Puskomda tidak pernah menerima field ini dari backend. */
+  consolidatedScore?: ConsolidatedScoreResponse;
+}
+
+export interface SaveFieldScoresRequest {
+  scores: { fieldID: number; rawScore: number }[];
 }
 
 // ---------- Reviewer actions ----------

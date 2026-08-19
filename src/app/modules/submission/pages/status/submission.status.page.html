@@ -36,6 +36,10 @@
     </div>
   }
 
+  @if (submission()!.consolidatedScore; as cs) {
+    <app-submission-scoring-panel [consolidatedScore]="cs" [editable]="false" />
+  }
+
   @if (submission()!.kader; as kader) {
     <div class="result-card">
       <h3>Kartu Kader</h3>

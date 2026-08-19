@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
+import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
 import { SubmissionResponse, SubmissionDetail, LEVEL_OPTIONS, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
 import { SubmissionPenetapanLevelPresenter } from './submission.penetapan-level.presenter';
@@ -11,7 +12,7 @@ import { SubmissionPenetapanLevelView } from './submission.penetapan-level.view'
   selector: 'app-submission-penetapan-level-page',
   standalone: true,
   templateUrl: './submission.penetapan-level.page.html',
-  imports: [FormsModule, SelectComponent, SubmissionAnswersViewComponent],
+  imports: [FormsModule, SelectComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
   providers: [SubmissionPenetapanLevelPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -60,6 +61,12 @@ export class SubmissionPenetapanLevelPage implements OnInit, SubmissionPenetapan
     this.presenter.establishLevel(d.submissionID, {
       levelCode: this.levelCode, justificationNote: this.justificationNote, version: d.version,
     });
+  }
+
+  saveScores(scores: { fieldID: number; rawScore: number }[]): void {
+    const d = this.detail();
+    if (!d) return;
+    this.presenter.saveFieldScores(d.submissionID, scores);
   }
 
   setQueue(items: SubmissionResponse[]): void { this.queue.set(items); }

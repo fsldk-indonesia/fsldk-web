@@ -29,6 +29,10 @@
 
           <app-submission-answers-view [version]="version()" [answers]="d.answers" />
 
+          @if (reviewTier === 'PUSKOMNAS' && d.consolidatedScore) {
+            <app-submission-scoring-panel [consolidatedScore]="d.consolidatedScore" [editable]="true" [busy]="busy()" (save)="saveScores($event)" />
+          }
+
           <div class="decision-form">
             <h4>Keputusan</h4>
             <div class="form-group">

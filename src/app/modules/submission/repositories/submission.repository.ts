@@ -4,6 +4,7 @@ import { SubmissionApiService } from '../services/submission-api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import {
   SubmissionResponse, SubmissionDetail, ReviewRequest, EstablishLevelRequest, VersionedRequest, ReopenRequest,
+  SaveFieldScoresRequest,
 } from '../entities/submission';
 
 @Injectable({ providedIn: 'root' })
@@ -40,4 +41,5 @@ export class SubmissionRepository {
   reopen(id: number, body: ReopenRequest): Observable<SubmissionResponse> { return this.api.reopen(id, body); }
   reassess(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.reassess(id, body); }
   reassessKader(id: number, body: VersionedRequest): Observable<SubmissionResponse> { return this.api.reassessKader(id, body); }
+  saveFieldScores(id: number, body: SaveFieldScoresRequest): Observable<SubmissionDetail> { return this.api.saveFieldScores(id, body); }
 }

@@ -15,6 +15,11 @@
         <button class="btn btn-primary btn-sm" (click)="publish()" [disabled]="busy()">Publikasikan</button>
       }
     }
+    @if (version()?.status === 'DRAFT' && totalWeight() > 0) {
+      <span class="chip" [class.chip-green]="totalWeight() === 100" [class.chip-red]="totalWeight() !== 100">
+        Total Bobot Skor: {{ totalWeight() }}%
+      </span>
+    }
   </div>
 
   @if (version(); as v) {
@@ -41,6 +46,9 @@
               <div class="field-meta">
                 <strong>{{ field.fieldLabel }} @if (field.isRequired) { <span class="text-muted">*wajib</span> }</strong>
                 <span class="text-muted">{{ field.fieldType }} — <code>{{ field.fieldCode }}</code></span>
+                @if (field.useScoring) {
+                  <span class="chip chip-green">Skor {{ field.scoringMethod === 'AUTOMATIC' ? 'Otomatis' : 'Manual' }} · {{ field.minScore }}–{{ field.maxScore }} · Bobot {{ field.weight }}%</span>
+                }
                 @if (isOptionType(field.fieldType)) {
                   <div class="option-list">
                     @for (opt of field.options; track opt.optionID) {
@@ -138,6 +146,25 @@
         </div>
       }
 
+      <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="fieldForm.useScoring"> Gunakan Skor</label></div>
+      @if (fieldForm.useScoring) {
+        <div class="form-group">
+          <label class="form-label">Metode Skor</label>
+          <app-select [options]="scoringMethodOptions" [(ngModel)]="fieldForm.scoringMethod" [disabled]="!isSingleChoice(fieldForm.fieldType)" />
+          @if (!isSingleChoice(fieldForm.fieldType)) {
+            <p class="field-help">Skor otomatis hanya tersedia untuk field Pilihan Tunggal (SELECT/RADIO) — field ini akan dinilai manual oleh Puskomnas.</p>
+          }
+        </div>
+        <div class="grid-cols-2">
+          <div class="form-group"><label class="form-label">Skor Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.minScore"></div>
+          <div class="form-group"><label class="form-label">Skor Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.maxScore"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Bobot (%)</label><input type="number" class="form-control" [(ngModel)]="fieldForm.weight"></div>
+        @if (fieldForm.scoringMethod === 'AUTOMATIC') {
+          <p class="field-help">Atur skor tiap pilihan lewat "+ Pilihan" pada field ini setelah disimpan — Skor Minimum/Maksimum di sini harus persis sama dengan skor pilihan terendah/tertinggi.</p>
+        }
+      }
+
       <div class="modal-footer">
         <button class="btn btn-ghost" (click)="closeFieldForm()">Batal</button>
         <button class="btn btn-primary" (click)="saveField()" [disabled]="busy()">Simpan</button>
@@ -153,6 +180,9 @@
       <div class="form-group"><label class="form-label">Nilai (value)</label><input class="form-control" [(ngModel)]="optionForm.optionValue"></div>
       <div class="form-group"><label class="form-label">Label</label><input class="form-control" [(ngModel)]="optionForm.optionLabel"></div>
       <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="optionForm.sortOrder"></div>
+      @if (isAutomaticScoringField(optionFieldID)) {
+        <div class="form-group"><label class="form-label">Skor</label><input type="number" class="form-control" [(ngModel)]="optionForm.score"></div>
+      }
       @if (optionEditID) { <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="optionForm.isActive"> Aktif</label></div> }
       <div class="modal-footer">
         <button class="btn btn-ghost" (click)="closeOptionForm()">Batal</button>

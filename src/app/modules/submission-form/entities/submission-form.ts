@@ -18,6 +18,12 @@ export const FIELD_TYPE_OPTIONS: { value: FieldType; label: string }[] = [
 
 export const OPTION_FIELD_TYPES: FieldType[] = ['SELECT', 'MULTISELECT', 'RADIO', 'CHECKBOX'];
 
+/** Field Single Choice — satu-satunya tipe yang boleh pakai scoring
+ *  ScoringMethod "AUTOMATIC" (enhancement Flexible Scoring). */
+export const SINGLE_CHOICE_FIELD_TYPES: FieldType[] = ['SELECT', 'RADIO'];
+
+export type ScoringMethod = 'AUTOMATIC' | 'MANUAL';
+
 /** Satu baris ms_submission_form. */
 export interface SubmissionForm {
   formID: number;
@@ -45,6 +51,8 @@ export interface FormOption {
   optionLabel: string;
   sortOrder: number;
   isActive: boolean;
+  /** Hanya relevan bila field induk useScoring && scoringMethod==='AUTOMATIC'. */
+  score?: number;
 }
 
 export interface FormField {
@@ -59,6 +67,13 @@ export interface FormField {
   conditionalOnFieldID?: number;
   conditionalRule?: { operator: 'equals' | 'notEquals'; value: string };
   helpText?: string;
+  /** Konfigurasi scoring (enhancement Flexible Scoring) — skala bebas, tidak
+   *  dikunci ke 1-4. scoringMethod hanya terisi bila useScoring true. */
+  useScoring: boolean;
+  scoringMethod?: ScoringMethod;
+  minScore?: number;
+  maxScore?: number;
+  weight?: number;
   options: FormOption[];
 }
 

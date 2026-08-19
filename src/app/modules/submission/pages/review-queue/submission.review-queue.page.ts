@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
+import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
 import { SubmissionResponse, SubmissionDetail, ReviewDecision, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
 import { SubmissionReviewQueuePresenter } from './submission.review-queue.presenter';
@@ -12,7 +13,7 @@ import { SubmissionReviewQueueView } from './submission.review-queue.view';
   selector: 'app-submission-review-queue-page',
   standalone: true,
   templateUrl: './submission.review-queue.page.html',
-  imports: [FormsModule, SelectComponent, SubmissionAnswersViewComponent],
+  imports: [FormsModule, SelectComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
   providers: [SubmissionReviewQueuePresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -82,6 +83,12 @@ export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueV
     this.presenter.submitDecision(d.submissionID, {
       decision: this.decision, note: this.note, checklist: this.checklist, version: d.version,
     }, this.statuses);
+  }
+
+  saveScores(scores: { fieldID: number; rawScore: number }[]): void {
+    const d = this.detail();
+    if (!d) return;
+    this.presenter.saveFieldScores(d.submissionID, scores);
   }
 
   setQueue(items: SubmissionResponse[]): void { this.queue.set(items); }

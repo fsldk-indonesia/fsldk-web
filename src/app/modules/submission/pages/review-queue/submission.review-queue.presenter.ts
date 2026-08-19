@@ -54,4 +54,12 @@ export class SubmissionReviewQueuePresenter extends BasePresenter<SubmissionRevi
       error: () => this.view.setBusy(false),
     });
   }
+
+  saveFieldScores(id: number, scores: { fieldID: number; rawScore: number }[]): void {
+    this.view.setBusy(true);
+    this.submissionRepo.saveFieldScores(id, { scores }).subscribe({
+      next: (d) => { this.view.setBusy(false); this.toast.success('Skor berhasil disimpan'); this.view.setDetail(d); },
+      error: () => this.view.setBusy(false),
+    });
+  }
 }
