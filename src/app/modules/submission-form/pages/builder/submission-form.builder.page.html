@@ -87,12 +87,14 @@
   <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeSectionForm()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ sectionEditID ? 'Ubah Section' : 'Tambah Section' }}</h3>
-      @if (!sectionEditID) {
-        <div class="form-group"><label class="form-label">Kode Section</label><input class="form-control" [(ngModel)]="sectionForm.sectionCode"></div>
-      }
-      <div class="form-group"><label class="form-label">Label Section</label><input class="form-control" [(ngModel)]="sectionForm.sectionLabel"></div>
-      <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="sectionForm.sortOrder"></div>
-      <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="2" [(ngModel)]="sectionForm.description"></textarea></div>
+      <div class="modal-body">
+        @if (!sectionEditID) {
+          <div class="form-group"><label class="form-label">Kode Section</label><input class="form-control" [(ngModel)]="sectionForm.sectionCode"></div>
+        }
+        <div class="form-group"><label class="form-label">Label Section</label><input class="form-control" [(ngModel)]="sectionForm.sectionLabel"></div>
+        <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="sectionForm.sortOrder"></div>
+        <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="2" [(ngModel)]="sectionForm.description"></textarea></div>
+      </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" (click)="closeSectionForm()">Batal</button>
         <button class="btn btn-primary" (click)="saveSection()" [disabled]="busy()">Simpan</button>
@@ -105,66 +107,67 @@
   <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeFieldForm()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ fieldEditID ? 'Ubah Field' : 'Tambah Field' }}</h3>
-      @if (!fieldEditID) {
-        <div class="form-group"><label class="form-label">Kode Field</label><input class="form-control" [(ngModel)]="fieldForm.fieldCode"></div>
-      }
-      <div class="form-group"><label class="form-label">Label Field</label><input class="form-control" [(ngModel)]="fieldForm.fieldLabel"></div>
-      <div class="form-group">
-        <label class="form-label">Tipe Field</label>
-        <app-select [options]="fieldTypeOptions" [(ngModel)]="fieldForm.fieldType" [disabled]="!!fieldEditID" />
-      </div>
-      <div class="grid-cols-2">
-        <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="fieldForm.sortOrder"></div>
-        <div class="form-group"><label class="form-check" style="margin-top:34px"><input type="checkbox" [(ngModel)]="fieldForm.isRequired"> Wajib diisi</label></div>
-      </div>
-      <div class="form-group"><label class="form-label">Teks Bantuan</label><input class="form-control" [(ngModel)]="fieldForm.helpText"></div>
-
-      @if (isLengthType(fieldForm.fieldType)) {
-        <div class="grid-cols-2">
-          <div class="form-group"><label class="form-label">Panjang Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.minLength"></div>
-          <div class="form-group"><label class="form-label">Panjang Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.maxLength"></div>
-        </div>
-      }
-      @if (isRangeType(fieldForm.fieldType)) {
-        <div class="grid-cols-2">
-          <div class="form-group"><label class="form-label">Nilai Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.min"></div>
-          <div class="form-group"><label class="form-label">Nilai Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.max"></div>
-        </div>
-      }
-
-      <div class="form-group">
-        <label class="form-label">Tampilkan Hanya Jika (opsional)</label>
-        <app-select [options]="otherFieldOptions(fieldEditID)" [(ngModel)]="fieldForm.conditionalOnFieldID" placeholder="Tidak ada syarat" />
-      </div>
-      @if (fieldForm.conditionalOnFieldID) {
-        <div class="grid-cols-2">
-          <div class="form-group">
-            <label class="form-label">Operator</label>
-            <app-select [options]="conditionalOperatorOptions" [(ngModel)]="fieldForm.conditionalOperator" />
-          </div>
-          <div class="form-group"><label class="form-label">Nilai</label><input class="form-control" [(ngModel)]="fieldForm.conditionalValue"></div>
-        </div>
-      }
-
-      <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="fieldForm.useScoring"> Gunakan Skor</label></div>
-      @if (fieldForm.useScoring) {
-        <div class="form-group">
-          <label class="form-label">Metode Skor</label>
-          <app-select [options]="scoringMethodOptions" [(ngModel)]="fieldForm.scoringMethod" [disabled]="!isSingleChoice(fieldForm.fieldType)" />
-          @if (!isSingleChoice(fieldForm.fieldType)) {
-            <p class="field-help">Skor otomatis hanya tersedia untuk field Pilihan Tunggal (SELECT/RADIO) — field ini akan dinilai manual oleh Puskomnas.</p>
-          }
-        </div>
-        <div class="grid-cols-2">
-          <div class="form-group"><label class="form-label">Skor Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.minScore"></div>
-          <div class="form-group"><label class="form-label">Skor Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.maxScore"></div>
-        </div>
-        <div class="form-group"><label class="form-label">Bobot (%)</label><input type="number" class="form-control" [(ngModel)]="fieldForm.weight"></div>
-        @if (fieldForm.scoringMethod === 'AUTOMATIC') {
-          <p class="field-help">Atur skor tiap pilihan lewat "+ Pilihan" pada field ini setelah disimpan — Skor Minimum/Maksimum di sini harus persis sama dengan skor pilihan terendah/tertinggi.</p>
+      <div class="modal-body">
+        @if (!fieldEditID) {
+          <div class="form-group"><label class="form-label">Kode Field</label><input class="form-control" [(ngModel)]="fieldForm.fieldCode"></div>
         }
-      }
+        <div class="form-group"><label class="form-label">Label Field</label><input class="form-control" [(ngModel)]="fieldForm.fieldLabel"></div>
+        <div class="form-group">
+          <label class="form-label">Tipe Field</label>
+          <app-select [options]="fieldTypeOptions" [(ngModel)]="fieldForm.fieldType" [disabled]="!!fieldEditID" />
+        </div>
+        <div class="grid-cols-2">
+          <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="fieldForm.sortOrder"></div>
+          <div class="form-group"><label class="form-check" style="margin-top:34px"><input type="checkbox" [(ngModel)]="fieldForm.isRequired"> Wajib diisi</label></div>
+        </div>
+        <div class="form-group"><label class="form-label">Teks Bantuan</label><input class="form-control" [(ngModel)]="fieldForm.helpText"></div>
 
+        @if (isLengthType(fieldForm.fieldType)) {
+          <div class="grid-cols-2">
+            <div class="form-group"><label class="form-label">Panjang Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.minLength"></div>
+            <div class="form-group"><label class="form-label">Panjang Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.maxLength"></div>
+          </div>
+        }
+        @if (isRangeType(fieldForm.fieldType)) {
+          <div class="grid-cols-2">
+            <div class="form-group"><label class="form-label">Nilai Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.min"></div>
+            <div class="form-group"><label class="form-label">Nilai Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.max"></div>
+          </div>
+        }
+
+        <div class="form-group">
+          <label class="form-label">Tampilkan Hanya Jika (opsional)</label>
+          <app-select [options]="otherFieldOptions(fieldEditID)" [(ngModel)]="fieldForm.conditionalOnFieldID" placeholder="Tidak ada syarat" />
+        </div>
+        @if (fieldForm.conditionalOnFieldID) {
+          <div class="grid-cols-2">
+            <div class="form-group">
+              <label class="form-label">Operator</label>
+              <app-select [options]="conditionalOperatorOptions" [(ngModel)]="fieldForm.conditionalOperator" />
+            </div>
+            <div class="form-group"><label class="form-label">Nilai</label><input class="form-control" [(ngModel)]="fieldForm.conditionalValue"></div>
+          </div>
+        }
+
+        <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="fieldForm.useScoring"> Gunakan Skor</label></div>
+        @if (fieldForm.useScoring) {
+          <div class="form-group">
+            <label class="form-label">Metode Skor</label>
+            <app-select [options]="scoringMethodOptions" [(ngModel)]="fieldForm.scoringMethod" [disabled]="!isSingleChoice(fieldForm.fieldType)" />
+            @if (!isSingleChoice(fieldForm.fieldType)) {
+              <p class="field-help">Skor otomatis hanya tersedia untuk field Pilihan Tunggal (SELECT/RADIO) — field ini akan dinilai manual oleh Puskomnas.</p>
+            }
+          </div>
+          <div class="grid-cols-2">
+            <div class="form-group"><label class="form-label">Skor Minimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.minScore"></div>
+            <div class="form-group"><label class="form-label">Skor Maksimum</label><input type="number" class="form-control" [(ngModel)]="fieldForm.maxScore"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Bobot (%)</label><input type="number" class="form-control" [(ngModel)]="fieldForm.weight"></div>
+          @if (fieldForm.scoringMethod === 'AUTOMATIC') {
+            <p class="field-help">Atur skor tiap pilihan lewat "+ Pilihan" pada field ini setelah disimpan — Skor Minimum/Maksimum di sini harus persis sama dengan skor pilihan terendah/tertinggi.</p>
+          }
+        }
+      </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" (click)="closeFieldForm()">Batal</button>
         <button class="btn btn-primary" (click)="saveField()" [disabled]="busy()">Simpan</button>
@@ -177,13 +180,15 @@
   <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeOptionForm()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ optionEditID ? 'Ubah Pilihan' : 'Tambah Pilihan' }}</h3>
-      <div class="form-group"><label class="form-label">Nilai (value)</label><input class="form-control" [(ngModel)]="optionForm.optionValue"></div>
-      <div class="form-group"><label class="form-label">Label</label><input class="form-control" [(ngModel)]="optionForm.optionLabel"></div>
-      <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="optionForm.sortOrder"></div>
-      @if (isAutomaticScoringField(optionFieldID)) {
-        <div class="form-group"><label class="form-label">Skor</label><input type="number" class="form-control" [(ngModel)]="optionForm.score"></div>
-      }
-      @if (optionEditID) { <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="optionForm.isActive"> Aktif</label></div> }
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Nilai (value)</label><input class="form-control" [(ngModel)]="optionForm.optionValue"></div>
+        <div class="form-group"><label class="form-label">Label</label><input class="form-control" [(ngModel)]="optionForm.optionLabel"></div>
+        <div class="form-group"><label class="form-label">Urutan</label><input type="number" class="form-control" [(ngModel)]="optionForm.sortOrder"></div>
+        @if (isAutomaticScoringField(optionFieldID)) {
+          <div class="form-group"><label class="form-label">Skor</label><input type="number" class="form-control" [(ngModel)]="optionForm.score"></div>
+        }
+        @if (optionEditID) { <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="optionForm.isActive"> Aktif</label></div> }
+      </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" (click)="closeOptionForm()">Batal</button>
         <button class="btn btn-primary" (click)="saveOption()" [disabled]="busy()">Simpan</button>

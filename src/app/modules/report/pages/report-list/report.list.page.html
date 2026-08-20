@@ -41,15 +41,17 @@
 @if (detail(); as d) {
   <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeDetail()">
     <div class="modal" (click)="$event.stopPropagation()">
-      <div class="flex justify-between items-center">
+      <div class="flex justify-between items-center modal-header">
         <h3>{{ orgName(d.organizationID) }}</h3>
         <span class="chip">{{ statusLabel(d.status) }}</span>
       </div>
-      @if (d.levelResult; as level) {
-        <p class="text-muted">Level: <strong>{{ level.levelLabel || level.levelCode }}</strong></p>
-      }
-      <app-submission-answers-view [version]="version()" [answers]="d.answers" />
-      <div class="flex justify-end" style="margin-top:16px">
+      <div class="modal-body">
+        @if (d.levelResult; as level) {
+          <p class="text-muted">Level: <strong>{{ level.levelLabel || level.levelCode }}</strong></p>
+        }
+        <app-submission-answers-view [version]="version()" [answers]="d.answers" />
+      </div>
+      <div class="flex justify-end modal-footer">
         <button class="btn btn-ghost" (click)="closeDetail()">Tutup</button>
       </div>
     </div>

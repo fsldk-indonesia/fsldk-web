@@ -64,35 +64,37 @@
   <div class="modal-backdrop" appModalBackdrop (backdropClose)="close()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ editId ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h3>
-      <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName"></div>
-      <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email"></div>
-      <div class="form-group">
-        <label class="form-label">Kata Sandi</label>
-        <input class="form-control" type="password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
-      </div>
-      <div class="form-group"><label class="form-label">Role</label>
-        <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" placeholder="Pilih role" />
-      </div>
-      @if (showOrganizationPicker()) {
-        <div class="form-group"><label class="form-label">LDK</label>
-          <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" placeholder="Pilih LDK" />
-          <p class="form-hint">Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.</p>
-        </div>
-      }
-      @if (isFreeTierCaller()) {
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email"></div>
         <div class="form-group">
-          <label class="form-label">Akses Lintas Tier (opsional)</label>
-          <div class="wildcard-tiers">
-            @for (tier of wildcardTiers; track tier) {
-              <label class="form-check">
-                <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" (change)="toggleWildcardTier(tier)"> {{ tier }}
-              </label>
-            }
-          </div>
+          <label class="form-label">Kata Sandi</label>
+          <input class="form-control" type="password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
         </div>
-      }
-      <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div>
-      <div class="flex gap justify-between">
+        <div class="form-group"><label class="form-label">Role</label>
+          <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" placeholder="Pilih role" />
+        </div>
+        @if (showOrganizationPicker()) {
+          <div class="form-group"><label class="form-label">LDK</label>
+            <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" placeholder="Pilih LDK" />
+            <p class="form-hint">Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.</p>
+          </div>
+        }
+        @if (isFreeTierCaller()) {
+          <div class="form-group">
+            <label class="form-label">Akses Lintas Tier (opsional)</label>
+            <div class="wildcard-tiers">
+              @for (tier of wildcardTiers; track tier) {
+                <label class="form-check">
+                  <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" (change)="toggleWildcardTier(tier)"> {{ tier }}
+                </label>
+              }
+            </div>
+          </div>
+        }
+        <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div>
+      </div>
+      <div class="flex gap justify-between modal-footer">
         <button class="btn btn-ghost" (click)="close()">Batal</button>
         <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
       </div>
