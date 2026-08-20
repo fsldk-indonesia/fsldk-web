@@ -28,9 +28,8 @@ export const kaderRoutes: () => Routes = () => [
     data: { permission: 'submission.view', formCode: FORM_CODE_SENSUS_KADER },
     loadComponent: () => import('./pages/status/submission.status.page').then((m) => m.SubmissionStatusPage),
   },
-  {
-    path: 'profil',
-    canActivate: [verifiedGuard],
-    loadComponent: () => import('../user/pages/my-profile/user.my-profile.page').then((m) => m.UserMyProfilePage),
-  },
+  // Profil Saya dipindah keluar dari sini ke rute publik /akun/profil (lihat
+  // app.routes.ts) supaya akun non-Kader (CMS staff, yang tidak pernah masuk
+  // ke shell ini) juga bisa mengaksesnya — link sidebar di bawah diarahkan
+  // ke rute bersama itu, bukan didup dua rute untuk halaman yang sama.
 ];

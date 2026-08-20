@@ -17,13 +17,20 @@ const emptyForm = (): OrganizationProfileFormValue => ({
   providers: [OrganizationProfilePresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    /* Diperlebar dari 640px — sebelumnya card terlalu sempit & rata kiri,
-       menyisakan banyak ruang kosong di kanan pada layar lebar. */
-    .profile-card { max-width: 920px; }
+    /* Dua kolom: identitas+foto (kiri, tetap) di samping form identitas &
+       kontak (kanan, 1fr) — mengisi lebar area konten CMS, bukan satu kartu
+       sempit sendirian yang menyisakan banyak ruang kosong di kanan. */
+    .profile-grid { display: grid; grid-template-columns: minmax(260px, 320px) 1fr; gap: 24px; align-items: start; }
+    .profile-side { position: sticky; top: 88px; }
+    .profile-main { min-width: 0; }
+    @media (max-width: 860px) {
+      .profile-grid { grid-template-columns: 1fr; }
+      .profile-side { position: static; }
+    }
     .identity-row { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
     .avatar { width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; font-size: 1.3rem; }
     img.avatar { object-fit: cover; }
-    .photo-upload { max-width: 320px; margin-bottom: 20px; }
+    .photo-upload app-image-upload { display: block; }
     .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
     @media (max-width: 640px) { .grid-cols-2 { grid-template-columns: 1fr; } }
   `],

@@ -31,8 +31,8 @@ import { IconComponent } from '../shared/icon.component';
             <a routerLink="/kader/status" routerLinkActive="active">
               <app-icon name="list-checks" [size]="16" /> Status Pendataan
             </a>
-            <a routerLink="/kader/profil" routerLinkActive="active">
-              <app-icon name="id-card" [size]="16" /> Profil Saya
+            <a routerLink="/akun/profil" routerLinkActive="active">
+              <app-icon name="user-circle" [size]="16" /> Profil Saya
             </a>
           </nav>
           <a routerLink="/" class="side-back"><app-icon name="arrow-left" [size]="13" /> Kembali ke Beranda</a>
