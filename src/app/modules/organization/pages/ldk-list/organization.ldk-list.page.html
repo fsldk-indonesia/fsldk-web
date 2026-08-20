@@ -40,7 +40,7 @@
                 @if (canDeactivate) {
                   <div class="table-actions">
                     <button type="button" class="icon-action" [class.danger]="o.isActive" [disabled]="isBusy(o.organizationID)" (click)="toggleActive(o, $event)" [title]="o.isActive ? 'Nonaktifkan' : 'Aktifkan kembali'">
-                      @if (isBusy(o.organizationID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="o.isActive ? 'eye-off' : 'eye'" [size]="14" /> }
+                      @if (isBusy(o.organizationID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
                     </button>
                   </div>
                 }
