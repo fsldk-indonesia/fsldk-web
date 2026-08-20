@@ -54,6 +54,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
                 @if (auth.isKaderSelfService()) {
                   <a [routerLink]="kaderNavLink()" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="id-card" [size]="16" />{{ kaderNavLabel() }}</a>
                 }
+                <a routerLink="/akun/profil" class="dropdown-fun-item" (click)="closeUserMenu()"><app-icon name="user-circle" [size]="16" />Profil Saya</a>
                 <button type="button" class="dropdown-fun-item" (click)="logout()"><app-icon name="log-out" [size]="16" />Keluar</button>
               </div>
             </div>
@@ -107,6 +108,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
           @if (auth.isKaderSelfService()) {
             <a [routerLink]="kaderNavLink()" class="btn btn-primary btn-block" (click)="closeMobile()"><app-icon name="id-card" [size]="17" />{{ kaderNavLabel() }}</a>
           }
+          <a routerLink="/akun/profil" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="user-circle" [size]="17" />Profil Saya</a>
           <button type="button" class="btn btn-outline btn-block" (click)="logout(); closeMobile()"><app-icon name="log-out" [size]="17" />Keluar</button>
         } @else {
           <div class="mobile-account"><span class="chip-avatar guest"><app-icon name="guest" [size]="15" /></span> Pengunjung</div>

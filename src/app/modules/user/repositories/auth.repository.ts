@@ -83,6 +83,10 @@ export class AuthRepository {
     return this.api.updateContact(body).pipe(tap((u) => { this.session.persistUser(u); this.user.set(u); }));
   }
 
+  updatePhoto(photoURL: string): Observable<UserProfile> {
+    return this.api.updatePhoto(photoURL).pipe(tap((u) => { this.session.persistUser(u); this.user.set(u); }));
+  }
+
   refreshMe(): Observable<UserProfile> {
     return this.api.me().pipe(tap((u) => { this.session.persistUser(u); this.user.set(u); }));
   }

@@ -3,7 +3,7 @@ import { PublicLayoutComponent } from './layouts/public-layout.component';
 import { AuthLayoutComponent } from './layouts/auth-layout.component';
 import { CmsLayoutComponent } from './layouts/cms-layout.component';
 import { KaderLayoutComponent } from './layouts/kader-layout.component';
-import { authGuard } from './core/guards/guards';
+import { authGuard, verifiedGuard } from './core/guards/guards';
 
 import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
@@ -54,6 +54,18 @@ export const routes: Routes = [
       ...articlePublicRoutes(),
       ...eventPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
+      // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
+      // jadi tidak bisa diakses akun non-Kader sama sekali karena link
+      // menuju Portal Kader hanya muncul untuk akun Kader) supaya SEMUA akun
+      // login (CMS staff maupun Kader) punya jalur ke halaman ini — lihat
+      // site-header.component.ts & cms-layout.component.ts (dropdown akun)
+      // dan kader-layout.component.ts (sidebar Portal Kader, link diarahkan
+      // ke sini juga, bukan didup dua rute untuk halaman yang sama).
+      {
+        path: 'akun/profil',
+        canActivate: [verifiedGuard],
+        loadComponent: () => import('./modules/user/pages/my-profile/user.my-profile.page').then((m) => m.UserMyProfilePage),
+      },
     ],
   },
 

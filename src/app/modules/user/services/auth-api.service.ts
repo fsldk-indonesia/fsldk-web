@@ -45,6 +45,10 @@ export class AuthApiService {
     return this.api.put<UserProfile>('/auth/me/contact', body);
   }
 
+  updatePhoto(photoURL: string): Observable<UserProfile> {
+    return this.api.put<UserProfile>('/auth/me/photo', { photoURL });
+  }
+
   me(): Observable<UserProfile> {
     return this.api.get<UserProfile>('/auth/me');
   }

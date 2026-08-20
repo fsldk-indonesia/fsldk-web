@@ -93,6 +93,7 @@ type Tier = CmsTier;
                 @for (t of auth.accessibleCmsTiers(); track t) {
                   <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"><app-icon [name]="shellIconOf(t)" [size]="16" />{{ shellLabelOf(t) }}</a>
                 }
+                <a routerLink="/akun/profil" (click)="closeAllDropdowns()"><app-icon name="user-circle" [size]="16" />Profil Saya</a>
                 <button type="button" (click)="logout()"><app-icon name="log-out" [size]="16" />Keluar</button>
               </div>
             }

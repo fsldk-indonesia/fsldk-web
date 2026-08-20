@@ -5,4 +5,5 @@ export interface UserMyProfileView {
   onChangePasswordSuccess(): void;
   setKader(kader: KaderInfo | null): void;
   setContactSaving(saving: boolean): void;
+  setPhotoSaving(saving: boolean): void;
 }

@@ -43,4 +43,15 @@ export class UserMyProfilePresenter extends BasePresenter<UserMyProfileView> {
       error: () => this.view.setContactSaving(false),
     });
   }
+
+  /** Foto tersimpan otomatis begitu unggahan selesai (app-image-upload sudah
+   *  mengunggah berkasnya ke server saat ini dipanggil) — tidak perlu tombol
+   *  simpan terpisah untuk satu field ini. */
+  updatePhoto(photoURL: string): void {
+    this.view.setPhotoSaving(true);
+    this.auth.updatePhoto(photoURL).subscribe({
+      next: () => { this.view.setPhotoSaving(false); this.toast.success('Foto profil berhasil diperbarui'); },
+      error: () => this.view.setPhotoSaving(false),
+    });
+  }
 }
