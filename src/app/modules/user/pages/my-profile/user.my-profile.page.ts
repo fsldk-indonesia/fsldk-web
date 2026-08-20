@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../repositories/auth.repository';
 import { PasswordFieldComponent } from '../../../../shared/password-field.component';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { KaderInfo } from '../../../submission/entities/submission';
 import { UserMyProfilePresenter } from './user.my-profile.presenter';
 import { UserMyProfileView } from './user.my-profile.view';
@@ -10,7 +11,7 @@ import { UserMyProfileView } from './user.my-profile.view';
 @Component({
   selector: 'app-user-my-profile-page',
   standalone: true,
-  imports: [FormsModule, PasswordFieldComponent, IconComponent],
+  imports: [FormsModule, PasswordFieldComponent, IconComponent, ImageUploadComponent],
   providers: [UserMyProfilePresenter],
   template: `
     <div class="page-head">
@@ -30,16 +31,27 @@ import { UserMyProfileView } from './user.my-profile.view';
           <p class="text-muted" style="margin:0">{{ auth.user()?.email }}</p>
         </div>
       </div>
+
+      <div class="form-group photo-upload">
+        <label class="form-label">
+          Foto Profil
+          @if (photoSaving()) { <span class="spinner spinner-xs"></span> }
+        </label>
+        <app-image-upload [value]="auth.user()?.photoURL ?? null" (valueChange)="onPhotoChange($event)" />
+        <p class="form-hint">Kalau tidak diunggah, otomatis pakai foto akun Google Anda (bila ada) — kalau tidak ada juga, tampil inisial huruf seperti di atas.</p>
+      </div>
     </div>
 
     @if (kader(); as k) {
       @if (k.status === 'ACTIVE') {
         <div class="card card-pad profile-card" style="margin-top:16px">
           <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="id-card" [size]="16" /> Info Kekaderan</h3>
-          <div class="form-group"><label class="form-label">Nama LDK</label>
-            <input class="form-control" [value]="k.organizationName ?? '—'" readonly></div>
-          <div class="form-group"><label class="form-label">Nama Puskomda</label>
-            <input class="form-control" [value]="k.parentOrganizationName ?? '—'" readonly></div>
+          <div class="grid-cols-2">
+            <div class="form-group"><label class="form-label">Nama LDK</label>
+              <input class="form-control" [value]="k.organizationName ?? '—'" readonly></div>
+            <div class="form-group"><label class="form-label">Nama Puskomda</label>
+              <input class="form-control" [value]="k.parentOrganizationName ?? '—'" readonly></div>
+          </div>
         </div>
       }
     }
@@ -47,10 +59,12 @@ import { UserMyProfileView } from './user.my-profile.view';
     <div class="card card-pad profile-card" style="margin-top:16px">
       <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="phone" [size]="16" /> Kontak</h3>
       <form (ngSubmit)="submitContact()">
-        <div class="form-group"><label class="form-label">No Whatsapp</label>
-          <input class="form-control" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="08xxxxxxxxxx"></div>
-        <div class="form-group"><label class="form-label">Alamat</label>
-          <textarea class="form-control" name="address" rows="2" [(ngModel)]="address" placeholder="Alamat domisili"></textarea></div>
+        <div class="grid-cols-2">
+          <div class="form-group"><label class="form-label">No Whatsapp</label>
+            <input class="form-control" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="08xxxxxxxxxx"></div>
+          <div class="form-group"><label class="form-label">Alamat</label>
+            <textarea class="form-control" name="address" rows="1" [(ngModel)]="address" placeholder="Alamat domisili"></textarea></div>
+        </div>
         <button class="btn btn-primary" type="submit" [disabled]="contactSaving()">
           @if (contactSaving()) { <span class="spinner"></span> } @else { Simpan Kontak }
         </button>
@@ -60,10 +74,12 @@ import { UserMyProfileView } from './user.my-profile.view';
     <div class="card card-pad profile-card" style="margin-top:16px">
       <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="lock" [size]="16" /> Ubah Kata Sandi</h3>
       <form (ngSubmit)="submit()">
-        <div class="form-group"><label class="form-label">Kata Sandi Lama</label>
-          <app-password-field name="old" [(ngModel)]="oldPassword" placeholder="Kata sandi saat ini" /></div>
-        <div class="form-group"><label class="form-label">Kata Sandi Baru</label>
-          <app-password-field name="new" [(ngModel)]="newPassword" placeholder="Minimal 8 karakter" /></div>
+        <div class="grid-cols-2">
+          <div class="form-group"><label class="form-label">Kata Sandi Lama</label>
+            <app-password-field name="old" [(ngModel)]="oldPassword" placeholder="Kata sandi saat ini" /></div>
+          <div class="form-group"><label class="form-label">Kata Sandi Baru</label>
+            <app-password-field name="new" [(ngModel)]="newPassword" placeholder="Minimal 8 karakter" /></div>
+        </div>
         <button class="btn btn-primary" type="submit" [disabled]="saving()">
           @if (saving()) { <span class="spinner"></span> } @else { Simpan Kata Sandi }
         </button>
@@ -72,10 +88,15 @@ import { UserMyProfileView } from './user.my-profile.view';
   `,
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    .profile-card { max-width: 520px; }
-    .identity-row { display: flex; align-items: center; gap: 14px; }
+    /* Diperlebar dari 520px — sebelumnya card terlalu sempit & rata kiri,
+       menyisakan banyak ruang kosong di kanan pada layar lebar. */
+    .profile-card { max-width: 720px; }
+    .identity-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
     .avatar { width: 52px; height: 52px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; font-size: 1.1rem; }
     img.avatar { object-fit: cover; }
+    .photo-upload app-image-upload { max-width: 320px; display: block; }
+    .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+    @media (max-width: 640px) { .grid-cols-2 { grid-template-columns: 1fr; } }
   `],
 })
 export class UserMyProfilePage implements OnInit, UserMyProfileView {
@@ -89,6 +110,7 @@ export class UserMyProfilePage implements OnInit, UserMyProfileView {
   phoneNumber = this.auth.user()?.phoneNumber ?? '';
   address = this.auth.user()?.address ?? '';
   contactSaving = signal(false);
+  photoSaving = signal(false);
 
   kader = signal<KaderInfo | null>(null);
 
@@ -111,8 +133,13 @@ export class UserMyProfilePage implements OnInit, UserMyProfileView {
     this.presenter.updateContact(this.phoneNumber.trim(), this.address.trim());
   }
 
+  onPhotoChange(url: string): void {
+    this.presenter.updatePhoto(url);
+  }
+
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onChangePasswordSuccess(): void { this.oldPassword = ''; this.newPassword = ''; }
   setKader(kader: KaderInfo | null): void { this.kader.set(kader); }
   setContactSaving(saving: boolean): void { this.contactSaving.set(saving); }
+  setPhotoSaving(saving: boolean): void { this.photoSaving.set(saving); }
 }
