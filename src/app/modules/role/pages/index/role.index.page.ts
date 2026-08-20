@@ -6,6 +6,7 @@ import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-
 import { Role } from '../../entities/role';
 import { Permission } from '../../../permission/entities/permission';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { RoleFormValue, RoleIndexPresenter } from './role.index.presenter';
 import { RoleIndexView } from './role.index.view';
 
@@ -13,7 +14,7 @@ import { RoleIndexView } from './role.index.view';
   selector: 'app-role-index-page',
   standalone: true,
   templateUrl: './role.index.page.html',
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective],
   providers: [RoleIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }

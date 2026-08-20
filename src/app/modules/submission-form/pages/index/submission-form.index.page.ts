@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { SubmissionForm } from '../../entities/submission-form';
 import { submissionFormPath } from '../../submission-form.path';
 import { FormFormValue, SubmissionFormIndexPresenter } from './submission-form.index.presenter';
@@ -13,7 +14,7 @@ import { SubmissionFormIndexView } from './submission-form.index.view';
   selector: 'app-submission-form-index-page',
   standalone: true,
   templateUrl: './submission-form.index.page.html',
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective],
   providers: [SubmissionFormIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }

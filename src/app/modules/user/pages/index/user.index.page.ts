@@ -6,6 +6,7 @@ import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-
 import { UserRow } from '../../entities/user';
 import { Role } from '../../../role/entities/role';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { UserFormValue, UserIndexPresenter } from './user.index.presenter';
@@ -21,7 +22,7 @@ const emptyForm = (roleID = 0): UserFormValue => ({
   selector: 'app-user-index-page',
   standalone: true,
   templateUrl: './user.index.page.html',
-  imports: [FormsModule, IconComponent, PaginationComponent, SelectComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective, PaginationComponent, SelectComponent],
   providers: [UserIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }

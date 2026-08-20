@@ -84,7 +84,7 @@
 }
 
 @if (showSectionForm()) {
-  <div class="modal-backdrop" (click)="closeSectionForm()">
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeSectionForm()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ sectionEditID ? 'Ubah Section' : 'Tambah Section' }}</h3>
       @if (!sectionEditID) {
@@ -102,7 +102,7 @@
 }
 
 @if (showFieldForm()) {
-  <div class="modal-backdrop" (click)="closeFieldForm()">
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeFieldForm()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ fieldEditID ? 'Ubah Field' : 'Tambah Field' }}</h3>
       @if (!fieldEditID) {
@@ -174,7 +174,7 @@
 }
 
 @if (showOptionForm()) {
-  <div class="modal-backdrop" (click)="closeOptionForm()">
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeOptionForm()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ optionEditID ? 'Ubah Pilihan' : 'Tambah Pilihan' }}</h3>
       <div class="form-group"><label class="form-label">Nilai (value)</label><input class="form-control" [(ngModel)]="optionForm.optionValue"></div>
