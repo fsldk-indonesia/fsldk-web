@@ -59,13 +59,15 @@
   <div class="modal-backdrop" appModalBackdrop (backdropClose)="close()">
     <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>Tambah Puskomda</h3>
-      <div class="form-group"><label class="form-label">Nama Puskomda</label><input class="form-control" [(ngModel)]="form.organizationName"></div>
-      <div class="form-group"><label class="form-label">Kode Organisasi</label><input class="form-control" [(ngModel)]="form.organizationCode"></div>
-      <div class="form-group"><label class="form-label">Provinsi</label><input class="form-control" [(ngModel)]="form.provinceName"></div>
-      <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input class="form-control" [(ngModel)]="form.cityName"></div>
-      <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" type="email" [(ngModel)]="form.contactEmail"></div>
-      <div class="form-group"><label class="form-label">Telepon Kontak</label><input class="form-control" [(ngModel)]="form.contactPhone"></div>
-      <div class="flex gap justify-between">
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Nama Puskomda</label><input class="form-control" [(ngModel)]="form.organizationName"></div>
+        <div class="form-group"><label class="form-label">Kode Organisasi</label><input class="form-control" [(ngModel)]="form.organizationCode"></div>
+        <div class="form-group"><label class="form-label">Provinsi</label><input class="form-control" [(ngModel)]="form.provinceName"></div>
+        <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input class="form-control" [(ngModel)]="form.cityName"></div>
+        <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" type="email" [(ngModel)]="form.contactEmail"></div>
+        <div class="form-group"><label class="form-label">Telepon Kontak</label><input class="form-control" [(ngModel)]="form.contactPhone"></div>
+      </div>
+      <div class="flex gap justify-between modal-footer">
         <button class="btn btn-ghost" (click)="close()">Batal</button>
         <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
       </div>

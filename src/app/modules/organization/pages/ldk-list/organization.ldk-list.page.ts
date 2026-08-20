@@ -26,7 +26,10 @@ const emptyForm = (): LdkFormValue => ({
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
     .modal-backdrop { position: fixed; inset: 0; background: rgba(20,23,26,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .modal { background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; overflow-y: auto; }
+    .modal { background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column; }
+    .modal > h3 { flex-shrink: 0; }
+    .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 8px; }
+    .modal-footer { flex-shrink: 0; padding-top: 20px; }
   `],
 })
 export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView {

@@ -505,6 +505,31 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
   to { opacity: 1; transform: translate(0, 0) scale(1); }
 }
 
+/* ---------- Scrollbar kustom untuk seluruh popup/modal ----------
+   Scrollbar bawaan OS (abu-abu tebal + tombol panah naik/turun) tidak ikut
+   mengikuti border-radius popup, jadi sudut modal yang membundar terlihat
+   "putus" begitu isinya perlu discroll. Dipasang di level root backdrop
+   (.modal-backdrop / .gif-modal-backdrop / .alert-backdrop) — SEMUA popup di
+   aplikasi ini selalu dibungkus salah satu dari ketiganya — sehingga aturan
+   ini otomatis berlaku ke area scroll APA PUN di dalam popup manapun
+   (termasuk .modal, .perm-list, .gif-grid, dan popup baru di masa depan),
+   tanpa perlu diulang manual di tiap halaman. */
+.modal-backdrop, .gif-modal-backdrop, .alert-backdrop {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-strong);
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--color-muted); background-clip: padding-box; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+}
+
 /* ---------- Aksesibilitas: hormati preferensi pengurangan gerak ---------- */
 @media (prefers-reduced-motion: reduce) {
   .spinner, .skel, .btn, .chip, .card-hover, .form-control,
