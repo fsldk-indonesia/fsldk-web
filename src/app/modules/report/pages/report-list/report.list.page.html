@@ -39,7 +39,7 @@
 }
 
 @if (detail(); as d) {
-  <div class="modal-backdrop" (click)="closeDetail()">
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeDetail()">
     <div class="modal" (click)="$event.stopPropagation()">
       <div class="flex justify-between items-center">
         <h3>{{ orgName(d.organizationID) }}</h3>

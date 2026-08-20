@@ -5,6 +5,7 @@ import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
 import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import {
   SubmissionFormDetail, FormVersionDetail, FormSection, FormField, FormOption,
@@ -38,7 +39,7 @@ const emptyOptionForm = (sortOrder = 0): OptionFormValue => ({ optionValue: '', 
   selector: 'app-submission-form-builder-page',
   standalone: true,
   templateUrl: './submission-form.builder.page.html',
-  imports: [FormsModule, RouterLink, IconComponent, SelectComponent],
+  imports: [FormsModule, RouterLink, IconComponent, ModalBackdropDirective, SelectComponent],
   providers: [SubmissionFormBuilderPresenter],
   styles: [`
     .page-head { margin-bottom: 20px; }

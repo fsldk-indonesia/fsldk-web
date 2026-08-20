@@ -7,6 +7,7 @@ import { AlertService } from '../../../../core/services/alert.service';
 import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { ShortLink } from '../../entities/shortlink';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { ShortlinkFormValue, ShortlinkIndexPresenter } from './shortlink.index.presenter';
 import { ShortlinkIndexView } from './shortlink.index.view';
@@ -15,7 +16,7 @@ import { ShortlinkIndexView } from './shortlink.index.view';
   selector: 'app-shortlink-index-page',
   standalone: true,
   templateUrl: './shortlink.index.page.html',
-  imports: [FormsModule, DatePipe, IconComponent, PaginationComponent],
+  imports: [FormsModule, DatePipe, IconComponent, ModalBackdropDirective, PaginationComponent],
   providers: [ShortlinkIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { OrgContextService } from '../../../../core/services/org-context.service';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { SubmissionAnswersViewComponent } from '../../../submission/components/submission-answers-view.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
@@ -15,7 +16,7 @@ import { ReportListView } from './report.list.view';
   selector: 'app-report-list-page',
   standalone: true,
   templateUrl: './report.list.page.html',
-  imports: [FormsModule, SelectComponent, SubmissionAnswersViewComponent],
+  imports: [FormsModule, ModalBackdropDirective, SelectComponent, SubmissionAnswersViewComponent],
   providers: [ReportListPresenter],
   styles: [`
     .page-head { margin-bottom: 20px; } .page-head h1 { margin-bottom: 2px; }

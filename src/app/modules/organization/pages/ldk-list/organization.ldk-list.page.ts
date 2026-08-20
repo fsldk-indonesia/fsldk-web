@@ -7,6 +7,7 @@ import { OrgContextService } from '../../../../core/services/org-context.service
 import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { Organization } from '../../entities/organization';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { LdkFormValue, OrganizationLdkListPresenter } from './organization.ldk-list.presenter';
@@ -20,7 +21,7 @@ const emptyForm = (): LdkFormValue => ({
   selector: 'app-organization-ldk-list-page',
   standalone: true,
   templateUrl: './organization.ldk-list.page.html',
-  imports: [FormsModule, IconComponent, PaginationComponent, SelectComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective, PaginationComponent, SelectComponent],
   providers: [OrganizationLdkListPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }

@@ -5,6 +5,7 @@ import { AlertService } from '../../../../core/services/alert.service';
 import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { Organization } from '../../entities/organization';
 import { IconComponent } from '../../../../shared/icon.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { PuskomdaFormValue, OrganizationPuskomdaListPresenter } from './organization.puskomda-list.presenter';
 import { OrganizationPuskomdaListView } from './organization.puskomda-list.view';
@@ -17,7 +18,7 @@ const emptyForm = (): PuskomdaFormValue => ({
   selector: 'app-organization-puskomda-list-page',
   standalone: true,
   templateUrl: './organization.puskomda-list.page.html',
-  imports: [FormsModule, IconComponent, PaginationComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective, PaginationComponent],
   providers: [OrganizationPuskomdaListPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
