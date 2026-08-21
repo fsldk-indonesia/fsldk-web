@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { SubmissionRepository } from '../modules/submission/repositories/submission.repository';
 import { FORM_CODE_SENSUS_KADER } from '../modules/submission/entities/submission';
+import { shortlinkPath } from '../modules/shortlink/shortlink.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
 
@@ -29,12 +30,30 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
           <span class="brand-text">FSLDK <b>Indonesia</b></span>
         </a>
 
-        <nav class="pub-nav">
-          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Beranda</a>
-          <a routerLink="/berita" routerLinkActive="active">Berita</a>
-          <a routerLink="/artikel" routerLinkActive="active">Artikel</a>
-          <a routerLink="/event" routerLinkActive="active">Event</a>
-        </nav>
+        <div class="pub-nav-group">
+          <nav class="pub-nav">
+            <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Beranda</a>
+            <a routerLink="/berita" routerLinkActive="active">Berita</a>
+            <a routerLink="/artikel" routerLinkActive="active">Artikel</a>
+            <a routerLink="/event" routerLinkActive="active">Event</a>
+          </nav>
+          <div class="nav-dropdown-wrap" (mouseenter)="openLainnyaMenu()" (mouseleave)="closeLainnyaMenu()">
+            <button type="button" class="nav-dropdown-trigger" [class.active]="isLainnyaActive()" (click)="toggleLainnyaMenu($event)">
+              Lainnya <app-icon name="chevron-down" [size]="12" />
+            </button>
+            <div class="nav-dropdown-panel" [class.open]="lainnyaMenuOpen()">
+              @for (item of lainnyaItems; track item.href) {
+                <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeLainnyaMenu()">
+                  <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
+                  <span class="nav-dropdown-item-text">
+                    <span class="nav-dropdown-item-title">{{ item.title }}</span>
+                    <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
+                  </span>
+                </a>
+              }
+            </div>
+          </div>
+        </div>
 
         <div class="flex items-center gap-sm pub-actions">
           @if (auth.isLoggedIn()) {
@@ -92,6 +111,18 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         <a routerLink="/artikel" routerLinkActive="active" (click)="closeMobile()">Artikel</a>
         <a routerLink="/event" routerLinkActive="active" (click)="closeMobile()">Event</a>
       </nav>
+      <div class="mobile-nav-extra">
+        <span class="mobile-nav-label">Lainnya</span>
+        @for (item of lainnyaItems; track item.href) {
+          <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMobile()">
+            <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
+            <span class="nav-dropdown-item-text">
+              <span class="nav-dropdown-item-title">{{ item.title }}</span>
+              <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
+            </span>
+          </a>
+        }
+      </div>
       <div class="mobile-actions">
         @if (auth.isLoggedIn()) {
           <div class="mobile-account">
@@ -141,6 +172,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .brand-text { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; display: flex; flex-direction: column; line-height: 1.1; }
     .brand-text b { color: var(--color-primary); display: inline; }
 
+    .pub-nav-group { display: flex; align-items: center; gap: 6px; }
     .pub-nav { display: flex; gap: 6px; }
     .mobile-nav a { position: relative; display: flex; align-items: center; gap: 7px; color: var(--color-text); font-weight: 600; transition: color var(--motion-fast) ease; }
     .pub-nav a svg, .mobile-nav a svg { opacity: .75; }
@@ -176,6 +208,60 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     @media (prefers-reduced-motion: reduce) { .dropdown-fun { transition: opacity var(--motion-base) ease, visibility var(--motion-base); transform: none !important; } }
     .mobile-account { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-weight: 600; color: var(--color-text); }
 
+    /* Dropdown item navbar "Lainnya" — sama idiom-nya dengan .dropdown-fun
+       (hover desktop + toggle-click, ditutup lewat onDocumentClick), tapi
+       item-nya dua-baris (ikon + judul + caption) sehingga perlu varian
+       markup/style sendiri, bukan reuse .dropdown-fun-item yang satu-baris.
+       Markup-nya SENGAJA ditaruh sebagai sibling dari nav.pub-nav /
+       nav.mobile-nav (dibungkus .pub-nav-group di desktop), BUKAN anak di
+       dalamnya — selector global .pub-nav a / .pub-nav a.active dan
+       .mobile-nav a / .mobile-nav a.active menyasar SEMUA elemen <a>
+       keturunan, jadi kalau <a class="nav-dropdown-item"> ada di dalam nav
+       itu, ia ikut kena gaya pill hijau solid milik link nav biasa
+       (spesifisitas .pub-nav a.active lebih tinggi dari .nav-dropdown-item
+       sendiri) alih-alih gaya dua-baris di bawah ini. */
+    .nav-dropdown-wrap { position: relative; }
+    .nav-dropdown-trigger {
+      display: flex; align-items: center; gap: 6px; margin: 0; appearance: none;
+      padding: 9px 16px; border-radius: var(--radius-full); border: none; background: none; cursor: pointer;
+      color: var(--color-text); font-weight: 600; font-size: .95rem; font-family: var(--font-body); line-height: normal;
+      transition: color var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .nav-dropdown-trigger:hover { color: var(--color-primary-dark); background: var(--color-primary-soft); transform: translateY(-1px); }
+    .nav-dropdown-trigger:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-xs); }
+    /* Trigger ikut solid hijau (persis .pub-nav a.active) saat salah satu
+       opsi di dropdown-nya sedang jadi halaman aktif, bukan cuma opsi-nya
+       sendiri di dalam panel — lihat isLainnyaActive(). */
+    .nav-dropdown-trigger.active { color: #fff; background: var(--color-primary); box-shadow: 0 4px 12px rgba(0,147,59,.28); }
+    .nav-dropdown-trigger.active:hover { color: #fff; background: var(--color-primary-dark); }
+    .nav-dropdown-trigger app-icon { transition: transform var(--motion-fast) ease; }
+    .nav-dropdown-wrap:has(.nav-dropdown-panel.open) .nav-dropdown-trigger app-icon { transform: rotate(180deg); }
+
+    .nav-dropdown-panel {
+      position: absolute; left: 0; top: 100%; margin-top: 8px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: 14px; box-shadow: var(--shadow-lg); min-width: 280px; padding: 14px;
+      opacity: 0; visibility: hidden; transform-origin: top left; transform: scale(.85) translateY(-4px);
+      transition: opacity var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out), visibility var(--motion-base);
+      z-index: 70;
+    }
+    .nav-dropdown-panel.open { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
+    @media (prefers-reduced-motion: reduce) { .nav-dropdown-panel { transition: opacity var(--motion-base) ease, visibility var(--motion-base); transform: none !important; } }
+
+    .nav-dropdown-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-xs); color: var(--color-text); transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    /* Sama seperti hover .pub-nav a (background primary-soft + teks primary-dark)
+       supaya konsisten dengan hover item navbar lainnya — geser seluruh baris
+       (bukan cuma ikon, yang sudah punya animasi sendiri dari selector global
+       a:hover > .icon-badge di styles.scss) supaya terasa satu kesatuan yang bergerak. */
+    .nav-dropdown-item:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none; transform: translateX(4px); }
+    .nav-dropdown-item.active { background: var(--color-primary-soft); }
+    .nav-dropdown-item-text { display: flex; flex-direction: column; gap: 1px; }
+    .nav-dropdown-item-title { font-weight: 700; font-size: .9rem; }
+    .nav-dropdown-item-caption { font-size: .78rem; color: var(--color-muted); }
+
+    .mobile-nav-extra { display: flex; flex-direction: column; gap: 4px; padding: 0 12px 12px; }
+    .mobile-nav-label { padding: 10px 14px 2px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
+    .mobile-nav-extra .nav-dropdown-item { padding: 10px 14px; }
+
     .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: var(--radius-xs); cursor: pointer; padding: 0; }
     .mobile-toggle span { display: block; width: 18px; height: 2px; background: var(--color-primary-dark); border-radius: 2px; transition: transform .25s ease, opacity .25s ease; }
     .mobile-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
@@ -194,7 +280,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .mobile-actions { margin-top: auto; padding: 16px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 10px; }
 
     @media (max-width: 900px) {
-      .pub-nav, .pub-actions { display: none; }
+      .pub-nav-group, .pub-actions { display: none; }
       .mobile-toggle { display: flex; }
       .pub-header { padding: 12px 0; }
       .pub-header.scrolled { top: 10px; width: calc(100% - 24px); padding: 8px 6px; }
@@ -237,9 +323,16 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     }
   });
 
+  /** Isi dropdown navbar "Lainnya" — data-driven (bukan `<a>` di-hardcode)
+   *  supaya item baru tinggal ditambah ke array ini. */
+  readonly lainnyaItems = [
+    { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
+  ];
+
   scrolled = signal(false);
   mobileOpen = signal(false);
   userMenuOpen = signal(false);
+  lainnyaMenuOpen = signal(false);
 
   private onScroll = (): void => {
     const isScrolled = window.scrollY > 80;
@@ -262,6 +355,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.userMenuOpen.set(false);
+    this.lainnyaMenuOpen.set(false);
   }
 
   toggleMobile(): void { this.mobileOpen.update((v) => !v); }
@@ -272,6 +366,20 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   toggleUserMenu(event: Event): void {
     event.stopPropagation();
     this.userMenuOpen.update((v) => !v);
+  }
+
+  openLainnyaMenu(): void { this.lainnyaMenuOpen.set(true); }
+  closeLainnyaMenu(): void { this.lainnyaMenuOpen.set(false); }
+  toggleLainnyaMenu(event: Event): void {
+    event.stopPropagation();
+    this.lainnyaMenuOpen.update((v) => !v);
+  }
+
+  /** Trigger "Lainnya" ikut tersorot solid saat halaman aktif adalah salah
+   *  satu opsi di dropdown-nya, bukan cuma opsi-nya sendiri di dalam panel. */
+  isLainnyaActive(): boolean {
+    const path = this.router.url.split('?')[0];
+    return this.lainnyaItems.some((item) => path === item.href);
   }
 
   initials(): string {

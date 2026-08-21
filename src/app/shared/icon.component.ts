@@ -70,13 +70,9 @@ const ICONS: Record<string, string> = {
   clock: 'fas fa-clock',
   check: 'fas fa-check',
   x: 'fas fa-xmark',
-  settings: 'fas fa-gear',
-  // Indikator dropdown navbar (mis. menu "Lainnya").
-  'chevron-down': 'fas fa-chevron-down',
   // Sidebar info halaman pengajuan shortlink publik (Cara Penggunaan).
   list: 'fas fa-list-ul',
   // Dashboard Job Queue (sidebar menuIcon + aksi retry).
-  'list-checks': 'fas fa-list-check',
   refresh: 'fas fa-rotate-right',
 };
 
