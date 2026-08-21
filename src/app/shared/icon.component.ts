@@ -32,6 +32,7 @@ const ICONS: Record<string, string> = {
   tiktok: 'fab fa-tiktok',
   'x-twitter': 'fab fa-x-twitter',
   youtube: 'fab fa-youtube',
+  whatsapp: 'fab fa-whatsapp',
   // Dipakai toast & dialog konfirmasi (app-toast, app-alert-dialog).
   'check-circle': 'fas fa-circle-check',
   'x-circle': 'fas fa-circle-xmark',
@@ -44,6 +45,18 @@ const ICONS: Record<string, string> = {
   eye: 'fas fa-eye',
   'eye-off': 'fas fa-eye-slash',
   copy: 'fas fa-copy',
+  // Antrian permintaan shortlink (app-shortlinkrequest-index-page) & App Settings.
+  clock: 'fas fa-clock',
+  check: 'fas fa-check',
+  x: 'fas fa-xmark',
+  settings: 'fas fa-gear',
+  // Indikator dropdown navbar (mis. menu "Lainnya").
+  'chevron-down': 'fas fa-chevron-down',
+  // Sidebar info halaman pengajuan shortlink publik (Cara Penggunaan).
+  list: 'fas fa-list-ul',
+  // Dashboard Job Queue (sidebar menuIcon + aksi retry).
+  'list-checks': 'fas fa-list-check',
+  refresh: 'fas fa-rotate-right',
 };
 
 /**

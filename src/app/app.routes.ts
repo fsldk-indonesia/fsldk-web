@@ -12,8 +12,10 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { roleRoutes } from './modules/role/role.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
-import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
+import { settingRoutes } from './modules/setting/setting.routes';
+import { jobqueueRoutes } from './modules/jobqueue/jobqueue.routes';
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
@@ -47,6 +49,7 @@ export const routes: Routes = [
       ...newsPublicRoutes(),
       ...articlePublicRoutes(),
       ...eventPublicRoutes(),
+      ...shortlinkPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
     ],
   },
@@ -66,6 +69,8 @@ export const routes: Routes = [
       ...eventCmsRoutes(),
       ...shortlinkRoutes(),
       ...commentCmsRoutes(),
+      ...settingRoutes(),
+      ...jobqueueRoutes(),
     ],
   },
 
