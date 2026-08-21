@@ -77,7 +77,14 @@ export class ImageUploadComponent {
     this.uploadService.uploadImage(file).subscribe({
       next: (res) => {
         this.uploading.set(false);
-        this.value = res.url;
+        // Tidak menyentuh this.value di sini — biarkan @Input() value (milik
+        // parent) yang jadi satu-satunya sumber kebenaran tampilan. Kalau
+        // langsung dimutasi lokal sebelum parent mengonfirmasi penyimpanan
+        // (mis. via [(value)] atau, seperti di halaman Profil Saya, lewat
+        // panggilan API terpisah setelah valueChange), dan penyimpanan itu
+        // gagal, tampilan akan "nyangkut" di state baru tanpa cara rollback
+        // — persis skenario yang bikin foto profil terlihat hilang padahal
+        // penghapusannya sendiri ditolak backend.
         this.valueChange.emit(res.url);
       },
       error: () => this.uploading.set(false),
@@ -85,7 +92,9 @@ export class ImageUploadComponent {
   }
 
   remove(): void {
-    this.value = null;
+    // Sama seperti di atas: jangan optimis set this.value = null di sini.
+    // Parent yang mengontrol @Input() value akan mendorong nilai baru turun
+    // ke komponen ini setelah penghapusan benar-benar berhasil disimpan.
     this.valueChange.emit('');
   }
 }

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ModalBackdropDirective } from '../../../shared/modal-backdrop.directive';
 import { CommentRepository } from '../repositories/comment.repository';
 import { GifCategory, GifItem, MediaType } from '../entities/comment';
 
@@ -10,9 +11,9 @@ import { GifCategory, GifItem, MediaType } from '../entities/comment';
 @Component({
   selector: 'app-gif-picker',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ModalBackdropDirective],
   template: `
-    <div class="gif-modal-backdrop" (click)="close.emit()">
+    <div class="gif-modal-backdrop" appModalBackdrop (backdropClose)="close.emit()">
       <div class="gif-modal" (click)="$event.stopPropagation()">
         <div class="gif-modal-head">
           <div class="gif-tabs">

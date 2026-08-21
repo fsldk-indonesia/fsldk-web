@@ -40,8 +40,8 @@ export class ApiService {
     return this.http.get<ApiResponse<T>>(`${this.base}${path}`, { params: this.toParams(query), context }).pipe(this.unwrap<T>());
   }
 
-  post<T>(path: string, body?: unknown): Observable<T> {
-    return this.http.post<ApiResponse<T>>(`${this.base}${path}`, body ?? {}).pipe(this.unwrap<T>());
+  post<T>(path: string, body?: unknown, query?: Record<string, unknown>): Observable<T> {
+    return this.http.post<ApiResponse<T>>(`${this.base}${path}`, body ?? {}, { params: this.toParams(query) }).pipe(this.unwrap<T>());
   }
 
   put<T>(path: string, body?: unknown): Observable<T> {
@@ -54,5 +54,16 @@ export class ApiService {
 
   delete<T>(path: string): Observable<T> {
     return this.http.delete<ApiResponse<T>>(`${this.base}${path}`).pipe(this.unwrap<T>());
+  }
+
+  /** Unduhan berkas mentah (bukan amplop JSON standar) — mis. ekspor laporan Excel/CSV. */
+  getBlob(path: string, query?: Record<string, unknown>): Observable<{ blob: Blob; filename: string }> {
+    return this.http.get(`${this.base}${path}`, {
+      params: this.toParams(query), responseType: 'blob', observe: 'response',
+    }).pipe(map((res) => {
+      const disposition = res.headers.get('Content-Disposition') ?? '';
+      const match = /filename="?([^";]+)"?/.exec(disposition);
+      return { blob: res.body as Blob, filename: match?.[1] ?? 'export' };
+    }));
   }
 }

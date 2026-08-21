@@ -2,7 +2,8 @@
 import { PublicLayoutComponent } from './layouts/public-layout.component';
 import { AuthLayoutComponent } from './layouts/auth-layout.component';
 import { CmsLayoutComponent } from './layouts/cms-layout.component';
-import { authGuard } from './core/guards/guards';
+import { KaderLayoutComponent } from './layouts/kader-layout.component';
+import { authGuard, verifiedGuard } from './core/guards/guards';
 
 import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
@@ -11,8 +12,13 @@ import { eventPublicRoutes, eventCmsRoutes } from './modules/event/event.routes'
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { roleRoutes } from './modules/role/role.routes';
+import { organizationRoutes } from './modules/organization/organization.routes';
+import { submissionFormRoutes } from './modules/submission-form/submission-form.routes';
+import { submissionRoutes } from './modules/submission/submission.routes';
+import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
 import { settingRoutes } from './modules/setting/setting.routes';
 import { jobqueueRoutes } from './modules/jobqueue/jobqueue.routes';
@@ -51,14 +57,35 @@ export const routes: Routes = [
       ...eventPublicRoutes(),
       ...shortlinkPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
+      // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
+      // jadi tidak bisa diakses akun non-Kader sama sekali karena link
+      // menuju Portal Kader hanya muncul untuk akun Kader) supaya SEMUA akun
+      // login (CMS staff maupun Kader) punya jalur ke halaman ini — lihat
+      // site-header.component.ts & cms-layout.component.ts (dropdown akun)
+      // dan kader-layout.component.ts (sidebar Portal Kader, link diarahkan
+      // ke sini juga, bukan didup dua rute untuk halaman yang sama).
+      {
+        path: 'akun/profil',
+        canActivate: [verifiedGuard],
+        loadComponent: () => import('./modules/user/pages/my-profile/user.my-profile.page').then((m) => m.UserMyProfilePage),
+      },
     ],
   },
 
   // ---------- CMS (terproteksi) ----------
+  // 4 shell terpisah (miss-development-clarification.md poin 1-4): CMS Utama
+  // (FSLDK, tema default) + 3 CMS ber-tier (LDK/Puskomda/Puskomnas, tema &
+  // org-switcher lokal sendiri-sendiri — lihat CmsLayoutComponent). Menu
+  // sidebar tiap shell difilter dari /me/menus berdasarkan prefix route ini
+  // (lk_permission.menuRoute sudah di-set per shell lewat migration 0010),
+  // jadi array child routes di bawah boleh dipakai bersama lintas shell
+  // (mis. dashboardRoutes()) tanpa perlu 4 salinan *.routes.ts — akses tetap
+  // dijaga permissionGuard per halaman, bukan oleh shell mana yang dipakai.
   {
     path: 'cms',
     component: CmsLayoutComponent,
     canActivate: [authGuard],
+    data: { tier: 'FSLDK' },
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       ...dashboardRoutes(),
@@ -72,6 +99,100 @@ export const routes: Routes = [
       ...settingRoutes(),
       ...jobqueueRoutes(),
     ],
+  },
+  {
+    path: 'cms-ldk',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'LDK' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomda',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMDA' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomnas',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMNAS' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+      ...submissionFormRoutes(),
+    ],
+  },
+
+  // ---------- Kader (self-service, tema landing page + sidebar ringkas) ----------
+  {
+    path: 'kader',
+    component: KaderLayoutComponent,
+    canActivate: [authGuard],
+    children: [...kaderRoutes()],
+  },
+  {
+    path: 'cms-ldk',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'LDK' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomda',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMDA' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomnas',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMNAS' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+      ...submissionFormRoutes(),
+    ],
+  },
+
+  // ---------- Kader (self-service, tema landing page + sidebar ringkas) ----------
+  {
+    path: 'kader',
+    component: KaderLayoutComponent,
+    canActivate: [authGuard],
+    children: [...kaderRoutes()],
   },
 
   ...shortlinkRedirectRoutes(),

@@ -1,0 +1,76 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Puskomda</h1><p class="text-muted">Monitoring seluruh Puskomda tingkat nasional.</p></div>
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate($event)">+ Tambah Puskomda</button> }
+</div>
+
+<div class="card">
+  <div class="card-pad flex gap">
+    <input class="form-control" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari Puskomda…">
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Nama Puskomda</th><th>Kode</th><th>Provinsi</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:60%"></span></td>
+              <td><span class="skel skel-line" style="width:50%"></span></td>
+              <td><span class="skel skel-line" style="width:70px;border-radius:999px"></span></td>
+              <td></td>
+            </tr>
+          }
+        } @else {
+          @for (o of organizations(); track o.organizationID) {
+            <tr>
+              <td><strong>{{ o.organizationName }}</strong></td>
+              <td class="text-muted">{{ o.organizationCode }}</td>
+              <td class="text-muted">{{ o.provinceName }}</td>
+              <td><span class="badge" [class.badge-active]="o.isActive" [class.badge-inactive]="!o.isActive">{{ o.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
+              <td>
+                @if (canDeactivate) {
+                  <div class="table-actions">
+                    <button type="button" class="icon-action" [class.danger]="o.isActive" [disabled]="isBusy(o.organizationID)" (click)="toggleActive(o, $event)" [title]="o.isActive ? 'Nonaktifkan' : 'Aktifkan kembali'">
+                      @if (isBusy(o.organizationID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  </div>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="landmark" [size]="26" /></span>
+                <h4>Belum ada Puskomda</h4>
+                <p>Tambahkan Puskomda untuk mulai mengelola wilayahnya.</p>
+                @if (canCreate) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Tambah Puskomda</button> }
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) { <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" /> }
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="close()">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
+      <h3>Tambah Puskomda</h3>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">Nama Puskomda</label><input class="form-control" [(ngModel)]="form.organizationName"></div>
+        <div class="form-group"><label class="form-label">Kode Organisasi</label><input class="form-control" [(ngModel)]="form.organizationCode"></div>
+        <div class="form-group"><label class="form-label">Provinsi</label><input class="form-control" [(ngModel)]="form.provinceName"></div>
+        <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input class="form-control" [(ngModel)]="form.cityName"></div>
+        <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" type="email" [(ngModel)]="form.contactEmail"></div>
+        <div class="form-group"><label class="form-label">Telepon Kontak</label><input class="form-control" [(ngModel)]="form.contactPhone"></div>
+      </div>
+      <div class="flex gap justify-between modal-footer">
+        <button class="btn btn-ghost" (click)="close()">Batal</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
+      </div>
+    </div>
+  </div>
+}

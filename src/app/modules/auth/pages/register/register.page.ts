@@ -42,8 +42,8 @@ export class RegisterPage implements OnInit, RegisterView {
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   navigateToVerifyEmail(email: string): void { this.router.navigate(['/verifikasi-email'], { queryParams: { email } }); }
-  navigateAfterLogin(hasCmsAccess: boolean): void {
-    if (hasCmsAccess) { this.router.navigate(['/cms/dashboard']); return; }
+  navigateAfterLogin(cmsPath: string | null): void {
+    if (cmsPath) { this.router.navigateByUrl(cmsPath); return; }
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
     this.router.navigateByUrl(returnUrl || '/');
   }

@@ -16,7 +16,12 @@ export class VerifyEmailPresenter extends BasePresenter<VerifyEmailView> {
       next: () => {
         this.view.setVerifying(false);
         this.view.setVerified(true);
-        if (this.authRepo.isLoggedIn()) this.authRepo.refreshMe().subscribe();
+        // refreshSession() (bukan sekadar refreshMe()) supaya access token
+        // baru langsung membawa klaim emailVerified terkini — tanpa ini,
+        // request API berikutnya di tab yang sama masih memakai token lama
+        // yang mengunci emailVerified=false, tetap ditolak RequireVerified()
+        // di backend (lihat guards.ts verifiedGuard).
+        if (this.authRepo.isLoggedIn()) this.authRepo.refreshSession().subscribe();
       },
       error: () => {
         this.view.setVerifying(false);

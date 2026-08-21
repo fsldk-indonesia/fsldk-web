@@ -1,0 +1,50 @@
+<div class="page-head">
+  <h1>Penetapan Levelisasi</h1>
+  <p class="text-muted">Tetapkan level akhir untuk LDK yang telah lolos verifikasi wilayah &amp; nasional.</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
+} @else {
+  <div class="layout">
+    <div class="queue-list">
+      @for (item of queue(); track item.submissionID) {
+        <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
+          <strong>{{ orgName(item.organizationID) }}</strong>
+          <span class="chip">{{ statusLabel(item.status) }}</span>
+        </button>
+      } @empty {
+        <div class="card card-pad"><p class="text-muted">Tidak ada submission menunggu penetapan level.</p></div>
+      }
+    </div>
+
+    <div>
+      @if (detail(); as d) {
+        <div class="detail-card">
+          <div class="flex justify-between items-center">
+            <h3>{{ orgName(d.organizationID) }}</h3>
+            <span class="chip">{{ statusLabel(d.status) }}</span>
+          </div>
+
+          <app-submission-answers-view [version]="version()" [answers]="d.answers" />
+
+          @if (d.consolidatedScore) {
+            <app-submission-scoring-panel [consolidatedScore]="d.consolidatedScore" [editable]="true" [busy]="busy()" (save)="saveScores($event)" />
+          }
+
+          <div class="decision-form">
+            <h4>Penetapan Level</h4>
+            <div class="form-group">
+              <label class="form-label">Level</label>
+              <app-select [options]="levelOptions" [(ngModel)]="levelCode" placeholder="Pilih level" />
+            </div>
+            <div class="form-group"><label class="form-label">Catatan Justifikasi</label><textarea class="form-control" rows="3" [(ngModel)]="justificationNote"></textarea></div>
+            <button class="btn btn-primary" (click)="submit()" [disabled]="busy() || !levelCode">Tetapkan Level</button>
+          </div>
+        </div>
+      } @else {
+        <div class="card card-pad"><p class="text-muted">Pilih submission dari daftar untuk menetapkan level.</p></div>
+      }
+    </div>
+  </div>
+}

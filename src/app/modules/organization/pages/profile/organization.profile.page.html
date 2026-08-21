@@ -1,0 +1,48 @@
+<div class="page-head">
+  <h1>Profil LDK</h1>
+  <p class="text-muted">Kelola identitas & informasi dasar organisasi Anda.</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad">
+    <span class="skel skel-line" style="width:60%"></span>
+  </div>
+} @else {
+  <div class="profile-grid">
+    <!-- Kolom kiri: identitas + foto — sticky supaya tetap terlihat saat
+         kolom kanan (yang lebih panjang) di-scroll pada layar lebar. -->
+    <div class="card card-pad profile-side">
+      <div class="identity-row">
+        @if (organization()?.photoURL) {
+          <img class="avatar" [src]="organization()?.photoURL" alt="">
+        } @else {
+          <span class="avatar">{{ initials() }}</span>
+        }
+        <div>
+          <h3 style="margin-bottom:2px">{{ organization()?.organizationName }}</h3>
+          <p class="text-muted" style="margin:0">{{ organization()?.organizationCode }}</p>
+        </div>
+      </div>
+
+      <div class="form-group photo-upload">
+        <label class="form-label">Foto Profil</label>
+        <app-image-upload [(value)]="form.photoURL" />
+        <p class="form-hint">Jika tidak diunggah, tampil inisial nama organisasi seperti di atas.</p>
+      </div>
+    </div>
+
+    <!-- Kolom kanan: form identitas & kontak, mengisi sisa ruang (1fr)
+         supaya tidak ada celah kosong lebar di kanan. -->
+    <div class="card card-pad profile-main">
+      <div class="form-group"><label class="form-label">Kode Organisasi</label><input class="form-control" [value]="organization()?.organizationCode" disabled></div>
+      <div class="form-group"><label class="form-label">Nama Organisasi</label><input class="form-control" [(ngModel)]="form.organizationName"></div>
+      <div class="grid-cols-2">
+        <div class="form-group"><label class="form-label">Provinsi</label><input class="form-control" [(ngModel)]="form.provinceName"></div>
+        <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input class="form-control" [(ngModel)]="form.cityName"></div>
+        <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" type="email" [(ngModel)]="form.contactEmail"></div>
+        <div class="form-group"><label class="form-label">Telepon Kontak</label><input class="form-control" [(ngModel)]="form.contactPhone"></div>
+      </div>
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan Perubahan</button>
+    </div>
+  </div>
+}

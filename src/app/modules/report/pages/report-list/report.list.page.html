@@ -1,0 +1,59 @@
+<div class="page-head">
+  <h1>{{ title }}</h1>
+  <p class="text-muted">Rekap submission Levelisasi LDK dalam cakupan Anda.</p>
+</div>
+
+<div class="toolbar">
+  <div class="field">
+    <label class="form-label">Filter Status</label>
+    <app-select [options]="statusOptions()" [(ngModel)]="statusFilter" placeholder="Semua status" />
+  </div>
+  @if (canExport) {
+    <div class="field" style="min-width:180px">
+      <label class="form-label">Format Ekspor</label>
+      <app-select [options]="formatOptions" [(ngModel)]="exportFormat" />
+    </div>
+    <button class="btn btn-primary" (click)="export()" [disabled]="exporting()">Ekspor Laporan</button>
+  }
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
+} @else {
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>LDK</th><th>Status</th><th>Terkirim</th></tr></thead>
+      <tbody>
+        @for (row of filteredRows(); track row.submissionID) {
+          <tr (click)="select(row)">
+            <td>{{ orgName(row.organizationID) }}</td>
+            <td>{{ statusLabel(row.status) }}</td>
+            <td>{{ row.submittedDate || '—' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="3" class="text-muted">Tidak ada data.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+@if (detail(); as d) {
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeDetail()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="flex justify-between items-center modal-header">
+        <h3>{{ orgName(d.organizationID) }}</h3>
+        <span class="chip">{{ statusLabel(d.status) }}</span>
+      </div>
+      <div class="modal-body">
+        @if (d.levelResult; as level) {
+          <p class="text-muted">Level: <strong>{{ level.levelLabel || level.levelCode }}</strong></p>
+        }
+        <app-submission-answers-view [version]="version()" [answers]="d.answers" />
+      </div>
+      <div class="flex justify-end modal-footer">
+        <button class="btn btn-ghost" (click)="closeDetail()">Tutup</button>
+      </div>
+    </div>
+  </div>
+}

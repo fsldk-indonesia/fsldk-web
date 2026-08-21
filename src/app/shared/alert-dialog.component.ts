@@ -1,6 +1,7 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { AlertService } from '../core/services/alert.service';
 import { IconComponent } from './icon.component';
+import { ModalBackdropDirective } from './modal-backdrop.directive';
 
 /** Dialog konfirmasi reusable (dipasang di root aplikasi, sejajar app-toast)
  *  — pengganti bergaya untuk `confirm()` bawaan browser. Motif visualnya
@@ -10,10 +11,10 @@ import { IconComponent } from './icon.component';
 @Component({
   selector: 'app-alert-dialog',
   standalone: true,
-  imports: [IconComponent],
+  imports: [IconComponent, ModalBackdropDirective],
   template: `
     @if (alert.request(); as req) {
-      <div class="alert-backdrop" (click)="cancel()">
+      <div class="alert-backdrop" appModalBackdrop (backdropClose)="cancel()">
         <div class="alert-card modal-pop" [class.danger]="req.variant === 'danger'" role="alertdialog" aria-modal="true"
              [style.--dx.px]="req.origin.dx" [style.--dy.px]="req.origin.dy"
              [attr.aria-label]="req.title" (click)="$event.stopPropagation()">

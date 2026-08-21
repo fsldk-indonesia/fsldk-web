@@ -187,6 +187,7 @@ img { max-width: 100%; }
 .chip.active:hover { background: var(--color-text); color: #fff; }
 .chip-green { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 .chip-ember { background: var(--color-ember-soft); color: var(--color-ember-dark); }
+.chip-red { background: #fdecec; color: #9a1c1c; }
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: var(--radius-full); font-size: .75rem; font-weight: 700; }
 .badge-published, .badge-active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 .badge-draft { background: var(--color-warning-soft); color: var(--color-warning); }
@@ -502,6 +503,31 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 @keyframes modal-pop-in {
   from { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25); }
   to { opacity: 1; transform: translate(0, 0) scale(1); }
+}
+
+/* ---------- Scrollbar kustom untuk seluruh popup/modal ----------
+   Scrollbar bawaan OS (abu-abu tebal + tombol panah naik/turun) tidak ikut
+   mengikuti border-radius popup, jadi sudut modal yang membundar terlihat
+   "putus" begitu isinya perlu discroll. Dipasang di level root backdrop
+   (.modal-backdrop / .gif-modal-backdrop / .alert-backdrop) — SEMUA popup di
+   aplikasi ini selalu dibungkus salah satu dari ketiganya — sehingga aturan
+   ini otomatis berlaku ke area scroll APA PUN di dalam popup manapun
+   (termasuk .modal, .perm-list, .gif-grid, dan popup baru di masa depan),
+   tanpa perlu diulang manual di tiap halaman. */
+.modal-backdrop, .gif-modal-backdrop, .alert-backdrop {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-border-strong);
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--color-muted); background-clip: padding-box; }
+  ::-webkit-scrollbar-corner { background: transparent; }
 }
 
 /* ---------- Aksesibilitas: hormati preferensi pengurangan gerak ---------- */
