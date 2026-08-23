@@ -20,9 +20,10 @@ interface SettingGroup {
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
     .group-card { margin-bottom: 20px; }
     .group-title { font-size: .8rem; font-weight: 700; color: var(--color-text-secondary); margin: 0 0 12px; text-transform: uppercase; letter-spacing: .04em; }
-    .setting-row { display: flex; align-items: flex-end; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--color-border); }
+    .setting-row { padding: 14px 0; border-bottom: 1px solid var(--color-border); }
     .setting-row:last-child { border-bottom: none; }
-    .setting-row .field { flex: 1; }
+    .field-input-row { display: flex; align-items: center; gap: 12px; }
+    .field-input-row .form-control, .field-input-row p { flex: 1; margin: 0; }
   `],
 })
 export class SettingIndexPage implements OnInit, SettingIndexView {

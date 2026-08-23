@@ -39,7 +39,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
           </nav>
           <div class="nav-dropdown-wrap" (mouseenter)="openLainnyaMenu()" (mouseleave)="closeLainnyaMenu()">
             <button type="button" class="nav-dropdown-trigger" [class.active]="isLainnyaActive()" (click)="toggleLainnyaMenu($event)">
-              Lainnya <app-icon name="chevron-down" [size]="12" />
+              Layanan <app-icon name="chevron-down" [size]="12" />
             </button>
             <div class="nav-dropdown-panel" [class.open]="lainnyaMenuOpen()">
               @for (item of lainnyaItems; track item.href) {
@@ -112,7 +112,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         <a routerLink="/event" routerLinkActive="active" (click)="closeMobile()">Event</a>
       </nav>
       <div class="mobile-nav-extra">
-        <span class="mobile-nav-label">Lainnya</span>
+        <span class="mobile-nav-label">Layanan</span>
         @for (item of lainnyaItems; track item.href) {
           <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMobile()">
             <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>

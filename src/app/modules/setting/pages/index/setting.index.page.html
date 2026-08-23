@@ -12,19 +12,19 @@
         <h3 class="group-title">{{ group.name }}</h3>
         @for (s of group.items; track s.settingID) {
           <div class="setting-row">
-            <div class="field">
-              <label class="form-label">{{ s.settingLabel }}</label>
+            <label class="form-label">{{ s.settingLabel }}</label>
+            <div class="field-input-row">
               @if (canUpdate) {
                 <input class="form-control" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID">
               } @else {
                 <p class="text-muted" style="margin:0">{{ s.settingValue || '–' }}</p>
               }
+              @if (canUpdate) {
+                <button class="btn btn-primary btn-sm" [disabled]="isBusy(s.settingID)" (click)="save(s)">
+                  @if (isBusy(s.settingID)) { <span class="spinner spinner-xs"></span> } @else { Simpan }
+                </button>
+              }
             </div>
-            @if (canUpdate) {
-              <button class="btn btn-primary btn-sm" [disabled]="isBusy(s.settingID)" (click)="save(s)">
-                @if (isBusy(s.settingID)) { <span class="spinner spinner-xs"></span> } @else { Simpan }
-              </button>
-            }
           </div>
         }
       </div>

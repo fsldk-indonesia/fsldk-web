@@ -15,16 +15,19 @@
 }
 
 <div class="card">
-  <div class="card-pad flex gap">
-    <span class="chip" [class.active]="status === ''" (click)="filterStatus('')">Semua Status</span>
-    <span class="chip" [class.active]="status === 'pending'" (click)="filterStatus('pending')">Pending</span>
-    <span class="chip" [class.active]="status === 'processing'" (click)="filterStatus('processing')">Processing</span>
-    <span class="chip" [class.active]="status === 'failed'" (click)="filterStatus('failed')">Failed</span>
-    <span class="chip" [class.active]="status === 'completed'" (click)="filterStatus('completed')">Completed</span>
-    <span class="filter-sep"></span>
-    <span class="chip" [class.active]="queue === ''" (click)="filterQueue('')">Semua Queue</span>
-    <span class="chip" [class.active]="queue === 'whatsapp'" (click)="filterQueue('whatsapp')">WhatsApp</span>
-    <span class="chip" [class.active]="queue === 'email'" (click)="filterQueue('email')">Email</span>
+  <div class="card-pad flex gap filter-bar">
+    <select class="form-control filter-select" [value]="status" (change)="filterStatus($any($event.target).value)">
+      <option value="">Semua Status</option>
+      <option value="pending">Pending</option>
+      <option value="processing">Processing</option>
+      <option value="failed">Failed</option>
+      <option value="completed">Completed</option>
+    </select>
+    <select class="form-control filter-select" [value]="queue" (change)="filterQueue($any($event.target).value)">
+      <option value="">Semua Queue</option>
+      <option value="whatsapp">WhatsApp</option>
+      <option value="email">Email</option>
+    </select>
   </div>
   <div class="table-wrap">
     <table class="table">

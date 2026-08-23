@@ -22,7 +22,8 @@ import { JobQueueIndexView } from './jobqueue.index.view';
     .stat-tile .label { font-size: .8rem; color: var(--color-muted); }
     .stat-tile.stuck .value, .stat-tile.failed .value { color: var(--color-danger); }
     .last-error { font-size: .78rem; color: var(--color-danger); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
-    .filter-sep { width: 1px; background: var(--color-border); align-self: stretch; margin: 0 4px; }
+    .filter-bar { flex-wrap: wrap; }
+    .filter-select { width: auto; max-width: 220px; }
   `],
 })
 export class JobQueueIndexPage implements OnInit, JobQueueIndexView {
