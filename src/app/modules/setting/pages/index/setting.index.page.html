@@ -1,0 +1,35 @@
+<div class="page-head">
+  <h1>App Settings</h1>
+  <p class="text-muted">Konfigurasi runtime platform — hanya dapat diubah oleh Super Admin.</p>
+</div>
+
+@if (loading()) {
+  <div class="card"><div class="card-pad"><span class="skel skel-line" style="width:60%"></span></div></div>
+} @else {
+  @for (group of groups(); track group.name) {
+    <div class="card group-card">
+      <div class="card-pad">
+        <h3 class="group-title">{{ group.name }}</h3>
+        @for (s of group.items; track s.settingID) {
+          <div class="setting-row">
+            <label class="form-label">{{ s.settingLabel }}</label>
+            <div class="field-input-row">
+              @if (canUpdate) {
+                <input class="form-control" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID">
+              } @else {
+                <p class="text-muted" style="margin:0">{{ s.settingValue || '–' }}</p>
+              }
+              @if (canUpdate) {
+                <button class="btn btn-primary btn-sm" [disabled]="isBusy(s.settingID)" (click)="save(s)">
+                  @if (isBusy(s.settingID)) { <span class="spinner spinner-xs"></span> } @else { Simpan }
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @empty {
+    <div class="card"><div class="card-pad"><p class="text-muted">Belum ada setting.</p></div></div>
+  }
+}

@@ -1,0 +1,103 @@
+<section class="section">
+  <div class="container">
+    <div class="page-head">
+      <h1>Ajukan Shortlink</h1>
+      <p class="text-muted">Isi form berikut untuk mengajukan tautan pendek baru. Tim kami akan meninjau permintaan Anda.</p>
+    </div>
+
+    <div class="layout-grid">
+      <aside class="info-col">
+        <div class="card info-card">
+          <h3><app-icon name="list" [size]="16" /> Cara Penggunaan</h3>
+          <ul class="info-list">
+            <li>Isi formulir dengan data yang benar dan lengkap — seluruh field wajib diisi.</li>
+            <li>Masukkan link asli (URL) yang ingin dipendekkan.</li>
+            <li>Tentukan custom link dengan format <code>{{ baseUrl }}/kata-kunci</code>.</li>
+            <li>Klik <strong>Kirim Permintaan</strong>, lalu tunggu peninjauan admin.</li>
+            <li>Anda akan dihubungi lewat WhatsApp &amp; email begitu permintaan diproses.</li>
+          </ul>
+        </div>
+
+        <div class="card info-card">
+          <h3><app-icon name="alert-triangle" [size]="16" /> Ketentuan</h3>
+          <ul class="info-list">
+            <li>Seluruh field pada formulir <strong>wajib diisi</strong>.</li>
+            <li>Nomor WhatsApp harus diawali <code>62</code> atau <code>0</code> dan aktif digunakan.</li>
+            <li>Custom link hanya boleh berisi huruf, angka, dan tanda hubung (-).</li>
+            <li>Gunakan tanda hubung (-) jika kata kunci lebih dari satu kata.</li>
+            <li>Permintaan ditolak bila custom link sudah dipakai atau bentrok dengan halaman lain.</li>
+          </ul>
+        </div>
+
+        @if (pic()?.picWhatsapp) {
+          <div class="card info-card">
+            <span class="pic-label">Konfirmasi via WhatsApp</span>
+            <div class="pic-row">
+              <span class="icon-badge sm icon-badge-soft"><app-icon name="guest" [size]="15" /></span>
+              <div>
+                <div class="pic-name">{{ pic()?.picName || 'Admin FSLDK' }}</div>
+                <div class="pic-phone text-muted">+{{ pic()?.picWhatsapp }}</div>
+              </div>
+            </div>
+            <a class="btn btn-whatsapp btn-block" [href]="waLink()" target="_blank" rel="noopener">
+              <app-icon name="whatsapp" [size]="16" /> Konfirmasi via WhatsApp
+            </a>
+            <p class="pic-hint text-muted">Ingin proses lebih cepat? Konfirmasi permintaan Anda langsung ke PIC lewat WhatsApp.</p>
+          </div>
+        }
+      </aside>
+
+      <div class="form-card card">
+        <div class="card-pad">
+          @if (submitted()) {
+            <div class="success">
+              <span class="icon">&#10003;</span>
+              <h2>Permintaan Terkirim</h2>
+              <p class="text-muted">Kami akan mengabari lewat WhatsApp &amp; email begitu permintaan Anda diproses.</p>
+              <a routerLink="/" class="btn btn-primary">Kembali ke Beranda</a>
+            </div>
+          } @else {
+            <form (ngSubmit)="submit()">
+              <div class="form-group">
+                <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                <input class="form-control" name="requesterName" [(ngModel)]="requesterName" placeholder="Masukkan nama lengkapmu" required>
+                <p class="form-hint">Nama lengkap Anda sesuai identitas diri.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Alamat Email <span class="text-danger">*</span></label>
+                <input class="form-control" type="email" name="requesterEmail" [(ngModel)]="requesterEmail" placeholder="contoh@email.com" required>
+                <p class="form-hint">Dipakai mengirim update status permintaan Anda.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">WhatsApp Aktif <span class="text-danger">*</span></label>
+                <input class="form-control" name="requesterWhatsapp" [(ngModel)]="requesterWhatsapp" placeholder="+62" required>
+                <p class="form-hint">Awali dengan 62 atau 0 — dipakai mengirim notifikasi status via WhatsApp.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Link Asli (Original URL) <span class="text-danger">*</span></label>
+                <input class="form-control" type="url" name="destinationURL" [(ngModel)]="destinationURL" placeholder="https://contoh.com/halaman-panjang" required>
+                <p class="form-hint">Tautan panjang yang ingin Anda pendekkan.</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Custom Link yang Diinginkan <span class="text-danger">*</span></label>
+                <div class="input-prefix-group">
+                  <span class="input-prefix">{{ baseUrl }}/</span>
+                  <input class="form-control" name="requestedKey" [(ngModel)]="requestedKey" placeholder="nama-program" required>
+                </div>
+                <p class="form-hint">Huruf, angka, dan tanda hubung (-) saja. Contoh: {{ baseUrl }}/nama-program</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Catatan / Keterangan <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="note" [(ngModel)]="note" rows="3" placeholder="Tuliskan keterangan atau tujuan pembuatan shortlink..." required></textarea>
+                <p class="form-hint">Jelaskan tujuan atau keperluan pembuatan tautan ini.</p>
+              </div>
+              <button class="btn btn-primary btn-block" type="submit" [disabled]="loading()">
+                @if (loading()) { <span class="spinner"></span> } @else { Kirim Permintaan }
+              </button>
+            </form>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

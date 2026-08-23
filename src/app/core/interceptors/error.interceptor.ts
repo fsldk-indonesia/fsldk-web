@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthRepository } from '../../modules/user/repositories/auth.repository';
 import { ToastService } from '../services/toast.service';
+import { SILENT_ERROR } from '../services/api.service';
 
 /**
  * Menangani error HTTP global: memetakan pesan, menampilkan toast, dan
@@ -30,8 +31,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       } else if (err.status === 403 && code === '43-EMAIL') {
         router.navigate(['/verifikasi-email']);
-      } else if (err.status !== 0) {
-        // Jangan tampilkan toast untuk error jaringan mentah (status 0).
+      } else if (err.status !== 0 && !req.context.get(SILENT_ERROR)) {
+        // Jangan tampilkan toast untuk error jaringan mentah (status 0) atau
+        // request yang sengaja ditandai silent (mis. kartu WhatsApp opsional
+        // di halaman pengajuan shortlink — errornya sudah ditangani presenter).
         toast.error(message);
       }
       return throwError(() => err);

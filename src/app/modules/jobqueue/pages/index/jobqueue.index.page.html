@@ -1,0 +1,96 @@
+<div class="page-head">
+  <h1>Job Queue</h1>
+  <p class="text-muted">Pantau pengiriman WhatsApp &amp; email asinkron (Permintaan Shortlink, dsb.).</p>
+</div>
+
+@if (stats(); as st) {
+  <div class="stats-grid">
+    <div class="stat-tile"><div class="value">{{ st.pending }}</div><div class="label">Pending</div></div>
+    <div class="stat-tile"><div class="value">{{ st.delayed }}</div><div class="label">Delayed</div></div>
+    <div class="stat-tile"><div class="value">{{ st.processing }}</div><div class="label">Processing</div></div>
+    <div class="stat-tile stuck"><div class="value">{{ st.stuck }}</div><div class="label">Stuck</div></div>
+    <div class="stat-tile failed"><div class="value">{{ st.failed }}</div><div class="label">Failed</div></div>
+    <div class="stat-tile"><div class="value">{{ st.completed }}</div><div class="label">Completed</div></div>
+  </div>
+}
+
+<div class="card">
+  <div class="card-pad flex gap filter-bar">
+    <select class="form-control filter-select" [value]="status" (change)="filterStatus($any($event.target).value)">
+      <option value="">Semua Status</option>
+      <option value="pending">Pending</option>
+      <option value="processing">Processing</option>
+      <option value="failed">Failed</option>
+      <option value="completed">Completed</option>
+    </select>
+    <select class="form-control filter-select" [value]="queue" (change)="filterQueue($any($event.target).value)">
+      <option value="">Semua Queue</option>
+      <option value="whatsapp">WhatsApp</option>
+      <option value="email">Email</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>ID</th><th>Queue</th><th>Job Type</th><th>Status</th><th>Percobaan</th><th>Error</th><th>Dibuat</th><th></th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:30px"></span></td>
+              <td><span class="skel skel-line" style="width:70px"></span></td>
+              <td><span class="skel skel-line" style="width:140px"></span></td>
+              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:40px"></span></td>
+              <td><span class="skel skel-line" style="width:100px"></span></td>
+              <td><span class="skel skel-line" style="width:70px"></span></td>
+              <td><span class="skel skel-line" style="width:60px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (j of jobs(); track j.jobID) {
+            <tr>
+              <td class="text-muted">#{{ j.jobID }}</td>
+              <td>{{ j.queue }}</td>
+              <td><code class="key">{{ j.jobType }}</code></td>
+              <td>
+                <span class="badge" [class.badge-draft]="j.status === 'pending'" [class.badge-info]="j.status === 'processing'" [class.badge-published]="j.status === 'completed'" [class.badge-danger]="j.status === 'failed'">
+                  {{ j.status }}
+                </span>
+              </td>
+              <td class="text-center">{{ j.attempts }}/{{ j.maxAttempts }}</td>
+              <td>
+                @if (j.lastError) { <span class="last-error" [title]="j.lastError">{{ j.lastError }}</span> } @else { <span class="text-muted">–</span> }
+              </td>
+              <td class="text-muted">{{ j.createdDate | date:'d MMM yyyy HH:mm' }}</td>
+              <td>
+                <div class="table-actions">
+                  @if (j.status === 'failed' && canRetry) {
+                    <button type="button" class="icon-action" [disabled]="isBusy(j.jobID)" (click)="retry(j)" title="Retry">
+                      @if (isBusy(j.jobID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="refresh" [size]="14" /> }
+                    </button>
+                  }
+                  @if ((j.status === 'failed' || j.status === 'completed') && canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(j.jobID)" (click)="remove(j, $event)" title="Hapus">
+                      @if (isBusy(j.jobID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="8">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="list-checks" [size]="26" /></span>
+                <h4>Belum ada job</h4>
+                <p>Job pengiriman WhatsApp &amp; email akan muncul di sini.</p>
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

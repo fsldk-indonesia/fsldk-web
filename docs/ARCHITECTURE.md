@@ -65,7 +65,8 @@ modules/news/
 | `article` | Artikel — publik (list/detail) & CMS (manajemen/form) |
 | `event` | Event — publik (list/detail, countdown, tab dokumentasi) & CMS (manajemen/form) |
 | `comment` | Komentar — widget publik (`comment-section`/`comment-item`, dipakai lintas modul `article`/`news`/`event`) & CMS moderasi (lihat §9) |
-| `shortlink` | Manajemen shortlink CMS — buat/lihat/ubah/hapus, salin tautan pendek |
+| `shortlink` | Manajemen shortlink CMS (buat/lihat/ubah/hapus, salin tautan pendek) + halaman publik pengajuan (`shortlink/ajukan`, tanpa login) + antrian moderasi CMS (`shortlink-requests`, approve/reject) |
+| `setting` | App Settings CMS (`/cms/settings`) — konfigurasi runtime key-value generik, Superadmin-only |
 | `dashboard` | Ringkasan **tier-aware** (LDK/Puskomda/Puskomnas) — bentuk widget berbeda sesuai `organizationTypeCode` pengguna |
 | `organization` | Hierarki LDK/Puskomda/Puskomnas — profil, daftar wilayah/nasional, `OrganizationRepository` sekaligus pemilik state dashboard switcher (§7) |
 | `submission-form` | Form builder (Super Admin) — form/version/section/field/option pendataan Levelisasi & Sensus Kader |
@@ -232,9 +233,9 @@ Guard dipasang berlapis, berurutan (`canActivate: [verifiedGuard, permissionGuar
 
 ### Rute catch-all `/:key` (redirect shortlink)
 
-`modules/shortlink` mengekspor dua factory rute, bukan satu: `shortlinkRoutes()` (CMS, `/cms/shortlinks`) dan `shortlinkRedirectRoutes()` — rute publik `path: ':key'` yang menangkap path satu-segmen apa pun yang tidak cocok rute lain (mis. `/promo2026`), me-resolve kuncinya lewat `GET /public/shortlinks/:key` di backend, lalu `window.location.href = destinationURL`. Ini membuat shortlink yang dibagikan memakai domain frontend (`fsldk-indonesia.com/promo2026`), bukan domain backend.
+`modules/shortlink` mengekspor tiga factory rute, bukan satu: `shortlinkRoutes()` (CMS, `/cms/shortlinks` + `/cms/shortlink-requests`), `shortlinkPublicRoutes()` (publik, path **statis** dua-segmen `shortlink/ajukan` — form pengajuan tanpa login), dan `shortlinkRedirectRoutes()` — rute publik `path: ':key'` yang menangkap path satu-segmen apa pun yang tidak cocok rute lain (mis. `/promo2026`), me-resolve kuncinya lewat `GET /public/shortlinks/:key` di backend, lalu `window.location.href = destinationURL`. Ini membuat shortlink yang dibagikan memakai domain frontend (`fsldk-indonesia.com/promo2026`), bukan domain backend.
 
-`shortlinkRedirectRoutes()` **wajib** ditaruh di [`app.routes.ts`](../src/app/app.routes.ts) setelah seluruh rute publik/auth/cms dan sebelum wildcard `**` — Angular mencocokkan array rute berurutan, jadi urutan ini memastikan `/login`, `/berita`, dst. tetap ditangani rute aslinya dan hanya path yang benar-benar tidak dikenal jatuh ke resolver shortlink.
+`shortlinkRedirectRoutes()` **wajib** ditaruh di [`app.routes.ts`](../src/app/app.routes.ts) setelah seluruh rute publik/auth/cms dan sebelum wildcard `**` — Angular mencocokkan array rute berurutan, jadi urutan ini memastikan `/login`, `/berita`, dst. tetap ditangani rute aslinya dan hanya path yang benar-benar tidak dikenal jatuh ke resolver shortlink. `shortlinkPublicRoutes()` (dua segmen) aman ditaruh di posisi rute publik bernama biasa — tidak pernah bentrok dengan catch-all `:key` (satu segmen) karena Angular mencocokkan berdasarkan jumlah segmen path.
 
 ---
 

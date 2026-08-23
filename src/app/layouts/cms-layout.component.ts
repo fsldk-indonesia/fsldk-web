@@ -75,7 +75,7 @@ type Tier = CmsTier;
             <span class="icon-badge sm icon-badge-neutral"><app-icon name="globe" [size]="15" /></span>
             Website
           </a>
-          <div class="user-dropdown">
+          <div class="user-dropdown" (mouseenter)="openDropdown()" (mouseleave)="closeDropdown()">
             <button class="user-chip" type="button" (click)="toggleDropdown($event)">
               @if (auth.user()?.photoURL) {
                 <img class="avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
@@ -86,7 +86,7 @@ type Tier = CmsTier;
                 <strong>{{ auth.user()?.fullName }}</strong>
                 <small>{{ auth.user()?.role }}</small>
               </div>
-              <span class="caret">&#9662;</span>
+              <app-icon name="chevron-down" [size]="12" class="caret" [class.open]="dropdownOpen()" />
             </button>
             @if (dropdownOpen()) {
               <div class="dropdown-panel">
@@ -149,7 +149,8 @@ type Tier = CmsTier;
     img.avatar { object-fit: cover; }
     .user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
     .user-meta small { color: var(--color-muted); font-size: .78rem; }
-    .caret { font-size: .7rem; color: var(--color-muted); }
+    .caret { color: var(--color-muted); transition: transform var(--motion-fast) ease; flex-shrink: 0; }
+    .caret.open { transform: rotate(180deg); }
     .dropdown-panel {
       position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--color-border);
       border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px;
@@ -282,6 +283,9 @@ export class CmsLayoutComponent implements OnInit {
     event.stopPropagation();
     this.dropdownOpen.update((v) => !v);
   }
+
+  openDropdown(): void { this.dropdownOpen.set(true); }
+  closeDropdown(): void { this.dropdownOpen.set(false); }
 
   toggleOrgDropdown(event: Event): void {
     event.stopPropagation();

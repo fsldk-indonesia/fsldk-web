@@ -17,9 +17,11 @@ import { submissionFormRoutes } from './modules/submission-form/submission-form.
 import { submissionRoutes } from './modules/submission/submission.routes';
 import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
-import { shortlinkRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
+import { settingRoutes } from './modules/setting/setting.routes';
+import { jobqueueRoutes } from './modules/jobqueue/jobqueue.routes';
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
@@ -53,6 +55,7 @@ export const routes: Routes = [
       ...newsPublicRoutes(),
       ...articlePublicRoutes(),
       ...eventPublicRoutes(),
+      ...shortlinkPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
       // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
       // jadi tidak bisa diakses akun non-Kader sama sekali karena link
@@ -93,7 +96,56 @@ export const routes: Routes = [
       ...eventCmsRoutes(),
       ...shortlinkRoutes(),
       ...commentCmsRoutes(),
+      ...settingRoutes(),
+      ...jobqueueRoutes(),
     ],
+  },
+  {
+    path: 'cms-ldk',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'LDK' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomda',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMDA' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+    ],
+  },
+  {
+    path: 'cms-puskomnas',
+    component: CmsLayoutComponent,
+    canActivate: [authGuard],
+    data: { tier: 'PUSKOMNAS' },
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      ...dashboardRoutes(),
+      ...organizationRoutes(),
+      ...submissionRoutes(),
+      ...reportRoutes(),
+      ...submissionFormRoutes(),
+    ],
+  },
+
+  // ---------- Kader (self-service, tema landing page + sidebar ringkas) ----------
+  {
+    path: 'kader',
+    component: KaderLayoutComponent,
+    canActivate: [authGuard],
+    children: [...kaderRoutes()],
   },
   {
     path: 'cms-ldk',

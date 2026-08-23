@@ -1,8 +1,14 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpContextToken, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../entities/api-response';
+
+/** Ditandai lewat `{ silent: true }` pada `ApiService.get()` untuk request
+ *  dekoratif/opsional (mis. kartu "Konfirmasi via WhatsApp") yang errornya
+ *  ditangani sendiri oleh pemanggil (biasanya disembunyikan diam-diam) —
+ *  errorInterceptor membaca token ini untuk melewati toast global. */
+export const SILENT_ERROR = new HttpContextToken<boolean>(() => false);
 
 /**
  * ApiService adalah pembungkus HttpClient yang membuka amplop response standar
@@ -29,8 +35,9 @@ export class ApiService {
     return map((res: ApiResponse<T>) => res.result);
   }
 
-  get<T>(path: string, query?: Record<string, unknown>): Observable<T> {
-    return this.http.get<ApiResponse<T>>(`${this.base}${path}`, { params: this.toParams(query) }).pipe(this.unwrap<T>());
+  get<T>(path: string, query?: Record<string, unknown>, opts?: { silent?: boolean }): Observable<T> {
+    const context = opts?.silent ? new HttpContext().set(SILENT_ERROR, true) : undefined;
+    return this.http.get<ApiResponse<T>>(`${this.base}${path}`, { params: this.toParams(query), context }).pipe(this.unwrap<T>());
   }
 
   post<T>(path: string, body?: unknown, query?: Record<string, unknown>): Observable<T> {
