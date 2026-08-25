@@ -74,6 +74,8 @@ const ICONS: Record<string, string> = {
   list: 'fas fa-list-ul',
   // Dashboard Job Queue (sidebar menuIcon + aksi retry).
   refresh: 'fas fa-rotate-right',
+  // Kantong Amal (sidebar menuIcon lk_permission + halaman publik).
+  'hand-heart': 'fas fa-hand-holding-heart',
 };
 
 /**

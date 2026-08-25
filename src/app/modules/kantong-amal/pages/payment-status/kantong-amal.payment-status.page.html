@@ -1,0 +1,38 @@
+<section class="section">
+  <div class="container">
+    @if (loading()) {
+      <div class="status-card"><span class="skel skel-title"></span><span class="skel skel-line"></span></div>
+    } @else if (!donation()) {
+      <div class="status-card">
+        <h4>Donasi tidak ditemukan</h4>
+        <p><a [routerLink]="kantongAmalPath.list">Kembali ke daftar campaign</a></p>
+      </div>
+    } @else {
+      <div class="status-card">
+        <span class="status-badge" [class]="statusClass()">{{ statusLabel() }}</span>
+        <div class="amount">{{ formatRupiah(donation()!.totalAmount) }}</div>
+        <p style="color:var(--color-text-secondary); font-size:.9rem">{{ donation()!.campaignTitle }}</p>
+
+        @if (donation()!.paymentStatus === 'PENDING') {
+          @if (qrImageDataUrl()) {
+            <div class="qr-box"><img [src]="qrImageDataUrl()" alt="Kode QRIS"></div>
+          }
+          @if (timedOut()) {
+            <p style="font-size:.88rem; color:var(--color-text-secondary)">
+              Pembayaran belum terkonfirmasi setelah 10 menit. Silakan cek kembali nanti atau hubungi admin bila sudah membayar.
+            </p>
+            <a class="btn btn-outline mt-md" [routerLink]="[]" (click)="$event.preventDefault()">Cek Status Manual</a>
+          } @else {
+            <p style="font-size:.85rem; color:var(--color-text-secondary)">Pindai kode QR di atas menggunakan aplikasi e-wallet/m-banking Anda. Halaman ini akan otomatis diperbarui.</p>
+          }
+        } @else if (donation()!.paymentStatus === 'PAID') {
+          <a class="btn btn-primary mt-md" [routerLink]="kantongAmalPath.receipt(donation()!.publicRef)">Lihat Bukti Donasi</a>
+        } @else {
+          <p style="font-size:.88rem; color:var(--color-text-secondary)">Donasi tidak dapat diproses. Silakan coba lagi atau hubungi admin bila Anda merasa sudah membayar.</p>
+        }
+
+        <p class="mt-lg"><a [routerLink]="kantongAmalPath.list">← Kembali ke daftar campaign</a></p>
+      </div>
+    }
+  </div>
+</section>

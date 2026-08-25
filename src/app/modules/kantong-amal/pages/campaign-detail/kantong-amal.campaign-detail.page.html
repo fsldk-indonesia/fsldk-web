@@ -1,0 +1,58 @@
+@if (loading()) {
+  <section class="section"><div class="container">
+    <div class="layout-grid">
+      <div><span class="skel skel-thumb" style="aspect-ratio:16/9; width:100%"></span></div>
+      <div class="side-card"><span class="skel skel-title"></span><span class="skel skel-line"></span></div>
+    </div>
+  </div></section>
+} @else if (!campaign()) {
+  <section class="section"><div class="container">
+    <div class="empty-state" style="min-height:50vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
+      <h4>Campaign tidak ditemukan</h4>
+      <p><a [routerLink]="kantongAmalPath.list">Kembali ke daftar campaign</a></p>
+    </div>
+  </div></section>
+} @else {
+  <section class="section"><div class="container">
+    <div class="layout-grid">
+      <div>
+        <img class="cover" [src]="campaign()!.coverImageUrl" [alt]="campaign()!.title">
+        <span class="chip chip-green" style="margin-top:20px; display:inline-block">{{ campaign()!.categoryName }}</span>
+        <h1>{{ campaign()!.title }}</h1>
+        <p class="meta" style="color:var(--color-muted)">Digalang oleh {{ campaign()!.ownerName }}</p>
+        <div class="story">{{ campaign()!.story }}</div>
+
+        @if (campaign()!.supportingImageUrls.length) {
+          <div class="grid grid-3 mt-lg">
+            @for (img of campaign()!.supportingImageUrls; track img) {
+              <img [src]="img" alt="" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--radius-md)">
+            }
+          </div>
+        }
+      </div>
+
+      <aside class="side-card">
+        <div class="collected">{{ formatRupiah(campaign()!.collectedAmount) }}</div>
+        <div class="target">terkumpul dari target {{ formatRupiah(campaign()!.targetAmount) }}</div>
+        <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent()"></div></div>
+
+        <a class="btn btn-primary donate-cta" [routerLink]="kantongAmalPath.donate(campaign()!.slug)">Donasi Sekarang</a>
+
+        <div class="donor-list">
+          <span class="pic-label" style="display:block; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--color-muted)">Donatur Terbaru</span>
+          @for (d of recentDonations(); track $index) {
+            <div class="donor-item">
+              <div>
+                <div class="donor-name">{{ d.donorName }}</div>
+                @if (d.message) { <div class="donor-message">"{{ d.message }}"</div> }
+              </div>
+              <div style="white-space:nowrap; font-weight:700; color:var(--color-primary-dark)">{{ formatRupiah(d.amount) }}</div>
+            </div>
+          } @empty {
+            <p style="font-size:.85rem; color:var(--color-text-secondary)">Jadilah donatur pertama untuk campaign ini.</p>
+          }
+        </div>
+      </aside>
+    </div>
+  </div></section>
+}

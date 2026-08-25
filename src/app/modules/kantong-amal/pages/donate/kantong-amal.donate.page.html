@@ -1,0 +1,58 @@
+@if (loading()) {
+  <section class="section"><div class="container"><span class="skel skel-title"></span></div></section>
+} @else if (!campaign()) {
+  <section class="section"><div class="container">
+    <div class="empty-state" style="min-height:40vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
+      <h4>Campaign tidak ditemukan</h4>
+      <p><a [routerLink]="kantongAmalPath.list">Kembali ke daftar campaign</a></p>
+    </div>
+  </div></section>
+} @else {
+  <section class="section"><div class="container">
+    <div class="text-center" style="margin-bottom:24px">
+      <span class="eyebrow">Donasi</span>
+      <h1>{{ campaign()!.title }}</h1>
+    </div>
+
+    <div class="layout-grid">
+      <div class="form-card">
+        <label class="form-label">Pilih Nominal</label>
+        <div class="quick-amounts">
+          @for (v of quickAmounts; track v) {
+            <button type="button" [class.active]="amount === v" (click)="pickAmount(v)">{{ formatRupiah(v) }}</button>
+          }
+        </div>
+        <label class="form-label">Atau Nominal Lain (min. Rp 1.000)</label>
+        <input class="form-control" [(ngModel)]="customAmount" (ngModelChange)="onCustomAmountChange()" placeholder="Masukkan nominal">
+
+        <label class="form-label mt-md">Nama Donatur</label>
+        <input class="form-control" [(ngModel)]="donorName" placeholder="Nama lengkap">
+
+        <label class="form-label mt-md">Email</label>
+        <input class="form-control" type="email" [(ngModel)]="donorEmail" placeholder="email@contoh.com">
+
+        <label class="form-label mt-md">Nomor WhatsApp</label>
+        <input class="form-control" [(ngModel)]="donorPhone" placeholder="08xxxxxxxxxx">
+
+        <label class="form-label mt-md">Pesan (opsional)</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="message" placeholder="Tuliskan doa atau dukungan Anda"></textarea>
+
+        @if (campaign()!.isAnonymousAllowed) {
+          <div class="toggle-row mt-md">
+            <input type="checkbox" id="anon" [(ngModel)]="isAnonymous">
+            <label for="anon">Sembunyikan nama saya (donasi anonim)</label>
+          </div>
+        }
+
+        <button class="btn btn-primary mt-lg" style="width:100%" [disabled]="!canSubmit()" (click)="submit()">
+          {{ submitting() ? 'Memproses…' : 'Lanjutkan Pembayaran' }}
+        </button>
+      </div>
+
+      <aside class="side-card">
+        <img [src]="campaign()!.coverImageUrl" [alt]="campaign()!.title">
+        <p style="font-size:.88rem; color:var(--color-text-secondary)">Pembayaran diproses via QRIS — Anda akan diarahkan untuk memindai kode QR setelah menekan tombol di samping.</p>
+      </aside>
+    </div>
+  </div></section>
+}

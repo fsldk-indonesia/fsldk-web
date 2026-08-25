@@ -18,6 +18,7 @@ import { submissionRoutes } from './modules/submission/submission.routes';
 import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { kantongAmalPublicRoutes } from './modules/kantong-amal/kantong-amal.routes';
 import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
 import { settingRoutes } from './modules/setting/setting.routes';
@@ -55,6 +56,7 @@ export const routes: Routes = [
       ...newsPublicRoutes(),
       ...articlePublicRoutes(),
       ...eventPublicRoutes(),
+      ...kantongAmalPublicRoutes(),
       ...shortlinkPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
       // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
