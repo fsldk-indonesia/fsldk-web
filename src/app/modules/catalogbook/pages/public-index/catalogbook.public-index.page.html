@@ -1,0 +1,81 @@
+<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:32px">
+      <span class="eyebrow">Perpustakaan</span>
+      <h1>Katalog Buku Digital</h1>
+    </div>
+
+    <div class="toolbar">
+      <input class="form-control search" [(ngModel)]="search" (ngModelChange)="onSearchInput()" (keyup.enter)="apply()" placeholder="Cari judul, penulis, atau penerbit…">
+      <app-select class="sort" [(ngModel)]="sort" [options]="sortOptions" (ngModelChange)="apply()" />
+      <button type="button" class="btn btn-outline" (click)="openFilter()">
+        <app-icon name="list" [size]="14" /> Filter
+        @if (activeFilterCount() > 0) { <span class="chip chip-green" style="margin-left:6px">{{ activeFilterCount() }}</span> }
+      </button>
+    </div>
+
+    @if (loading()) {
+      <div class="grid grid-4 mt-lg">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="card" style="overflow:hidden">
+            <span class="skel skel-thumb" style="border-radius:0;aspect-ratio:3/4"></span>
+            <div class="card-pad">
+              <span class="skel skel-title" style="margin-top:4px"></span>
+              <span class="skel skel-line" style="width:50%"></span>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="grid grid-4 mt-lg">
+        @for (b of items(); track b.bookID) {
+          <a class="book-card" [routerLink]="['/perpustakaan', b.bookSlug]">
+            <div class="book-thumb">@if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle"> } @else { <app-icon name="book" [size]="28" /> }</div>
+            <div class="book-body">
+              <span class="chip chip-green">{{ b.bookCategoryName }}</span>
+              <h3>{{ b.bookTitle }}</h3>
+              <p class="meta">{{ b.authorName }} · {{ b.year }}</p>
+              <span class="fav"><app-icon name="heart" [size]="13" /> {{ b.favoriteCount }}</span>
+            </div>
+          </a>
+        } @empty {
+          <div class="empty-state" style="grid-column:1/-1; min-height:60vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
+            <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="book-open" [size]="26" /></span>
+            <h4>Belum ada buku</h4>
+            <p>Koleksi buku akan muncul di sini setelah ditambahkan.</p>
+          </div>
+        }
+      </div>
+
+      @if (count() > limit) {
+        <div class="pager">
+          <button class="btn btn-outline btn-sm" [disabled]="page() <= 1" (click)="go(page() - 1)">Sebelumnya</button>
+          <span>Halaman {{ page() }} dari {{ totalPages() }}</span>
+          <button class="btn btn-outline btn-sm" [disabled]="page() >= totalPages()" (click)="go(page() + 1)">Berikutnya</button>
+        </div>
+      }
+    }
+  </div>
+</section>
+
+@if (showFilter()) {
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeFilter()">
+    <div class="modal card card-pad" (click)="$event.stopPropagation()">
+      <h3>Filter Buku</h3>
+      <div class="form-group"><label class="form-label">Kategori</label>
+        <app-select [(ngModel)]="filter.bookCategoryID" [options]="categoryOptions()" /></div>
+      <div class="form-group"><label class="form-label">Tipe Penulis</label>
+        <app-select [(ngModel)]="filter.authorTypeID" [options]="authorTypeOptions()" /></div>
+      <div class="form-group"><label class="form-label">Ketersediaan</label>
+        <app-select [(ngModel)]="filter.availabilityTypeID" [options]="availabilityTypeOptions()" /></div>
+      <div class="form-group"><label class="form-label">Bahasa</label>
+        <app-select [(ngModel)]="filter.languageID" [options]="languageOptions()" /></div>
+      <div class="form-group"><label class="form-label">Tahun Terbit</label>
+        <input class="form-control" [(ngModel)]="filter.year" placeholder="mis. 2023" maxlength="4"></div>
+      <div class="flex gap justify-between mt">
+        <button type="button" class="btn btn-ghost" (click)="resetFilter()">Reset</button>
+        <button type="button" class="btn btn-primary" (click)="applyFilter()">Terapkan</button>
+      </div>
+    </div>
+  </div>
+}

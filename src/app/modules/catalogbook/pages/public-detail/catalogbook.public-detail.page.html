@@ -1,0 +1,69 @@
+<article class="section">
+  <div class="container">
+    @if (loading()) {
+      <div class="layout">
+        <span class="skel skel-thumb" style="aspect-ratio:3/4"></span>
+        <div>
+          <span class="skel skel-line" style="width:90px;height:22px;border-radius:999px"></span>
+          <span class="skel skel-line" style="width:80%;height:34px;margin-top:16px"></span>
+          <span class="skel skel-line" style="width:40%"></span>
+          <span class="skel skel-line"></span>
+          <span class="skel skel-line" style="width:70%"></span>
+        </div>
+      </div>
+    } @else {
+      @if (item(); as b) {
+        <nav class="crumb"><a routerLink="/">Beranda</a> / <a routerLink="/perpustakaan">Perpustakaan</a> / <span>Detail</span></nav>
+
+        <div class="layout">
+          <div>
+            <div class="cover">
+              @if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-lg)"> }
+              @else { <app-icon name="book" [size]="40" /> }
+            </div>
+          </div>
+
+          <div>
+            <span class="chip chip-green">{{ b.bookCategoryName }}</span>
+            <h1>{{ b.bookTitle }}</h1>
+            <p class="text-muted">{{ b.authorName }} <span class="chip" style="margin-left:6px">{{ b.authorTypeName }}</span></p>
+
+            <div class="meta-list">
+              <span><strong>Penerbit:</strong> {{ b.publisherName }}</span>
+              <span><strong>Tahun:</strong> {{ b.year }} &middot; <strong>Halaman:</strong> {{ b.pages }}</span>
+              <span><strong>Bahasa:</strong> {{ b.languageName }}</span>
+              <span><strong>Ketersediaan:</strong> {{ b.availabilityTypeName }}</span>
+              @if (b.isbn) { <span><strong>ISBN:</strong> {{ b.isbn }}</span> }
+              @if (b.edition) { <span><strong>Edisi:</strong> {{ b.edition }}</span> }
+            </div>
+
+            <div class="actions">
+              @if (b.bookPdf) { <a [href]="b.bookPdf" target="_blank" rel="noopener" class="btn btn-primary">📄 Baca Buku (PDF)</a> }
+              <button type="button" class="btn btn-outline fav-btn" [class.liked]="liked()" [disabled]="liked()" (click)="like()">
+                <app-icon name="heart" [size]="15" /> {{ b.favoriteCount }} Suka
+              </button>
+            </div>
+            @if (!b.bookPdf) { <p class="pdf-missing">Berkas PDF buku ini belum tersedia.</p> }
+
+            <div class="tabs">
+              <button type="button" class="tab-btn" [class.active]="tab() === 'description'" (click)="setTab('description')">Deskripsi</button>
+              @if (b.synopsis) { <button type="button" class="tab-btn" [class.active]="tab() === 'synopsis'" (click)="setTab('synopsis')">Sinopsis</button> }
+              <button type="button" class="tab-btn" [class.active]="tab() === 'discussion'" (click)="setTab('discussion')">Diskusi</button>
+            </div>
+            @if (tab() === 'discussion') {
+              <app-comment-section contentType="catalogBook" [contentID]="b.bookID" />
+            } @else {
+              <div class="content">
+                @if (tab() === 'description') { {{ b.description }} } @else { {{ b.synopsis }} }
+              </div>
+            }
+
+            <a routerLink="/perpustakaan" class="btn btn-outline mt-lg">← Kembali ke Perpustakaan</a>
+          </div>
+        </div>
+      } @else {
+        <div class="text-center"><h2>Buku tidak ditemukan</h2><a routerLink="/perpustakaan" class="btn btn-primary mt">Kembali</a></div>
+      }
+    }
+  </div>
+</article>
