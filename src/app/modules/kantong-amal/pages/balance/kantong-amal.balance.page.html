@@ -1,0 +1,35 @@
+@if (loading()) {
+  <div class="balance-grid"><span class="skel skel-title"></span></div>
+} @else if (!campaign() || !balance()) {
+  <div class="page-head"><h1>Campaign tidak ditemukan</h1><a [routerLink]="kantongAmalPath.myCampaigns">← Campaign Saya</a></div>
+} @else {
+  <div class="page-head">
+    <a class="back" [routerLink]="kantongAmalPath.myCampaigns">← Campaign Saya</a>
+    <h1>Saldo — {{ campaign()!.title }}</h1>
+  </div>
+
+  <div class="balance-grid">
+    <div class="balance-card primary">
+      <div class="label">Saldo Tersedia</div>
+      <div class="value">{{ formatRupiah(balance()!.availableBalance) }}</div>
+    </div>
+    <div class="balance-card">
+      <div class="label">Sedang Diproses</div>
+      <div class="value">{{ formatRupiah(balance()!.pendingBalance) }}</div>
+    </div>
+    <div class="balance-card">
+      <div class="label">Total Terkumpul</div>
+      <div class="value">{{ formatRupiah(balance()!.totalCollected) }}</div>
+    </div>
+    <div class="balance-card">
+      <div class="label">Total Ditarik</div>
+      <div class="value">{{ formatRupiah(balance()!.totalWithdrawn) }}</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-primary" [routerLink]="kantongAmalPath.withdrawalForm(campaign()!.campaignID)">Tarik Saldo</a>
+    <a class="btn btn-outline" [routerLink]="kantongAmalPath.ledgerHistory(campaign()!.campaignID)">Riwayat Ledger</a>
+    <a class="btn btn-outline" [routerLink]="kantongAmalPath.withdrawalHistory(campaign()!.campaignID)">Riwayat Penarikan</a>
+  </div>
+}

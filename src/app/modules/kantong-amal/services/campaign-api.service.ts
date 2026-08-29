@@ -2,9 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { Campaign, CampaignCategory, CampaignDetail } from '../entities/campaign';
+import { Campaign, CampaignCategory, CampaignDetail, CreateCampaignRequest, UpdateBeneficiaryRequest, UpdateCampaignRequest } from '../entities/campaign';
 
-/** Panggilan HTTP mentah modul campaign — endpoint publik saja di fase ini. */
+/** Panggilan HTTP mentah modul campaign — endpoint publik + milik-sendiri. */
 @Injectable({ providedIn: 'root' })
 export class CampaignApiService {
   private api = inject(ApiService);
@@ -12,4 +12,11 @@ export class CampaignApiService {
   publicList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.get('/public/campaigns', q); }
   publicDetail(slug: string): Observable<CampaignDetail> { return this.api.get(`/public/campaigns/${slug}`); }
   categories(): Observable<CampaignCategory[]> { return this.api.get('/public/campaign-categories'); }
+
+  myList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.get('/me/campaigns', q); }
+  myGet(id: number): Observable<CampaignDetail> { return this.api.get(`/me/campaigns/${id}`); }
+  create(body: CreateCampaignRequest): Observable<CampaignDetail> { return this.api.post('/me/campaigns', body); }
+  update(id: number, body: UpdateCampaignRequest): Observable<CampaignDetail> { return this.api.put(`/me/campaigns/${id}`, body); }
+  updateBeneficiary(id: number, body: UpdateBeneficiaryRequest): Observable<CampaignDetail> { return this.api.put(`/me/campaigns/${id}/beneficiary`, body); }
+  submit(id: number): Observable<CampaignDetail> { return this.api.post(`/me/campaigns/${id}/submit`); }
 }

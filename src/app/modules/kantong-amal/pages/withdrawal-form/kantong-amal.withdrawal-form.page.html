@@ -1,0 +1,84 @@
+@if (loading()) {
+  <div class="wizard-card"><span class="skel skel-title"></span></div>
+} @else if (!campaign() || !balance()) {
+  <div class="page-head"><h1>Campaign tidak ditemukan</h1><a [routerLink]="kantongAmalPath.myCampaigns">← Campaign Saya</a></div>
+} @else {
+  <div class="page-head">
+    <a class="back" [routerLink]="kantongAmalPath.balance(campaign()!.campaignID)">← Saldo</a>
+    <h1>Tarik Saldo — {{ campaign()!.title }}</h1>
+  </div>
+
+  <div class="wizard-card">
+    <div class="steps">
+      @for (i of [1,2,3,4,5]; track i) { <span [class.done]="step() >= i"></span> }
+    </div>
+
+    @if (step() === 1) {
+      <h3>Nominal Penarikan</h3>
+      <p class="text-muted" style="font-size:.88rem">Saldo tersedia: <strong>{{ formatRupiah(balance()!.availableBalance) }}</strong></p>
+      <label class="form-label mt-md">Nominal (min. {{ formatRupiah(50000) }})</label>
+      <input class="form-control" type="number" [(ngModel)]="amount" placeholder="0">
+      @if (inquiry()) {
+        <p class="text-muted mt-sm" style="font-size:.85rem">Estimasi biaya transfer: {{ formatRupiah(inquiry()!.fee) }}</p>
+      }
+      <button class="btn btn-primary mt-lg" style="width:100%" [disabled]="!canProceedFromAmount()" (click)="goToStep(2)">Lanjutkan</button>
+    }
+
+    @if (step() === 2) {
+      <h3>Konfirmasi Rekening Tujuan</h3>
+      <div class="summary-row"><span>Bank</span><span class="value">{{ campaign()!.beneficiaryBankCode | uppercase }}</span></div>
+      <div class="summary-row"><span>No. Rekening</span><span class="value">{{ campaign()!.beneficiaryAccountNumber }}</span></div>
+      <div class="summary-row"><span>Nama Pemilik</span><span class="value">{{ campaign()!.beneficiaryAccountHolder }}</span></div>
+      <p class="text-muted mt-md" style="font-size:.83rem">Untuk mengganti rekening tujuan, ubah dari halaman Edit Campaign — perubahan rekening memicu masa jeda 24 jam sebelum bisa dipakai penarikan.</p>
+      <div class="flex gap justify-between mt-lg">
+        <button class="btn btn-outline" (click)="goToStep(1)">Kembali</button>
+        <button class="btn btn-primary" (click)="goToStep(3)">Lanjutkan</button>
+      </div>
+    }
+
+    @if (step() === 3) {
+      <h3>Ringkasan Penarikan</h3>
+      <div class="summary-row"><span>Nominal Ditarik</span><span class="value">{{ formatRupiah(amount!) }}</span></div>
+      <div class="summary-row"><span>Biaya Transfer</span><span class="value">{{ formatRupiah(inquiry()?.fee ?? 0) }}</span></div>
+      <div class="summary-row"><span>Jumlah Diterima</span><span class="value summary-total">{{ formatRupiah(netAmount()) }}</span></div>
+      <div class="summary-row"><span>Rekening Tujuan</span><span class="value">{{ campaign()!.beneficiaryBankCode | uppercase }} {{ campaign()!.beneficiaryAccountNumber }} a.n. {{ campaign()!.beneficiaryAccountHolder }}</span></div>
+      <div class="summary-row"><span>Estimasi Waktu Proses</span><span class="value">{{ processingEta }}</span></div>
+      <div class="flex gap justify-between mt-lg">
+        <button class="btn btn-outline" (click)="goToStep(2)" [disabled]="busy()">Kembali</button>
+        <button class="btn btn-primary" (click)="submitRequest()" [disabled]="busy()">
+          @if (busy()) { <span class="spinner"></span> } @else { Ajukan Penarikan }
+        </button>
+      </div>
+    }
+
+    @if (step() === 4) {
+      <h3>Verifikasi Keamanan</h3>
+      <p class="text-muted" style="font-size:.88rem">Masukkan password akun Anda. Bila penarikan ini butuh verifikasi tambahan, kirim kode OTP ke WhatsApp terdaftar terlebih dahulu.</p>
+
+      <label class="form-label mt-md">Password</label>
+      <input class="form-control" type="password" [(ngModel)]="password" placeholder="Password akun Anda">
+
+      <div class="flex justify-between items-center mt-md">
+        <label class="form-label" style="margin:0">Kode OTP (bila diminta)</label>
+        <button type="button" class="btn btn-outline btn-sm" (click)="sendOtp()" [disabled]="busy()">
+          {{ otpSent() ? 'Kirim Ulang OTP' : 'Kirim Kode OTP' }}
+        </button>
+      </div>
+      <input class="form-control mt-sm" [(ngModel)]="otpCode" maxlength="6" placeholder="6 digit kode OTP">
+      @if (otpSent()) { <p class="text-muted mt-sm" style="font-size:.82rem">Kode OTP telah dikirim ke WhatsApp terdaftar Anda.</p> }
+
+      <button class="btn btn-primary mt-lg" style="width:100%" [disabled]="!password || busy()" (click)="submitVerify()">
+        @if (busy()) { <span class="spinner"></span> } @else { Konfirmasi Penarikan }
+      </button>
+    }
+
+    @if (step() === 5) {
+      <div class="text-center">
+        <div class="result-icon">✓</div>
+        <h3>Menunggu Persetujuan Admin</h3>
+        <p class="text-muted">Permintaan penarikan Anda telah diajukan dan sedang menunggu persetujuan admin.</p>
+        <a class="btn btn-primary mt-lg" [routerLink]="kantongAmalPath.withdrawalHistory(campaign()!.campaignID)">Lihat Riwayat Penarikan</a>
+      </div>
+    }
+  </div>
+}

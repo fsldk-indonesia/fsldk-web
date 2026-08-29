@@ -1,0 +1,81 @@
+@if (loading()) {
+  <div class="form-card"><span class="skel skel-title"></span></div>
+} @else {
+  <div class="page-head">
+    <a class="back" [routerLink]="kantongAmalPath.myCampaigns">← Campaign Saya</a>
+    <h1>{{ editId ? 'Ubah Campaign' : 'Ajukan Campaign Baru' }}</h1>
+  </div>
+
+  <div class="card card-pad form-card">
+    @if (isReadonly) {
+      <div class="readonly-note">Campaign ini sedang {{ campaign()?.status }} dan tidak dapat diubah dari sini.</div>
+    }
+
+    <label class="form-label">Judul Campaign</label>
+    <input class="form-control" [(ngModel)]="form.title" [disabled]="isReadonly" placeholder="Judul campaign">
+
+    <label class="form-label mt-md">Kategori</label>
+    <app-select [options]="categoryOptions" [(ngModel)]="form.categoryID" [disabled]="isReadonly" placeholder="Pilih kategori" />
+
+    <label class="form-label mt-md">Cerita (minimal 50 karakter)</label>
+    <textarea class="form-control" rows="8" [(ngModel)]="form.story" [disabled]="isReadonly" placeholder="Ceritakan latar belakang dan tujuan penggalangan dana"></textarea>
+
+    <label class="form-label mt-md">Gambar Sampul</label>
+    <app-image-upload [value]="form.coverImageUrl" (valueChange)="form.coverImageUrl = $event" />
+
+    <label class="form-label mt-md">Gambar Pendukung (opsional)</label>
+    <div class="support-images">
+      @for (url of form.supportingImageUrls; track $index) {
+        <div class="support-image-item">
+          <app-image-upload [value]="url" (valueChange)="setSupportingImage($index, $event)" />
+          <button type="button" class="remove-btn" (click)="removeSupportingImage($index)">×</button>
+        </div>
+      }
+    </div>
+    @if (!isReadonly && form.supportingImageUrls.length < 10) {
+      <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addSupportingImage()">+ Tambah Gambar</button>
+    }
+
+    <label class="form-label mt-md">Target Dana (Rp)</label>
+    <input class="form-control" type="number" [(ngModel)]="form.targetAmount" [disabled]="isReadonly" placeholder="0">
+
+    <div class="grid grid-2 mt-md">
+      <div><label class="form-label">Mulai (opsional)</label><input class="form-control" type="date" [(ngModel)]="form.startDate" [disabled]="isReadonly"></div>
+      <div><label class="form-label">Selesai (opsional)</label><input class="form-control" type="date" [(ngModel)]="form.endDate" [disabled]="isReadonly"></div>
+    </div>
+
+    <h3 class="mt-lg" style="font-size:1rem">Rekening Penerima</h3>
+    <label class="form-label mt-sm">Nama Pemilik Rekening / Yayasan</label>
+    <input class="form-control" [(ngModel)]="form.beneficiaryName" [disabled]="isReadonly">
+
+    <label class="form-label mt-md">Bank</label>
+    <app-select [options]="bankOptions" [(ngModel)]="form.beneficiaryBankCode" [disabled]="isReadonly" placeholder="Pilih bank" />
+
+    <label class="form-label mt-md">Nomor Rekening</label>
+    <input class="form-control" [(ngModel)]="form.beneficiaryAccountNumber" [disabled]="isReadonly">
+
+    <label class="form-label mt-md">Nama Pemilik Rekening (sesuai buku tabungan)</label>
+    <input class="form-control" [(ngModel)]="form.beneficiaryAccountHolder" [disabled]="isReadonly">
+
+    <div class="toggle-row mt-md" style="display:flex; align-items:center; gap:10px">
+      <input type="checkbox" id="anon-allowed" [(ngModel)]="form.isAnonymousAllowed" [disabled]="isReadonly">
+      <label for="anon-allowed">Izinkan donatur berdonasi secara anonim</label>
+    </div>
+
+    @if (editId) {
+      <label class="form-label mt-md">Update Terbaru (opsional, tampil di halaman publik)</label>
+      <textarea class="form-control" rows="4" [(ngModel)]="form.latestUpdate" [disabled]="isReadonly" placeholder="Kabar terbaru penggunaan dana, dsb."></textarea>
+    }
+
+    @if (!isReadonly) {
+      <div class="flex gap justify-between mt-lg">
+        <button class="btn btn-outline" (click)="save()" [disabled]="!canSubmitForm()">
+          @if (saving()) { <span class="spinner"></span> } @else { Simpan Draft }
+        </button>
+        @if (editId) {
+          <button class="btn btn-primary" (click)="submitForReview()" [disabled]="saving()">Ajukan untuk Ditinjau</button>
+        }
+      </div>
+    }
+  </div>
+}
