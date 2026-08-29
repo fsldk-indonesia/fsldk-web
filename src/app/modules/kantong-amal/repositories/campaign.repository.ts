@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CampaignApiService } from '../services/campaign-api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { Campaign, CampaignCategory, CampaignDetail, CreateCampaignRequest, UpdateBeneficiaryRequest, UpdateCampaignRequest } from '../entities/campaign';
+import { Campaign, CampaignCategory, CampaignDetail, CampaignReview, CreateCampaignRequest, ReviewRequest, UpdateBeneficiaryRequest, UpdateCampaignRequest } from '../entities/campaign';
 
 @Injectable({ providedIn: 'root' })
 export class CampaignRepository {
@@ -18,4 +18,13 @@ export class CampaignRepository {
   update(id: number, body: UpdateCampaignRequest): Observable<CampaignDetail> { return this.api.update(id, body); }
   updateBeneficiary(id: number, body: UpdateBeneficiaryRequest): Observable<CampaignDetail> { return this.api.updateBeneficiary(id, body); }
   submit(id: number): Observable<CampaignDetail> { return this.api.submit(id); }
+
+  cmsList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.cmsList(q); }
+  cmsGet(id: number): Observable<CampaignDetail> { return this.api.cmsGet(id); }
+  reviewHistory(id: number): Observable<CampaignReview[]> { return this.api.reviewHistory(id); }
+  review(id: number, body: ReviewRequest): Observable<CampaignDetail> { return this.api.review(id, body); }
+  publish(id: number): Observable<CampaignDetail> { return this.api.publish(id); }
+  pause(id: number): Observable<CampaignDetail> { return this.api.pause(id); }
+  resume(id: number): Observable<CampaignDetail> { return this.api.resume(id); }
+  archive(id: number): Observable<CampaignDetail> { return this.api.archive(id); }
 }

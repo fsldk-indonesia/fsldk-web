@@ -49,6 +49,11 @@ export interface CampaignReview {
   reviewedDate: string;
 }
 
+export interface ReviewRequest {
+  decision: 'APPROVED' | 'REVISION_REQUESTED' | 'REJECTED';
+  note?: string;
+}
+
 export interface CreateCampaignRequest {
   title: string;
   categoryID: number;

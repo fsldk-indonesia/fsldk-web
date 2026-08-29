@@ -16,4 +16,9 @@ export class WithdrawalRepository {
 
   listBanks(): Observable<BankListItem[]> { return this.api.listBanks(); }
   inquiry(body: InquiryRequest): Observable<InquiryResponse> { return this.api.inquiry(body); }
+
+  cmsList(q: Record<string, unknown>): Observable<Pagination<Withdrawal>> { return this.api.cmsList(q); }
+  approve(id: number): Observable<Withdrawal> { return this.api.approve(id); }
+  reject(id: number, reason: string): Observable<unknown> { return this.api.reject(id, reason); }
+  process(id: number): Observable<Withdrawal> { return this.api.process(id); }
 }

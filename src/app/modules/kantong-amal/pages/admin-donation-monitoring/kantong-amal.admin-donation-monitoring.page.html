@@ -1,0 +1,44 @@
+<div class="page-head">
+  <h1>Monitoring Donasi</h1>
+  <p class="text-muted">Pantau seluruh donasi yang masuk lintas campaign.</p>
+</div>
+
+<div class="card">
+  <div class="card-pad">
+    <select class="form-control" [(ngModel)]="status" (ngModelChange)="applyFilter()" style="max-width:220px">
+      <option value="">Semua Status</option>
+      <option value="PENDING">Menunggu</option>
+      <option value="PAID">Lunas</option>
+      <option value="EXPIRED">Kedaluwarsa</option>
+      <option value="FAILED">Gagal</option>
+      <option value="CANCELLED">Dibatalkan</option>
+      <option value="REFUNDED">Dikembalikan</option>
+      <option value="AMOUNT_MISMATCH">Perlu Verifikasi</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Campaign</th><th>Donatur</th><th>Nominal</th><th>Status</th><th>Tanggal</th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4]; track i) { <tr><td colspan="5"><span class="skel skel-line"></span></td></tr> }
+        } @else {
+          @for (d of donations(); track d.donationID) {
+            <tr>
+              <td>{{ d.campaignTitle }}</td>
+              <td>{{ d.isAnonymous ? 'Anonim' : d.donorName }}</td>
+              <td>{{ formatRupiah(d.amount) }}</td>
+              <td><span class="status-badge" [class]="'status-' + d.paymentStatus">{{ statusLabel(d.paymentStatus) }}</span></td>
+              <td class="text-muted">{{ d.createdDate | date:'d MMM yyyy, HH:mm' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5"><div class="empty-state"><h4>Belum ada donasi</h4></div></td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

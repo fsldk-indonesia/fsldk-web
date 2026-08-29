@@ -78,3 +78,74 @@ export const kantongAmalMeRoutes: () => Routes = () => [
     loadComponent: () => import('./pages/withdrawal-history/kantong-amal.withdrawal-history.page').then((m) => m.KantongAmalWithdrawalHistoryPage),
   },
 ];
+
+/**
+ * Rute admin CMS Kantong Amal — dipasang sebagai children CmsLayoutComponent
+ * (§8.4 techspec), path & permission gate mengikuti persis `menuRoute`/
+ * `permissionCode` yang sudah di-seed migration 0018 supaya sidebar dinamis
+ * (`GET /me/menus`) benar-benar mengarah ke halaman yang hidup.
+ *
+ * `kantong-amal/campaigns` (permission `.campaign.view`, menu "Kantong Amal")
+ * dan `kantong-amal/moderasi` (permission `.campaign.review`, menu "Moderasi
+ * Campaign") sengaja dipetakan ke komponen YANG SAMA — keduanya cuma beda
+ * gerbang permission untuk peran yang berbeda (Puskomda/Puskomnas Verifikator
+ * punya `.review` langsung; peran lain yang nanti diberi `.view` saja tetap
+ * bisa membuka daftar/riwayatnya), backend tetap menolak aksi review bila
+ * caller sungguhan tidak punya `.campaign.review`.
+ *
+ * Queue Monitoring **tidak** punya halaman terpisah — job queue Kantong Amal
+ * berbagi infrastruktur & CMS page generik dengan fitur shortlink-request
+ * (`/cms/job-queue`, permission `jobqueue.view`, dibangun Phase 8 lewat merge
+ * `main`); `kantong-amal/queue` (menu seeded dengan permission
+ * `kantong_amal.queue.view`, saat ini cuma dimiliki Super Admin yang juga
+ * otomatis punya `jobqueue.view`) di-redirect ke sana alih-alih membuat
+ * halaman kedua yang murni duplikat hanya beda filter correlationType.
+ */
+export const kantongAmalAdminRoutes: () => Routes = () => [
+  {
+    path: 'kantong-amal/campaigns',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.campaign.view' },
+    loadComponent: () => import('./pages/admin-campaign-moderation/kantong-amal.admin-campaign-moderation.page').then((m) => m.KantongAmalAdminCampaignModerationPage),
+  },
+  {
+    path: 'kantong-amal/moderasi',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.campaign.review' },
+    loadComponent: () => import('./pages/admin-campaign-moderation/kantong-amal.admin-campaign-moderation.page').then((m) => m.KantongAmalAdminCampaignModerationPage),
+  },
+  {
+    path: 'kantong-amal/queue',
+    redirectTo: 'job-queue',
+  },
+  {
+    path: 'kantong-amal/donasi',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.donation.view' },
+    loadComponent: () => import('./pages/admin-donation-monitoring/kantong-amal.admin-donation-monitoring.page').then((m) => m.KantongAmalAdminDonationMonitoringPage),
+  },
+  {
+    path: 'kantong-amal/persetujuan-penarikan',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.withdrawal.approve' },
+    loadComponent: () => import('./pages/admin-withdrawal-approval/kantong-amal.admin-withdrawal-approval.page').then((m) => m.KantongAmalAdminWithdrawalApprovalPage),
+  },
+  {
+    path: 'kantong-amal/laporan',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.report.view' },
+    loadComponent: () => import('./pages/admin-reports/kantong-amal.admin-reports.page').then((m) => m.KantongAmalAdminReportsPage),
+  },
+  {
+    path: 'kantong-amal/laporan/rekonsiliasi',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.report.view' },
+    loadComponent: () => import('./pages/admin-reconciliation/kantong-amal.admin-reconciliation.page').then((m) => m.KantongAmalAdminReconciliationPage),
+  },
+  {
+    path: 'kantong-amal/audit-log',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.audit.view' },
+    loadComponent: () => import('./pages/admin-audit-log/kantong-amal.admin-audit-log.page').then((m) => m.KantongAmalAdminAuditLogPage),
+  },
+];

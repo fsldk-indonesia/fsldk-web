@@ -17,4 +17,9 @@ export class WithdrawalApiService {
 
   listBanks(): Observable<BankListItem[]> { return this.api.get('/transfer/banks'); }
   inquiry(body: InquiryRequest): Observable<InquiryResponse> { return this.api.post('/transfer/inquiry', body); }
+
+  cmsList(q: Record<string, unknown>): Observable<Pagination<Withdrawal>> { return this.api.get('/withdrawals', q); }
+  approve(id: number): Observable<Withdrawal> { return this.api.post(`/withdrawals/${id}/approve`); }
+  reject(id: number, reason: string): Observable<unknown> { return this.api.post(`/withdrawals/${id}/reject`, { reason }); }
+  process(id: number): Observable<Withdrawal> { return this.api.post(`/withdrawals/${id}/process`); }
 }
