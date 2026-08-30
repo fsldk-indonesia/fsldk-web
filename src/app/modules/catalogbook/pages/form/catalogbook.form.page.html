@@ -1,0 +1,77 @@
+<div class="page-head"><a routerLink="/cms/catalog-books" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Buku' : 'Tambah Buku' }}</h1></div>
+
+<div class="card card-pad form-card">
+  <div class="form-group"><label class="form-label">Judul Buku</label>
+    <input class="form-control" [(ngModel)]="form.bookTitle" placeholder="Tulis judul buku…"></div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Penulis</label>
+      <input class="form-control" [(ngModel)]="form.authorName" placeholder="Nama penulis…"></div>
+    <div class="form-group"><label class="form-label">Tipe Penulis</label>
+      <app-select [(ngModel)]="form.authorTypeID" [options]="authorTypeOptions()" placeholder="Pilih tipe penulis" />
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Penerbit</label>
+      <input class="form-control" [(ngModel)]="form.publisherName" placeholder="Nama penerbit…"></div>
+    <div class="form-group"><label class="form-label">Kategori</label>
+      <app-select [(ngModel)]="form.bookCategoryID" [options]="categoryOptions()" placeholder="Pilih kategori" />
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Bahasa</label>
+      <app-select [(ngModel)]="form.languageID" [options]="languageOptions()" placeholder="Pilih bahasa" />
+    </div>
+    <div class="form-group"><label class="form-label">Ketersediaan</label>
+      <app-select [(ngModel)]="form.availabilityTypeID" [options]="availabilityTypeOptions()" placeholder="Pilih ketersediaan" />
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Tahun Terbit</label>
+      <input class="form-control" [(ngModel)]="form.year" placeholder="mis. 2023" maxlength="4"></div>
+    <div class="form-group"><label class="form-label">Jumlah Halaman</label>
+      <input class="form-control" type="number" min="1" [(ngModel)]="form.pages" placeholder="mis. 240"></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">ISBN <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.isbn" placeholder="Nomor ISBN…"></div>
+    <div class="form-group"><label class="form-label">Edisi <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.edition" placeholder="mis. Cetakan ke-2…"></div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Berkas PDF Buku <span class="text-muted">(opsional)</span></label>
+    <p class="form-hint">Pengunjung membaca buku ini lewat berkas PDF, dibuka di tab baru dari halaman detail.</p>
+    <app-pdf-upload [(value)]="form.bookPdf" />
+  </div>
+
+  <div class="form-group"><label class="form-label">Sampul Buku</label>
+    <app-image-upload [(value)]="form.coverImage" /></div>
+
+  <div class="form-group"><label class="form-label">Deskripsi</label>
+    <textarea class="form-control" rows="4" [(ngModel)]="form.description" placeholder="Deskripsi buku…"></textarea></div>
+
+  <div class="form-group"><label class="form-label">Sinopsis <span class="text-muted">(opsional)</span></label>
+    <textarea class="form-control" rows="4" [(ngModel)]="form.synopsis" placeholder="Sinopsis buku…"></textarea></div>
+
+  <div class="form-group"><label class="form-label">Tag <span class="text-muted">(opsional, pisahkan dengan koma)</span></label>
+    <input class="form-control" [(ngModel)]="form.tags" placeholder="mis. dakwah, motivasi, remaja"></div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Meta Keywords <span class="text-muted">(SEO, opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.metaKeywords"></div>
+    <div class="form-group"><label class="form-label">Meta Description <span class="text-muted">(SEO, opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.metaDescription"></div>
+  </div>
+
+  <div class="flex gap justify-between">
+    <a routerLink="/cms/catalog-books" class="btn btn-ghost">Batal</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } @else { Simpan Buku }
+    </button>
+  </div>
+</div>

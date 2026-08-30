@@ -18,6 +18,8 @@ const ICONS: Record<string, string> = {
   'calendar-days': 'fas fa-calendar-alt',
   home: 'fas fa-home',
   book: 'fas fa-book',
+  'book-open': 'fas fa-book-open',
+  heart: 'fas fa-heart',
   globe: 'fas fa-globe',
   'empty-box': 'fas fa-box-open',
   error: 'fas fa-exclamation-triangle',

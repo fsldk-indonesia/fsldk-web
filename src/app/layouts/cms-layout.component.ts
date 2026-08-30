@@ -157,6 +157,13 @@ type Tier = CmsTier;
       display: flex; flex-direction: column; z-index: 30;
       transform-origin: top right; animation: dropdown-panel-in var(--motion-base) var(--ease-out) both;
     }
+    /* Invisible hover bridge over the 8px gap above the panel — without it,
+       that gap is dead space outside both .user-dropdown's own box (which
+       ends at the trigger button, since the panel is absolutely positioned
+       and out of flow) and the panel's box, so moving the pointer straight
+       down from the trigger fires mouseleave on .user-dropdown before ever
+       reaching the panel, closing it before a click can land. */
+    .dropdown-panel::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }
     @keyframes dropdown-panel-in { from { opacity: 0; transform: scale(.85) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
     .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; color: var(--color-text); transition: background var(--motion-fast) ease; }

@@ -8,6 +8,7 @@ import { authGuard, verifiedGuard } from './core/guards/guards';
 import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
 import { articlePublicRoutes, articleCmsRoutes } from './modules/article/article.routes';
+import { catalogbookPublicRoutes, catalogbookCmsRoutes } from './modules/catalogbook/catalogbook.routes';
 import { eventPublicRoutes, eventCmsRoutes } from './modules/event/event.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
@@ -55,6 +56,7 @@ export const routes: Routes = [
       ...homeRoutes(),
       ...newsPublicRoutes(),
       ...articlePublicRoutes(),
+      ...catalogbookPublicRoutes(),
       ...eventPublicRoutes(),
       ...kantongAmalPublicRoutes(),
       ...shortlinkPublicRoutes(),
@@ -95,6 +97,7 @@ export const routes: Routes = [
       ...roleRoutes(),
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
+      ...catalogbookCmsRoutes(),
       ...eventCmsRoutes(),
       ...shortlinkRoutes(),
       ...commentCmsRoutes(),

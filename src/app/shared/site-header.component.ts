@@ -35,6 +35,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
             <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Beranda</a>
             <a routerLink="/berita" routerLinkActive="active">Berita</a>
             <a routerLink="/artikel" routerLinkActive="active">Artikel</a>
+            <a routerLink="/perpustakaan" routerLinkActive="active">Perpustakaan</a>
             <a routerLink="/event" routerLinkActive="active">Event</a>
           </nav>
           <div class="nav-dropdown-wrap" (mouseenter)="openLainnyaMenu()" (mouseleave)="closeLainnyaMenu()">
@@ -109,6 +110,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobile()">Beranda</a>
         <a routerLink="/berita" routerLinkActive="active" (click)="closeMobile()">Berita</a>
         <a routerLink="/artikel" routerLinkActive="active" (click)="closeMobile()">Artikel</a>
+        <a routerLink="/perpustakaan" routerLinkActive="active" (click)="closeMobile()">Perpustakaan</a>
         <a routerLink="/event" routerLinkActive="active" (click)="closeMobile()">Event</a>
       </nav>
       <div class="mobile-nav-extra">
