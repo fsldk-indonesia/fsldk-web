@@ -1,0 +1,150 @@
+/* Ported from ldksyahid-app zakat-calculator/_index-styles.blade.php (prefix
+   zk-). Palette mapped onto the app's CSS custom properties; decorative-only
+   rules from the reference were dropped. */
+
+.zk-section { padding: 4rem 0 5rem; }
+.zk-layout { display: grid; grid-template-columns: 5fr 7fr; gap: 2.5rem; align-items: start; }
+
+/* --- Left info column --- */
+.zk-col-info { position: sticky; top: 7rem; }
+.zk-deco-label { font-size: .72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--color-primary); margin-bottom: .5rem; }
+.zk-deco-title { font-size: 2rem; font-weight: 800; color: var(--color-text); line-height: 1.15; margin: 0; }
+.zk-deco-bar { width: 48px; height: 4px; background: var(--color-primary); border-radius: 50rem; margin: 1.1rem 0 1.5rem; }
+.zk-deco-quote { background: var(--color-primary-soft); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+.zk-quran-arabic { font-size: 1.05rem; line-height: 2; text-align: right; direction: rtl; color: var(--color-text); font-weight: 600; margin-bottom: .5rem; }
+.zk-deco-quote p { font-size: .87rem; line-height: 1.8; color: var(--color-text-secondary); text-align: justify; margin-bottom: .6rem; }
+.zk-deco-quote span { font-size: .75rem; font-weight: 700; color: var(--color-primary); display: block; text-align: right; }
+.zk-how-card { background: var(--color-bg-alt); border: 2px solid var(--color-border); border-radius: 20px; padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; }
+.zk-how-title { font-size: .73rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--color-primary); margin-bottom: .85rem; }
+.zk-how-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .55rem; }
+.zk-how-list li { display: flex; align-items: flex-start; gap: .65rem; font-size: .83rem; color: var(--color-text-secondary); line-height: 1.5; }
+.zk-how-bullet { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--color-primary); margin-top: .35rem; flex-shrink: 0; }
+.zk-method-card { background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 16px; padding: 1rem 1.25rem; }
+.zk-method-title { font-size: .73rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #92400e; margin-bottom: .5rem; }
+.zk-method-body { font-size: .82rem; line-height: 1.7; color: var(--color-text-secondary); margin: 0; }
+
+/* --- Right form column --- */
+.zk-col-form { display: flex; flex-direction: column; }
+.zk-form-card { background: var(--color-bg-alt); border: 2px solid var(--color-border); border-radius: 24px; padding: 2.25rem 2.5rem; box-shadow: var(--shadow); }
+.zk-card-title-wrap { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; }
+.zk-card-title-icon { width: 34px; height: 34px; border-radius: 10px; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-primary); flex-shrink: 0; }
+.zk-card-title { font-size: .875rem; font-weight: 700; color: var(--color-text); }
+
+/* --- Gold price panel --- */
+.zk-gold-panel { background: linear-gradient(135deg, #78350f, #b45309 65%, #d97706); border-radius: 18px; padding: 1.4rem 1.6rem 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 8px 32px rgba(146, 64, 14, .28); }
+.zk-gold-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; }
+.zk-gold-brand { display: flex; align-items: center; gap: .75rem; }
+.zk-gold-icon-wrap { width: 42px; height: 42px; background: rgba(255, 255, 255, .15); border: 1px solid rgba(255, 255, 255, .2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; color: #fef3c7; flex-shrink: 0; }
+.zk-gold-brand-label { font-size: .65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em; color: rgba(255, 255, 255, .65); margin: 0 0 .15rem; }
+.zk-gold-brand-src { font-size: .78rem; font-weight: 700; margin: 0; }
+.zk-gold-brand-src a { color: #fef3c7; text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, .3); }
+.zk-gold-fetch-btn { display: inline-flex; align-items: center; gap: .4rem; padding: .42rem 1rem; background: rgba(255, 255, 255, .15); border: 1px solid rgba(255, 255, 255, .3); border-radius: 50rem; font-size: .7rem; font-weight: 700; color: #fff; cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: background .2s, transform .15s; }
+.zk-gold-fetch-btn:hover { background: rgba(255, 255, 255, .26); transform: translateY(-1px); }
+.zk-gold-fetch-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.zk-gold-price-row { display: flex; align-items: baseline; gap: .3rem; margin-bottom: 1rem; }
+.zk-gold-price-cur { font-size: 1.25rem; font-weight: 600; color: rgba(255, 255, 255, .75); }
+.zk-gold-price-num { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; letter-spacing: -.03em; }
+.zk-gold-price-unit { font-size: .95rem; color: rgba(255, 255, 255, .6); align-self: flex-end; margin-bottom: .15rem; }
+.zk-gold-footer { display: flex; align-items: center; gap: .5rem; }
+.zk-gold-live-dot { width: 8px; height: 8px; background: #4ade80; border-radius: 50%; flex-shrink: 0; }
+.zk-gold-live-label { font-size: .7rem; color: rgba(255, 255, 255, .55); }
+.zk-gold-fetch-status { font-size: .7rem; font-weight: 600; padding: .35rem .75rem; margin-top: .65rem; border-radius: 8px; display: flex; align-items: center; gap: .35rem; }
+.zk-gold-fetch-status.zk-fetch-ok { background: rgba(74, 222, 128, .15); color: #86efac; }
+.zk-gold-fetch-status.zk-fetch-fail { background: rgba(248, 113, 113, .15); color: #fca5a5; }
+
+/* --- Form controls --- */
+.zk-form-group { margin-bottom: 1rem; }
+.zk-form-label { display: flex; align-items: center; gap: .45rem; font-size: .82rem; font-weight: 700; color: var(--color-text); margin-bottom: .5rem; }
+.zk-form-label i { color: var(--color-primary); }
+.zk-form-input, .zk-form-select { width: 100%; padding: .7rem 1rem; background: var(--color-bg); border: 1.5px solid var(--color-border); border-radius: 12px; font-size: .875rem; color: var(--color-text); font-family: inherit; font-weight: 600; outline: none; box-sizing: border-box; transition: border-color .25s ease, box-shadow .25s ease; }
+.zk-form-input:focus, .zk-form-select:focus, .zk-input-group:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+.zk-form-input::placeholder { color: var(--color-muted); font-weight: 400; }
+.zk-form-select { cursor: pointer; }
+.zk-input-group { display: flex; border: 1.5px solid var(--color-border); border-radius: 12px; overflow: hidden; background: var(--color-bg); transition: border-color .25s ease, box-shadow .25s ease; }
+.zk-input-prefix { padding: .7rem .85rem; background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 700; display: flex; align-items: center; font-size: .875rem; flex-shrink: 0; }
+.zk-input-with-prefix { border: none !important; border-radius: 0 !important; box-shadow: none !important; background: transparent !important; flex: 1; min-width: 0; }
+.zk-form-hint { font-size: .7rem; color: var(--color-muted); margin-top: .3rem; display: block; line-height: 1.5; }
+
+/* --- Type pills --- */
+.zk-pill-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.zk-pill { padding: .45rem 1rem; background: var(--color-primary-soft); border: 1.5px solid var(--color-border); border-radius: 50rem; cursor: pointer; white-space: nowrap; font-weight: 600; color: var(--color-text-secondary); font-size: .82rem; font-family: inherit; user-select: none; transition: all .25s ease; }
+.zk-pill:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.zk-pill.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+.zk-desc-box { background: var(--color-primary-soft); border-radius: 10px; padding: .6rem 1rem; margin: .75rem 0 1.25rem; font-size: .82rem; color: var(--color-text-secondary); line-height: 1.6; }
+
+.zk-dagang-summary { background: var(--color-primary-soft); border: 1.5px dashed var(--color-primary); border-radius: 12px; padding: .85rem 1rem; margin-bottom: .75rem; }
+.zk-dagang-summary-label { font-size: .72rem; color: var(--color-text-secondary); margin-bottom: .2rem; }
+.zk-dagang-summary-val { font-weight: 700; font-size: 1.05rem; color: var(--color-primary); }
+.zk-dagang-summary-val.negative { color: var(--color-danger, #dc2626); }
+
+.zk-tarif-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
+.zk-tarif-label { flex: 1; min-width: 140px; border: 1.5px solid var(--color-border); border-radius: 12px; padding: .65rem 1rem; cursor: pointer; text-align: center; font-size: .82rem; font-weight: 600; color: var(--color-text-secondary); user-select: none; line-height: 1.5; transition: all .25s ease; }
+.zk-tarif-label input { display: none; }
+.zk-tarif-label.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.zk-tarif-label small { font-size: .72rem; font-weight: 400; opacity: .85; }
+
+/* --- Result box --- */
+.zk-result-box { margin-top: 1.5rem; padding: 1.5rem; border-radius: 18px; text-align: center; background: var(--color-primary-soft); border: 2px dashed var(--color-primary); }
+.zk-result-status { font-size: .73rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: .5rem; }
+.zk-result-status.due { color: var(--color-primary-dark); }
+.zk-result-status.not-due { color: var(--color-muted); }
+.zk-result-amount { font-size: 2.2rem; font-weight: 800; color: var(--color-primary); line-height: 1.2; }
+.zk-result-amount.livestock { font-size: 1.1rem; }
+.zk-pay-btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; margin-top: 1rem; padding: .75rem 2rem; background: var(--color-primary); color: #fff; border: none; border-radius: 50rem; font-size: .875rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: transform .25s ease; }
+.zk-pay-btn:hover { transform: translateY(-2px); }
+
+/* --- Nisab guide accordion --- */
+.zk-accordion { display: flex; flex-direction: column; gap: .6rem; }
+.zk-acc-item { border: 1px solid var(--color-border); border-radius: 14px; overflow: hidden; }
+.zk-acc-item.zk-open { border-color: var(--color-primary); }
+.zk-acc-header { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .9rem 1.1rem; background: none; border: none; cursor: pointer; text-align: left; font-family: inherit; transition: background .25s ease; }
+.zk-acc-header:hover, .zk-acc-item.zk-open .zk-acc-header { background: var(--color-primary-soft); }
+.zk-acc-title-text { font-size: .855rem; font-weight: 700; color: var(--color-text); line-height: 1.3; flex: 1; }
+.zk-acc-chevron { font-size: .72rem; color: var(--color-muted); transition: transform .35s ease; flex-shrink: 0; }
+.zk-acc-item.zk-open .zk-acc-chevron { transform: rotate(180deg); color: var(--color-primary); }
+.zk-acc-body { max-height: 0; overflow: hidden; transition: max-height .4s ease; }
+.zk-acc-item.zk-open .zk-acc-body { max-height: 3000px; }
+.zk-acc-content { padding: .75rem 1.1rem 1rem; font-size: .82rem; color: var(--color-text-secondary); line-height: 1.7; }
+.zk-nisab-table { width: 100%; font-size: .78rem; border-collapse: collapse; }
+.zk-nisab-table th { background: var(--color-primary-soft); color: var(--color-primary-dark); padding: .4rem .65rem; font-weight: 700; text-align: left; }
+.zk-nisab-table td { padding: .35rem .65rem; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary); }
+.zk-table-label { font-size: .72rem; font-weight: 700; color: var(--color-muted); letter-spacing: .05em; margin: .75rem 0 .3rem; }
+
+/* --- Warning card --- */
+.zk-warning-card { background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 20px; padding: 1.5rem 1.75rem; }
+.zk-warning-title { font-size: .82rem; font-weight: 700; color: #92400e; margin-bottom: .85rem; display: flex; align-items: center; gap: .5rem; }
+.zk-warning-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .5rem; }
+.zk-warning-list li { font-size: .8rem; color: #78350f; line-height: 1.6; padding-left: 1.1rem; position: relative; }
+.zk-warning-list li::before { content: '•'; position: absolute; left: 0; color: #f59e0b; font-weight: 700; }
+
+/* --- Amil-zakat modal --- */
+.zk-org-backdrop { position: fixed; inset: 0; background: rgba(20, 23, 26, .55); backdrop-filter: blur(4px); z-index: 9998; }
+.zk-org-modal { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.zk-org-modal-inner { background: var(--color-bg); border-radius: 20px; padding: 2rem; width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); position: relative; animation: zkSlideUp .25s cubic-bezier(.34, 1.56, .64, 1); }
+@keyframes zkSlideUp { from { opacity: 0; transform: translateY(24px) scale(.97); } to { opacity: 1; transform: none; } }
+.zk-org-header-label { font-size: .72rem; font-weight: 600; color: var(--color-primary); text-transform: uppercase; letter-spacing: .08em; margin: 0 0 .2rem; }
+.zk-org-header-title { font-size: 1.1rem; font-weight: 700; color: var(--color-text); margin: 0; }
+.zk-org-close { position: absolute; top: 1rem; right: 1rem; background: var(--color-bg-alt); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--color-text-secondary); }
+.zk-org-close:hover { background: var(--color-border); }
+.zk-org-subtitle { font-size: .8rem; color: var(--color-text-secondary); margin: .35rem 0 1.25rem; }
+.zk-org-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .85rem; }
+.zk-org-card { display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: 1rem .75rem .85rem; border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-bg-alt); text-decoration: none !important; transition: border-color .2s, transform .15s; }
+.zk-org-card:hover { border-color: var(--color-primary); transform: translateY(-2px); }
+.zk-org-logo-wrap { width: 56px; height: 56px; border-radius: 12px; overflow: hidden; background: #f8f9fa; display: flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); flex-shrink: 0; }
+.zk-org-logo { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+.zk-org-name { font-size: .8rem; font-weight: 700; color: var(--color-text); text-align: center; line-height: 1.3; }
+.zk-org-tagline { font-size: .68rem; color: var(--color-text-secondary); text-align: center; line-height: 1.4; }
+.zk-org-cta { margin-top: auto; font-size: .7rem; font-weight: 600; color: var(--color-primary); display: flex; align-items: center; gap: .25rem; }
+
+@media (max-width: 991px) {
+  .zk-layout { grid-template-columns: 1fr; gap: 1.75rem; }
+  .zk-col-info { position: static; }
+  .zk-deco-title { font-size: 1.65rem; }
+  .zk-form-card { padding: 1.75rem 1.5rem; }
+}
+@media (max-width: 767px) {
+  .zk-form-card { padding: 1.35rem 1.1rem; border-radius: 20px; }
+  .zk-result-amount { font-size: 1.7rem; }
+  .zk-tarif-label { min-width: 100%; }
+}

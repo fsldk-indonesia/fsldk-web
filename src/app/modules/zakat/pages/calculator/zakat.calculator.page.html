@@ -1,0 +1,288 @@
+<!-- Public zakat calculator. All markup ported from ldksyahid-app
+     zakat-calculator/index.blade.php; [innerHTML] is used ONLY for trusted
+     static constants (descriptions, nisab guide) — never for calculator input. -->
+<section class="zk-section">
+  <div class="container">
+    <div class="zk-layout">
+
+      <!-- ===== LEFT: INFO COLUMN ===== -->
+      <div class="zk-col-info">
+        <p class="zk-deco-label">Kalkulator Islami</p>
+        <h1 class="zk-deco-title">Kalkulator Zakat</h1>
+        <div class="zk-deco-bar"></div>
+
+        <div class="zk-deco-quote">
+          <p class="zk-quran-arabic">وَأَقِيمُوا الصَّلَاةَ وَآتُوا الزَّكَاةَ وَارْكَعُوا مَعَ الرَّاكِعِينَ</p>
+          <p>"Dan dirikanlah shalat, tunaikanlah zakat, dan rukuklah beserta orang-orang yang rukuk."</p>
+          <span>● QS. Al-Baqarah 2: 43</span>
+        </div>
+
+        <div class="zk-how-card">
+          <p class="zk-how-title"><i class="fas fa-info-circle"></i> Cara Penggunaan</p>
+          <ul class="zk-how-list">
+            @for (step of caraPenggunaan; track step) {
+              <li><span class="zk-how-bullet"></span>{{ step }}</li>
+            }
+          </ul>
+        </div>
+
+        <div class="zk-method-card">
+          <p class="zk-method-title"><i class="fas fa-balance-scale"></i> Metode Perhitungan</p>
+          <p class="zk-method-body">
+            Zakat Penghasilan menggunakan metode <strong>Bruto</strong> (dari penghasilan kotor)
+            atas dasar <em>ihtiyath</em> sesuai <strong>Fatwa MUI No.3/2003</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- ===== RIGHT: CALCULATOR FORM ===== -->
+      <div class="zk-col-form">
+
+        <!-- Main calculator card -->
+        <div class="zk-form-card">
+
+          <!-- Gold price panel -->
+          <div class="zk-gold-panel">
+            <div class="zk-gold-top">
+              <div class="zk-gold-brand">
+                <div class="zk-gold-icon-wrap"><i class="fas fa-coins"></i></div>
+                <div>
+                  <p class="zk-gold-brand-label">Harga Emas</p>
+                  <p class="zk-gold-brand-src">
+                    <a href="https://www.logammulia.com/id/harga-emas-hari-ini" target="_blank" rel="noopener">Antam · logammulia.com</a>
+                  </p>
+                </div>
+              </div>
+              <button type="button" class="zk-gold-fetch-btn" [disabled]="fetching()" (click)="refreshGoldPrice()">
+                <i class="fas fa-sync-alt" [class.fa-spin]="fetching()"></i>
+                <span>{{ fetching() ? 'Mengambil...' : 'Perbarui' }}</span>
+              </button>
+            </div>
+            <div class="zk-gold-price-row">
+              <span class="zk-gold-price-cur">Rp</span>
+              <span class="zk-gold-price-num">{{ goldPriceText() }}</span>
+              <span class="zk-gold-price-unit">/gram</span>
+            </div>
+            <div class="zk-gold-footer">
+              <span class="zk-gold-live-dot"></span>
+              <span class="zk-gold-live-label">Harga aktif · diperbarui otomatis</span>
+            </div>
+            @if (fetchState().status !== 'idle' && fetchState().status !== 'loading') {
+              <div class="zk-gold-fetch-status" [class.zk-fetch-ok]="fetchState().status === 'ok'" [class.zk-fetch-fail]="fetchState().status === 'fail'">
+                <i class="fas" [class.fa-check-circle]="fetchState().status === 'ok'" [class.fa-exclamation-circle]="fetchState().status === 'fail'"></i>
+                {{ fetchState().message }}
+              </div>
+            }
+          </div>
+
+          <!-- Jenis zakat pills -->
+          <div class="zk-form-group">
+            <label class="zk-form-label"><i class="fas fa-mosque"></i> Jenis Zakat</label>
+            <div class="zk-pill-wrap">
+              @for (t of types; track t.key) {
+                <button type="button" class="zk-pill" [class.active]="selectedType() === t.key" (click)="onSelectType(t.key)">
+                  {{ t.emoji }} {{ t.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Description box -->
+          <div class="zk-desc-box" [innerHTML]="selectedMeta().descHtml"></div>
+
+          <!-- INPUT: Penghasilan / Maal -->
+          @if (selectedMeta().input === 'wealth' && selectedType() !== 'emas') {
+            <div class="zk-form-group">
+              <label class="zk-form-label">{{ selectedMeta().wealthLabel }}</label>
+              <div class="zk-input-group">
+                <span class="zk-input-prefix">Rp</span>
+                <input type="text" inputmode="numeric" class="zk-form-input zk-input-with-prefix"
+                       [value]="money.wealth" (input)="onMoneyInput($event, 'wealth')" placeholder="Contoh: 5.000.000">
+              </div>
+              @if (nisabHintText()) { <small class="zk-form-hint">{{ nisabHintText() }}</small> }
+            </div>
+          }
+
+          <!-- INPUT: Emas -->
+          @if (selectedType() === 'emas') {
+            <div class="zk-form-group">
+              <label class="zk-form-label">{{ selectedMeta().wealthLabel }}</label>
+              <input type="text" inputmode="decimal" class="zk-form-input" [(ngModel)]="gram" (ngModelChange)="recompute()" placeholder="Contoh: 100 (gram)">
+              @if (nisabHintText()) { <small class="zk-form-hint">{{ nisabHintText() }}</small> }
+            </div>
+          }
+
+          <!-- INPUT: Fitrah -->
+          @if (selectedMeta().input === 'fitrah') {
+            <div class="zk-form-group">
+              <label class="zk-form-label">Jumlah Jiwa / Tanggungan</label>
+              <input type="number" min="1" class="zk-form-input" [(ngModel)]="jiwa" (ngModelChange)="recompute()">
+              <small class="zk-form-hint">Standar Zakat Fitrah: Rp 50.000 / jiwa (BAZNAS Pusat)</small>
+            </div>
+          }
+
+          <!-- INPUT: Perdagangan -->
+          @if (selectedMeta().input === 'perdagangan') {
+            <div class="zk-form-group">
+              <label class="zk-form-label">📦 Nilai Stok Barang Dagangan</label>
+              <div class="zk-input-group">
+                <span class="zk-input-prefix">Rp</span>
+                <input type="text" inputmode="numeric" class="zk-form-input zk-input-with-prefix"
+                       [value]="money.stok" (input)="onMoneyInput($event, 'stok')" placeholder="Contoh: 50.000.000">
+              </div>
+            </div>
+            <div class="zk-form-group">
+              <label class="zk-form-label">💳 Piutang Dagang yang Dapat Ditagih</label>
+              <div class="zk-input-group">
+                <span class="zk-input-prefix">Rp</span>
+                <input type="text" inputmode="numeric" class="zk-form-input zk-input-with-prefix"
+                       [value]="money.piutang" (input)="onMoneyInput($event, 'piutang')" placeholder="Contoh: 10.000.000">
+              </div>
+            </div>
+            <div class="zk-form-group">
+              <label class="zk-form-label">🏦 Kas / Bank (Modal Lancar)</label>
+              <div class="zk-input-group">
+                <span class="zk-input-prefix">Rp</span>
+                <input type="text" inputmode="numeric" class="zk-form-input zk-input-with-prefix"
+                       [value]="money.kas" (input)="onMoneyInput($event, 'kas')" placeholder="Contoh: 20.000.000">
+              </div>
+            </div>
+            <div class="zk-form-group">
+              <label class="zk-form-label">📉 Utang Dagang Jatuh Tempo</label>
+              <div class="zk-input-group">
+                <span class="zk-input-prefix">Rp</span>
+                <input type="text" inputmode="numeric" class="zk-form-input zk-input-with-prefix"
+                       [value]="money.utang" (input)="onMoneyInput($event, 'utang')" placeholder="Contoh: 5.000.000">
+              </div>
+              <small class="zk-form-hint">Utang yang jatuh tempo dalam tahun berjalan saja yang boleh dikurangi.</small>
+            </div>
+            <div class="zk-dagang-summary">
+              <div class="zk-dagang-summary-label">Aset Bersih Dagang (Stok + Piutang + Kas − Utang)</div>
+              <div class="zk-dagang-summary-val" [class.negative]="tradeNet() < 0">Rp {{ tradeNetText() }}</div>
+            </div>
+            @if (nisabHintText()) { <small class="zk-form-hint">{{ nisabHintText() }}</small> }
+          }
+
+          <!-- INPUT: Pertanian -->
+          @if (selectedMeta().input === 'pertanian') {
+            <div class="zk-form-group">
+              <label class="zk-form-label">🌾 Sumber Pengairan</label>
+              <div class="zk-tarif-wrap">
+                <label class="zk-tarif-label" [class.active]="tarifPertanian === 'irigasi'">
+                  <input type="radio" name="tarif_pertanian" value="irigasi" [(ngModel)]="tarifPertanian" (ngModelChange)="recompute()">
+                  💧 Irigasi / Biaya Pengairan<br><small>Tarif 5%</small>
+                </label>
+                <label class="zk-tarif-label" [class.active]="tarifPertanian === 'hujan'">
+                  <input type="radio" name="tarif_pertanian" value="hujan" [(ngModel)]="tarifPertanian" (ngModelChange)="recompute()">
+                  🌧️ Tadah Hujan / Tanpa Biaya<br><small>Tarif 10%</small>
+                </label>
+              </div>
+            </div>
+            <div class="zk-form-group">
+              <label class="zk-form-label">⚖️ Hasil Panen (Kg Gabah)</label>
+              <input type="number" min="0" class="zk-form-input" [(ngModel)]="hasilPanenKg" (ngModelChange)="recompute()" placeholder="Contoh: 700">
+              <small class="zk-form-hint">Nisab: 653 kg gabah per panen. Tidak disyaratkan haul. | Ref: Fatwa MUI No.3/2003</small>
+            </div>
+            <small class="zk-form-hint">Konversi nilai Rp menggunakan estimasi harga gabah Rp 6.000/kg. Sesuaikan dengan harga aktual daerah Anda.</small>
+          }
+
+          <!-- INPUT: Peternakan -->
+          @if (selectedMeta().input === 'peternakan') {
+            <div class="zk-form-group">
+              <label class="zk-form-label">🐄 Jenis Hewan Ternak</label>
+              <select class="zk-form-select" [(ngModel)]="jenisHewan" (ngModelChange)="recompute()">
+                @for (opt of hewanOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <small class="zk-form-hint">Hewan harus berupa sa'imah (digembalakan) dan dimiliki ≥ 1 haul.</small>
+            </div>
+            <div class="zk-form-group">
+              <label class="zk-form-label">🔢 Jumlah Hewan (Ekor)</label>
+              <input type="number" min="0" class="zk-form-input" [(ngModel)]="jumlahHewan" (ngModelChange)="recompute()" placeholder="Contoh: 40">
+              @if (nisabHintText()) { <small class="zk-form-hint">{{ nisabHintText() }}</small> }
+            </div>
+          }
+
+          <!-- Result box -->
+          @if (showResult() && result(); as r) {
+            <div class="zk-result-box">
+              <h6 class="zk-result-status" [class.due]="r.wajib" [class.not-due]="!r.wajib">
+                {{ r.wajib ? '✅ Wajib Zakat' : '❌ Belum Wajib Zakat' }}
+              </h6>
+              <div class="zk-result-amount" [class.livestock]="r.kind === 'livestock'">{{ r.label }}</div>
+              @if (r.kind === 'livestock') {
+                <small class="zk-form-hint">Zakat peternakan dibayarkan dalam bentuk hewan, bukan uang tunai.</small>
+              } @else if (r.extraInfo) {
+                <small class="zk-form-hint">{{ r.extraInfo }}</small>
+              }
+              @if (showPayButton()) {
+                <div>
+                  <button type="button" class="zk-pay-btn" (click)="openOrgModal()">
+                    <i class="fas fa-heart"></i> <span>Tunaikan Zakat Sekarang</span>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Panduan Nisab card -->
+        <div class="zk-form-card" style="margin-top: 1.5rem;">
+          <div class="zk-card-title-wrap">
+            <div class="zk-card-title-icon"><i class="fas fa-book-open"></i></div>
+            <span class="zk-card-title">Panduan Nisab Zakat</span>
+          </div>
+          <div class="zk-accordion">
+            @for (item of panduan; track item.title; let i = $index) {
+              <div class="zk-acc-item" [class.zk-open]="openAcc() === i">
+                <button type="button" class="zk-acc-header" (click)="toggleAcc(i)">
+                  <span class="zk-acc-title-text">{{ item.title }}</span>
+                  <i class="fas fa-chevron-down zk-acc-chevron"></i>
+                </button>
+                <div class="zk-acc-body">
+                  <div class="zk-acc-content" [innerHTML]="item.bodyHtml"></div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Catatan Penting -->
+        <div class="zk-warning-card" style="margin-top: 1.5rem;">
+          <p class="zk-warning-title"><i class="fas fa-exclamation-triangle"></i> Catatan Penting</p>
+          <ul class="zk-warning-list">
+            @for (note of catatanPenting; track note) { <li>{{ note }}</li> }
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Modal: Pilih Lembaga Zakat ===== -->
+@if (showOrgModal()) {
+  <div class="zk-org-backdrop"></div>
+  <div class="zk-org-modal" role="dialog" aria-modal="true" aria-label="Pilih Lembaga Zakat"
+       (click)="onModalShellClick($event)">
+    <div class="zk-org-modal-inner">
+      <button type="button" class="zk-org-close" aria-label="Tutup" (click)="closeOrgModal()"><i class="fas fa-times"></i></button>
+      <p class="zk-org-header-label">Tunaikan Zakatmu</p>
+      <h5 class="zk-org-header-title">Pilih Lembaga Zakat Terpercaya</h5>
+      <p class="zk-org-subtitle">Semua lembaga di bawah terdaftar resmi dan terpercaya dalam pengelolaan zakat di Indonesia.</p>
+      <div class="zk-org-grid">
+        @for (org of lembaga; track org.name) {
+          <a [href]="org.url" target="_blank" rel="noopener" class="zk-org-card">
+            <div class="zk-org-logo-wrap">
+              <img [src]="logoUrl(org.domain)" [alt]="org.name" class="zk-org-logo" (error)="onLogoError($event, org.domain)">
+            </div>
+            <span class="zk-org-name">{{ org.name }}</span>
+            <span class="zk-org-tagline">{{ org.tagline }}</span>
+            <span class="zk-org-cta">Bayar Zakat <i class="fas fa-arrow-right"></i></span>
+          </a>
+        }
+      </div>
+    </div>
+  </div>
+}

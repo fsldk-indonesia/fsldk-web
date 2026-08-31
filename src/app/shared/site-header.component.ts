@@ -5,6 +5,7 @@ import { SubmissionRepository } from '../modules/submission/repositories/submiss
 import { FORM_CODE_SENSUS_KADER } from '../modules/submission/entities/submission';
 import { shortlinkPath } from '../modules/shortlink/shortlink.path';
 import { financeformatPath } from '../modules/financeformat/financeformat.path';
+import { zakatPath } from '../modules/zakat/zakat.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
 
@@ -331,6 +332,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   readonly lainnyaItems = [
     { icon: 'file-spreadsheet', title: 'Format Keuangan', caption: 'Template Excel Laporan Keuangan', href: financeformatPath.publicIndex },
     { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
+    { icon: 'calculator', title: 'Kalkulator Zakat', caption: 'Hitung 7 jenis zakat', href: zakatPath.calculator },
   ];
 
   scrolled = signal(false);
