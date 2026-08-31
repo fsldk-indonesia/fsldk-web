@@ -9,6 +9,7 @@ import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
 import { articlePublicRoutes, articleCmsRoutes } from './modules/article/article.routes';
 import { catalogbookPublicRoutes, catalogbookCmsRoutes } from './modules/catalogbook/catalogbook.routes';
+import { financeformatPublicRoutes, financeformatCmsRoutes } from './modules/financeformat/financeformat.routes';
 import { eventPublicRoutes, eventCmsRoutes } from './modules/event/event.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
@@ -56,6 +57,7 @@ export const routes: Routes = [
       ...newsPublicRoutes(),
       ...articlePublicRoutes(),
       ...catalogbookPublicRoutes(),
+      ...financeformatPublicRoutes(),
       ...eventPublicRoutes(),
       ...shortlinkPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
@@ -96,6 +98,7 @@ export const routes: Routes = [
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...catalogbookCmsRoutes(),
+      ...financeformatCmsRoutes(),
       ...eventCmsRoutes(),
       ...shortlinkRoutes(),
       ...commentCmsRoutes(),

@@ -4,6 +4,7 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { SubmissionRepository } from '../modules/submission/repositories/submission.repository';
 import { FORM_CODE_SENSUS_KADER } from '../modules/submission/entities/submission';
 import { shortlinkPath } from '../modules/shortlink/shortlink.path';
+import { financeformatPath } from '../modules/financeformat/financeformat.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
 
@@ -328,6 +329,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   /** Isi dropdown navbar "Lainnya" — data-driven (bukan `<a>` di-hardcode)
    *  supaya item baru tinggal ditambah ke array ini. */
   readonly lainnyaItems = [
+    { icon: 'file-spreadsheet', title: 'Format Keuangan', caption: 'Template Excel Laporan Keuangan', href: financeformatPath.publicIndex },
     { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
   ];
 
