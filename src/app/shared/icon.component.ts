@@ -78,6 +78,8 @@ const ICONS: Record<string, string> = {
   list: 'fas fa-list-ul',
   // Dashboard Job Queue (sidebar menuIcon + aksi retry).
   refresh: 'fas fa-rotate-right',
+  // Navbar "Layanan" dropdown — Kalkulator Zakat.
+  calculator: 'fas fa-calculator',
 };
 
 /**
