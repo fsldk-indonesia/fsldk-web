@@ -1,0 +1,77 @@
+<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:32px">
+      <span class="eyebrow">Format Keuangan</span>
+      <h1>Template Laporan Keuangan</h1>
+      <p class="text-muted" style="max-width:640px;margin:8px auto 0">
+        Unduh template Excel (.xlsx) sesuai jenis laporan yang Anda butuhkan, lalu isi sesuai kegiatan LDK Anda.
+      </p>
+    </div>
+
+    @if (loading()) {
+      <div class="grid-cards">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="card" style="padding:18px">
+            <span class="skel skel-title"></span>
+            <span class="skel skel-line" style="width:60%"></span>
+            <span class="skel skel-line" style="width:80%;margin-top:12px"></span>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="grid-cards">
+        @for (g of groups(); track g.type.formatTypeID) {
+          <div class="fmt-card">
+            <div class="fmt-head">
+              <span class="icon-badge sm icon-badge-soft"><app-icon name="file-spreadsheet" [size]="16" /></span>
+              <h3>{{ g.type.formatTypeName }}</h3>
+              @if (g.files.length > 0) { <span class="chip chip-green count">{{ g.files.length }}</span> }
+            </div>
+            @if (g.files.length > 0) {
+              <ul class="fmt-files">
+                @for (f of g.files; track f.financeFormatID) {
+                  <li class="fmt-file">
+                    <span class="icon-badge sm icon-badge-neutral"><app-icon name="file-spreadsheet" [size]="14" /></span>
+                    <span class="fmt-file-info">
+                      <span class="name">{{ f.fileName }}</span>
+                      <span class="date">Diunggah {{ f.createdDate | date:'d MMM y' }}</span>
+                    </span>
+                    <span class="fmt-file-actions">
+                      <a class="btn btn-primary btn-sm" [href]="downloadUrl(f)">
+                        <app-icon name="download" [size]="13" /> Unduh
+                      </a>
+                      <button type="button" class="btn btn-outline btn-sm" (click)="copy(downloadUrl(f))" title="Salin URL berkas">
+                        <app-icon name="copy" [size]="13" />
+                      </button>
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <div class="fmt-empty">Belum ada file untuk kategori ini.</div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (totalFiles() === 0) {
+        <div class="empty-state" style="margin-top:24px">
+          <p>Belum ada template yang tersedia untuk saat ini. Silakan cek kembali nanti.</p>
+        </div>
+      }
+
+      @if (cpPhone()) {
+        <div class="cp-card">
+          <span class="icon-badge lg icon-badge-soft"><app-icon name="whatsapp" [size]="24" /></span>
+          <div class="cp-text">
+            <h4>Ada pertanyaan soal format ini?</h4>
+            <p>Hubungi {{ cpName() || 'kontak kami' }} untuk bantuan pengisian.</p>
+          </div>
+          <a class="btn btn-primary" [href]="whatsappLink()" target="_blank" rel="noopener">
+            <app-icon name="whatsapp" [size]="15" /> Chat WhatsApp
+          </a>
+        </div>
+      }
+    }
+  </div>
+</section>

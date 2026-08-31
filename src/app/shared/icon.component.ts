@@ -11,6 +11,8 @@ const ICONS: Record<string, string> = {
   dashboard: 'fas fa-tachometer-alt',
   newspaper: 'fas fa-newspaper',
   'file-text': 'fas fa-file-alt',
+  'file-spreadsheet': 'fas fa-file-excel',
+  download: 'fas fa-download',
   users: 'fas fa-users',
   'user-group': 'fas fa-users',
   'shield-check': 'fas fa-user-shield',
