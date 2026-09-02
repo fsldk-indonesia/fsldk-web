@@ -28,19 +28,11 @@ import { IconComponent } from '../../../../shared/icon.component';
           <!-- Left Column: Official Contact Information -->
           <div class="contact-info-col">
             <div class="card info-card">
-              <div class="info-card-header">
-                <span class="badge-icon"><app-icon name="building" [size]="20" /></span>
-                <div>
-                  <h3 class="info-card-title">Sekretariat Nasional</h3>
-                  <p class="info-card-desc">Pusat Komunikasi Nasional FSLDK Indonesia</p>
-                </div>
-              </div>
-
               <div class="info-items">
                 <div class="info-item">
                   <span class="item-icon"><app-icon name="map-pin" [size]="18" /></span>
                   <div class="item-content">
-                    <span class="item-label">Alamat Sekretariat</span>
+                    <span class="item-label">Alamat</span>
                     <span class="item-value">Plaza Aminta Lantai 5/504 Jl TB Simatupang Kav.10 - Pondok Pinang Kebayoran Lama - Jakarta Selatan 12310</span>
                   </div>
                 </div>
