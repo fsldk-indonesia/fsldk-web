@@ -18,7 +18,7 @@ import { IconComponent } from '../../../../shared/icon.component';
         <!-- Hero Header -->
         <div class="text-center page-header">
           <span class="eyebrow">Tentang Kami</span>
-          <h1>Hubungi Kami</h1>
+          <h1>Hubungi <span class="text-primary">Kami</span></h1>
           <p class="text-muted page-subtitle">
             Ada pertanyaan, kolaborasi dakwah, atau aspirasi kampus? Kami siap mendengar dan bersinergi bersama Anda.
           </p>
@@ -230,8 +230,23 @@ import { IconComponent } from '../../../../shared/icon.component';
     </section>
   `,
   styles: [`
+    :host { display: block; }
+    /* Wash gradien hijau khas FSLDK di bagian atas halaman (konsisten dengan halaman berita, artikel, event, galeri, struktur, dll.) */
+    .section {
+      background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-primary-tint) 220px, #fff 520px);
+      min-height: 85vh;
+      padding-top: 48px;
+    }
+
     .page-header { margin-bottom: 48px; }
-    .page-subtitle { max-width: 620px; margin: 10px auto 0; font-size: 1.05rem; }
+    .page-header h1 {
+      font-size: clamp(2rem, 4vw, 2.75rem);
+      font-weight: 800;
+      color: var(--color-text);
+      margin: 6px 0 10px;
+      letter-spacing: -0.02em;
+    }
+    .page-subtitle { max-width: 620px; margin: 0 auto; font-size: 1.05rem; }
 
     .contact-grid {
       display: grid;
