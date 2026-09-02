@@ -81,6 +81,19 @@ const ICONS: Record<string, string> = {
   refresh: 'fas fa-rotate-right',
   // Navbar "Layanan" dropdown — Kalkulator Zakat.
   calculator: 'fas fa-calculator',
+  // Navbar "Tentang Kami" dropdown & Modul Struktur, Galeri, Kontak.
+  sitemap: 'fas fa-sitemap',
+  photo: 'fas fa-images',
+  images: 'fas fa-images',
+  image: 'fas fa-image',
+  messages: 'fas fa-envelope',
+  envelope: 'fas fa-envelope',
+  comments: 'fas fa-comments',
+  'zoom-in': 'fas fa-search-plus',
+  plus: 'fas fa-plus',
+  inbox: 'fas fa-inbox',
+  star: 'fas fa-star',
+  mosque: 'fas fa-mosque',
 };
 
 /**
