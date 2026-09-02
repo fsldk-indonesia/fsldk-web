@@ -1,0 +1,63 @@
+@if (loading()) {
+  <div class="form-card"><span class="skel skel-title"></span></div>
+} @else {
+  <div class="page-head">
+    <a class="back" [routerLink]="kantongAmalPath.adminDonations">← Donasi</a>
+    <h1>{{ editId ? 'Ubah Donasi Manual' : 'Tambah Donasi Manual' }}</h1>
+    <p class="text-muted" style="font-size:.88rem">Untuk mencatat donasi yang tidak lewat Amdigipay/Bisatopup (tunai, transfer langsung, dsb).</p>
+  </div>
+
+  <div class="card card-pad form-card">
+    <label class="form-label">Campaign</label>
+    <app-select [options]="campaignOptions" [(ngModel)]="form.campaignID" placeholder="Pilih campaign" />
+
+    <label class="form-label mt-md">Nama Donatur</label>
+    <input class="form-control" [(ngModel)]="form.donorName" placeholder="Nama donatur">
+
+    <div class="grid grid-2 mt-md">
+      <div><label class="form-label">Email (opsional)</label>
+        <input class="form-control" type="email" [(ngModel)]="form.donorEmail"></div>
+      <div><label class="form-label">No. WhatsApp (opsional)</label>
+        <input class="form-control" [(ngModel)]="form.donorPhone"></div>
+    </div>
+
+    <div class="grid grid-3 mt-md">
+      <div><label class="form-label">Usia (opsional)</label>
+        <input class="form-control" [(ngModel)]="form.donorAge"></div>
+      <div><label class="form-label">Domisili (opsional)</label>
+        <input class="form-control" [(ngModel)]="form.donorDomicile"></div>
+      <div><label class="form-label">Pekerjaan (opsional)</label>
+        <input class="form-control" [(ngModel)]="form.donorOccupation"></div>
+    </div>
+
+    <label class="form-label mt-md">Nominal (Rp)</label>
+    <input class="form-control" type="number" [(ngModel)]="form.amount" placeholder="0">
+
+    <div class="grid grid-2 mt-md">
+      <div><label class="form-label">Metode Pembayaran</label>
+        <app-select [options]="paymentMethodOptions" [(ngModel)]="form.paymentMethod" /></div>
+      <div><label class="form-label">Status Pembayaran</label>
+        <app-select [options]="paymentStatusOptions" [(ngModel)]="form.paymentStatus" /></div>
+    </div>
+
+    <label class="form-label mt-md">Pesan (opsional)</label>
+    <textarea class="form-control" rows="3" [(ngModel)]="form.message"></textarea>
+
+    <div class="toggle-row mt-md">
+      <input type="checkbox" id="donation-anon" [(ngModel)]="form.isAnonymous">
+      <label for="donation-anon">Tampilkan sebagai donatur anonim</label>
+    </div>
+    @if (form.isAnonymous) {
+      <p class="anon-hint">
+        <app-icon name="info-circle" [size]="13" />
+        <span>Nama donatur tidak akan ditampilkan ke publik — daftar donatur akan menampilkan <strong>&ldquo;Hamba Allah&rdquo;</strong> sebagai gantinya.</span>
+      </p>
+    }
+
+    <div class="flex gap justify-between mt-lg">
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+        @if (saving()) { <span class="spinner"></span> } @else { Simpan }
+      </button>
+    </div>
+  </div>
+}

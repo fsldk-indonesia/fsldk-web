@@ -1,0 +1,39 @@
+<section class="section">
+  <div class="container">
+    @if (loading()) {
+      <div class="receipt-card"><span class="skel skel-title"></span></div>
+    } @else if (!donation()) {
+      <div class="receipt-card text-center">
+        <h4>Donasi tidak ditemukan</h4>
+        <p><a [routerLink]="kantongAmalPath.list">Kembali ke daftar campaign</a></p>
+      </div>
+    } @else if (donation()!.paymentStatus !== 'PAID') {
+      <div class="receipt-card text-center">
+        <h4>Bukti Donasi Belum Tersedia</h4>
+        <p style="color:var(--color-text-secondary)">Bukti donasi hanya tersedia setelah pembayaran berhasil dikonfirmasi.</p>
+        <p><a [routerLink]="kantongAmalPath.paymentStatus(donation()!.publicRef)">Cek Status Pembayaran</a></p>
+      </div>
+    } @else {
+      <div class="receipt-card">
+        <div class="receipt-head">
+          <span class="eyebrow">Bukti Donasi</span>
+          <div class="amount">{{ formatRupiah(donation()!.amount) }}</div>
+        </div>
+
+        <div class="receipt-row"><span>Campaign</span><span>{{ donation()!.campaignTitle }}</span></div>
+        <div class="receipt-row"><span>Donatur</span><span>{{ donation()!.isAnonymous ? 'Anonim' : donation()!.donorName }}</span></div>
+        <div class="receipt-row"><span>Referensi</span><span>{{ donation()!.publicRef }}</span></div>
+        <div class="receipt-row"><span>Tanggal</span><span>{{ donation()!.createdDate | date:'d MMM yyyy, HH:mm' }}</span></div>
+        <div class="receipt-row"><span>Status</span><span>Lunas</span></div>
+        @if (donation()!.message) {
+          <div class="receipt-row"><span>Pesan</span><span>"{{ donation()!.message }}"</span></div>
+        }
+
+        <div class="receipt-actions no-print">
+          <button class="btn btn-primary" style="flex:1" (click)="print()">Cetak / Simpan sebagai PDF</button>
+          <a class="btn btn-outline" [routerLink]="kantongAmalPath.list">Selesai</a>
+        </div>
+      </div>
+    }
+  </div>
+</section>
