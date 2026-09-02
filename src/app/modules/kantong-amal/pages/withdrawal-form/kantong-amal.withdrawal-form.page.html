@@ -3,7 +3,7 @@
 } @else {
   <div class="page-head">
     <a class="back" [routerLink]="kantongAmalPath.adminWithdrawals">← Penarikan</a>
-    <h1>Ajukan Penarikan Saldo</h1>
+    <h1>Penarikan Saldo</h1>
   </div>
 
   <div class="wizard-card">
@@ -62,7 +62,7 @@
       <div class="flex gap justify-between mt-lg">
         <button class="btn btn-outline" (click)="goToStep(2)" [disabled]="busy()">Kembali</button>
         <button class="btn btn-primary" (click)="submitRequest()" [disabled]="busy()">
-          @if (busy()) { <span class="spinner"></span> } @else { Ajukan Penarikan }
+          @if (busy()) { <span class="spinner"></span> } @else { Lanjut ke Verifikasi }
         </button>
       </div>
     }
