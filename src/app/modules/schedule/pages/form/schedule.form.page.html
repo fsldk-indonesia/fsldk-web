@@ -1,0 +1,62 @@
+<div class="page-head"><a routerLink="/cms/schedules" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Jadwal' : 'Tambah Jadwal' }}</h1></div>
+
+<div class="card card-pad form-card">
+  <p class="fieldset-title">Informasi Kegiatan</p>
+
+  <div class="form-group"><label class="form-label">Judul Kegiatan</label>
+    <input class="form-control" [(ngModel)]="form.title" maxlength="150" placeholder="mis. Kajian Rutin Pekanan"></div>
+
+  <div class="form-group"><label class="form-label">Kategori</label>
+    <app-select [(ngModel)]="form.category" [options]="categoryOptions()" placeholder="Pilih kategori" /></div>
+
+  <div class="form-group"><label class="form-label">Deskripsi <span class="text-muted">(opsional)</span></label>
+    <textarea class="form-control" rows="4" [(ngModel)]="form.description" maxlength="2000" placeholder="Detail kegiatan…"></textarea></div>
+</div>
+
+<div class="card card-pad form-card">
+  <p class="fieldset-title">Waktu Pelaksanaan</p>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Tanggal Mulai</label>
+      <input class="form-control" type="date" [(ngModel)]="form.startDate"></div>
+    <div class="form-group"><label class="form-label">Tanggal Selesai <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" type="date" [(ngModel)]="form.endDate" [min]="form.startDate"></div>
+  </div>
+
+  <label class="allday-row">
+    <input type="checkbox" [(ngModel)]="form.isAllDay" (ngModelChange)="onAllDayChange()">
+    <span>Sepanjang hari</span>
+  </label>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Jam Mulai</label>
+      <input class="form-control" type="time" step="300" [(ngModel)]="form.startTime" [disabled]="form.isAllDay"></div>
+    <div class="form-group"><label class="form-label">Jam Selesai <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" type="time" step="300" [(ngModel)]="form.endTime" [disabled]="form.isAllDay"></div>
+  </div>
+</div>
+
+<div class="card card-pad form-card">
+  <p class="fieldset-title">Detail Tambahan</p>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Lokasi / Tempat <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.location" maxlength="200" placeholder="mis. Masjid Kampus lt. 2"></div>
+    <div class="form-group"><label class="form-label">Penanggung Jawab / Panitia <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.organizer" maxlength="150" placeholder="mis. Departemen Kaderisasi"></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Narahubung <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.contactPerson" maxlength="100" placeholder="Nama / no. HP"></div>
+    <div class="form-group"><label class="form-label">Tautan Info / Pendaftaran <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" type="url" [(ngModel)]="form.url" maxlength="300" placeholder="https://…"></div>
+  </div>
+
+  <div class="flex gap justify-between">
+    <a routerLink="/cms/schedules" class="btn btn-ghost">Batal</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } @else { Simpan Jadwal }
+    </button>
+  </div>
+</div>
