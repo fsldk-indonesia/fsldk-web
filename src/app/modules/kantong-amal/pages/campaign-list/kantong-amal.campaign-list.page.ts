@@ -3,16 +3,22 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Campaign, CampaignCategory } from '../../entities/campaign';
 import { IconComponent } from '../../../../shared/icon.component';
+import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
 import { KantongAmalCampaignListPresenter } from './kantong-amal.campaign-list.presenter';
 import { KantongAmalCampaignListView } from './kantong-amal.campaign-list.view';
 
+const SORT_OPTIONS: SelectOption[] = [
+  { value: '-createdDate', label: 'Terbaru' },
+  { value: '-collectedAmountCache', label: 'Dana Terkumpul Terbanyak' },
+];
+
 @Component({
   selector: 'app-kantong-amal-campaign-list-page',
   standalone: true,
   templateUrl: './kantong-amal.campaign-list.page.html',
-  imports: [RouterLink, FormsModule, IconComponent],
+  imports: [RouterLink, FormsModule, IconComponent, SelectComponent],
   providers: [KantongAmalCampaignListPresenter],
   styles: [`
     .section { background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-primary-tint) 220px, #fff 520px); }
@@ -51,6 +57,7 @@ export class KantongAmalCampaignListPage implements OnInit, KantongAmalCampaignL
 
   readonly kantongAmalPath = kantongAmalPath;
   readonly formatRupiah = formatRupiah;
+  readonly sortOptions = SORT_OPTIONS;
 
   ngOnInit(): void {
     this.presenter.attachView(this);

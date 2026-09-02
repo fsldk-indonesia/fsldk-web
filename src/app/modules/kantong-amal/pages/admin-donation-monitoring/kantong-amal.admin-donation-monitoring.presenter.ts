@@ -14,4 +14,12 @@ export class KantongAmalAdminDonationMonitoringPresenter extends BasePresenter<K
       error: () => this.view.setLoading(false),
     });
   }
+
+  delete(id: number): void {
+    this.view.setBusy(id, true);
+    this.donationRepo.adminDelete(id).subscribe({
+      next: () => { this.view.setBusy(id, false); this.view.onDeleteSuccess(); },
+      error: () => this.view.setBusy(id, false),
+    });
+  }
 }

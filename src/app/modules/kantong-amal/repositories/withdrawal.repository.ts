@@ -9,7 +9,6 @@ export class WithdrawalRepository {
   private api = inject(WithdrawalApiService);
 
   request(campaignID: number, body: CreateWithdrawalRequest): Observable<Withdrawal> { return this.api.request(campaignID, body); }
-  myList(q: Record<string, unknown>): Observable<Pagination<Withdrawal>> { return this.api.myList(q); }
   cancel(id: number): Observable<unknown> { return this.api.cancel(id); }
   requestSecurityOtp(id: number): Observable<unknown> { return this.api.requestSecurityOtp(id); }
   verifySecurity(id: number, body: SecurityVerifyRequest): Observable<Withdrawal> { return this.api.verifySecurity(id, body); }
@@ -18,7 +17,5 @@ export class WithdrawalRepository {
   inquiry(body: InquiryRequest): Observable<InquiryResponse> { return this.api.inquiry(body); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<Withdrawal>> { return this.api.cmsList(q); }
-  approve(id: number): Observable<Withdrawal> { return this.api.approve(id); }
-  reject(id: number, reason: string): Observable<unknown> { return this.api.reject(id, reason); }
   process(id: number): Observable<Withdrawal> { return this.api.process(id); }
 }

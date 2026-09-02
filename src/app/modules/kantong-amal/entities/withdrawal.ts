@@ -22,6 +22,8 @@ export interface Withdrawal {
 
 export interface CreateWithdrawalRequest {
   amount: number;
+  beneficiaryBankCode: string;
+  beneficiaryAccountNumber: string;
   idempotencyKey?: string;
 }
 

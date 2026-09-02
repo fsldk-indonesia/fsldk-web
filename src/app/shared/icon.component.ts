@@ -78,6 +78,12 @@ const ICONS: Record<string, string> = {
   refresh: 'fas fa-rotate-right',
   // Kantong Amal (sidebar menuIcon lk_permission + halaman publik).
   'hand-heart': 'fas fa-hand-holding-heart',
+  'hand-coins': 'fas fa-hand-holding-dollar',
+  banknote: 'fas fa-money-bill-wave',
+  history: 'fas fa-clock-rotate-left',
+  'list-todo': 'fas fa-list-check',
+  // Komentar (sidebar menuIcon lk_permission — sebelumnya jatuh ke fallback "?").
+  'message-circle': 'fas fa-comment',
 };
 
 /**

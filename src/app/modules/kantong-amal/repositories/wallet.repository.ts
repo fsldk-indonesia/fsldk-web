@@ -8,6 +8,6 @@ import { LedgerListItem, WalletBalance } from '../entities/wallet';
 export class WalletRepository {
   private api = inject(WalletApiService);
 
-  myBalance(campaignID: number): Observable<WalletBalance> { return this.api.myBalance(campaignID); }
-  myLedger(campaignID: number, q: Record<string, unknown>): Observable<Pagination<LedgerListItem>> { return this.api.myLedger(campaignID, q); }
+  cmsBalance(campaignID: number): Observable<WalletBalance> { return this.api.cmsBalance(campaignID); }
+  cmsLedger(campaignID: number, q: Record<string, unknown>): Observable<Pagination<LedgerListItem>> { return this.api.cmsLedger(campaignID, q); }
 }

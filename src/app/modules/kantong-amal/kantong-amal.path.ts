@@ -5,11 +5,14 @@ export const kantongAmalPath = {
   paymentStatus: (publicRef: string) => `/kantong-amal/donasi/${publicRef}/status`,
   receipt: (publicRef: string) => `/kantong-amal/donasi/${publicRef}/bukti`,
 
-  myCampaigns: '/cms/kantong-amal/campaigns-saya',
-  campaignCreate: '/cms/kantong-amal/campaigns-saya/baru',
-  campaignEdit: (id: number) => `/cms/kantong-amal/campaigns-saya/${id}/edit`,
-  balance: (id: number) => `/cms/kantong-amal/campaigns-saya/${id}/saldo`,
-  ledgerHistory: (id: number) => `/cms/kantong-amal/campaigns-saya/${id}/riwayat`,
-  withdrawalForm: (id: number) => `/cms/kantong-amal/campaigns-saya/${id}/tarik-saldo`,
-  withdrawalHistory: (id: number) => `/cms/kantong-amal/campaigns-saya/${id}/riwayat-penarikan`,
+  adminCampaigns: '/cms/kantong-amal/campaigns',
+  campaignCreate: '/cms/kantong-amal/campaigns/baru',
+  campaignEdit: (id: number) => `/cms/kantong-amal/campaigns/${id}/edit`,
+
+  adminDonations: '/cms/kantong-amal/donasi',
+  donationCreate: '/cms/kantong-amal/donasi/baru',
+  donationEdit: (id: number) => `/cms/kantong-amal/donasi/${id}/edit`,
+
+  adminWithdrawals: '/cms/kantong-amal/penarikan',
+  withdrawalCreate: '/cms/kantong-amal/penarikan/baru',
 };

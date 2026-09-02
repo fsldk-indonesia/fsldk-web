@@ -1,36 +1,47 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe, UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { Withdrawal } from '../../entities/withdrawal';
 import { PaginationComponent } from '../../../../shared/pagination.component';
+import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { AlertService } from '../../../../core/services/alert.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
-import { KantongAmalAdminWithdrawalApprovalPresenter } from './kantong-amal.admin-withdrawal-approval.presenter';
-import { KantongAmalAdminWithdrawalApprovalView } from './kantong-amal.admin-withdrawal-approval.view';
+import { kantongAmalPath } from '../../kantong-amal.path';
+import { KantongAmalAdminWithdrawalPresenter } from './kantong-amal.admin-withdrawal.presenter';
+import { KantongAmalAdminWithdrawalView } from './kantong-amal.admin-withdrawal.view';
 
 const STATUS_LABELS: Record<string, string> = {
-  REQUESTED: 'Diajukan', SECURITY_CHECK: 'Verifikasi Keamanan', PENDING_APPROVAL: 'Menunggu Persetujuan',
-  APPROVED: 'Disetujui', PROCESSING: 'Diproses', SUCCESS: 'Berhasil', FAILED: 'Gagal',
+  REQUESTED: 'Diajukan', SECURITY_CHECK: 'Verifikasi Keamanan', APPROVED: 'Siap Diproses',
+  PROCESSING: 'Diproses', SUCCESS: 'Berhasil', FAILED: 'Gagal',
   REJECTED: 'Ditolak', CANCELLED: 'Dibatalkan', REVERSED: 'Dibatalkan Sistem',
 };
 
+const STATUS_OPTIONS: SelectOption[] = [
+  { value: 'APPROVED', label: 'Siap Diproses' },
+  { value: 'PROCESSING', label: 'Diproses' },
+  { value: 'SUCCESS', label: 'Berhasil' },
+  { value: 'FAILED', label: 'Gagal' },
+  { value: '', label: 'Semua Status' },
+];
+
 @Component({
-  selector: 'app-kantong-amal-admin-withdrawal-approval-page',
+  selector: 'app-kantong-amal-admin-withdrawal-page',
   standalone: true,
-  templateUrl: './kantong-amal.admin-withdrawal-approval.page.html',
-  imports: [DatePipe, UpperCasePipe, FormsModule, PaginationComponent],
-  providers: [KantongAmalAdminWithdrawalApprovalPresenter],
+  templateUrl: './kantong-amal.admin-withdrawal.page.html',
+  imports: [DatePipe, UpperCasePipe, FormsModule, RouterLink, PaginationComponent, SelectComponent],
+  providers: [KantongAmalAdminWithdrawalPresenter],
   styles: [`
     .status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
     .status-SUCCESS { background: #dcfce7; color: #166534; }
     .status-FAILED, .status-REJECTED, .status-REVERSED { background: #fee2e2; color: #991b1b; }
     .status-CANCELLED { background: #f3f4f6; color: #4b5563; }
-    .status-REQUESTED, .status-SECURITY_CHECK, .status-PENDING_APPROVAL, .status-APPROVED, .status-PROCESSING { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    .status-REQUESTED, .status-SECURITY_CHECK, .status-APPROVED, .status-PROCESSING { background: var(--color-primary-soft); color: var(--color-primary-dark); }
   `],
 })
-export class KantongAmalAdminWithdrawalApprovalPage implements OnInit, KantongAmalAdminWithdrawalApprovalView {
-  private presenter = inject(KantongAmalAdminWithdrawalApprovalPresenter);
+export class KantongAmalAdminWithdrawalPage implements OnInit, KantongAmalAdminWithdrawalView {
+  private presenter = inject(KantongAmalAdminWithdrawalPresenter);
   private alert = inject(AlertService);
   private toast = inject(ToastService);
 
@@ -39,14 +50,12 @@ export class KantongAmalAdminWithdrawalApprovalPage implements OnInit, KantongAm
   page = signal(1);
   count = signal(0);
   limit = 15;
-  status = 'PENDING_APPROVAL';
+  status = 'APPROVED';
   busyIDs = signal<Set<number>>(new Set());
 
-  showRejectModal = signal(false);
-  rejectTarget: Withdrawal | null = null;
-  rejectReason = '';
-
   readonly formatRupiah = formatRupiah;
+  readonly statusOptions = STATUS_OPTIONS;
+  readonly kantongAmalPath = kantongAmalPath;
 
   ngOnInit(): void {
     this.presenter.attachView(this);
@@ -59,28 +68,9 @@ export class KantongAmalAdminWithdrawalApprovalPage implements OnInit, KantongAm
   statusLabel(s: string): string { return STATUS_LABELS[s] ?? s; }
   isBusy(id: number): boolean { return this.busyIDs().has(id); }
 
-  async approve(w: Withdrawal, event: Event): Promise<void> {
-    const ok = await this.alert.confirm(`Setujui penarikan ${this.formatRupiah(w.amount)} untuk "${w.campaignTitle}"?`, {}, event);
-    if (ok) this.presenter.approve(w.withdrawalID);
-  }
-
   async process(w: Withdrawal, event: Event): Promise<void> {
     const ok = await this.alert.confirm(`Proses pencairan ${this.formatRupiah(w.amount)}? Ini akan mengeksekusi transfer ke rekening tujuan.`, { variant: 'danger' }, event);
     if (ok) this.presenter.process(w.withdrawalID);
-  }
-
-  openReject(w: Withdrawal): void {
-    this.rejectTarget = w;
-    this.rejectReason = '';
-    this.showRejectModal.set(true);
-  }
-
-  closeReject(): void { this.showRejectModal.set(false); this.rejectTarget = null; }
-
-  submitReject(): void {
-    if (!this.rejectTarget || !this.rejectReason.trim()) { this.toast.error('Alasan penolakan wajib diisi.'); return; }
-    this.presenter.reject(this.rejectTarget.withdrawalID, this.rejectReason);
-    this.closeReject();
   }
 
   setLoading(loading: boolean): void { this.loading.set(loading); }

@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { UpperCasePipe } from '@angular/common';
-import { CampaignDetail } from '../../entities/campaign';
+import { CampaignLite } from '../../entities/campaign';
 import { WalletBalance } from '../../entities/wallet';
-import { InquiryResponse, Withdrawal } from '../../entities/withdrawal';
+import { BankListItem, InquiryResponse, Withdrawal } from '../../entities/withdrawal';
+import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
 import { KantongAmalWithdrawalFormPresenter } from './kantong-amal.withdrawal-form.presenter';
@@ -16,7 +17,7 @@ const MIN_AMOUNT = 50_000;
   selector: 'app-kantong-amal-withdrawal-form-page',
   standalone: true,
   templateUrl: './kantong-amal.withdrawal-form.page.html',
-  imports: [RouterLink, FormsModule, UpperCasePipe],
+  imports: [RouterLink, FormsModule, UpperCasePipe, SelectComponent],
   providers: [KantongAmalWithdrawalFormPresenter],
   styles: [`
     .page-head { max-width: 640px; margin: 0 auto 24px; }
@@ -33,9 +34,9 @@ const MIN_AMOUNT = 50_000;
 })
 export class KantongAmalWithdrawalFormPage implements OnInit, KantongAmalWithdrawalFormView {
   private presenter = inject(KantongAmalWithdrawalFormPresenter);
-  private route = inject(ActivatedRoute);
 
-  campaign = signal<CampaignDetail | null>(null);
+  campaigns = signal<CampaignLite[]>([]);
+  banks = signal<BankListItem[]>([]);
   balance = signal<WalletBalance | null>(null);
   inquiry = signal<InquiryResponse | null>(null);
   loading = signal(true);
@@ -44,7 +45,10 @@ export class KantongAmalWithdrawalFormPage implements OnInit, KantongAmalWithdra
   otpSent = signal(false);
   withdrawal = signal<Withdrawal | null>(null);
 
+  campaignID: number | null = null;
   amount: number | null = null;
+  bankCode: string | null = null;
+  accountNumber = '';
   password = '';
   otpCode = '';
 
@@ -52,12 +56,17 @@ export class KantongAmalWithdrawalFormPage implements OnInit, KantongAmalWithdra
   readonly formatRupiah = formatRupiah;
   readonly processingEta = '1-3 hari kerja';
 
-  private campaignID = 0;
+  get campaignOptions(): SelectOption[] { return this.campaigns().map((c) => ({ value: c.campaignID, label: c.title })); }
+  get bankOptions(): SelectOption[] { return this.banks().map((b) => ({ value: b.bankCode, label: b.name })); }
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.campaignID = Number(this.route.snapshot.paramMap.get('id'));
-    this.presenter.load(this.campaignID);
+    this.presenter.load();
+  }
+
+  onCampaignChange(): void {
+    this.balance.set(null);
+    if (this.campaignID) this.presenter.loadBalance(this.campaignID);
   }
 
   netAmount(): number {
@@ -67,14 +76,22 @@ export class KantongAmalWithdrawalFormPage implements OnInit, KantongAmalWithdra
 
   canProceedFromAmount(): boolean {
     const bal = this.balance()?.availableBalance ?? 0;
-    return !!this.amount && this.amount >= MIN_AMOUNT && this.amount <= bal;
+    return !!this.campaignID && !!this.amount && this.amount >= MIN_AMOUNT && this.amount <= bal;
   }
 
   goToStep(n: number): void { this.step.set(n); }
 
+  checkAccount(): void {
+    if (!this.bankCode || !this.accountNumber || this.busy()) return;
+    this.presenter.inquiry({ bankCode: this.bankCode, accountNumber: this.accountNumber });
+  }
+
   submitRequest(): void {
-    if (!this.canProceedFromAmount() || this.busy()) return;
-    this.presenter.request(this.campaignID, this.amount!);
+    if (!this.campaignID || !this.canProceedFromAmount() || !this.bankCode || !this.accountNumber || this.busy()) return;
+    this.presenter.request(this.campaignID, {
+      amount: this.amount!, beneficiaryBankCode: this.bankCode, beneficiaryAccountNumber: this.accountNumber,
+      idempotencyKey: crypto.randomUUID(),
+    });
   }
 
   sendOtp(): void {
@@ -91,7 +108,8 @@ export class KantongAmalWithdrawalFormPage implements OnInit, KantongAmalWithdra
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
-  setCampaign(campaign: CampaignDetail | null): void { this.campaign.set(campaign); }
+  setCampaigns(campaigns: CampaignLite[]): void { this.campaigns.set(campaigns); }
+  setBanks(banks: BankListItem[]): void { this.banks.set(banks); }
   setBalance(balance: WalletBalance | null): void { this.balance.set(balance); }
   setInquiry(inquiry: InquiryResponse | null): void { this.inquiry.set(inquiry); }
 

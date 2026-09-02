@@ -2,13 +2,13 @@
   <div class="form-card"><span class="skel skel-title"></span></div>
 } @else {
   <div class="page-head">
-    <a class="back" [routerLink]="kantongAmalPath.myCampaigns">← Campaign Saya</a>
-    <h1>{{ editId ? 'Ubah Campaign' : 'Ajukan Campaign Baru' }}</h1>
+    <a class="back" [routerLink]="kantongAmalPath.adminCampaigns">← Campaign</a>
+    <h1>{{ editId ? 'Ubah Campaign' : 'Buat Campaign Baru' }}</h1>
   </div>
 
   <div class="card card-pad form-card">
     @if (isReadonly) {
-      <div class="readonly-note">Campaign ini sedang {{ campaign()?.status }} dan tidak dapat diubah dari sini.</div>
+      <div class="readonly-note">Campaign ini sudah diarsipkan dan tidak dapat diubah dari sini.</div>
     }
 
     <label class="form-label">Judul Campaign</label>
@@ -17,8 +17,18 @@
     <label class="form-label mt-md">Kategori</label>
     <app-select [options]="categoryOptions" [(ngModel)]="form.categoryID" [disabled]="isReadonly" placeholder="Pilih kategori" />
 
+    <div class="grid grid-2 mt-md">
+      <div><label class="form-label">Provinsi</label>
+        <input class="form-control" [(ngModel)]="form.provinceName" [disabled]="isReadonly" placeholder="mis. DKI Jakarta"></div>
+      <div><label class="form-label">Kota/Kabupaten</label>
+        <input class="form-control" [(ngModel)]="form.cityName" [disabled]="isReadonly" placeholder="mis. Jakarta Selatan"></div>
+    </div>
+
+    <label class="form-label mt-md">Tujuan Penggalangan Dana</label>
+    <textarea class="form-control" rows="3" [(ngModel)]="form.goals" [disabled]="isReadonly" placeholder="Ringkasan tujuan penggunaan dana"></textarea>
+
     <label class="form-label mt-md">Cerita (minimal 50 karakter)</label>
-    <textarea class="form-control" rows="8" [(ngModel)]="form.story" [disabled]="isReadonly" placeholder="Ceritakan latar belakang dan tujuan penggalangan dana"></textarea>
+    <app-rich-text-editor [(value)]="form.story" />
 
     <label class="form-label mt-md">Gambar Sampul</label>
     <app-image-upload [value]="form.coverImageUrl" (valueChange)="form.coverImageUrl = $event" />
@@ -40,22 +50,28 @@
     <input class="form-control" type="number" [(ngModel)]="form.targetAmount" [disabled]="isReadonly" placeholder="0">
 
     <div class="grid grid-2 mt-md">
-      <div><label class="form-label">Mulai (opsional)</label><input class="form-control" type="date" [(ngModel)]="form.startDate" [disabled]="isReadonly"></div>
-      <div><label class="form-label">Selesai (opsional)</label><input class="form-control" type="date" [(ngModel)]="form.endDate" [disabled]="isReadonly"></div>
+      <div><label class="form-label">Mulai (opsional)</label><app-datetime-picker [showTime]="false" [(ngModel)]="form.startDate" [disabled]="isReadonly" /></div>
+      <div><label class="form-label">Selesai (opsional)</label><app-datetime-picker [showTime]="false" [(ngModel)]="form.endDate" [disabled]="isReadonly" /></div>
     </div>
 
-    <h3 class="mt-lg" style="font-size:1rem">Rekening Penerima</h3>
-    <label class="form-label mt-sm">Nama Pemilik Rekening / Yayasan</label>
-    <input class="form-control" [(ngModel)]="form.beneficiaryName" [disabled]="isReadonly">
+    <h3 class="mt-lg" style="font-size:1rem">Penanggung Jawab</h3>
+    <div class="grid grid-2 mt-sm">
+      <div><label class="form-label">Nama PIC</label>
+        <input class="form-control" [(ngModel)]="form.picName" [disabled]="isReadonly"></div>
+      <div><label class="form-label">No. WhatsApp PIC</label>
+        <input class="form-control" [(ngModel)]="form.picPhone" [disabled]="isReadonly" placeholder="62812xxxxxxx"></div>
+    </div>
 
-    <label class="form-label mt-md">Bank</label>
-    <app-select [options]="bankOptions" [(ngModel)]="form.beneficiaryBankCode" [disabled]="isReadonly" placeholder="Pilih bank" />
-
-    <label class="form-label mt-md">Nomor Rekening</label>
-    <input class="form-control" [(ngModel)]="form.beneficiaryAccountNumber" [disabled]="isReadonly">
-
-    <label class="form-label mt-md">Nama Pemilik Rekening (sesuai buku tabungan)</label>
-    <input class="form-control" [(ngModel)]="form.beneficiaryAccountHolder" [disabled]="isReadonly">
+    <h3 class="mt-lg" style="font-size:1rem">Organisasi Penyelenggara (opsional)</h3>
+    <p class="form-hint">Isi bila campaign diselenggarakan atas nama organisasi/yayasan di luar FSLDK.</p>
+    <label class="form-label mt-sm">Nama Organisasi</label>
+    <input class="form-control" [(ngModel)]="form.organizationNameOverride" [disabled]="isReadonly">
+    <div class="grid grid-2 mt-md">
+      <div><label class="form-label">Logo Organisasi (URL)</label>
+        <app-image-upload [value]="form.organizationLogoUrl" (valueChange)="form.organizationLogoUrl = $event" /></div>
+      <div><label class="form-label">Tautan Organisasi</label>
+        <input class="form-control" [(ngModel)]="form.organizationLinkUrl" [disabled]="isReadonly" placeholder="https://..."></div>
+    </div>
 
     <div class="toggle-row mt-md" style="display:flex; align-items:center; gap:10px">
       <input type="checkbox" id="anon-allowed" [(ngModel)]="form.isAnonymousAllowed" [disabled]="isReadonly">
@@ -69,12 +85,9 @@
 
     @if (!isReadonly) {
       <div class="flex gap justify-between mt-lg">
-        <button class="btn btn-outline" (click)="save()" [disabled]="!canSubmitForm()">
-          @if (saving()) { <span class="spinner"></span> } @else { Simpan Draft }
+        <button class="btn btn-primary" (click)="save()" [disabled]="!isFormValid()">
+          @if (saving()) { <span class="spinner"></span> } @else { Simpan }
         </button>
-        @if (editId) {
-          <button class="btn btn-primary" (click)="submitForReview()" [disabled]="saving()">Ajukan untuk Ditinjau</button>
-        }
       </div>
     }
   </div>

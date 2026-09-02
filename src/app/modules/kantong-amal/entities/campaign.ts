@@ -9,25 +9,28 @@ export interface Campaign {
   title: string;
   categoryID: number;
   categoryName: string;
-  ownerUserID: number;
-  ownerName: string;
   organizationID?: number;
   organizationName?: string;
+  provinceName?: string;
+  cityName?: string;
   story: string;
+  goals: string;
   latestUpdate?: string;
   coverImageUrl: string;
   targetAmount: number;
   collectedAmount: number;
-  beneficiaryName: string;
-  beneficiaryBankCode: string;
-  beneficiaryAccountNumber: string;
-  beneficiaryAccountHolder: string;
+  picName: string;
+  picPhone: string;
+  organizationNameOverride?: string;
+  organizationLogoUrl?: string;
+  organizationLinkUrl?: string;
   startDate?: string;
   endDate?: string;
   status: CampaignStatus;
   moderationNote?: string;
   isFeatured: boolean;
   isAnonymousAllowed: boolean;
+  hasDonations: boolean;
   createdDate: string;
 }
 
@@ -41,31 +44,27 @@ export interface CampaignCategory {
   categoryName: string;
 }
 
-export interface CampaignReview {
-  reviewID: number;
-  reviewerName: string;
-  decision: 'APPROVED' | 'REVISION_REQUESTED' | 'REJECTED';
-  note?: string;
-  reviewedDate: string;
-}
-
-export interface ReviewRequest {
-  decision: 'APPROVED' | 'REVISION_REQUESTED' | 'REJECTED';
-  note?: string;
+export interface CampaignLite {
+  campaignID: number;
+  title: string;
 }
 
 export interface CreateCampaignRequest {
   title: string;
   categoryID: number;
   organizationID?: number | null;
+  provinceName?: string;
+  cityName?: string;
   story: string;
+  goals: string;
   coverImageUrl: string;
   supportingImageUrls?: string[];
   targetAmount: number;
-  beneficiaryName: string;
-  beneficiaryBankCode: string;
-  beneficiaryAccountNumber: string;
-  beneficiaryAccountHolder: string;
+  picName: string;
+  picPhone: string;
+  organizationNameOverride?: string;
+  organizationLogoUrl?: string;
+  organizationLinkUrl?: string;
   startDate?: string | null;
   endDate?: string | null;
   isAnonymousAllowed?: boolean;
@@ -73,11 +72,4 @@ export interface CreateCampaignRequest {
 
 export interface UpdateCampaignRequest extends CreateCampaignRequest {
   latestUpdate?: string;
-}
-
-export interface UpdateBeneficiaryRequest {
-  beneficiaryName: string;
-  beneficiaryBankCode: string;
-  beneficiaryAccountNumber: string;
-  beneficiaryAccountHolder: string;
 }

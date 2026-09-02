@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CampaignApiService } from '../services/campaign-api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { Campaign, CampaignCategory, CampaignDetail, CampaignReview, CreateCampaignRequest, ReviewRequest, UpdateBeneficiaryRequest, UpdateCampaignRequest } from '../entities/campaign';
+import { Campaign, CampaignCategory, CampaignDetail, CampaignLite, CreateCampaignRequest, UpdateCampaignRequest } from '../entities/campaign';
 
 @Injectable({ providedIn: 'root' })
 export class CampaignRepository {
@@ -12,17 +12,12 @@ export class CampaignRepository {
   publicDetail(slug: string): Observable<CampaignDetail> { return this.api.publicDetail(slug); }
   categories(): Observable<CampaignCategory[]> { return this.api.categories(); }
 
-  myList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.myList(q); }
-  myGet(id: number): Observable<CampaignDetail> { return this.api.myGet(id); }
+  cmsList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.cmsList(q); }
+  cmsLite(): Observable<CampaignLite[]> { return this.api.cmsLite(); }
+  cmsGet(id: number): Observable<CampaignDetail> { return this.api.cmsGet(id); }
   create(body: CreateCampaignRequest): Observable<CampaignDetail> { return this.api.create(body); }
   update(id: number, body: UpdateCampaignRequest): Observable<CampaignDetail> { return this.api.update(id, body); }
-  updateBeneficiary(id: number, body: UpdateBeneficiaryRequest): Observable<CampaignDetail> { return this.api.updateBeneficiary(id, body); }
-  submit(id: number): Observable<CampaignDetail> { return this.api.submit(id); }
-
-  cmsList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.cmsList(q); }
-  cmsGet(id: number): Observable<CampaignDetail> { return this.api.cmsGet(id); }
-  reviewHistory(id: number): Observable<CampaignReview[]> { return this.api.reviewHistory(id); }
-  review(id: number, body: ReviewRequest): Observable<CampaignDetail> { return this.api.review(id, body); }
+  delete(id: number): Observable<void> { return this.api.delete(id); }
   publish(id: number): Observable<CampaignDetail> { return this.api.publish(id); }
   pause(id: number): Observable<CampaignDetail> { return this.api.pause(id); }
   resume(id: number): Observable<CampaignDetail> { return this.api.resume(id); }

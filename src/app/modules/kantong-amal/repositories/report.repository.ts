@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { ReportApiService } from '../services/report-api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { BalanceReport, CampaignReportRow, DonationReportRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../entities/report';
+import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../entities/report';
 import { FinanceAuditLogItem } from '../entities/audit-log';
 
 @Injectable({ providedIn: 'root' })
@@ -25,6 +25,9 @@ export class ReportRepository {
   runReconciliation(): Observable<ReconciliationSnapshot> { return this.api.runReconciliation(); }
 
   auditLog(q: Record<string, unknown>): Observable<Pagination<FinanceAuditLogItem>> { return this.api.auditLog(q); }
+
+  ledgerGlobal(q: Record<string, unknown>): Observable<Pagination<GlobalLedgerRow>> { return this.api.ledgerGlobal(q); }
+  analytics(campaignID?: number): Observable<AnalyticsResponse> { return this.api.analytics(campaignID); }
 
   private triggerDownload(result: { blob: Blob; filename: string }): void {
     const url = URL.createObjectURL(result.blob);

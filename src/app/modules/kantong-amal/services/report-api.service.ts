@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { BalanceReport, CampaignReportRow, DonationReportRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../entities/report';
+import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../entities/report';
 import { FinanceAuditLogItem } from '../entities/audit-log';
 
 interface WithdrawalReportEnvelope {
@@ -31,4 +31,7 @@ export class ReportApiService {
   runReconciliation(): Observable<ReconciliationSnapshot> { return this.api.post('/reports/kantong-amal/reconciliation/run'); }
 
   auditLog(q: Record<string, unknown>): Observable<Pagination<FinanceAuditLogItem>> { return this.api.get('/reports/kantong-amal/audit-log', q); }
+
+  ledgerGlobal(q: Record<string, unknown>): Observable<Pagination<GlobalLedgerRow>> { return this.api.get('/reports/kantong-amal/ledger-global', q); }
+  analytics(campaignID?: number): Observable<AnalyticsResponse> { return this.api.get('/reports/kantong-amal/analytics', campaignID ? { campaignID } : undefined); }
 }

@@ -19,7 +19,7 @@
         <img class="cover" [src]="campaign()!.coverImageUrl" [alt]="campaign()!.title">
         <span class="chip chip-green" style="margin-top:20px; display:inline-block">{{ campaign()!.categoryName }}</span>
         <h1>{{ campaign()!.title }}</h1>
-        <p class="meta" style="color:var(--color-muted)">Digalang oleh {{ campaign()!.ownerName }}</p>
+        <p class="meta" style="color:var(--color-muted)">Digalang oleh {{ campaign()!.organizationNameOverride || campaign()!.organizationName || campaign()!.picName }}</p>
         <div class="story">{{ campaign()!.story }}</div>
 
         @if (campaign()!.supportingImageUrls.length) {

@@ -4,11 +4,13 @@ import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import { LedgerListItem, WalletBalance } from '../entities/wallet';
 
-/** Panggilan HTTP mentah modul wallet — endpoint milik-sendiri saja di fase ini. */
+/** Panggilan HTTP mentah modul wallet — CMS saja sejak revisi 2026-09-01
+ * (tidak ada lagi endpoint milik-sendiri, balance/ledger self-service
+ * digantikan Laporan Kantong Amal). */
 @Injectable({ providedIn: 'root' })
 export class WalletApiService {
   private api = inject(ApiService);
 
-  myBalance(campaignID: number): Observable<WalletBalance> { return this.api.get(`/me/campaigns/${campaignID}/balance`); }
-  myLedger(campaignID: number, q: Record<string, unknown>): Observable<Pagination<LedgerListItem>> { return this.api.get(`/me/campaigns/${campaignID}/ledger`, q); }
+  cmsBalance(campaignID: number): Observable<WalletBalance> { return this.api.get(`/campaigns/${campaignID}/balance`); }
+  cmsLedger(campaignID: number, q: Record<string, unknown>): Observable<Pagination<LedgerListItem>> { return this.api.get(`/campaigns/${campaignID}/ledger`, q); }
 }

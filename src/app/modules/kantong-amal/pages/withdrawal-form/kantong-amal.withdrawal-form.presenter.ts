@@ -3,7 +3,7 @@ import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { CampaignRepository } from '../../repositories/campaign.repository';
 import { WalletRepository } from '../../repositories/wallet.repository';
 import { WithdrawalRepository } from '../../repositories/withdrawal.repository';
-import { SecurityVerifyRequest } from '../../entities/withdrawal';
+import { CreateWithdrawalRequest, InquiryRequest, SecurityVerifyRequest } from '../../entities/withdrawal';
 import { KantongAmalWithdrawalFormView } from './kantong-amal.withdrawal-form.view';
 
 @Injectable()
@@ -12,27 +12,33 @@ export class KantongAmalWithdrawalFormPresenter extends BasePresenter<KantongAma
   private walletRepo = inject(WalletRepository);
   private withdrawalRepo = inject(WithdrawalRepository);
 
-  load(campaignID: number): void {
+  load(): void {
     this.view.setLoading(true);
-    this.campaignRepo.myGet(campaignID).subscribe({
-      next: (campaign) => {
-        this.view.setCampaign(campaign);
-        this.withdrawalRepo.inquiry({ bankCode: campaign.beneficiaryBankCode, accountNumber: campaign.beneficiaryAccountNumber }).subscribe({
-          next: (inquiry) => this.view.setInquiry(inquiry),
-          error: () => this.view.setInquiry(null),
-        });
-      },
-      error: () => this.view.setCampaign(null),
+    this.campaignRepo.cmsLite().subscribe({
+      next: (campaigns) => { this.view.setCampaigns(campaigns); this.view.setLoading(false); },
+      error: () => { this.view.setCampaigns([]); this.view.setLoading(false); },
     });
-    this.walletRepo.myBalance(campaignID).subscribe({
-      next: (balance) => { this.view.setBalance(balance); this.view.setLoading(false); },
-      error: () => { this.view.setBalance(null); this.view.setLoading(false); },
+    this.withdrawalRepo.listBanks().subscribe({ next: (banks) => this.view.setBanks(banks), error: () => this.view.setBanks([]) });
+  }
+
+  loadBalance(campaignID: number): void {
+    this.walletRepo.cmsBalance(campaignID).subscribe({
+      next: (balance) => this.view.setBalance(balance),
+      error: () => this.view.setBalance(null),
     });
   }
 
-  request(campaignID: number, amount: number): void {
+  inquiry(body: InquiryRequest): void {
     this.view.setBusy(true);
-    this.withdrawalRepo.request(campaignID, { amount, idempotencyKey: crypto.randomUUID() }).subscribe({
+    this.withdrawalRepo.inquiry(body).subscribe({
+      next: (res) => { this.view.setBusy(false); this.view.setInquiry(res); },
+      error: () => { this.view.setBusy(false); this.view.setInquiry(null); },
+    });
+  }
+
+  request(campaignID: number, body: CreateWithdrawalRequest): void {
+    this.view.setBusy(true);
+    this.withdrawalRepo.request(campaignID, body).subscribe({
       next: (withdrawal) => { this.view.setBusy(false); this.view.onRequestSuccess(withdrawal); },
       error: () => this.view.setBusy(false),
     });

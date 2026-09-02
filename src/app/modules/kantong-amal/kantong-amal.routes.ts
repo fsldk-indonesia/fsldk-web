@@ -26,97 +26,31 @@ export const kantongAmalPublicRoutes: () => Routes = () => [
 ];
 
 /**
- * Rute self-service pemilik campaign — dipasang sebagai children dari
- * CmsLayoutComponent (path `cms/kantong-amal/campaigns-saya/...`, mengikuti
- * §8.3 techspec). Digerbang permission `kantong_amal.campaign.create` (satu
- * permission generik "boleh mengelola campaign sendiri", sama pola dengan
- * modules/campaign backend) — bukan permission per-halaman karena seluruh
- * halaman ini murni self-service, kepemilikan campaign individual tetap
- * divalidasi di backend (404 untuk campaign bukan milik caller).
- */
-export const kantongAmalMeRoutes: () => Routes = () => [
-  {
-    path: 'kantong-amal/campaigns-saya',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.campaign.create' },
-    loadComponent: () => import('./pages/my-campaigns/kantong-amal.my-campaigns.page').then((m) => m.KantongAmalMyCampaignsPage),
-  },
-  {
-    path: 'kantong-amal/campaigns-saya/baru',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.campaign.create' },
-    loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
-  },
-  {
-    path: 'kantong-amal/campaigns-saya/:id/edit',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.campaign.create' },
-    loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
-  },
-  {
-    path: 'kantong-amal/campaigns-saya/:id/saldo',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.campaign.create' },
-    loadComponent: () => import('./pages/balance/kantong-amal.balance.page').then((m) => m.KantongAmalBalancePage),
-  },
-  {
-    path: 'kantong-amal/campaigns-saya/:id/riwayat',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.campaign.create' },
-    loadComponent: () => import('./pages/ledger-history/kantong-amal.ledger-history.page').then((m) => m.KantongAmalLedgerHistoryPage),
-  },
-  {
-    path: 'kantong-amal/campaigns-saya/:id/tarik-saldo',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.withdrawal.request' },
-    loadComponent: () => import('./pages/withdrawal-form/kantong-amal.withdrawal-form.page').then((m) => m.KantongAmalWithdrawalFormPage),
-  },
-  {
-    path: 'kantong-amal/campaigns-saya/:id/riwayat-penarikan',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.campaign.create' },
-    loadComponent: () => import('./pages/withdrawal-history/kantong-amal.withdrawal-history.page').then((m) => m.KantongAmalWithdrawalHistoryPage),
-  },
-];
-
-/**
  * Rute admin CMS Kantong Amal — dipasang sebagai children CmsLayoutComponent
- * (§8.4 techspec), path & permission gate mengikuti persis `menuRoute`/
- * `permissionCode` yang sudah di-seed migration 0018 supaya sidebar dinamis
- * (`GET /me/menus`) benar-benar mengarah ke halaman yang hidup.
- *
- * `kantong-amal/campaigns` (permission `.campaign.view`, menu "Kantong Amal")
- * dan `kantong-amal/moderasi` (permission `.campaign.review`, menu "Moderasi
- * Campaign") sengaja dipetakan ke komponen YANG SAMA — keduanya cuma beda
- * gerbang permission untuk peran yang berbeda (Puskomda/Puskomnas Verifikator
- * punya `.review` langsung; peran lain yang nanti diberi `.view` saja tetap
- * bisa membuka daftar/riwayatnya), backend tetap menolak aksi review bila
- * caller sungguhan tidak punya `.campaign.review`.
- *
- * Queue Monitoring **tidak** punya halaman terpisah — job queue Kantong Amal
- * berbagi infrastruktur & CMS page generik dengan fitur shortlink-request
- * (`/cms/job-queue`, permission `jobqueue.view`, dibangun Phase 8 lewat merge
- * `main`); `kantong-amal/queue` (menu seeded dengan permission
- * `kantong_amal.queue.view`, saat ini cuma dimiliki Super Admin yang juga
- * otomatis punya `jobqueue.view`) di-redirect ke sana alih-alih membuat
- * halaman kedua yang murni duplikat hanya beda filter correlationType.
+ * (§8.4 techspec). Revisi 2026-09-01: campaign/donation/withdrawal murni
+ * CRUD/aksi permission-gated, TIDAK ada lagi rute milik-sendiri
+ * ("campaigns-saya/...", dulu `kantongAmalMeRoutes` — dihapus seluruhnya,
+ * termasuk halaman balance/ledger-history/withdrawal-history self-service
+ * yang kini digantikan Laporan Kantong Amal).
  */
 export const kantongAmalAdminRoutes: () => Routes = () => [
   {
     path: 'kantong-amal/campaigns',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'kantong_amal.campaign.view' },
-    loadComponent: () => import('./pages/admin-campaign-moderation/kantong-amal.admin-campaign-moderation.page').then((m) => m.KantongAmalAdminCampaignModerationPage),
+    loadComponent: () => import('./pages/admin-campaign/kantong-amal.admin-campaign.page').then((m) => m.KantongAmalAdminCampaignPage),
   },
   {
-    path: 'kantong-amal/moderasi',
+    path: 'kantong-amal/campaigns/baru',
     canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.campaign.review' },
-    loadComponent: () => import('./pages/admin-campaign-moderation/kantong-amal.admin-campaign-moderation.page').then((m) => m.KantongAmalAdminCampaignModerationPage),
+    data: { permission: 'kantong_amal.campaign.create' },
+    loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
   },
   {
-    path: 'kantong-amal/queue',
-    redirectTo: 'job-queue',
+    path: 'kantong-amal/campaigns/:id/edit',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.campaign.update' },
+    loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
   },
   {
     path: 'kantong-amal/donasi',
@@ -125,10 +59,28 @@ export const kantongAmalAdminRoutes: () => Routes = () => [
     loadComponent: () => import('./pages/admin-donation-monitoring/kantong-amal.admin-donation-monitoring.page').then((m) => m.KantongAmalAdminDonationMonitoringPage),
   },
   {
-    path: 'kantong-amal/persetujuan-penarikan',
+    path: 'kantong-amal/donasi/baru',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.donation.create' },
+    loadComponent: () => import('./pages/admin-donation-form/kantong-amal.admin-donation-form.page').then((m) => m.KantongAmalAdminDonationFormPage),
+  },
+  {
+    path: 'kantong-amal/donasi/:id/edit',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.donation.update' },
+    loadComponent: () => import('./pages/admin-donation-form/kantong-amal.admin-donation-form.page').then((m) => m.KantongAmalAdminDonationFormPage),
+  },
+  {
+    path: 'kantong-amal/penarikan',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'kantong_amal.withdrawal.approve' },
-    loadComponent: () => import('./pages/admin-withdrawal-approval/kantong-amal.admin-withdrawal-approval.page').then((m) => m.KantongAmalAdminWithdrawalApprovalPage),
+    loadComponent: () => import('./pages/admin-withdrawal/kantong-amal.admin-withdrawal.page').then((m) => m.KantongAmalAdminWithdrawalPage),
+  },
+  {
+    path: 'kantong-amal/penarikan/baru',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.withdrawal.request' },
+    loadComponent: () => import('./pages/withdrawal-form/kantong-amal.withdrawal-form.page').then((m) => m.KantongAmalWithdrawalFormPage),
   },
   {
     path: 'kantong-amal/laporan',

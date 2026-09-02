@@ -11,6 +11,25 @@ import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from '../sha
 
 type Tier = CmsTier;
 
+/** Konfigurasi grup sidebar collapsible — dikelompokkan berdasarkan prefix
+ *  `menuRoute` (bukan field baru dari backend; `GET /me/menus` tetap
+ *  mengembalikan daftar flat, `menuLabel`/`menuIcon`/`menuRoute`/`sortOrder`
+ *  saja). Array satu entri untuk saat ini (Kantong Amal), tapi ditulis
+ *  generik supaya modul lain bisa ikut dikelompokkan nanti tanpa perlu
+ *  menulis ulang mekanismenya. */
+interface SidebarGroupConfig {
+  label: string;
+  icon: string;
+  routePrefix: string;
+}
+const SIDEBAR_GROUPS: SidebarGroupConfig[] = [
+  { label: 'Kantong Amal', icon: 'hand-heart', routePrefix: '/cms/kantong-amal' },
+];
+
+type SidebarEntry =
+  | { kind: 'item'; item: MenuItem }
+  | { kind: 'group'; config: SidebarGroupConfig; children: MenuItem[] };
+
 /**
  * Shell CMS — dipakai untuk 4 route tree terpisah (cms/cms-ldk/cms-puskomda/
  * cms-puskomnas, lihat app.routes.ts). `tier` datang dari route `data` dan
@@ -37,11 +56,29 @@ type Tier = CmsTier;
             <span class="icon-badge sm icon-badge-soft"><app-icon name="dashboard" [size]="17" /></span> Dashboard
             <span class="side-nav-dot"></span>
           </a>
-          @for (m of menus(); track m.menuRoute; let i = $index) {
-            <a [routerLink]="m.menuRoute" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()" class="stagger-in" [style.--stagger-i]="i + 1">
-              <span class="icon-badge sm icon-badge-soft"><app-icon [name]="m.menuIcon" [size]="17" /></span> {{ m.menuLabel }}
-              <span class="side-nav-dot"></span>
-            </a>
+          @for (entry of sidebarEntries(); track entry.kind === 'group' ? entry.config.label : entry.item.menuRoute; let i = $index) {
+            @if (entry.kind === 'item') {
+              <a [routerLink]="entry.item.menuRoute" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()" class="stagger-in" [style.--stagger-i]="i + 1">
+                <span class="icon-badge sm icon-badge-soft"><app-icon [name]="entry.item.menuIcon" [size]="17" /></span> {{ entry.item.menuLabel }}
+                <span class="side-nav-dot"></span>
+              </a>
+            } @else {
+              <button type="button" class="side-nav-group-trigger stagger-in" [style.--stagger-i]="i + 1" (click)="toggleGroup(entry.config.label)">
+                <span class="icon-badge sm icon-badge-soft"><app-icon [name]="entry.config.icon" [size]="17" /></span>
+                <span class="side-nav-group-label">{{ entry.config.label }}</span>
+                <app-icon name="chevron-down" [size]="12" class="side-nav-group-chevron" [class.open]="isGroupExpanded(entry.config.label)" />
+              </button>
+              @if (isGroupExpanded(entry.config.label)) {
+                <div class="side-nav-group-children">
+                  @for (child of entry.children; track child.menuRoute) {
+                    <a [routerLink]="child.menuRoute" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()">
+                      <span class="icon-badge sm icon-badge-soft"><app-icon [name]="child.menuIcon" [size]="15" /></span> {{ child.menuLabel }}
+                      <span class="side-nav-dot"></span>
+                    </a>
+                  }
+                </div>
+              }
+            }
           }
         </nav>
       </aside>
@@ -128,6 +165,16 @@ type Tier = CmsTier;
     .side-nav a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
     .side-nav-dot { display: none; margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--color-gold); flex-shrink: 0; animation: node-pulse 2.4s ease-in-out infinite; }
     .side-nav a.active .side-nav-dot { display: block; }
+    .side-nav-group-trigger { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; font-family: var(--font-body); cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
+    .side-nav-group-trigger:hover { background: var(--color-bg-alt); color: var(--color-text); }
+    .side-nav-group-label { flex: 1; text-align: left; }
+    .side-nav-group-chevron { color: var(--color-muted); transition: transform var(--motion-fast) ease; flex-shrink: 0; }
+    .side-nav-group-chevron.open { transform: rotate(180deg); }
+    .side-nav-group-children { display: flex; flex-direction: column; gap: 4px; padding-left: 18px; margin: 2px 0 4px; border-left: 2px solid var(--color-border); }
+    .side-nav-group-children a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .88rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .side-nav-group-children a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; transform: translateX(3px); }
+    .side-nav-group-children a.active { background: var(--color-primary); color: #fff; }
+    .side-nav-group-children a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
     .cms-main { margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; }
     .topbar { display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
     .spacer { flex: 1; }
@@ -234,6 +281,36 @@ export class CmsLayoutComponent implements OnInit {
   allMenus = signal<MenuItem[]>([]);
   menus = computed(() => this.allMenus().filter((m) => m.menuRoute.startsWith(this.shellBase() + '/')));
 
+  // Grup sidebar collapsible (mis. "Kantong Amal") — partisi menus() jadi
+  // urutan item flat & grup, menjaga posisi grup persis di mana anak
+  // pertamanya seharusnya muncul (mengikuti sortOrder asli dari backend),
+  // bukan dipindah ke awal/akhir.
+  expandedGroups = signal<Set<string>>(new Set());
+  sidebarEntries = computed<SidebarEntry[]>(() => {
+    const items = this.menus();
+    const entries: SidebarEntry[] = [];
+    const seen = new Set<string>();
+    for (const item of items) {
+      const group = SIDEBAR_GROUPS.find((g) => item.menuRoute.startsWith(g.routePrefix + '/'));
+      if (!group) {
+        entries.push({ kind: 'item', item });
+        continue;
+      }
+      if (seen.has(group.label)) continue;
+      seen.add(group.label);
+      const children = items.filter((i) => i.menuRoute.startsWith(group.routePrefix + '/'));
+      entries.push({ kind: 'group', config: group, children });
+    }
+    return entries;
+  });
+
+  toggleGroup(label: string): void {
+    const next = new Set(this.expandedGroups());
+    if (next.has(label)) next.delete(label); else next.add(label);
+    this.expandedGroups.set(next);
+  }
+  isGroupExpanded(label: string): boolean { return this.expandedGroups().has(label); }
+
   currentOrgID = signal<number | undefined>(undefined);
   orgOptions = signal<MeOrganization[]>([]);
   orgSearch = signal('');
@@ -248,6 +325,13 @@ export class CmsLayoutComponent implements OnInit {
   ngOnInit(): void {
     this.tier.set((this.route.snapshot.data['tier'] as Tier) ?? 'FSLDK');
     this.permissionRepo.getMenus().subscribe({ next: (m) => this.allMenus.set(m), error: () => {} });
+
+    // Grup sidebar yang memuat route aktif saat load pertama langsung
+    // terbuka, supaya pengguna tidak "kehilangan" halaman yang sedang
+    // dibuka di balik dropdown tertutup.
+    const currentUrl = this.router.url;
+    const activeGroup = SIDEBAR_GROUPS.find((g) => currentUrl.startsWith(g.routePrefix + '/'));
+    if (activeGroup) this.expandedGroups.set(new Set([activeGroup.label]));
 
     if (this.showOrgSwitcher()) {
       this.orgContext.organizationID$(this.route).subscribe((id) => {

@@ -16,10 +16,7 @@
     </div>
 
     <div class="sort-row">
-      <select class="form-control" [(ngModel)]="sort" (ngModelChange)="applySort()">
-        <option value="-createdDate">Terbaru</option>
-        <option value="-collectedAmountCache">Dana Terkumpul Terbanyak</option>
-      </select>
+      <app-select style="width:240px" [options]="sortOptions" [(ngModel)]="sort" (ngModelChange)="applySort()" />
     </div>
 
     @if (loading()) {

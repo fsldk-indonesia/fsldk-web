@@ -65,6 +65,39 @@ export interface WithdrawalReportResult {
   statusFunnel: WithdrawalStatusFunnel[];
 }
 
+/** Satu baris laporan debit/kredit global (item 6 revision-prompt-2.md) —
+ * khusus Bisatopup by construction (donasi manual tidak pernah menyentuh
+ * tr_wallet_ledger, lihat backend donation_service). */
+export interface GlobalLedgerRow {
+  ledgerID: number;
+  campaignID: number;
+  campaignTitle: string;
+  entryType: string;
+  direction: 'CREDIT' | 'DEBIT';
+  amount: number;
+  balanceAfter: number;
+  referenceType: string;
+  referenceID: number;
+  createdDate: string;
+}
+
+/** Satu bucket distribusi untuk tab Analitik (item 7 revision-prompt-2.md). */
+export interface AmountBandRow {
+  bandLabel: string;
+  count: number;
+}
+
+export interface AgeBandRow {
+  bandLabel: string;
+  count: number;
+}
+
+export interface AnalyticsResponse {
+  donationAmountBands: AmountBandRow[];
+  donorAgeBands: AgeBandRow[];
+  campaignProgress: CampaignReportRow[];
+}
+
 export interface ReconciliationSnapshot {
   snapshotID: number;
   snapshotDate: string;

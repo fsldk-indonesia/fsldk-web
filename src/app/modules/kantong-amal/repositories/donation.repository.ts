@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { DonationApiService } from '../services/donation-api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { CreateDonationRequest, Donation, DonationStatusResponse, PublicDonationItem } from '../entities/donation';
+import { AdminCreateDonationRequest, AdminUpdateDonationRequest, CreateDonationRequest, Donation, DonationAdminDetail, DonationStatusResponse, PublicDonationItem } from '../entities/donation';
 
 @Injectable({ providedIn: 'root' })
 export class DonationRepository {
@@ -14,4 +14,8 @@ export class DonationRepository {
   status(publicRef: string): Observable<DonationStatusResponse> { return this.api.status(publicRef); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<Donation>> { return this.api.cmsList(q); }
+  cmsGet(id: number): Observable<DonationAdminDetail> { return this.api.cmsGet(id); }
+  adminCreate(body: AdminCreateDonationRequest): Observable<Donation> { return this.api.adminCreate(body); }
+  adminUpdate(id: number, body: AdminUpdateDonationRequest): Observable<Donation> { return this.api.adminUpdate(id, body); }
+  adminDelete(id: number): Observable<void> { return this.api.adminDelete(id); }
 }
