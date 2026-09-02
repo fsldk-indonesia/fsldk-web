@@ -94,6 +94,14 @@ const ICONS: Record<string, string> = {
   inbox: 'fas fa-inbox',
   star: 'fas fa-star',
   mosque: 'fas fa-mosque',
+  play: 'fas fa-play',
+  'play-circle': 'fas fa-play-circle',
+  video: 'fas fa-video',
+  'external-link': 'fas fa-external-link-alt',
+  'chevron-left': 'fas fa-chevron-left',
+  'chevron-right': 'fas fa-chevron-right',
+  'arrow-up': 'fas fa-arrow-up',
+  'arrow-down': 'fas fa-arrow-down',
 };
 
 /**
