@@ -1,0 +1,75 @@
+<section class="section">
+  <div class="container">
+    @if (loading()) {
+      <div class="status-card"><span class="skel skel-title"></span><span class="skel skel-line"></span></div>
+    } @else if (!donation()) {
+      <div class="status-card">
+        <h4>Donasi tidak ditemukan</h4>
+        <p><a [routerLink]="kantongAmalPath.list">Kembali ke daftar campaign</a></p>
+      </div>
+    } @else {
+      <div class="status-card">
+        <div class="status-icon" [class]="statusClass()"><app-icon [name]="statusIcon()" [size]="30" /></div>
+        <h1 class="status-title">{{ statusLabel() }}</h1>
+        <p class="status-sub">{{ statusSubtitle() }}</p>
+
+        @if (donation()!.paymentStatus === 'PENDING' && !timedOut()) {
+          <div class="polling-indicator">
+            <span class="polling-dot"></span>
+            <span>Memeriksa status pembayaran…</span>
+          </div>
+        }
+
+        @if (donation()!.paymentStatus === 'PENDING') {
+          @if (qrImageDataUrl()) {
+            <div class="qris-card">
+              <div class="qris-provider"><app-icon name="banknote" [size]="13" /> Diproses oleh <strong>Amdigipay (BisaTopup)</strong></div>
+              <div class="qr-box"><img [src]="qrImageDataUrl()" alt="Kode QRIS"></div>
+              <div class="amount">{{ formatRupiah(donation()!.totalAmount) }}</div>
+
+              @if (timedOut()) {
+                <p class="status-sub">Pembayaran belum terkonfirmasi setelah 10 menit. Silakan cek kembali bila sudah membayar.</p>
+                <button type="button" class="btn btn-outline qris-dl-btn" [disabled]="checkingManually()" (click)="manualCheck()">
+                  @if (checkingManually()) { <span class="spinner"></span> } @else { <app-icon name="refresh" [size]="14" /> }
+                  Cek Status Manual
+                </button>
+              } @else {
+                <p class="status-sub">Pindai kode QR di atas menggunakan aplikasi e-wallet/m-banking Anda. Halaman ini akan otomatis diperbarui.</p>
+              }
+
+              @if (donation()!.expiredDate) {
+                <p class="qris-expiry"><app-icon name="clock" [size]="12" /> Berlaku sampai {{ donation()!.expiredDate | date:'d MMM yyyy, HH:mm' }}</p>
+              }
+
+              <button type="button" class="btn btn-primary qris-dl-btn" [disabled]="downloadingQr()" (click)="downloadQr()">
+                @if (downloadingQr()) { <span class="spinner"></span> } @else { <app-icon name="banknote" [size]="14" /> }
+                Download QR Code
+              </button>
+            </div>
+          }
+        } @else if (donation()!.paymentStatus === 'PAID') {
+          <a class="btn btn-primary mt-md" [routerLink]="kantongAmalPath.receipt(donation()!.publicRef)">Lihat Bukti Donasi</a>
+        } @else if (donation()!.paymentStatus === 'AMOUNT_MISMATCH') {
+          <p class="status-sub">Tim kami akan menghubungi Anda untuk verifikasi lebih lanjut.</p>
+        } @else {
+          <a class="btn btn-primary mt-md" [routerLink]="kantongAmalPath.donate(donation()!.campaignSlug)">Donasi Lagi</a>
+        }
+
+        <div class="detail-card">
+          <h3 class="detail-title"><app-icon name="clipboard-list" [size]="15" /> Detail Pembayaran</h3>
+          <div class="detail-row"><span class="detail-key">ID Donasi</span><span class="detail-val">#{{ donation()!.donationID }}</span></div>
+          <div class="detail-row"><span class="detail-key">Waktu</span><span class="detail-val">{{ donation()!.createdDate | date:'d MMM yyyy, HH:mm' }}</span></div>
+          <div class="detail-row"><span class="detail-key">Campaign</span><span class="detail-val">{{ donation()!.campaignTitle }}</span></div>
+          <div class="detail-row"><span class="detail-key">Atas Nama</span><span class="detail-val">{{ donation()!.isAnonymous ? 'Hamba Allah' : donation()!.donorName }}</span></div>
+          <div class="detail-row"><span class="detail-key">Jumlah Donasi</span><span class="detail-val">{{ formatRupiah(donation()!.amount) }}</span></div>
+          @if (donation()!.adminFee > 0) {
+            <div class="detail-row"><span class="detail-key">Biaya Layanan QRIS</span><span class="detail-val">{{ formatRupiah(donation()!.adminFee) }}</span></div>
+          }
+          <div class="detail-row total"><span class="detail-key">Total Pembayaran</span><span class="detail-val">{{ formatRupiah(donation()!.totalAmount) }}</span></div>
+        </div>
+
+        <p class="mt-lg"><a [routerLink]="kantongAmalPath.list">← Kembali ke daftar campaign</a></p>
+      </div>
+    }
+  </div>
+</section>

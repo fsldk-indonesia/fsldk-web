@@ -21,6 +21,7 @@ import { submissionRoutes } from './modules/submission/submission.routes';
 import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { kantongAmalPublicRoutes, kantongAmalAdminRoutes } from './modules/kantong-amal/kantong-amal.routes';
 import { zakatPublicRoutes } from './modules/zakat/zakat.routes';
 import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
@@ -62,6 +63,7 @@ export const routes: Routes = [
       ...schedulePublicRoutes(),
       ...financeformatPublicRoutes(),
       ...eventPublicRoutes(),
+      ...kantongAmalPublicRoutes(),
       ...shortlinkPublicRoutes(),
       ...zakatPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
@@ -109,6 +111,7 @@ export const routes: Routes = [
       ...commentCmsRoutes(),
       ...settingRoutes(),
       ...jobqueueRoutes(),
+      ...kantongAmalAdminRoutes(),
     ],
   },
   {
