@@ -167,61 +167,64 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
     <!-- Detail Message Modal -->
     @if (detailModalOpen() && selectedMessage()) {
       <div class="modal-backdrop" (click)="closeDetailModal()">
-        <div class="modal modal-pop" (click)="$event.stopPropagation()">
-          <div class="modal-header flex justify-between items-center">
-            <h3 class="modal-title">
-              <app-icon name="mail" [size]="18" class="mr-xs text-primary" /> Detail Pesan Kontak
-            </h3>
-            <button type="button" class="btn-close-modal" (click)="closeDetailModal()">
-              <app-icon name="x" [size]="16" />
-            </button>
+        <div class="modal modal-pop modal-detail" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="modal-top-row">
+              <div class="flex items-center gap-xs">
+                <span class="chip chip-green">
+                  <app-icon name="envelope" [size]="12" /> Pesan Masuk
+                </span>
+                <span class="modal-id-badge">#{{ selectedMessage()!.messageID }}</span>
+              </div>
+              <button type="button" class="btn-close-modal" (click)="closeDetailModal()" title="Tutup">
+                <app-icon name="x" [size]="16" />
+              </button>
+            </div>
+            <h2 class="modal-subject-title">{{ selectedMessage()!.subject }}</h2>
           </div>
 
           <div class="modal-body">
-            <!-- Sender info grid -->
-            <div class="detail-meta-grid mb-md">
-              <div class="meta-field">
-                <span class="meta-label">Nama Pengirim</span>
-                <span class="meta-val font-semibold">{{ selectedMessage()!.senderName }}</span>
+            <!-- Sender Profile Bar -->
+            <div class="sender-profile-card">
+              <div class="sender-avatar">
+                {{ getInitials(selectedMessage()!.senderName) }}
               </div>
-              <div class="meta-field">
-                <span class="meta-label">Alamat Email</span>
-                <a [href]="'mailto:' + selectedMessage()!.email" class="meta-link">
-                  {{ selectedMessage()!.email }}
+              <div class="sender-info">
+                <div class="sender-name">{{ selectedMessage()!.senderName }}</div>
+                <a [href]="'mailto:' + selectedMessage()!.email" class="sender-email">
+                  <app-icon name="envelope" [size]="12" class="mr-xs" />{{ selectedMessage()!.email }}
                 </a>
               </div>
-              <div class="meta-field">
-                <span class="meta-label">Waktu Diterima</span>
-                <span class="meta-val">{{ selectedMessage()!.createdDate | date: 'd MMMM y, HH:mm:ss' }}</span>
-              </div>
-              <div class="meta-field">
-                <span class="meta-label">Alamat IP Pengirim</span>
-                <span class="meta-val font-mono">{{ selectedMessage()!.ipAddress || '–' }}</span>
+              <div class="message-meta-right">
+                <div class="meta-date">
+                  <app-icon name="calendar-days" [size]="12" class="mr-xs" />
+                  {{ selectedMessage()!.createdDate | date: 'd MMMM y, HH:mm' }}
+                </div>
+                <div class="meta-ip">
+                  <app-icon name="globe" [size]="12" class="mr-xs" />
+                  IP: {{ selectedMessage()!.ipAddress || '–' }}
+                </div>
               </div>
             </div>
 
-            <!-- Subject -->
-            <div class="detail-subject-box mb-md">
-              <span class="meta-label">Subjek</span>
-              <div class="subject-content">{{ selectedMessage()!.subject }}</div>
-            </div>
-
-            <!-- Message Body -->
-            <div class="detail-message-box">
-              <span class="meta-label">Isi Pesan</span>
-              <div class="message-content">{{ selectedMessage()!.message }}</div>
+            <!-- Message Body Area -->
+            <div class="message-body-container">
+              <div class="message-body-label">
+                <app-icon name="messages" [size]="13" class="mr-xs text-primary" /> Isi Pesan
+              </div>
+              <div class="message-body-text">{{ selectedMessage()!.message }}</div>
             </div>
           </div>
 
           <div class="modal-footer flex justify-between items-center">
             <a
               [href]="'mailto:' + selectedMessage()!.email + '?subject=' + replySubject(selectedMessage()!.subject)"
-              class="btn btn-outline"
+              class="btn btn-primary"
               target="_blank"
             >
               <app-icon name="send" [size]="14" class="mr-xs" /> Balas via Email
             </a>
-            <button type="button" class="btn btn-primary" (click)="closeDetailModal()">
+            <button type="button" class="btn btn-outline" (click)="closeDetailModal()">
               Tutup
             </button>
           </div>
@@ -393,7 +396,7 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
       position: fixed;
       inset: 0;
       background: rgba(15, 23, 42, 0.55);
-      backdrop-filter: blur(2px);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -403,89 +406,178 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
     .modal {
       background: #fff;
       border-radius: var(--radius-lg);
-      padding: 28px;
       width: 100%;
-      max-width: 640px;
-      max-height: 88vh;
+      max-height: 90vh;
       display: flex;
       flex-direction: column;
-      box-shadow: var(--shadow-xl);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.16);
+      overflow: hidden;
     }
-    .modal-confirm { max-width: 460px; }
+    .modal-detail {
+      max-width: 680px;
+    }
+    .modal-confirm {
+      max-width: 440px;
+      padding: 24px;
+    }
     
     .modal-header {
       flex-shrink: 0;
-      padding-bottom: 16px;
+      padding: 22px 28px 16px;
       border-bottom: 1px solid var(--color-border);
+      background: #fff;
     }
-    .modal-title {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 700;
+    .modal-top-row {
       display: flex;
+      justify-content: space-between;
       align-items: center;
+      margin-bottom: 10px;
     }
+    .modal-id-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--color-muted);
+      background: var(--color-bg-alt);
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+    }
+    .modal-subject-title {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--color-text);
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+    }
+
     .btn-close-modal {
-      border: none;
-      background: transparent;
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--color-border);
+      background: #fff;
       color: var(--color-muted);
       cursor: pointer;
-      padding: 4px;
-      border-radius: var(--radius-xs);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--motion-fast);
     }
-    .btn-close-modal:hover { color: var(--color-text); }
+    .btn-close-modal:hover {
+      background: var(--color-bg-alt);
+      color: var(--color-text);
+    }
 
     .modal-body {
       flex: 1 1 auto;
       min-height: 0;
       overflow-y: auto;
-      padding: 20px 0;
+      padding: 22px 28px;
+      background: #fff;
+    }
+
+    .sender-profile-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px 18px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+    }
+    .sender-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      font-weight: 800;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      letter-spacing: 0.04em;
+    }
+    .sender-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .sender-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .sender-email {
+      font-size: 0.88rem;
+      color: var(--color-primary);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      font-weight: 500;
+    }
+    .sender-email:hover { text-decoration: underline; }
+
+    .message-meta-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      font-size: 0.8rem;
+      color: var(--color-muted);
+      flex-shrink: 0;
+    }
+    .meta-date { display: inline-flex; align-items: center; font-weight: 500; }
+    .meta-ip {
+      display: inline-flex;
+      align-items: center;
+      background: #fff;
+      padding: 2px 8px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-family: monospace;
+      font-size: 0.78rem;
+    }
+
+    .message-body-container {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    }
+    .message-body-label {
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--color-muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+    .message-body-text {
+      font-size: 0.95rem;
+      line-height: 1.75;
+      color: #334155;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
 
     .modal-footer {
       flex-shrink: 0;
-      padding-top: 18px;
+      padding: 16px 28px;
       border-top: 1px solid var(--color-border);
+      background: #f8fafc;
     }
 
-    /* Detail Modal Specifics */
-    .detail-meta-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      background: var(--color-bg-alt);
-      padding: 16px;
-      border-radius: var(--radius-md);
-    }
-    .meta-field { display: flex; flex-direction: column; gap: 3px; }
-    .meta-label { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
-    .meta-val { font-size: 0.9rem; color: var(--color-text); }
-    .meta-link { font-size: 0.9rem; color: var(--color-primary); font-weight: 600; text-decoration: none; }
-    .meta-link:hover { text-decoration: underline; }
-    .font-mono { font-family: monospace; font-size: 0.85rem; }
-
-    .detail-subject-box {
-      padding: 14px 16px;
-      border-left: 3px solid var(--color-primary);
-      background: var(--color-primary-soft);
-      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    }
-    .subject-content { font-size: 1.05rem; font-weight: 700; color: var(--color-primary-dark); margin-top: 3px; }
-
-    .detail-message-box {
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-md);
-      padding: 18px;
-      background: #fafafa;
-    }
-    .message-content {
-      margin-top: 8px;
-      font-size: 0.95rem;
-      line-height: 1.65;
-      color: var(--color-text);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+    .modal-confirm .modal-header { padding: 0 0 14px; border-bottom: 1px solid var(--color-border); background: transparent; }
+    .modal-confirm .modal-body { padding: 16px 0; background: transparent; }
+    .modal-confirm .modal-footer { padding: 14px 0 0; background: transparent; border-top: 1px solid var(--color-border); }
   `],
 })
 export class ContactIndexPage implements OnInit {
@@ -584,6 +676,15 @@ export class ContactIndexPage implements OnInit {
 
   replySubject(subject: string): string {
     return encodeURIComponent('Re: ' + subject);
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   }
 
   confirmDelete(item: ContactListItem): void {
