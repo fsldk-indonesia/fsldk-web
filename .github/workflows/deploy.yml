@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: http://187.124.137.178/
+      url: https://fsldk.or.id/
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -34,5 +34,5 @@ jobs:
 
       - name: Health check
         run: |
-          curl -sf http://${{ secrets.SSH_HOST }}/ -o /dev/null
+          curl -sf https://fsldk.or.id/ -o /dev/null
           echo "Frontend OK"

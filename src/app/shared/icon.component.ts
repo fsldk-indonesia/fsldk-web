@@ -79,6 +79,14 @@ const ICONS: Record<string, string> = {
   list: 'fas fa-list-ul',
   // Dashboard Job Queue (sidebar menuIcon + aksi retry).
   refresh: 'fas fa-rotate-right',
+  // Kantong Amal (sidebar menuIcon lk_permission + halaman publik).
+  'hand-heart': 'fas fa-hand-holding-heart',
+  'hand-coins': 'fas fa-hand-holding-dollar',
+  banknote: 'fas fa-money-bill-wave',
+  history: 'fas fa-clock-rotate-left',
+  'list-todo': 'fas fa-list-check',
+  // Komentar (sidebar menuIcon lk_permission — sebelumnya jatuh ke fallback "?").
+  'message-circle': 'fas fa-comment',
   // Navbar "Layanan" dropdown — Kalkulator Zakat.
   calculator: 'fas fa-calculator',
   // Navbar "Tentang Kami" dropdown & Modul Struktur, Galeri, Kontak.

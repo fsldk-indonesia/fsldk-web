@@ -436,6 +436,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
    *  supaya item baru tinggal ditambah ke array ini. */
   readonly lainnyaItems = [
     { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
+    { icon: 'hand-heart', title: 'Kantong Amal', caption: 'Galang & Salurkan Donasi', href: '/kantong-amal' },
     { icon: 'calculator', title: 'Kalkulator Zakat', caption: 'Hitung 7 jenis zakat', href: zakatPath.calculator },
   ];
 

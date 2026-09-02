@@ -1,0 +1,62 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Campaign</h1><p class="text-muted">Kelola seluruh campaign penggalangan dana.</p></div>
+  <a class="btn btn-primary" [routerLink]="kantongAmalPath.campaignCreate">+ Buat Campaign</a>
+</div>
+
+<div class="card">
+  <div class="card-pad">
+    <app-select style="max-width:220px" [options]="statusOptions" [(ngModel)]="status" (ngModelChange)="applyFilter()" />
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Campaign</th><th>PIC</th><th>Target</th><th>Dibuat</th><th></th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3]; track i) { <tr><td colspan="5"><span class="skel skel-line"></span></td></tr> }
+        } @else {
+          @for (c of campaigns(); track c.campaignID) {
+            <tr>
+              <td>
+                <div class="campaign-cell">
+                  <a [routerLink]="kantongAmalPath.detail(c.slug)" target="_blank" rel="noopener" title="Lihat halaman publik">{{ c.title }}</a>
+                  <span class="status-badge" [class]="'status-' + c.status">{{ statusLabel(c.status) }}</span>
+                </div>
+              </td>
+              <td class="text-muted">{{ c.picName }}</td>
+              <td>{{ formatRupiah(c.targetAmount) }}</td>
+              <td class="text-muted">{{ c.createdDate | date:'d MMM yyyy' }}</td>
+              <td>
+                <div class="table-actions">
+                  <a class="icon-action" [routerLink]="kantongAmalPath.campaignEdit(c.campaignID)" title="Ubah"><app-icon name="edit" [size]="14" /></a>
+                  @if (c.status === 'DRAFT') {
+                    <button class="btn btn-primary btn-sm" [disabled]="isBusy(c.campaignID)" (click)="publish(c, $event)">Publish</button>
+                  }
+                  @if (c.status === 'PUBLISHED') {
+                    <button class="btn btn-outline btn-sm" [disabled]="isBusy(c.campaignID)" (click)="pause(c, $event)">Jeda</button>
+                    <button class="btn btn-outline btn-sm" [disabled]="isBusy(c.campaignID)" (click)="archive(c, $event)">Arsipkan</button>
+                  }
+                  @if (c.status === 'PAUSED') {
+                    <button class="btn btn-primary btn-sm" [disabled]="isBusy(c.campaignID)" (click)="resume(c)">Lanjutkan</button>
+                    <button class="btn btn-outline btn-sm" [disabled]="isBusy(c.campaignID)" (click)="archive(c, $event)">Arsipkan</button>
+                  }
+                  @if (c.status === 'COMPLETED') {
+                    <button class="btn btn-outline btn-sm" [disabled]="isBusy(c.campaignID)" (click)="archive(c, $event)">Arsipkan</button>
+                  }
+                  <button type="button" class="icon-action" [disabled]="isBusy(c.campaignID) || c.hasDonations"
+                    [title]="c.hasDonations ? 'Sudah punya donasi, tidak dapat dihapus' : 'Hapus'" (click)="delete(c, $event)">
+                    <app-icon name="trash" [size]="14" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5"><div class="empty-state"><h4>Tidak ada campaign</h4></div></td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

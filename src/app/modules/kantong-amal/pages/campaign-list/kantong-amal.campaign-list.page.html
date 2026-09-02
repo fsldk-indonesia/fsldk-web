@@ -1,0 +1,74 @@
+<section class="section">
+  <div class="container">
+    <div class="text-center" style="margin-bottom:32px">
+      <span class="eyebrow">Kantong Amal</span>
+      <h1>Salurkan Kebaikan, Bantu Sesama</h1>
+    </div>
+
+    <div class="filters">
+      <input class="form-control search" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari campaign…">
+      <div class="chips">
+        <span class="chip" [class.active]="activeCategoryID === 0" (click)="filterCategory(0)">Semua</span>
+        @for (c of categories(); track c.campaignCategoryID) {
+          <span class="chip" [class.active]="activeCategoryID === c.campaignCategoryID" (click)="filterCategory(c.campaignCategoryID)">{{ c.categoryName }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="sort-row">
+      <app-select style="width:240px" [options]="sortOptions" [(ngModel)]="sort" (ngModelChange)="applySort()" />
+    </div>
+
+    @if (loading()) {
+      <div class="grid grid-3 mt-lg">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="card" style="overflow:hidden">
+            <span class="skel skel-thumb" style="border-radius:0"></span>
+            <div class="card-pad">
+              <span class="skel skel-title"></span>
+              <span class="skel skel-line" style="width:90%"></span>
+              <span class="skel skel-line" style="width:50%"></span>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="grid grid-3 mt-lg">
+        @for (c of campaigns(); track c.campaignID) {
+          <a class="campaign-card" [routerLink]="kantongAmalPath.detail(c.slug)">
+            <div class="campaign-thumb">@if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>FOTO CAMPAIGN</span> }</div>
+            <div class="campaign-body">
+              <span class="chip chip-green">{{ c.categoryName }}</span>
+              <h3>{{ c.title }}</h3>
+              <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent(c)"></div></div>
+              <div class="progress-meta">
+                <span><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</span>
+                <span>{{ progressPercent(c) }}%</span>
+              </div>
+            </div>
+          </a>
+        } @empty {
+          <div class="empty-state" style="grid-column:1/-1; min-height:50vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
+            @if (search || activeCategoryID) {
+              <span class="icon-badge lg icon-badge-neutral" style="margin:0 auto 14px"><app-icon name="search" [size]="26" /></span>
+              <h4>Tidak ada campaign ditemukan</h4>
+              <p>Coba ubah kata kunci pencarian atau kategori yang dipilih.</p>
+            } @else {
+              <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="hand-heart" [size]="26" /></span>
+              <h4>Belum ada campaign</h4>
+              <p>Jadi yang pertama menggalang dana kebaikan di sini.</p>
+            }
+          </div>
+        }
+      </div>
+
+      @if (count() > limit) {
+        <div class="pager">
+          <button class="btn btn-outline btn-sm" [disabled]="page() <= 1" (click)="go(page() - 1)">Sebelumnya</button>
+          <span>Halaman {{ page() }} dari {{ totalPages() }}</span>
+          <button class="btn btn-outline btn-sm" [disabled]="page() >= totalPages()" (click)="go(page() + 1)">Berikutnya</button>
+        </div>
+      }
+    }
+  </div>
+</section>
