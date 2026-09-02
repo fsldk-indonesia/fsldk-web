@@ -18,7 +18,7 @@ import { IconComponent } from '../../../../shared/icon.component';
         <!-- Hero Header -->
         <div class="text-center page-header">
           <span class="eyebrow">Tentang Kami</span>
-          <h1>Hubungi <span class="text-primary">Kami</span></h1>
+          <h1>Hubungi Kami</h1>
           <p class="text-muted page-subtitle">
             Ada pertanyaan, kolaborasi dakwah, atau aspirasi kampus? Kami siap mendengar dan bersinergi bersama Anda.
           </p>
