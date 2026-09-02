@@ -96,6 +96,7 @@ const ICONS: Record<string, string> = {
   image: 'fas fa-image',
   messages: 'fas fa-envelope',
   envelope: 'fas fa-envelope',
+  'map-pin': 'fas fa-map-marker-alt',
   comments: 'fas fa-comments',
   'zoom-in': 'fas fa-search-plus',
   plus: 'fas fa-plus',

@@ -41,7 +41,7 @@ import { IconComponent } from '../../../../shared/icon.component';
                   <span class="item-icon"><app-icon name="map-pin" [size]="18" /></span>
                   <div class="item-content">
                     <span class="item-label">Alamat Sekretariat</span>
-                    <span class="item-value">Gedung Puskomnas FSLDK Indonesia, Jl. Salemba Raya No. 4, Jakarta Pusat 10430</span>
+                    <span class="item-value">Plaza Aminta Lantai 5/504 Jl TB Simatupang Kav.10 - Pondok Pinang Kebayoran Lama - Jakarta Selatan 12310</span>
                   </div>
                 </div>
 
@@ -49,15 +49,15 @@ import { IconComponent } from '../../../../shared/icon.component';
                   <span class="item-icon"><app-icon name="envelope" [size]="18" /></span>
                   <div class="item-content">
                     <span class="item-label">Email Resmi</span>
-                    <a href="mailto:info@fsldk.or.id" class="item-link">info&#64;fsldk.or.id</a>
+                    <a href="mailto:info@fsldkindonesia.org" class="item-link">info&#64;fsldkindonesia.org</a>
                   </div>
                 </div>
 
                 <div class="info-item">
-                  <span class="item-icon"><app-icon name="clock" [size]="18" /></span>
+                  <span class="item-icon"><app-icon name="whatsapp" [size]="18" /></span>
                   <div class="item-content">
-                    <span class="item-label">Jam Pelayanan</span>
-                    <span class="item-value">Senin – Jumat: 08.30 – 17.00 WIB</span>
+                    <span class="item-label">WhatsApp</span>
+                    <a href="https://wa.me/6285111332861" target="_blank" rel="noopener noreferrer" class="item-link">+62 851-1133-2861</a>
                   </div>
                 </div>
               </div>
@@ -67,17 +67,21 @@ import { IconComponent } from '../../../../shared/icon.component';
               <div class="social-section">
                 <span class="social-title">Media Sosial Resmi:</span>
                 <div class="social-links">
-                  <a href="https://instagram.com/fsldk_indonesia" target="_blank" rel="noopener noreferrer" class="social-badge">
-                    <app-icon name="globe" [size]="15" />
-                    <span>&#64;fsldk_indonesia</span>
+                  <a href="https://www.instagram.com/fsldkindonesia/" target="_blank" rel="noopener noreferrer" class="social-badge">
+                    <app-icon name="instagram" [size]="15" />
+                    <span>&#64;fsldkindonesia</span>
                   </a>
-                  <a href="https://x.com/FSLDK_ID" target="_blank" rel="noopener noreferrer" class="social-badge">
-                    <app-icon name="share" [size]="15" />
-                    <span>&#64;FSLDK_ID</span>
+                  <a href="https://www.facebook.com/FSLDKIndonesia/" target="_blank" rel="noopener noreferrer" class="social-badge">
+                    <app-icon name="facebook" [size]="15" />
+                    <span>&#64;fsldkindonesia</span>
                   </a>
-                  <a href="https://youtube.com/@FSLDKIndonesia" target="_blank" rel="noopener noreferrer" class="social-badge">
-                    <app-icon name="play-circle" [size]="15" />
-                    <span>FSLDK Indonesia</span>
+                  <a href="https://www.tiktok.com/@fsldkindonesia" target="_blank" rel="noopener noreferrer" class="social-badge">
+                    <app-icon name="tiktok" [size]="15" />
+                    <span>&#64;fsldkindonesia</span>
+                  </a>
+                  <a href="https://www.youtube.com/@fsldk-indonesia" target="_blank" rel="noopener noreferrer" class="social-badge">
+                    <app-icon name="youtube" [size]="15" />
+                    <span>youtube/fsldk-indonesia</span>
                   </a>
                 </div>
               </div>
