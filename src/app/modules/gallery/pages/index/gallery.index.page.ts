@@ -8,6 +8,7 @@ import { GalleryRepository } from '../../repositories/gallery.repository';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { ToastService } from '../../../../core/services/toast.service';
+import { AlertService } from '../../../../core/services/alert.service';
 import { environment } from '../../../../../environments/environment';
 
 /**
@@ -142,7 +143,7 @@ import { environment } from '../../../../../environments/environment';
                         type="button"
                         class="icon-action danger"
                         title="Hapus Galeri"
-                        (click)="confirmDelete(item.galleryID, item.eventTheme)"
+                        (click)="confirmDelete(item.galleryID, item.eventTheme, $event)"
                       >
                         <app-icon name="trash" [size]="14" />
                       </button>
@@ -234,6 +235,7 @@ export class GalleryIndexPage implements OnInit {
   repo = inject(GalleryRepository);
   private title = inject(Title);
   private toast = inject(ToastService);
+  private alert = inject(AlertService);
 
   page = signal(1);
   limit = signal(15);
@@ -273,10 +275,18 @@ export class GalleryIndexPage implements OnInit {
     this.loadData();
   }
 
-  confirmDelete(id: number, title: string): void {
-    if (!confirm(`Hapus galeri "${title}"? Semua foto terkait akan ikut terhapus secara permanen.`)) {
-      return;
-    }
+  async confirmDelete(id: number, title: string, event?: MouseEvent): Promise<void> {
+    const ok = await this.alert.confirm(
+      `Hapus galeri "${title}"? Semua foto terkait akan ikut terhapus secara permanen.`,
+      {
+        title: 'Hapus Galeri',
+        confirmLabel: 'Ya, Hapus',
+        cancelLabel: 'Batal',
+        variant: 'danger',
+      },
+      event,
+    );
+    if (!ok) return;
 
     this.repo.delete(id).subscribe({
       next: () => {

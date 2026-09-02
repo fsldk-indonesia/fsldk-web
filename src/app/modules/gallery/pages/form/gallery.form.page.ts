@@ -11,7 +11,9 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
+import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { ToastService } from '../../../../core/services/toast.service';
+import { AlertService } from '../../../../core/services/alert.service';
 import { environment } from '../../../../../environments/environment';
 
 /**
@@ -28,6 +30,7 @@ import { environment } from '../../../../../environments/environment';
     ImageUploadComponent,
     RichTextEditorComponent,
     DateTimePickerComponent,
+    ModalBackdropDirective,
   ],
   template: `
     <div class="cms-header">
@@ -148,7 +151,7 @@ import { environment } from '../../../../../environments/environment';
               }
             </div>
 
-            <div class="form-actions mt-lg">
+            <div class="form-actions">
               <button type="button" class="btn btn-outline" (click)="back()" [disabled]="submitting()">
                 Batal
               </button>
@@ -172,7 +175,7 @@ import { environment } from '../../../../../environments/environment';
           <!-- If in Edit Mode: Interactive CRUD for Photos -->
           @if (isEdit()) {
             <!-- Add New Photo Box -->
-            <div class="add-photo-box mt-md p-md">
+            <div class="add-photo-box">
               <h3 class="text-sm font-bold mb-xs">Tambah Satu Foto ke Galeri</h3>
               <div class="row">
                 <div class="col-md-6">
@@ -192,15 +195,17 @@ import { environment } from '../../../../../environments/environment';
                       [(ngModel)]="newPhotoCaption"
                     />
                   </div>
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm mt-sm self-start"
-                    [disabled]="!newPhotoPath() || addingPhoto()"
-                    (click)="onAddPhotoCMS()"
-                  >
-                    @if (addingPhoto()) { <div class="spinner spinner-sm mr-xs"></div> }
-                    + Simpan Foto Baru
-                  </button>
+                  <div class="photo-btn-wrap">
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-sm"
+                      [disabled]="!newPhotoPath() || addingPhoto()"
+                      (click)="onAddPhotoCMS()"
+                    >
+                      @if (addingPhoto()) { <div class="spinner spinner-sm mr-xs"></div> }
+                      + Simpan Foto Baru
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -245,8 +250,8 @@ import { environment } from '../../../../../environments/environment';
                           <button
                             type="button"
                             class="btn-icon-sm text-primary"
-                            title="Edit Caption"
-                            (click)="editPhotoCaption(photo)"
+                            title="Ubah Keterangan"
+                            (click)="openEditCaptionModal(photo)"
                           >
                             <app-icon name="edit" [size]="12" />
                           </button>
@@ -254,7 +259,7 @@ import { environment } from '../../../../../environments/environment';
                             type="button"
                             class="btn-icon-sm text-danger"
                             title="Hapus Foto"
-                            (click)="deletePhotoCMS(photo.photoID)"
+                            (click)="deletePhotoCMS(photo.photoID, $event)"
                           >
                             <app-icon name="trash" [size]="12" />
                           </button>
@@ -273,7 +278,7 @@ import { environment } from '../../../../../environments/environment';
               </p>
 
               <!-- Upload photo to stage -->
-              <div class="add-photo-box p-md mb-md">
+              <div class="add-photo-box">
                 <div class="row">
                   <div class="col-md-6">
                     <label class="form-label text-sm">Unggah Foto</label>
@@ -293,14 +298,16 @@ import { environment } from '../../../../../environments/environment';
                         [(ngModel)]="newPhotoCaption"
                       />
                     </div>
-                    <button
-                      type="button"
-                      class="btn btn-outline btn-sm mt-sm self-start"
-                      [disabled]="!newPhotoPath()"
-                      (click)="addStagedPhoto()"
-                    >
-                      + Tambahkan ke Daftar
-                    </button>
+                    <div class="photo-btn-wrap">
+                      <button
+                        type="button"
+                        class="btn btn-outline btn-sm"
+                        [disabled]="!newPhotoPath()"
+                        (click)="addStagedPhoto()"
+                      >
+                        + Tambahkan ke Daftar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -326,6 +333,55 @@ import { environment } from '../../../../../environments/environment';
           }
         </div>
       </div>
+
+      <!-- Modal Pop-up: Ubah Caption Foto -->
+      @if (editingCaptionPhoto(); as photo) {
+        <div class="modal-backdrop" appModalBackdrop (backdropClose)="closeCaptionModal()">
+          <div class="modal modal-pop" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+              <h3 class="modal-title">
+                <app-icon name="edit" [size]="16" /> Ubah Keterangan Foto
+              </h3>
+              <button type="button" class="btn-close" (click)="closeCaptionModal()" [disabled]="savingCaption()">
+                <app-icon name="x" [size]="16" />
+              </button>
+            </div>
+
+            <div class="modal-body">
+              <div class="caption-preview-box">
+                <img [src]="imgUrl(photo.imagePath)" alt="Preview foto" class="caption-preview-thumb" />
+                <p class="caption-preview-hint">
+                  Keterangan ini akan ditampilkan saat pengunjung membuka foto di galeri publik maupun modal lightbox.
+                </p>
+              </div>
+
+              <div class="form-group mb-0">
+                <label class="form-label" for="captionField">Keterangan / Caption</label>
+                <input
+                  type="text"
+                  id="captionField"
+                  class="form-control"
+                  placeholder="Masukkan keterangan foto..."
+                  [ngModel]="editingCaptionText()"
+                  (ngModelChange)="editingCaptionText.set($event)"
+                  (keydown.enter)="savePhotoCaption()"
+                  autofocus
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline btn-sm" (click)="closeCaptionModal()" [disabled]="savingCaption()">
+                Batal
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" (click)="savePhotoCaption()" [disabled]="savingCaption()">
+                @if (savingCaption()) { <div class="spinner spinner-sm mr-xs"></div> }
+                Simpan Keterangan
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     }
   `,
   styles: [`
@@ -345,6 +401,15 @@ import { environment } from '../../../../../environments/environment';
       gap: 8px;
     }
 
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--color-border);
+    }
+
     .border-b {
       border-bottom: 1px solid var(--color-border);
     }
@@ -352,7 +417,115 @@ import { environment } from '../../../../../environments/environment';
     .add-photo-box {
       background: var(--color-bg-alt);
       border: 1px dashed var(--color-border);
-      border-radius: 12px;
+      border-radius: 14px;
+      padding: 24px;
+      margin-top: 18px;
+      margin-bottom: 28px;
+    }
+
+    .photo-btn-wrap {
+      margin-top: 20px;
+      padding-top: 10px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 20, 15, 0.55);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+      animation: modal-fade-in 0.2s ease;
+    }
+
+    @keyframes modal-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: var(--radius-lg, 16px);
+      padding: 24px 28px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-text);
+    }
+
+    .btn-close {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--color-text-secondary);
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .btn-close:hover {
+      background: var(--color-bg-alt);
+      color: var(--color-text);
+    }
+
+    .caption-preview-box {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      background: var(--color-bg-alt);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .caption-preview-thumb {
+      width: 64px;
+      height: 48px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      flex-shrink: 0;
+    }
+
+    .caption-preview-hint {
+      font-size: 0.8rem;
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 18px;
+      margin-top: 20px;
+      border-top: 1px solid var(--color-border);
     }
 
     .photo-tiles {
@@ -486,6 +659,7 @@ export class GalleryFormPage implements OnInit {
   private title = inject(Title);
   private location = inject(Location);
   private toast = inject(ToastService);
+  private alert = inject(AlertService);
 
   isEdit = signal(false);
   editId = signal<number | null>(null);
@@ -494,6 +668,11 @@ export class GalleryFormPage implements OnInit {
   submitting = signal(false);
   submitTried = signal(false);
   addingPhoto = signal(false);
+
+  // Edit Caption Modal state
+  editingCaptionPhoto = signal<GalleryPhoto | null>(null);
+  editingCaptionText = signal('');
+  savingCaption = signal(false);
 
   coverImagePath = signal<string | null>(null);
 
@@ -618,27 +797,52 @@ export class GalleryFormPage implements OnInit {
     });
   }
 
-  editPhotoCaption(photo: GalleryPhoto): void {
-    const current = photo.caption || '';
-    const updated = prompt('Ubah keterangan / caption foto:', current);
-    if (updated === null || updated === current) return;
+  openEditCaptionModal(photo: GalleryPhoto): void {
+    this.editingCaptionPhoto.set(photo);
+    this.editingCaptionText.set(photo.caption || '');
+  }
 
+  closeCaptionModal(): void {
+    if (this.savingCaption()) return;
+    this.editingCaptionPhoto.set(null);
+    this.editingCaptionText.set('');
+  }
+
+  savePhotoCaption(): void {
+    const photo = this.editingCaptionPhoto();
     const id = this.editId();
-    if (!id) return;
+    if (!photo || !id) return;
 
-    this.repo.updatePhoto(id, photo.photoID, { caption: updated }).subscribe({
+    const updated = this.editingCaptionText().trim();
+    this.savingCaption.set(true);
+
+    this.repo.updatePhoto(id, photo.photoID, { caption: updated || null }).subscribe({
       next: () => {
         this.toast.success('Caption berhasil diperbarui');
+        this.savingCaption.set(false);
+        this.closeCaptionModal();
         this.loadPhotos(id);
       },
       error: (err) => {
         this.toast.error(err.error?.message || 'Gagal memperbarui caption');
+        this.savingCaption.set(false);
       },
     });
   }
 
-  deletePhotoCMS(photoID: number): void {
-    if (!confirm('Hapus foto ini dari galeri?')) return;
+  async deletePhotoCMS(photoID: number, event?: MouseEvent): Promise<void> {
+    const ok = await this.alert.confirm(
+      'Hapus foto ini dari galeri? File foto akan dihapus secara permanen.',
+      {
+        title: 'Hapus Foto Dokumentasi',
+        confirmLabel: 'Ya, Hapus Foto',
+        cancelLabel: 'Batal',
+        variant: 'danger',
+      },
+      event,
+    );
+    if (!ok) return;
+
     const id = this.editId();
     if (!id) return;
 
