@@ -73,11 +73,11 @@ import { ToastService } from '../../../../core/services/toast.service';
                   <td><span class="chip chip-green">{{ item.batch }} ({{ item.period }})</span></td>
                   <td class="text-muted">{{ item.createdDate | date:'mediumDate' }}</td>
                   <td style="text-align: right">
-                    <div class="flex gap-sm justify-end">
-                      <a [routerLink]="['/cms/structures', item.structureID, 'edit']" class="btn btn-sm btn-outline" title="Edit">
-                        <app-icon name="edit" [size]="14" /> Edit
+                    <div class="table-actions" style="justify-content: flex-end">
+                      <a [routerLink]="['/cms/structures', item.structureID, 'edit']" class="icon-action" title="Edit">
+                        <app-icon name="edit" [size]="14" />
                       </a>
-                      <button type="button" class="btn btn-sm btn-outline text-danger" title="Hapus" (click)="confirmDelete(item.structureID, item.structureName, $event)">
+                      <button type="button" class="icon-action danger" title="Hapus" (click)="confirmDelete(item.structureID, item.structureName, $event)">
                         <app-icon name="trash" [size]="14" />
                       </button>
                     </div>

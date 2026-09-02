@@ -97,7 +97,7 @@ import { Location } from '@angular/common';
             }
           </div>
 
-          <div class="form-actions mt-lg">
+          <div class="form-actions">
             <button type="button" class="btn btn-outline" (click)="back()" [disabled]="submitting()">Batal</button>
             <button type="submit" class="btn btn-primary" [disabled]="submitting()">
               @if (submitting()) { <div class="spinner spinner-sm mr-xs"></div> }
@@ -110,6 +110,14 @@ import { Location } from '@angular/common';
   `,
   styles: [`
     .form-layout { max-width: 960px; }
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 36px;
+      padding-top: 24px;
+      border-top: 1px solid var(--color-border);
+    }
   `]
 })
 export class StructureFormPage implements OnInit {
