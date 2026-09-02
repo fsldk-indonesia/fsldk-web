@@ -11,11 +11,14 @@ const ICONS: Record<string, string> = {
   dashboard: 'fas fa-tachometer-alt',
   newspaper: 'fas fa-newspaper',
   'file-text': 'fas fa-file-alt',
+  'file-spreadsheet': 'fas fa-file-excel',
+  download: 'fas fa-download',
   users: 'fas fa-users',
   'user-group': 'fas fa-users',
   'shield-check': 'fas fa-user-shield',
   link: 'fas fa-link',
   'calendar-days': 'fas fa-calendar-alt',
+  calendar: 'fas fa-calendar-alt',
   home: 'fas fa-home',
   book: 'fas fa-book',
   'book-open': 'fas fa-book-open',
@@ -84,6 +87,8 @@ const ICONS: Record<string, string> = {
   'list-todo': 'fas fa-list-check',
   // Komentar (sidebar menuIcon lk_permission — sebelumnya jatuh ke fallback "?").
   'message-circle': 'fas fa-comment',
+  // Navbar "Layanan" dropdown — Kalkulator Zakat.
+  calculator: 'fas fa-calculator',
 };
 
 /**

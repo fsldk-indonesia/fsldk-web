@@ -1,0 +1,28 @@
+<div class="page-head"><a routerLink="/cms/finance-formats" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Format Keuangan' : 'Tambah Format Keuangan' }}</h1></div>
+
+<div class="card card-pad form-card">
+  <div class="form-group">
+    <label class="form-label">Nama File</label>
+    <input class="form-control" [(ngModel)]="form.fileName" placeholder="mis. Format Arus Kas 2026…">
+    <p class="form-hint">Nama yang ditampilkan ke pengunjung di halaman publik.</p>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Kategori Format</label>
+    <app-select [(ngModel)]="form.formatTypeID" [options]="typeOptions()" placeholder="Pilih kategori" />
+    <p class="form-hint">9 kategori tetap — pilih yang paling sesuai dengan jenis laporan.</p>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Berkas Excel</label>
+    <p class="form-hint">Hanya berkas Excel (.xlsx), maks. 10MB. Pengunjung mengunduh berkas ini langsung dari halaman publik.</p>
+    <app-pdf-upload [(value)]="form.fileURL" [allowedExtensions]="excelExtensions" [maxSizeMB]="10" label="berkas Excel (.xlsx)" />
+  </div>
+
+  <div class="flex gap justify-between">
+    <a routerLink="/cms/finance-formats" class="btn btn-ghost">Batal</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } @else { Simpan Format }
+    </button>
+  </div>
+</div>

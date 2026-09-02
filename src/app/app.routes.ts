@@ -9,6 +9,8 @@ import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
 import { articlePublicRoutes, articleCmsRoutes } from './modules/article/article.routes';
 import { catalogbookPublicRoutes, catalogbookCmsRoutes } from './modules/catalogbook/catalogbook.routes';
+import { schedulePublicRoutes, scheduleCmsRoutes } from './modules/schedule/schedule.routes';
+import { financeformatPublicRoutes, financeformatCmsRoutes } from './modules/financeformat/financeformat.routes';
 import { eventPublicRoutes, eventCmsRoutes } from './modules/event/event.routes';
 import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
@@ -20,6 +22,7 @@ import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 import { kantongAmalPublicRoutes, kantongAmalAdminRoutes } from './modules/kantong-amal/kantong-amal.routes';
+import { zakatPublicRoutes } from './modules/zakat/zakat.routes';
 import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
 import { settingRoutes } from './modules/setting/setting.routes';
@@ -57,9 +60,12 @@ export const routes: Routes = [
       ...newsPublicRoutes(),
       ...articlePublicRoutes(),
       ...catalogbookPublicRoutes(),
+      ...schedulePublicRoutes(),
+      ...financeformatPublicRoutes(),
       ...eventPublicRoutes(),
       ...kantongAmalPublicRoutes(),
       ...shortlinkPublicRoutes(),
+      ...zakatPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
       // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
       // jadi tidak bisa diakses akun non-Kader sama sekali karena link
@@ -98,6 +104,8 @@ export const routes: Routes = [
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...catalogbookCmsRoutes(),
+      ...scheduleCmsRoutes(),
+      ...financeformatCmsRoutes(),
       ...eventCmsRoutes(),
       ...shortlinkRoutes(),
       ...commentCmsRoutes(),
