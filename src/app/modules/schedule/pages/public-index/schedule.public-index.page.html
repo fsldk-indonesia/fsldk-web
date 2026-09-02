@@ -1,0 +1,122 @@
+<section class="section">
+  <div class="container">
+    <div class="text-center cal-head">
+      <span class="eyebrow">Jadwal</span>
+      <h1>Kalender Kegiatan</h1>
+      <p class="text-muted">Agenda kegiatan LDK. Arahkan kursor ke sebuah tanggal untuk melihat ringkasan kegiatan hari itu.</p>
+    </div>
+
+    <div class="cal-toolbar">
+      <button type="button" class="btn btn-outline btn-sm nav-btn" (click)="prev()" aria-label="Bulan sebelumnya">‹</button>
+      <span class="cal-period">{{ periodLabel() }}</span>
+      <button type="button" class="btn btn-outline btn-sm nav-btn" (click)="next()" aria-label="Bulan berikutnya">›</button>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="today()">Hari Ini</button>
+    </div>
+
+    @if (error()) {
+      <div class="cal-error">
+        <span>{{ error() }}</span>
+        <button type="button" class="btn btn-sm btn-outline" (click)="reload()">Coba lagi</button>
+      </div>
+    }
+
+    <div class="cal-wrap" tabindex="0" (keydown.arrowleft)="prev()" (keydown.arrowright)="next()">
+      <div class="cal-grid">
+        @for (d of dow; track d) { <div class="cal-dow-cell">{{ d }}</div> }
+      </div>
+
+      @if (loading()) {
+        <div class="cal-grid">
+          @for (i of skeletonCells; track i) {
+            <div class="cal-cell"><span class="skel skel-line" style="width:40%"></span></div>
+          }
+        </div>
+      } @else {
+        @for (week of weeks(); track $index) {
+          <div class="cal-grid">
+            @for (cell of week; track cell.iso) {
+              <div class="cal-cell" [class.out]="!cell.inMonth" [class.today]="cell.isToday" [class.has]="cell.items.length"
+                   [attr.tabindex]="cell.items.length ? 0 : null"
+                   (mouseenter)="openPopup(cell.iso)" (mouseleave)="closePopup()"
+                   (focus)="openPopup(cell.iso)" (blur)="closePopup()"
+                   (click)="togglePopup(cell.iso)">
+                <span class="cal-date">{{ cell.day }}</span>
+
+                <div class="cal-chips">
+                  @for (it of cell.items.slice(0, 3); track it.scheduleID) {
+                    <span class="cal-chip"><span class="dot" [style.background]="cat(it.category).color"></span>{{ it.title }}</span>
+                  }
+                  @if (cell.items.length > 3) {
+                    <span class="cal-more">+{{ cell.items.length - 3 }} lainnya</span>
+                  }
+                </div>
+
+                @if (popupIso() === cell.iso && cell.items.length) {
+                  <div class="cal-pop" role="tooltip" (click)="$event.stopPropagation()">
+                    <p class="cal-pop-date">{{ longDate(cell.date) }}</p>
+                    <ul>
+                      @for (it of cell.items; track it.scheduleID) {
+                        <li>
+                          <span class="cal-pop-time">{{ timeRange(it) }}</span>
+                          <span class="cal-pop-title">{{ it.title }}</span>
+                          <span class="cat-badge" [style.background]="cat(it.category).color + '1f'" [style.color]="cat(it.category).color">{{ cat(it.category).label }}</span>
+                          @if (it.location) {
+                            <span class="cal-pop-loc"><app-icon name="building" [size]="11" /> {{ it.location }}</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div class="agenda">
+      <h2>Agenda {{ periodLabel() }}</h2>
+
+      @if (loading()) {
+        @for (i of [1,2,3]; track i) {
+          <div class="agenda-item">
+            <div class="agenda-when"><span class="skel skel-line" style="width:90px"></span></div>
+            <div class="agenda-body" style="flex:1">
+              <span class="skel skel-title" style="width:60%"></span>
+              <span class="skel skel-line" style="width:80%"></span>
+            </div>
+          </div>
+        }
+      } @else {
+        @for (it of agenda(); track it.scheduleID) {
+          <article class="agenda-item">
+            <div class="agenda-when">
+              <span class="agenda-date">{{ dateRange(it) }}</span>
+              <span class="agenda-time">{{ timeRange(it) }}</span>
+            </div>
+            <div class="agenda-body">
+              <span class="cat-badge" [style.background]="cat(it.category).color + '1f'" [style.color]="cat(it.category).color">{{ cat(it.category).label }}</span>
+              <h3>{{ it.title }}</h3>
+              @if (it.description) { <p class="agenda-desc">{{ it.description }}</p> }
+              <p class="agenda-meta">
+                @if (it.location) { <span><app-icon name="building" [size]="12" /> {{ it.location }}</span> }
+                @if (it.organizer) { <span><app-icon name="users" [size]="12" /> {{ it.organizer }}</span> }
+                @if (it.contactPerson) { <span><app-icon name="phone" [size]="12" /> {{ it.contactPerson }}</span> }
+              </p>
+              @if (it.url) {
+                <a class="btn btn-sm btn-outline" [href]="it.url" target="_blank" rel="noopener">Info &amp; Pendaftaran</a>
+              }
+            </div>
+          </article>
+        } @empty {
+          <div class="empty-state">
+            <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="calendar-days" [size]="26" /></span>
+            <h4>Belum ada jadwal pada bulan ini</h4>
+            <p>Coba geser ke bulan lain lewat panah di atas.</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+</section>

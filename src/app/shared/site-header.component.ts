@@ -6,6 +6,7 @@ import { FORM_CODE_SENSUS_KADER } from '../modules/submission/entities/submissio
 import { shortlinkPath } from '../modules/shortlink/shortlink.path';
 import { financeformatPath } from '../modules/financeformat/financeformat.path';
 import { zakatPath } from '../modules/zakat/zakat.path';
+import { schedulePath } from '../modules/schedule/schedule.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
 
@@ -47,6 +48,22 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
             <div class="nav-dropdown-panel" [class.open]="lainnyaMenuOpen()">
               @for (item of lainnyaItems; track item.href) {
                 <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeLainnyaMenu()">
+                  <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
+                  <span class="nav-dropdown-item-text">
+                    <span class="nav-dropdown-item-title">{{ item.title }}</span>
+                    <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
+                  </span>
+                </a>
+              }
+            </div>
+          </div>
+          <div class="nav-dropdown-wrap" (mouseenter)="openMoreMenu()" (mouseleave)="closeMoreMenu()">
+            <button type="button" class="nav-dropdown-trigger" [class.active]="isMoreActive()" (click)="toggleMoreMenu($event)">
+              Lainnya <app-icon name="chevron-down" [size]="12" />
+            </button>
+            <div class="nav-dropdown-panel" [class.open]="moreMenuOpen()">
+              @for (item of moreItems; track item.href) {
+                <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMoreMenu()">
                   <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
                   <span class="nav-dropdown-item-text">
                     <span class="nav-dropdown-item-title">{{ item.title }}</span>
@@ -118,6 +135,18 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
       <div class="mobile-nav-extra">
         <span class="mobile-nav-label">Layanan</span>
         @for (item of lainnyaItems; track item.href) {
+          <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMobile()">
+            <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
+            <span class="nav-dropdown-item-text">
+              <span class="nav-dropdown-item-title">{{ item.title }}</span>
+              <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
+            </span>
+          </a>
+        }
+      </div>
+      <div class="mobile-nav-extra">
+        <span class="mobile-nav-label">Lainnya</span>
+        @for (item of moreItems; track item.href) {
           <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMobile()">
             <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
             <span class="nav-dropdown-item-text">
@@ -327,18 +356,24 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     }
   });
 
-  /** Isi dropdown navbar "Lainnya" — data-driven (bukan `<a>` di-hardcode)
+  /** Isi dropdown navbar "Layanan" — data-driven (bukan `<a>` di-hardcode)
    *  supaya item baru tinggal ditambah ke array ini. */
   readonly lainnyaItems = [
-    { icon: 'file-spreadsheet', title: 'Format Keuangan', caption: 'Template Excel Laporan Keuangan', href: financeformatPath.publicIndex },
     { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
     { icon: 'calculator', title: 'Kalkulator Zakat', caption: 'Hitung 7 jenis zakat', href: zakatPath.calculator },
+  ];
+
+  /** Isi dropdown navbar "Lainnya" — konten pelengkap di luar layanan inti. */
+  readonly moreItems = [
+    { icon: 'file-spreadsheet', title: 'Format Keuangan', caption: 'Template Excel Laporan Keuangan', href: financeformatPath.publicIndex },
+    { icon: 'calendar', title: 'Jadwal', caption: 'Kalender kegiatan LDK', href: schedulePath.publicIndex },
   ];
 
   scrolled = signal(false);
   mobileOpen = signal(false);
   userMenuOpen = signal(false);
   lainnyaMenuOpen = signal(false);
+  moreMenuOpen = signal(false);
 
   private onScroll = (): void => {
     const isScrolled = window.scrollY > 80;
@@ -362,6 +397,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   onDocumentClick(): void {
     this.userMenuOpen.set(false);
     this.lainnyaMenuOpen.set(false);
+    this.moreMenuOpen.set(false);
   }
 
   toggleMobile(): void { this.mobileOpen.update((v) => !v); }
@@ -381,11 +417,23 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     this.lainnyaMenuOpen.update((v) => !v);
   }
 
-  /** Trigger "Lainnya" ikut tersorot solid saat halaman aktif adalah salah
+  openMoreMenu(): void { this.moreMenuOpen.set(true); }
+  closeMoreMenu(): void { this.moreMenuOpen.set(false); }
+  toggleMoreMenu(event: Event): void {
+    event.stopPropagation();
+    this.moreMenuOpen.update((v) => !v);
+  }
+
+  /** Trigger dropdown ikut tersorot solid saat halaman aktif adalah salah
    *  satu opsi di dropdown-nya, bukan cuma opsi-nya sendiri di dalam panel. */
   isLainnyaActive(): boolean {
     const path = this.router.url.split('?')[0];
     return this.lainnyaItems.some((item) => path === item.href);
+  }
+
+  isMoreActive(): boolean {
+    const path = this.router.url.split('?')[0];
+    return this.moreItems.some((item) => path === item.href);
   }
 
   initials(): string {
