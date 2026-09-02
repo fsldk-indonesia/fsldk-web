@@ -19,8 +19,12 @@
       @if (campaignID) {
         @if (balance()) {
           <p class="text-muted mt-sm" style="font-size:.88rem">Saldo tersedia: <strong>{{ formatRupiah(balance()!.availableBalance) }}</strong></p>
-          <label class="form-label mt-md">Nominal (min. {{ formatRupiah(50000) }})</label>
+          <label class="form-label mt-md">Nominal</label>
           <input class="form-control" type="number" [(ngModel)]="amount" placeholder="0">
+          @if (amount && amount > balance()!.availableBalance) {
+            <p class="form-error">Nominal melebihi saldo tersedia.</p>
+          }
+          <p class="form-hint">Biaya transfer bank dipotong dari nominal ini (bukan ditambah di atasnya) — lihat rinciannya di langkah Ringkasan.</p>
         } @else {
           <span class="skel skel-line mt-sm"></span>
         }

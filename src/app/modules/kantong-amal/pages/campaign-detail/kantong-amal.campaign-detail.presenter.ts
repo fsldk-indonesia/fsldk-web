@@ -19,8 +19,10 @@ export class KantongAmalCampaignDetailPresenter extends BasePresenter<KantongAma
       error: () => { this.view.setCampaign(null); this.view.setLoading(false); },
     });
     // Donor terbaru dimuat terpisah — kegagalannya (mis. belum ada donasi)
-    // tidak boleh menghalangi tampilnya konten utama campaign.
-    this.donationRepo.recentDonations(slug, 10).subscribe({
+    // tidak boleh menghalangi tampilnya konten utama campaign. Limit 50 (bukan
+    // 10) karena daftar ini sekarang jadi isi penuh tab "Donatur", bukan cuma
+    // cuplikan sidebar — lihat tab ala ldksyahid-app (cd-pane-donors).
+    this.donationRepo.recentDonations(slug, 50).subscribe({
       next: (donations) => this.view.setRecentDonations(donations),
       error: () => this.view.setRecentDonations([]),
     });

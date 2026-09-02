@@ -109,6 +109,12 @@ export interface ReconciliationSnapshot {
   expectedBalance: number;
   gatewayWalletBalance: number;
   discrepancyAmount: number;
+  /** Donasi PAID dalam settlementMinutes menit sebelum snapshot ini dijalankan
+   *  — mungkin belum settle penuh di wallet gateway, jadi selisih sebesar ini
+   *  ditoleransi (tidak dianggap anomali). Setara "Settlement Pending" di
+   *  ldksyahid-app. */
+  settlementPendingAmount: number;
+  settlementMinutes: number;
   hasAnomaly: boolean;
   gatewayError?: string;
   createdDate: string;

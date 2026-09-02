@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CampaignLite } from '../../entities/campaign';
 import { Donation, DonationAdminDetail, DonationPaymentMethod } from '../../entities/donation';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { IconComponent } from '../../../../shared/icon.component';
 import { ToastService } from '../../../../core/services/toast.service';
 import { kantongAmalPath } from '../../kantong-amal.path';
 import { KantongAmalAdminDonationFormPresenter } from './kantong-amal.admin-donation-form.presenter';
@@ -50,11 +51,14 @@ const EMPTY_FORM: DonationFormValue = {
   selector: 'app-kantong-amal-admin-donation-form-page',
   standalone: true,
   templateUrl: './kantong-amal.admin-donation-form.page.html',
-  imports: [RouterLink, FormsModule, SelectComponent],
+  imports: [RouterLink, FormsModule, SelectComponent, IconComponent],
   providers: [KantongAmalAdminDonationFormPresenter],
   styles: [`
     .page-head { max-width: 640px; margin: 0 auto 24px; }
     .form-card { max-width: 640px; margin: 0 auto; }
+    .toggle-row { display: flex; align-items: center; gap: 10px; }
+    .anon-hint { display: flex; align-items: flex-start; gap: 6px; margin: 10px 0 0; font-size: .82rem; color: var(--color-text-secondary); background: var(--color-primary-tint); border-radius: var(--radius-sm); padding: 10px 12px; }
+    .anon-hint app-icon { color: var(--color-primary); flex-shrink: 0; margin-top: 1px; }
   `],
 })
 export class KantongAmalAdminDonationFormPage implements OnInit, KantongAmalAdminDonationFormView {
@@ -87,13 +91,26 @@ export class KantongAmalAdminDonationFormPage implements OnInit, KantongAmalAdmi
     }
   }
 
+  /** Sama seperti campaign-form: tombol Simpan TIDAK di-disable berdasarkan
+   *  ini (hanya saat saving()) — pesan spesifik dipakai supaya pengguna tahu
+   *  persis field mana yang kurang, bukan tombol yang macet tanpa penjelasan
+   *  (lihat revision-prompt-3.md poin 1). */
+  private firstValidationError(): string | null {
+    if (!this.form.campaignID) return 'Campaign wajib dipilih.';
+    if (!this.form.donorName) return 'Nama donatur wajib diisi.';
+    if (!this.form.amount || this.form.amount <= 0) return 'Nominal wajib diisi.';
+    if (!this.form.paymentMethod) return 'Metode pembayaran wajib dipilih.';
+    if (!this.form.paymentStatus) return 'Status pembayaran wajib dipilih.';
+    return null;
+  }
+
   isFormValid(): boolean {
-    return !!this.form.campaignID && !!this.form.donorName && !!this.form.amount && this.form.amount > 0
-      && !!this.form.paymentMethod && !!this.form.paymentStatus && !this.saving();
+    return this.firstValidationError() === null;
   }
 
   save(): void {
-    if (!this.isFormValid()) { this.toast.error('Lengkapi seluruh field wajib.'); return; }
+    const error = this.firstValidationError();
+    if (error) { this.toast.error(error); return; }
     const base = {
       campaignID: this.form.campaignID!, donorName: this.form.donorName, donorEmail: this.form.donorEmail || undefined,
       donorPhone: this.form.donorPhone || undefined, donorAge: this.form.donorAge || undefined,

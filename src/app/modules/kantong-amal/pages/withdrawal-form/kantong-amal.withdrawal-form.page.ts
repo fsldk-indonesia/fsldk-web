@@ -11,8 +11,6 @@ import { kantongAmalPath } from '../../kantong-amal.path';
 import { KantongAmalWithdrawalFormPresenter } from './kantong-amal.withdrawal-form.presenter';
 import { KantongAmalWithdrawalFormView } from './kantong-amal.withdrawal-form.view';
 
-const MIN_AMOUNT = 50_000;
-
 @Component({
   selector: 'app-kantong-amal-withdrawal-form-page',
   standalone: true,
@@ -74,9 +72,13 @@ export class KantongAmalWithdrawalFormPage implements OnInit, KantongAmalWithdra
     return (this.amount ?? 0) - fee;
   }
 
+  /** Tidak ada nominal minimum tetap — cuma perlu >0 dan tidak melebihi saldo
+   *  tersedia (biaya transfer dipotong DARI nominal ini, bukan ditambah di
+   *  atasnya — lihat netAmount(); persis pola ldksyahid-app WithdrawalController
+   *  store(): amount <= available, fee dikurangkan dari amount). */
   canProceedFromAmount(): boolean {
     const bal = this.balance()?.availableBalance ?? 0;
-    return !!this.campaignID && !!this.amount && this.amount >= MIN_AMOUNT && this.amount <= bal;
+    return !!this.campaignID && !!this.amount && this.amount > 0 && this.amount <= bal;
   }
 
   goToStep(n: number): void { this.step.set(n); }

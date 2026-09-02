@@ -1,5 +1,5 @@
 import { CampaignLite } from '../../entities/campaign';
-import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, WithdrawalReportRow, WithdrawalStatusFunnel } from '../../entities/report';
+import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../../entities/report';
 
 export interface KantongAmalAdminReportsView {
   setLoading(loading: boolean): void;
@@ -11,4 +11,7 @@ export interface KantongAmalAdminReportsView {
   setWithdrawalRows(rows: WithdrawalReportRow[], count: number, funnel: WithdrawalStatusFunnel[]): void;
   setLedgerGlobalRows(rows: GlobalLedgerRow[], count: number): void;
   setAnalytics(data: AnalyticsResponse | null): void;
+  setReconciliationRows(rows: ReconciliationSnapshot[], count: number): void;
+  setRunningReconciliation(running: boolean): void;
+  onReconciliationRunSuccess(): void;
 }

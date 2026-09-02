@@ -54,13 +54,11 @@ type SidebarEntry =
         <nav class="side-nav">
           <a [routerLink]="shellBase() + '/dashboard'" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()" class="stagger-in" style="--stagger-i:0">
             <span class="icon-badge sm icon-badge-soft"><app-icon name="dashboard" [size]="17" /></span> Dashboard
-            <span class="side-nav-dot"></span>
           </a>
           @for (entry of sidebarEntries(); track entry.kind === 'group' ? entry.config.label : entry.item.menuRoute; let i = $index) {
             @if (entry.kind === 'item') {
               <a [routerLink]="entry.item.menuRoute" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()" class="stagger-in" [style.--stagger-i]="i + 1">
                 <span class="icon-badge sm icon-badge-soft"><app-icon [name]="entry.item.menuIcon" [size]="17" /></span> {{ entry.item.menuLabel }}
-                <span class="side-nav-dot"></span>
               </a>
             } @else {
               <button type="button" class="side-nav-group-trigger stagger-in" [style.--stagger-i]="i + 1" (click)="toggleGroup(entry.config.label)">
@@ -73,7 +71,6 @@ type SidebarEntry =
                   @for (child of entry.children; track child.menuRoute) {
                     <a [routerLink]="child.menuRoute" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()">
                       <span class="icon-badge sm icon-badge-soft"><app-icon [name]="child.menuIcon" [size]="15" /></span> {{ child.menuLabel }}
-                      <span class="side-nav-dot"></span>
                     </a>
                   }
                 </div>
@@ -163,8 +160,6 @@ type SidebarEntry =
     .side-nav a.active:hover { background: var(--color-primary-dark); color: #fff; transform: translateX(3px); }
     .side-nav a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
     .side-nav a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
-    .side-nav-dot { display: none; margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--color-gold); flex-shrink: 0; animation: node-pulse 2.4s ease-in-out infinite; }
-    .side-nav a.active .side-nav-dot { display: block; }
     .side-nav-group-trigger { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; font-family: var(--font-body); cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
     .side-nav-group-trigger:hover { background: var(--color-bg-alt); color: var(--color-text); }
     .side-nav-group-label { flex: 1; text-align: left; }

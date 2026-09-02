@@ -37,13 +37,20 @@ const STATUS_OPTIONS: SelectOption[] = [
   imports: [DatePipe, FormsModule, RouterLink, IconComponent, PaginationComponent, SelectComponent],
   providers: [KantongAmalAdminCampaignPresenter],
   styles: [`
-    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+    .campaign-cell { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; white-space: nowrap; }
     .status-DRAFT { background: #f3f4f6; color: #4b5563; }
     .status-PUBLISHED { background: #dcfce7; color: #166534; }
     .status-PAUSED { background: #fef3c7; color: #92400e; }
     .status-ARCHIVED, .status-COMPLETED { background: #e0e7ff; color: #3730a3; }
     .status-EXPIRED { background: #fee2e2; color: #991b1b; }
     .status-SUBMITTED, .status-REVISION_REQUESTED, .status-APPROVED, .status-REJECTED { background: #f3f4f6; color: #4b5563; }
+
+    /* Aksi tabel Campaign punya lebih banyak tombol (Ubah, Publish/Jeda/
+       Arsipkan, Hapus) daripada tabel lain — beri jarak lebih lega & izinkan
+       wrap supaya tidak "dempet" di kolom sempit. */
+    .table-actions { gap: 10px; flex-wrap: wrap; row-gap: 8px; justify-content: flex-end; }
+    .table td:last-child { padding-right: 20px; }
   `],
 })
 export class KantongAmalAdminCampaignPage implements OnInit, KantongAmalAdminCampaignView {

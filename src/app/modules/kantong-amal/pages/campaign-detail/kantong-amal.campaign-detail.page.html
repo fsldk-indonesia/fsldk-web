@@ -20,15 +20,70 @@
         <span class="chip chip-green" style="margin-top:20px; display:inline-block">{{ campaign()!.categoryName }}</span>
         <h1>{{ campaign()!.title }}</h1>
         <p class="meta" style="color:var(--color-muted)">Digalang oleh {{ campaign()!.organizationNameOverride || campaign()!.organizationName || campaign()!.picName }}</p>
-        <div class="story">{{ campaign()!.story }}</div>
 
-        @if (campaign()!.supportingImageUrls.length) {
-          <div class="grid grid-3 mt-lg">
-            @for (img of campaign()!.supportingImageUrls; track img) {
-              <img [src]="img" alt="" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--radius-md)">
+        <!-- Tabs: Cerita / Update Terbaru / Donatur (ala ldksyahid-app) -->
+        <div class="tabs-wrap">
+          <nav class="tabs-nav" role="tablist">
+            <button type="button" class="tab-btn" [class.active]="activeTab() === 'cerita'" (click)="setTab('cerita')">Cerita</button>
+            <button type="button" class="tab-btn" [class.active]="activeTab() === 'update'" (click)="setTab('update')">Update Terbaru</button>
+            <button type="button" class="tab-btn" [class.active]="activeTab() === 'donatur'" (click)="setTab('donatur')">
+              Donatur
+              @if (recentDonations().length) { <span class="tab-badge">{{ recentDonations().length }}</span> }
+            </button>
+          </nav>
+
+          <div class="tab-body">
+            @switch (activeTab()) {
+              @case ('cerita') {
+                <div class="story-content" [innerHTML]="campaign()!.story"></div>
+                @if (campaign()!.supportingImageUrls.length) {
+                  <div class="grid grid-3 mt-lg">
+                    @for (img of campaign()!.supportingImageUrls; track img) {
+                      <img [src]="img" alt="" style="width:100%; aspect-ratio:1; object-fit:cover; border-radius:var(--radius-md)">
+                    }
+                  </div>
+                }
+              }
+              @case ('update') {
+                @if (campaign()!.latestUpdate) {
+                  <div class="story-content" [innerHTML]="campaign()!.latestUpdate"></div>
+                } @else {
+                  <div class="empty-tab">
+                    <app-icon name="file-text" [size]="32" />
+                    <p>Campaign ini belum memiliki update terbaru.</p>
+                  </div>
+                }
+              }
+              @case ('donatur') {
+                @if (recentDonations().length) {
+                  <div class="donor-list">
+                    @for (d of visibleDonors(); track $index) {
+                      <div class="donor-item">
+                        <span class="donor-avatar"><app-icon name="user-circle" [size]="18" /></span>
+                        <div class="donor-info">
+                          <div class="donor-name">{{ d.donorName }}</div>
+                          <div class="donor-message">&ldquo;{{ d.message || defaultDonorMessage }}&rdquo;</div>
+                        </div>
+                        <div class="donor-amount">{{ formatRupiah(d.amount) }}</div>
+                      </div>
+                    }
+                  </div>
+                  @if (recentDonations().length > 5 && !donorsExpanded()) {
+                    <button type="button" class="load-more-btn" (click)="donorsExpanded.set(true)">
+                      <app-icon name="chevron-down" [size]="12" />
+                      Lihat Lebih Banyak ({{ recentDonations().length - 5 }} lagi)
+                    </button>
+                  }
+                } @else {
+                  <div class="empty-tab">
+                    <app-icon name="hand-heart" [size]="32" />
+                    <p>Campaign ini belum memiliki donatur.</p>
+                  </div>
+                }
+              }
             }
           </div>
-        }
+        </div>
       </div>
 
       <aside class="side-card">
@@ -37,21 +92,6 @@
         <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent()"></div></div>
 
         <a class="btn btn-primary donate-cta" [routerLink]="kantongAmalPath.donate(campaign()!.slug)">Donasi Sekarang</a>
-
-        <div class="donor-list">
-          <span class="pic-label" style="display:block; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--color-muted)">Donatur Terbaru</span>
-          @for (d of recentDonations(); track $index) {
-            <div class="donor-item">
-              <div>
-                <div class="donor-name">{{ d.donorName }}</div>
-                @if (d.message) { <div class="donor-message">"{{ d.message }}"</div> }
-              </div>
-              <div style="white-space:nowrap; font-weight:700; color:var(--color-primary-dark)">{{ formatRupiah(d.amount) }}</div>
-            </div>
-          } @empty {
-            <p style="font-size:.85rem; color:var(--color-text-secondary)">Jadilah donatur pertama untuk campaign ini.</p>
-          }
-        </div>
       </aside>
     </div>
   </div></section>

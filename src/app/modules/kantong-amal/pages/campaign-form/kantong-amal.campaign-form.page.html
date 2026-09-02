@@ -50,11 +50,11 @@
     <input class="form-control" type="number" [(ngModel)]="form.targetAmount" [disabled]="isReadonly" placeholder="0">
 
     <div class="grid grid-2 mt-md">
-      <div><label class="form-label">Mulai (opsional)</label><app-datetime-picker [showTime]="false" [(ngModel)]="form.startDate" [disabled]="isReadonly" /></div>
-      <div><label class="form-label">Selesai (opsional)</label><app-datetime-picker [showTime]="false" [(ngModel)]="form.endDate" [disabled]="isReadonly" /></div>
+      <div><label class="form-label">Mulai (opsional)</label><app-datetime-picker [showTime]="true" [(ngModel)]="form.startDate" [disabled]="isReadonly" /></div>
+      <div><label class="form-label">Selesai (opsional)</label><app-datetime-picker [showTime]="true" [(ngModel)]="form.endDate" [disabled]="isReadonly" /></div>
     </div>
 
-    <h3 class="mt-lg" style="font-size:1rem">Penanggung Jawab</h3>
+    <h3 class="mt-lg section-title">Penanggung Jawab</h3>
     <div class="grid grid-2 mt-sm">
       <div><label class="form-label">Nama PIC</label>
         <input class="form-control" [(ngModel)]="form.picName" [disabled]="isReadonly"></div>
@@ -62,30 +62,36 @@
         <input class="form-control" [(ngModel)]="form.picPhone" [disabled]="isReadonly" placeholder="62812xxxxxxx"></div>
     </div>
 
-    <h3 class="mt-lg" style="font-size:1rem">Organisasi Penyelenggara (opsional)</h3>
-    <p class="form-hint">Isi bila campaign diselenggarakan atas nama organisasi/yayasan di luar FSLDK.</p>
-    <label class="form-label mt-sm">Nama Organisasi</label>
-    <input class="form-control" [(ngModel)]="form.organizationNameOverride" [disabled]="isReadonly">
-    <div class="grid grid-2 mt-md">
-      <div><label class="form-label">Logo Organisasi (URL)</label>
-        <app-image-upload [value]="form.organizationLogoUrl" (valueChange)="form.organizationLogoUrl = $event" /></div>
-      <div><label class="form-label">Tautan Organisasi</label>
-        <input class="form-control" [(ngModel)]="form.organizationLinkUrl" [disabled]="isReadonly" placeholder="https://..."></div>
-    </div>
-
-    <div class="toggle-row mt-md" style="display:flex; align-items:center; gap:10px">
+    <div class="toggle-row mt-md">
       <input type="checkbox" id="anon-allowed" [(ngModel)]="form.isAnonymousAllowed" [disabled]="isReadonly">
       <label for="anon-allowed">Izinkan donatur berdonasi secara anonim</label>
     </div>
 
     @if (editId) {
       <label class="form-label mt-md">Update Terbaru (opsional, tampil di halaman publik)</label>
-      <textarea class="form-control" rows="4" [(ngModel)]="form.latestUpdate" [disabled]="isReadonly" placeholder="Kabar terbaru penggunaan dana, dsb."></textarea>
+      <app-rich-text-editor [(value)]="form.latestUpdate" />
+    }
+
+    <h3 class="mt-lg section-title">Organisasi Penyelenggara</h3>
+    <div class="toggle-row mt-sm">
+      <input type="checkbox" id="org-enabled" [ngModel]="organizationEnabled" (ngModelChange)="onOrganizationToggleChange($event)" [disabled]="isReadonly">
+      <label for="org-enabled">Campaign ini diselenggarakan atas nama organisasi/yayasan di luar FSLDK</label>
+    </div>
+
+    @if (organizationEnabled) {
+      <label class="form-label mt-md">Nama Organisasi</label>
+      <input class="form-control" [(ngModel)]="form.organizationNameOverride" [disabled]="isReadonly">
+      <div class="grid grid-2 mt-md">
+        <div><label class="form-label">Logo Organisasi (URL)</label>
+          <app-image-upload [value]="form.organizationLogoUrl" (valueChange)="form.organizationLogoUrl = $event" /></div>
+        <div><label class="form-label">Tautan Organisasi</label>
+          <input class="form-control" [(ngModel)]="form.organizationLinkUrl" [disabled]="isReadonly" placeholder="https://..."></div>
+      </div>
     }
 
     @if (!isReadonly) {
       <div class="flex gap justify-between mt-lg">
-        <button class="btn btn-primary" (click)="save()" [disabled]="!isFormValid()">
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
           @if (saving()) { <span class="spinner"></span> } @else { Simpan }
         </button>
       </div>

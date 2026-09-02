@@ -55,6 +55,8 @@ const EMPTY_FORM: CampaignFormValue = {
     .support-image-item { position: relative; }
     .support-image-item .remove-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.55); color: #fff; border: none; border-radius: 999px; width: 22px; height: 22px; cursor: pointer; }
     .readonly-note { background: var(--color-bg-alt); border-radius: var(--radius-sm); padding: 12px 16px; font-size: .88rem; color: var(--color-text-secondary); margin-bottom: 20px; }
+    .section-title { font-size: 1rem; padding-top: 20px; border-top: 1px solid var(--color-border); }
+    .toggle-row { display: flex; align-items: center; gap: 10px; }
   `],
 })
 export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignFormView {
@@ -71,6 +73,11 @@ export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignF
   saving = signal(false);
 
   form: CampaignFormValue = { ...EMPTY_FORM };
+
+  /** Toggle UI murni (tidak dikirim ke backend) untuk menampilkan/menyembunyikan
+   *  blok "Organisasi Penyelenggara" — revisi: sebelumnya blok ini selalu
+   *  tampil meski kosong (revision-prompt-3.md poin 1). */
+  organizationEnabled = false;
 
   readonly kantongAmalPath = kantongAmalPath;
 
@@ -94,6 +101,17 @@ export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignF
     }
   }
 
+  /** Dipanggil saat toggle "organisasi di luar FSLDK" dimatikan — kosongkan
+   *  field organisasi supaya tidak diam-diam tersimpan sambil disembunyikan. */
+  onOrganizationToggleChange(enabled: boolean): void {
+    this.organizationEnabled = enabled;
+    if (!enabled) {
+      this.form.organizationNameOverride = '';
+      this.form.organizationLogoUrl = '';
+      this.form.organizationLinkUrl = '';
+    }
+  }
+
   addSupportingImage(): void { this.form.supportingImageUrls = [...this.form.supportingImageUrls, '']; }
   removeSupportingImage(index: number): void { this.form.supportingImageUrls = this.form.supportingImageUrls.filter((_, i) => i !== index); }
   setSupportingImage(index: number, url: string): void {
@@ -102,14 +120,37 @@ export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignF
     this.form.supportingImageUrls = next;
   }
 
+  /** Mengembalikan pesan field wajib pertama yang belum valid, atau null bila
+   *  form sudah lengkap — dipakai save() untuk menunjukkan persis apa yang
+   *  kurang (tombol Simpan sendiri TIDAK di-disable berdasarkan ini, supaya
+   *  pengguna selalu bisa klik & lihat pesannya, bukan macet tanpa penjelasan
+   *  seperti sebelumnya — lihat revision-prompt-3.md poin 1). */
+  private firstValidationError(): string | null {
+    if (!this.form.title) return 'Judul campaign wajib diisi.';
+    if (!this.form.categoryID) return 'Kategori wajib dipilih.';
+    if (this.plainTextLength(this.form.story) < 50) return 'Cerita wajib diisi, minimal 50 karakter.';
+    if (!this.form.goals) return 'Tujuan penggalangan dana wajib diisi.';
+    if (!this.form.coverImageUrl) return 'Gambar sampul wajib diunggah.';
+    if (!this.form.targetAmount || this.form.targetAmount <= 0) return 'Target dana wajib diisi.';
+    if (!this.form.picName) return 'Nama PIC wajib diisi.';
+    if (!this.form.picPhone) return 'No. WhatsApp PIC wajib diisi.';
+    return null;
+  }
+
+  /** Cerita disimpan sebagai HTML (dari TinyMCE) — hitung panjang teks
+   *  polosnya saja untuk validasi "minimal 50 karakter", bukan panjang
+   *  markup-nya (mis. `<p></p>` tidak boleh ikut dianggap konten). */
+  private plainTextLength(html: string): number {
+    return html.replace(/<[^>]*>/g, '').trim().length;
+  }
+
   isFormValid(): boolean {
-    return !!this.form.title && !!this.form.categoryID && this.form.story.length >= 50 && !!this.form.goals
-      && !!this.form.coverImageUrl && !!this.form.targetAmount && this.form.targetAmount > 0
-      && !!this.form.picName && !!this.form.picPhone && !this.saving();
+    return this.firstValidationError() === null;
   }
 
   save(): void {
-    if (!this.isFormValid()) { this.toast.error('Lengkapi seluruh field wajib (cerita minimal 50 karakter).'); return; }
+    const error = this.firstValidationError();
+    if (error) { this.toast.error(error); return; }
     const supportingImageUrls = this.form.supportingImageUrls.filter((u) => !!u);
     const base = {
       title: this.form.title, categoryID: this.form.categoryID!, organizationID: null,
@@ -143,14 +184,21 @@ export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignF
       picName: campaign.picName ?? '', picPhone: campaign.picPhone ?? '',
       organizationNameOverride: campaign.organizationNameOverride ?? '',
       organizationLogoUrl: campaign.organizationLogoUrl ?? '', organizationLinkUrl: campaign.organizationLinkUrl ?? '',
-      startDate: campaign.startDate?.slice(0, 10) ?? '', endDate: campaign.endDate?.slice(0, 10) ?? '',
+      // slice(0, 16) -> "YYYY-MM-DDTHH:mm", format yang dipakai <app-datetime-picker>
+      // dengan showTime=true (jam & menit ikut, bukan cuma tanggal — revisi startDate/
+      // endDate "pakai tanggal sampai waktu", revision-prompt-3.md poin 1). Berlaku sama
+      // untuk string RFC3339 apapun dari backend, dengan atau tanpa offset timezone.
+      startDate: campaign.startDate?.slice(0, 16) ?? '', endDate: campaign.endDate?.slice(0, 16) ?? '',
       isAnonymousAllowed: campaign.isAnonymousAllowed, latestUpdate: campaign.latestUpdate ?? '',
     };
+    this.organizationEnabled = !!this.form.organizationNameOverride;
   }
 
-  onSaveSuccess(campaign: CampaignDetail): void {
+  onSaveSuccess(): void {
     this.toast.success('Campaign berhasil disimpan.');
-    if (!this.editId) this.router.navigateByUrl(kantongAmalPath.campaignEdit(campaign.campaignID));
-    else this.setCampaign(campaign);
+    // Simpan (baik buat baru maupun ubah) selalu kembali ke daftar Campaign —
+    // sebelumnya update tetap di halaman edit, yang terasa seperti "tidak
+    // terjadi apa-apa" setelah menekan Simpan (revisi: harus ke index).
+    this.router.navigateByUrl(kantongAmalPath.adminCampaigns);
   }
 }

@@ -43,13 +43,19 @@
     <label class="form-label mt-md">Pesan (opsional)</label>
     <textarea class="form-control" rows="3" [(ngModel)]="form.message"></textarea>
 
-    <div class="toggle-row mt-md" style="display:flex; align-items:center; gap:10px">
+    <div class="toggle-row mt-md">
       <input type="checkbox" id="donation-anon" [(ngModel)]="form.isAnonymous">
       <label for="donation-anon">Tampilkan sebagai donatur anonim</label>
     </div>
+    @if (form.isAnonymous) {
+      <p class="anon-hint">
+        <app-icon name="info-circle" [size]="13" />
+        <span>Nama donatur tidak akan ditampilkan ke publik — daftar donatur akan menampilkan <strong>&ldquo;Hamba Allah&rdquo;</strong> sebagai gantinya.</span>
+      </p>
+    }
 
     <div class="flex gap justify-between mt-lg">
-      <button class="btn btn-primary" (click)="save()" [disabled]="!isFormValid()">
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
         @if (saving()) { <span class="spinner"></span> } @else { Simpan }
       </button>
     </div>

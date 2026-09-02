@@ -3,17 +3,18 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { CampaignLite } from '../../entities/campaign';
-import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, WithdrawalReportRow, WithdrawalStatusFunnel } from '../../entities/report';
+import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../../entities/report';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
+import { IconComponent } from '../../../../shared/icon.component';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { KantongAmalAdminReportsPresenter } from './kantong-amal.admin-reports.presenter';
 import { KantongAmalAdminReportsView } from './kantong-amal.admin-reports.view';
 
 Chart.register(...registerables);
 
-type ReportTab = 'balance' | 'campaigns' | 'donations' | 'withdrawals' | 'ledger-global' | 'analytics';
+type ReportTab = 'balance' | 'campaigns' | 'donations' | 'withdrawals' | 'ledger-global' | 'analytics' | 'balance-report';
 
 function isoDateDaysAgo(days: number): string {
   const d = new Date();
@@ -55,7 +56,7 @@ const LEDGER_DIRECTION_OPTIONS: SelectOption[] = [
   selector: 'app-kantong-amal-admin-reports-page',
   standalone: true,
   templateUrl: './kantong-amal.admin-reports.page.html',
-  imports: [DatePipe, FormsModule, PaginationComponent, SelectComponent, DateTimePickerComponent],
+  imports: [DatePipe, FormsModule, PaginationComponent, SelectComponent, DateTimePickerComponent, IconComponent],
   providers: [KantongAmalAdminReportsPresenter],
   styles: [`
     .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--color-border); margin-bottom: 20px; flex-wrap: wrap; }
@@ -77,6 +78,15 @@ const LEDGER_DIRECTION_OPTIONS: SelectOption[] = [
     .analytics-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px; }
     .analytics-card h4 { margin: 0 0 12px; font-size: .92rem; }
     .analytics-card canvas { max-height: 260px; }
+    .anomaly-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+    .anomaly-yes { background: #fee2e2; color: #991b1b; }
+    .anomaly-no { background: #dcfce7; color: #166534; }
+
+    .settlement-banner { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; margin-bottom: 20px; background: var(--color-primary-tint); border: 1px solid var(--color-primary-soft); border-radius: var(--radius-md); }
+    .settlement-banner app-icon { color: var(--color-primary-dark); flex-shrink: 0; margin-top: 2px; }
+    .settlement-banner-title { font-weight: 700; color: var(--color-text); font-size: .92rem; }
+    .settlement-banner-amount { margin-left: 8px; color: var(--color-primary-dark); font-weight: 800; }
+    .settlement-banner-desc { margin: 4px 0 0; font-size: .82rem; color: var(--color-text-secondary); line-height: 1.5; }
   `],
 })
 export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminReportsView {
@@ -84,9 +94,10 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   private amountChart: Chart | null = null;
   private ageChart: Chart | null = null;
 
-  tab = signal<ReportTab>('balance');
+  tab = signal<ReportTab>('balance-report');
   loading = signal(true);
   exporting = signal(false);
+  runningReconciliation = signal(false);
 
   from = isoDateDaysAgo(30);
   to = isoDateDaysAgo(0);
@@ -102,6 +113,7 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   withdrawalFunnel = signal<WithdrawalStatusFunnel[]>([]);
   ledgerGlobalRows = signal<GlobalLedgerRow[]>([]);
   analytics = signal<AnalyticsResponse | null>(null);
+  reconciliationRows = signal<ReconciliationSnapshot[]>([]);
   page = signal(1);
   count = signal(0);
   limit = 15;
@@ -119,7 +131,9 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadCampaigns();
-    this.loadBalance();
+    // Landing tab = Balance Report (bukan Saldo) — ini yang paling sering
+    // dicek admin saat pertama buka Laporan Kantong Amal.
+    this.load();
   }
 
   switchTab(t: ReportTab): void {
@@ -137,8 +151,11 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
       case 'withdrawals': this.presenter.loadWithdrawals(this.page(), this.limit, this.statusFilter); break;
       case 'ledger-global': this.presenter.loadLedgerGlobal(this.page(), this.limit, this.campaignID, this.ledgerDirection); break;
       case 'analytics': this.presenter.loadAnalytics(this.campaignID); break;
+      case 'balance-report': this.presenter.loadReconciliation(this.page(), this.limit); break;
     }
   }
+
+  runReconciliationNow(): void { this.presenter.runReconciliation(); }
 
   loadBalance(): void { this.presenter.loadBalance(this.from, this.to, this.campaignID); }
   applyBalanceFilter(): void { this.loadBalance(); }
@@ -172,6 +189,9 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
     this.withdrawalRows.set(rows); this.count.set(count); this.withdrawalFunnel.set(funnel);
   }
   setLedgerGlobalRows(rows: GlobalLedgerRow[], count: number): void { this.ledgerGlobalRows.set(rows); this.count.set(count); }
+  setReconciliationRows(rows: ReconciliationSnapshot[], count: number): void { this.reconciliationRows.set(rows); this.count.set(count); }
+  setRunningReconciliation(running: boolean): void { this.runningReconciliation.set(running); }
+  onReconciliationRunSuccess(): void { this.page.set(1); this.load(); }
 
   setAnalytics(data: AnalyticsResponse | null): void {
     this.analytics.set(data);

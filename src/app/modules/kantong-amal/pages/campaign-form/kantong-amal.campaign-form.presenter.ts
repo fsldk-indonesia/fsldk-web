@@ -19,7 +19,7 @@ export class KantongAmalCampaignFormPresenter extends BasePresenter<KantongAmalC
   create(body: CreateCampaignRequest): void {
     this.view.setSaving(true);
     this.campaignRepo.create(body).subscribe({
-      next: (campaign) => { this.view.setSaving(false); this.view.onSaveSuccess(campaign); },
+      next: () => { this.view.setSaving(false); this.view.onSaveSuccess(); },
       error: () => this.view.setSaving(false),
     });
   }
@@ -27,7 +27,7 @@ export class KantongAmalCampaignFormPresenter extends BasePresenter<KantongAmalC
   update(id: number, body: UpdateCampaignRequest): void {
     this.view.setSaving(true);
     this.campaignRepo.update(id, body).subscribe({
-      next: (campaign) => { this.view.setSaving(false); this.view.onSaveSuccess(campaign); },
+      next: () => { this.view.setSaving(false); this.view.onSaveSuccess(); },
       error: () => this.view.setSaving(false),
     });
   }

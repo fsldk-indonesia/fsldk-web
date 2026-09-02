@@ -42,7 +42,9 @@ const STATUS_OPTIONS: SelectOption[] = [
     .status-FAILED, .status-EXPIRED, .status-CANCELLED { background: #fee2e2; color: #991b1b; }
     .status-AMOUNT_MISMATCH { background: #fef3c7; color: #92400e; }
     .status-REFUNDED { background: #e0e7ff; color: #3730a3; }
-    .gateway-badge { font-size: .72rem; color: var(--color-text-secondary); }
+    .gateway-badge { font-size: .72rem; color: var(--color-text-secondary); margin-left: 4px; }
+    .table-actions { gap: 10px; justify-content: flex-end; }
+    .table td:last-child { padding-right: 20px; }
   `],
 })
 export class KantongAmalAdminDonationMonitoringPage implements OnInit, KantongAmalAdminDonationMonitoringView {
