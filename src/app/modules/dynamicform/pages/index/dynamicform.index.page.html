@@ -1,0 +1,88 @@
+<div class="page-head">
+  <div>
+    <h1>Formulir Dinamis</h1>
+    <p class="muted">Bangun formulir publik gaya Google Forms, bagikan lewat tautan, dan lihat rekap tanggapannya.</p>
+  </div>
+  @if (canCreate) {
+    <a class="btn btn-primary" [routerLink]="path.create"><app-icon name="user-plus" /> Buat Formulir</a>
+  }
+</div>
+
+<div class="filters">
+  <input type="text" placeholder="Cari judul formulir…" [(ngModel)]="search" (keyup.enter)="apply()" />
+  <app-select [options]="statusOptions" [(ngModel)]="status" (ngModelChange)="apply()" />
+  <button class="btn" (click)="apply()">Terapkan</button>
+</div>
+
+@if (selectedCount() > 0 && canDelete) {
+  <div class="bulk-bar">
+    <span class="muted">{{ selectedCount() }} formulir dipilih</span>
+    <button class="btn btn-danger btn-sm" (click)="bulkDelete($event)">Hapus Terpilih</button>
+  </div>
+}
+
+@if (loading()) {
+  <p class="muted">Memuat…</p>
+} @else if (forms().length === 0) {
+  <p class="muted">Belum ada formulir.</p>
+} @else {
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          @if (canDelete) {
+            <th style="width:32px;"><input type="checkbox" (change)="toggleAll($any($event.target).checked)" /></th>
+          }
+          <th>Judul</th>
+          <th>Status</th>
+          <th>Field</th>
+          <th>Tanggapan</th>
+          <th>Dibuat</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of forms(); track f.formID) {
+          <tr>
+            @if (canDelete) {
+              <td><input type="checkbox" [checked]="isSelected(f.formID)" (change)="toggleSelect(f.formID)" /></td>
+            }
+            <td>
+              <strong>{{ f.title }}</strong><br />
+              <span class="muted">/form/{{ f.slug }}</span>
+            </td>
+            <td><span class="badge" [class]="statusMeta(f.status).badgeClass">{{ statusMeta(f.status).label }}</span></td>
+            <td>{{ f.fieldCount ?? '—' }}</td>
+            <td>{{ f.totalSubmission }}</td>
+            <td class="muted">{{ f.createdDate | date: 'dd MMM yyyy' }}</td>
+            <td>
+              <div class="row-actions">
+                @if (canUpdate) {
+                  <a [routerLink]="path.builder(f.formID)"><app-icon name="file-sliders" /> Builder</a>
+                  <a [routerLink]="path.edit(f.formID)">Setelan</a>
+                }
+                <a [routerLink]="path.responses(f.formID)">Rekap</a>
+                <a [routerLink]="path.analytics(f.formID)">Analitik</a>
+                <a [href]="'/form/' + f.slug" target="_blank" rel="noopener">Pratinjau</a>
+                @if (canPublish && !isBusy(f.formID)) {
+                  <select class="input-sm" (change)="changeStatus(f, $any($event.target).value); $any($event.target).value=''">
+                    <option value="">Ubah status…</option>
+                    @for (s of nextStatuses(f); track s.value) {
+                      <option [value]="s.value">{{ s.label }}</option>
+                    }
+                  </select>
+                }
+                @if (canDelete && !isBusy(f.formID)) {
+                  <a class="link-danger" href="javascript:void(0)" (click)="remove(f, $event)">Hapus</a>
+                }
+                @if (isBusy(f.formID)) { <span class="muted">…</span> }
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+}

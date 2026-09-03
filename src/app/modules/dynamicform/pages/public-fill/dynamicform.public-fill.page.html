@@ -1,0 +1,148 @@
+<div class="wrap">
+  @switch (state()) {
+    @case ('loading') {
+      <p>Memuat formulir…</p>
+    }
+
+    @case ('closed') {
+      <div class="closed-card">
+        <h2>Formulir Ditutup</h2>
+        <p>{{ closedMessage() || 'Formulir ini sedang tidak menerima tanggapan.' }}</p>
+      </div>
+    }
+
+    @case ('done') {
+      <div class="done-card">
+        <h2>Jazakallah khair! 🤍</h2>
+        <p [innerHTML]="(submitResult()?.confirmationMessage || 'Tanggapan Anda telah kami terima.') | linkifyText"></p>
+        @if (submitResult()?.isMultipleSubmit) {
+          <button class="btn btn-primary" (click)="refill()">Isi Lagi</button>
+        }
+      </div>
+    }
+
+    @case ('form') {
+      @if (form(); as f) {
+        <div class="form-head">
+          <h1>{{ f.title }}</h1>
+          @if (f.description) { <div [innerHTML]="f.description | linkifyText"></div> }
+          @if (f.isPreview) { <p style="margin-top:8px; opacity:.85;">Mode pratinjau — pengiriman tidak akan disimpan sebagai tanggapan publik biasa.</p> }
+        </div>
+
+        @if (fieldErrors['_rate']) {
+          <div class="banner">{{ fieldErrors['_rate'] }} @if (retryCountdown() > 0) { — coba lagi dalam {{ countdownText() }}. }</div>
+        }
+
+        <form (ngSubmit)="submit()">
+          <!-- honeypot -->
+          <input class="hp" type="text" name="_hp_website" tabindex="-1" autocomplete="off" [(ngModel)]="honeypot" />
+
+          @for (fld of fields(); track fld.fieldID) {
+            @if (isDisplay(fld.fieldType)) {
+              <div class="card">
+                @switch (fld.fieldType) {
+                  @case ('section_break') {
+                    <div class="section-break">
+                      <h3>{{ fld.label }}</h3>
+                      @if (fld.helpText) { <div class="help" [innerHTML]="fld.helpText | linkifyText"></div> }
+                    </div>
+                  }
+                  @case ('paragraph') {
+                    <div [innerHTML]="fld.helpText | linkifyText"></div>
+                  }
+                  @case ('image') {
+                    @if (fld.helpText) { <img [src]="fld.helpText" [alt]="fld.label" style="max-width:100%; border-radius:8px;" /> }
+                    @if (fld.label) { <p class="help">{{ fld.label }}</p> }
+                  }
+                }
+              </div>
+            } @else if (visible(fld)) {
+              <div class="card">
+                <label class="q" [for]="'f' + fld.fieldID">
+                  {{ fld.label }} @if (fld.isRequired) { <span class="req">*</span> }
+                </label>
+                @if (fld.helpText) { <div class="help" [innerHTML]="fld.helpText | linkifyText"></div> }
+
+                @switch (fld.fieldType) {
+                  @case ('long_text') {
+                    <textarea [id]="'f' + fld.fieldID" rows="3" [name]="'field_' + fld.fieldID"
+                              [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()"
+                              [attr.aria-required]="fld.isRequired"></textarea>
+                  }
+                  @case ('dropdown') {
+                    <select [id]="'f' + fld.fieldID" [name]="'field_' + fld.fieldID"
+                            [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()">
+                      <option value="">— pilih —</option>
+                      @for (o of fld.options ?? []; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+                    </select>
+                  }
+                  @case ('radio') {
+                    @for (o of fld.options ?? []; track o.value) {
+                      <label class="opt">
+                        <input type="radio" [name]="'field_' + fld.fieldID" [value]="o.value"
+                               [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()" />
+                        {{ o.label }}
+                      </label>
+                    }
+                  }
+                  @case ('checkbox') {
+                    @for (o of fld.options ?? []; track o.value) {
+                      <label class="opt">
+                        <input type="checkbox" [checked]="isChecked('field_' + fld.fieldID, o.value)"
+                               (change)="toggleCheckbox('field_' + fld.fieldID, o.value, $any($event.target).checked)" />
+                        {{ o.label }}
+                      </label>
+                    }
+                  }
+                  @case ('linear_scale') {
+                    <div class="scale">
+                      @for (n of scaleRange(fld); track n) {
+                        <label class="opt">
+                          <input type="radio" [name]="'field_' + fld.fieldID" [value]="n"
+                                 [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()" /> {{ n }}
+                        </label>
+                      }
+                    </div>
+                  }
+                  @case ('rating') {
+                    <div class="stars">
+                      @for (n of ratingRange(fld); track n) {
+                        <span (click)="answers['field_' + fld.fieldID] = n.toString(); onChange()">
+                          {{ +(answers['field_' + fld.fieldID] || 0) >= n ? '★' : '☆' }}
+                        </span>
+                      }
+                    </div>
+                  }
+                  @case ('file') {
+                    @if (stagedFiles[fld.fieldID]) {
+                      <p class="staged">✓ {{ stagedFiles[fld.fieldID] }} tersimpan sementara
+                        <a href="javascript:void(0)" (click)="removeFile(fld)">hapus</a></p>
+                    } @else {
+                      <input type="file" (change)="onFilePicked(fld, $event)" />
+                    }
+                  }
+                  @default {
+                    <input [id]="'f' + fld.fieldID" [name]="'field_' + fld.fieldID"
+                           [type]="fld.fieldType === 'email' ? 'email' : (fld.fieldType === 'number' ? 'number' : (fld.fieldType === 'phone' ? 'tel' : (fld.fieldType === 'url' ? 'url' : (fld.fieldType === 'date' ? 'date' : (fld.fieldType === 'time' ? 'time' : (fld.fieldType === 'datetime' ? 'datetime-local' : 'text'))))))"
+                           [placeholder]="fld.placeholder || ''"
+                           [readonly]="isSystemEmail(fld) && !!form()?.prefillEmail"
+                           [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()"
+                           [attr.aria-required]="fld.isRequired" />
+                  }
+                }
+
+                @if (fieldErrors['field_' + fld.fieldID]) {
+                  <div class="err">{{ fieldErrors['field_' + fld.fieldID] }}</div>
+                }
+              </div>
+            }
+          }
+
+          <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+            {{ submitting() ? 'Mengirim…' : 'Kirim' }}
+          </button>
+        </form>
+      }
+    }
+  }
+</div>

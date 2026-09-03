@@ -9,6 +9,7 @@ import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
 import { articlePublicRoutes, articleCmsRoutes } from './modules/article/article.routes';
 import { catalogbookPublicRoutes, catalogbookCmsRoutes } from './modules/catalogbook/catalogbook.routes';
+import { dynamicFormPublicRoutes, dynamicFormCmsRoutes } from './modules/dynamicform/dynamicform.routes';
 import { schedulePublicRoutes, scheduleCmsRoutes } from './modules/schedule/schedule.routes';
 import { financeformatPublicRoutes, financeformatCmsRoutes } from './modules/financeformat/financeformat.routes';
 import { eventPublicRoutes, eventCmsRoutes } from './modules/event/event.routes';
@@ -64,6 +65,7 @@ export const routes: Routes = [
       ...eventPublicRoutes(),
       ...shortlinkPublicRoutes(),
       ...zakatPublicRoutes(),
+      ...dynamicFormPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
       // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
       // jadi tidak bisa diakses akun non-Kader sama sekali karena link
@@ -102,6 +104,7 @@ export const routes: Routes = [
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...catalogbookCmsRoutes(),
+      ...dynamicFormCmsRoutes(),
       ...scheduleCmsRoutes(),
       ...financeformatCmsRoutes(),
       ...eventCmsRoutes(),

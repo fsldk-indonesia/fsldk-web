@@ -1,0 +1,58 @@
+<div class="page-head">
+  <div>
+    <a class="back" [routerLink]="path.index"><app-icon name="arrow-left" /> Kembali</a>
+    <h1>Rekap Tanggapan</h1>
+    @if (form()) { <p class="muted">{{ form()!.title }} · {{ count() }} tanggapan</p> }
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <a class="btn btn-sm" [routerLink]="path.analytics(formId)">Analitik</a>
+    @if (form()?.gsheetSpreadsheetUrl) {
+      <a class="btn btn-sm" [href]="form()!.gsheetSpreadsheetUrl" target="_blank" rel="noopener">Buka di Google Sheets ↗</a>
+    }
+  </div>
+</div>
+
+<div class="toolbar">
+  <input type="text" placeholder="Cari email / nama…" [(ngModel)]="search" (keyup.enter)="apply()" />
+  <label class="muted"><input type="checkbox" [(ngModel)]="validOnly" (ngModelChange)="apply()" /> Hanya valid</label>
+  <button class="btn btn-sm" (click)="apply()">Terapkan</button>
+  <span style="flex:1"></span>
+  <button class="btn btn-sm" (click)="exportCsv()"><app-icon name="download" /> Unduh CSV</button>
+  @if (canDelete) {
+    <button class="btn btn-sm btn-danger" (click)="deleteAll($event)">Hapus Semua Respons</button>
+  }
+</div>
+
+@if (loading()) {
+  <p class="muted">Memuat…</p>
+} @else if (rows().length === 0) {
+  <p class="muted">Belum ada tanggapan.</p>
+} @else {
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr><th>#</th><th>Nama</th><th>Email</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr>
+      </thead>
+      <tbody>
+        @for (r of rows(); track r.submissionID; let i = $index) {
+          <tr>
+            <td>{{ (page() - 1) * limit + i + 1 }}</td>
+            <td>{{ r.respondentName || '—' }}</td>
+            <td>{{ r.respondentEmail }}</td>
+            <td class="muted">{{ r.submittedDate | date: 'dd MMM yyyy HH:mm' }}</td>
+            <td><span class="badge" [class]="r.isValid ? 'badge-ok' : 'badge-bad'">{{ r.isValid ? 'Valid' : 'Spam' }}</span></td>
+            <td class="row-actions">
+              @if (canUpdate) {
+                <a [routerLink]="path.responseEdit(formId, r.submissionID)">Lihat / Edit</a>
+              }
+              @if (canDelete) {
+                <a class="link-danger" href="javascript:void(0)" (click)="deleteRow(r, $event)">Hapus</a>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+}

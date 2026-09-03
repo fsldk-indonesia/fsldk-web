@@ -1,0 +1,61 @@
+@if (detail(); as d) {
+  <div class="form-card">
+    <a class="back" [routerLink]="path.responses(formId)"><app-icon name="arrow-left" /> Kembali ke rekap</a>
+    <h1>Ubah Tanggapan #{{ d.submissionID }}</h1>
+    <p class="muted">{{ d.respondentEmail }} · dikirim {{ d.submittedDate }} · versi form {{ d.formVersion }}</p>
+
+    <form (ngSubmit)="save()">
+      @for (f of editableFields(); track f.fieldID) {
+        <div class="field">
+          <label [for]="'f' + f.fieldID">{{ f.label }} @if (f.isRequired) { <span style="color:#b42318">*</span> }</label>
+
+          @switch (f.fieldType) {
+            @case ('long_text') {
+              <textarea [id]="'f' + f.fieldID" rows="3" [(ngModel)]="values['field_' + f.fieldID]" [name]="'field_' + f.fieldID"></textarea>
+            }
+            @case ('checkbox') {
+              @for (opt of f.options ?? []; track opt.value) {
+                <label class="muted" style="font-weight:400;">
+                  <input type="checkbox" [checked]="isChecked('field_' + f.fieldID, opt.value)"
+                         (change)="toggleCheckbox('field_' + f.fieldID, opt.value, $any($event.target).checked)" />
+                  {{ opt.label }}
+                </label>
+              }
+            }
+            @case ('dropdown') {
+              <select [id]="'f' + f.fieldID" [(ngModel)]="values['field_' + f.fieldID]" [name]="'field_' + f.fieldID">
+                <option value="">—</option>
+                @for (opt of f.options ?? []; track opt.value) { <option [value]="opt.value">{{ opt.label }}</option> }
+              </select>
+            }
+            @case ('radio') {
+              @for (opt of f.options ?? []; track opt.value) {
+                <label class="muted" style="font-weight:400;">
+                  <input type="radio" [name]="'field_' + f.fieldID" [value]="opt.value" [(ngModel)]="values['field_' + f.fieldID]" />
+                  {{ opt.label }}
+                </label>
+              }
+            }
+            @case ('file') {
+              @if (fileFor(f.fieldID); as fl) {
+                <p><a [href]="fl.fileURL" target="_blank" rel="noopener">{{ fl.originalFileName }} ↗</a></p>
+              }
+              <input type="file" (change)="onFilePicked(f.fieldID, $event)" />
+              <span class="muted">Kosongkan bila tidak ingin mengganti berkas.</span>
+            }
+            @default {
+              <input [id]="'f' + f.fieldID"
+                     [type]="f.fieldType === 'number' || f.fieldType === 'linear_scale' || f.fieldType === 'rating' ? 'number' : (f.fieldType === 'date' ? 'date' : (f.fieldType === 'email' ? 'email' : 'text'))"
+                     [(ngModel)]="values['field_' + f.fieldID]" [name]="'field_' + f.fieldID" />
+            }
+          }
+        </div>
+      }
+
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Menyimpan…' : 'Simpan Perubahan' }}</button>
+        <a class="btn" [routerLink]="path.responses(formId)">Batal</a>
+      </div>
+    </form>
+  </div>
+}
