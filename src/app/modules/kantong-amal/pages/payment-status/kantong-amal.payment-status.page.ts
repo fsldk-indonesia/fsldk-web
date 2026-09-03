@@ -29,7 +29,12 @@ const BRAND_GREEN_DARK = '#046428';
     .status-card { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 32px; text-align: center; }
 
     .status-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
-    .status-icon.status-pending { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    .status-icon.status-pending { background: var(--color-primary-soft); color: var(--color-primary-dark); position: relative; }
+    .status-icon.status-pending::before {
+      content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid var(--color-primary);
+      opacity: .5; animation: status-ring-pulse 1.6s ease-out infinite;
+    }
+    @keyframes status-ring-pulse { 0% { transform: scale(.85); opacity: .55; } 100% { transform: scale(1.35); opacity: 0; } }
     .status-icon.status-paid { background: #dcfce7; color: #166534; }
     .status-icon.status-failed { background: #fee2e2; color: #991b1b; }
     .status-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; margin: 0 0 6px; }
