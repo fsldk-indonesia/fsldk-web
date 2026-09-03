@@ -1,0 +1,108 @@
+@if (loading()) {
+  <section class="section"><div class="container"><span class="skel skel-title"></span></div></section>
+} @else if (!campaign()) {
+  <section class="section"><div class="container">
+    <div class="empty-state" style="min-height:40vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
+      <h4>Campaign tidak ditemukan</h4>
+      <p><a [routerLink]="kantongAmalPath.list">Kembali ke daftar campaign</a></p>
+    </div>
+  </div></section>
+} @else {
+  <section class="section"><div class="container">
+    <div class="text-center" style="margin-bottom:24px">
+      <span class="eyebrow">Donasi</span>
+      <h1>{{ campaign()!.title }}</h1>
+    </div>
+
+    <div class="layout-grid">
+      <div class="form-card">
+
+        <!-- Nominal -->
+
+        <div class="form-section">
+          <div class="section-head"><app-icon name="hand-coins" [size]="18" /><h3>Nominal Donasi</h3></div>
+
+          <label class="form-label">Masukkan Nominal</label>
+          <div class="amount-input-wrap">
+            <span class="amount-prefix">Rp</span>
+            <input class="amount-input" inputmode="numeric" placeholder="0"
+                   [ngModel]="amountDisplay" (ngModelChange)="onAmountInput($event)">
+          </div>
+          <p class="form-hint">Minimal Rp 1.000</p>
+
+          <div class="quick-amounts">
+            @for (v of quickAmounts; track v) {
+              <button type="button" [class.active]="amount === v" (click)="pickAmount(v)">{{ formatRupiah(v) }}</button>
+            }
+          </div>
+
+          @if (amount && amount > 0) {
+            <div class="fee-breakdown">
+              <div class="fee-row">
+                <span>Jumlah Donasi</span>
+                <span>{{ formatRupiah(amount) }}</span>
+              </div>
+              <div class="fee-row">
+                <span><app-icon name="info-circle" [size]="12" /> Biaya Layanan QRIS ({{ FEE_RATE * 100 }}%)</span>
+                <span>{{ formatRupiah(adminFee()) }}</span>
+              </div>
+              <div class="fee-row fee-total">
+                <span>Total Tagihan</span>
+                <span>{{ formatRupiah(grossTotal()) }}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Data Donatur -->
+        <div class="form-section">
+          <div class="section-head"><app-icon name="user-circle" [size]="18" /><h3>Data Donatur</h3></div>
+
+          <div class="form-group">
+            <label class="form-label">Nama Donatur</label>
+            <input class="form-control" [(ngModel)]="donorName" placeholder="Nama lengkap">
+          </div>
+
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input class="form-control" type="email" [(ngModel)]="donorEmail" placeholder="email@contoh.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nomor WhatsApp</label>
+              <input class="form-control" [(ngModel)]="donorPhone" placeholder="08xxxxxxxxxx">
+            </div>
+          </div>
+
+          @if (campaign()!.isAnonymousAllowed) {
+            <label class="anon-toggle">
+              <input type="checkbox" [(ngModel)]="isAnonymous">
+              <span>Sembunyikan nama saya (donasi anonim)</span>
+            </label>
+            @if (isAnonymous) {
+              <p class="anon-hint">
+                <app-icon name="info-circle" [size]="13" />
+                <span>Nama Anda tidak akan ditampilkan ke publik — daftar donatur akan menampilkan <strong>&ldquo;Hamba Allah&rdquo;</strong> sebagai gantinya.</span>
+              </p>
+            }
+          }
+        </div>
+
+        <!-- Pesan -->
+        <div class="form-section">
+          <div class="section-head"><app-icon name="message-circle" [size]="18" /><h3>Pesan (opsional)</h3></div>
+          <textarea class="form-control" rows="3" [(ngModel)]="message" placeholder="Tuliskan doa atau dukungan Anda"></textarea>
+        </div>
+
+        <button class="btn btn-primary mt-lg" style="width:100%" [disabled]="!canSubmit()" (click)="submit()">
+          {{ submitting() ? 'Memproses…' : 'Lanjutkan Pembayaran' }}
+        </button>
+      </div>
+
+      <aside class="side-card">
+        <img [src]="campaign()!.coverImageUrl" [alt]="campaign()!.title">
+        <p style="font-size:.88rem; color:var(--color-text-secondary)">Pembayaran diproses via QRIS — Anda akan diarahkan untuk memindai kode QR setelah menekan tombol di samping.</p>
+      </aside>
+    </div>
+  </div></section>
+}
