@@ -1,5 +1,4 @@
-import { Component, OnInit, PLATFORM_ID, inject, signal } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Donation } from '../../entities/donation';
@@ -31,10 +30,10 @@ import { KantongAmalDonationReceiptView } from './kantong-amal.donation-receipt.
 export class KantongAmalDonationReceiptPage implements OnInit, KantongAmalDonationReceiptView {
   private presenter = inject(KantongAmalDonationReceiptPresenter);
   private route = inject(ActivatedRoute);
-  private platformId = inject(PLATFORM_ID);
 
   donation = signal<Donation | null>(null);
   loading = signal(true);
+  downloading = signal(false);
 
   readonly kantongAmalPath = kantongAmalPath;
   readonly formatRupiah = formatRupiah;
@@ -44,10 +43,12 @@ export class KantongAmalDonationReceiptPage implements OnInit, KantongAmalDonati
     this.presenter.load(this.route.snapshot.paramMap.get('publicRef')!);
   }
 
-  print(): void {
-    if (isPlatformBrowser(this.platformId)) window.print();
+  downloadPdf(): void {
+    if (this.downloading()) return;
+    this.presenter.downloadReceipt(this.route.snapshot.paramMap.get('publicRef')!);
   }
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setDonation(donation: Donation | null): void { this.donation.set(donation); }
+  setDownloading(downloading: boolean): void { this.downloading.set(downloading); }
 }
