@@ -16,6 +16,7 @@ export interface Withdrawal {
   status: WithdrawalStatus;
   rejectionReason?: string;
   approvedDate?: string;
+  executedDate?: string;
   completedDate?: string;
   createdDate: string;
 }

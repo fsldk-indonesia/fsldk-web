@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Withdrawal } from '../../entities/withdrawal';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { IconComponent } from '../../../../shared/icon.component';
 import { AlertService } from '../../../../core/services/alert.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
@@ -19,18 +20,23 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_OPTIONS: SelectOption[] = [
+  { value: '', label: 'Semua Status' },
+  { value: 'REQUESTED', label: 'Diajukan' },
+  { value: 'SECURITY_CHECK', label: 'Verifikasi Keamanan' },
   { value: 'APPROVED', label: 'Siap Diproses' },
   { value: 'PROCESSING', label: 'Diproses' },
   { value: 'SUCCESS', label: 'Berhasil' },
   { value: 'FAILED', label: 'Gagal' },
-  { value: '', label: 'Semua Status' },
+  { value: 'REJECTED', label: 'Ditolak' },
+  { value: 'CANCELLED', label: 'Dibatalkan' },
+  { value: 'REVERSED', label: 'Dibatalkan Sistem' },
 ];
 
 @Component({
   selector: 'app-kantong-amal-admin-withdrawal-page',
   standalone: true,
   templateUrl: './kantong-amal.admin-withdrawal.page.html',
-  imports: [DatePipe, UpperCasePipe, FormsModule, RouterLink, PaginationComponent, SelectComponent],
+  imports: [DatePipe, UpperCasePipe, FormsModule, RouterLink, PaginationComponent, SelectComponent, IconComponent],
   providers: [KantongAmalAdminWithdrawalPresenter],
   styles: [`
     .status-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
@@ -50,7 +56,7 @@ export class KantongAmalAdminWithdrawalPage implements OnInit, KantongAmalAdminW
   page = signal(1);
   count = signal(0);
   limit = 15;
-  status = 'APPROVED';
+  status = '';
   busyIDs = signal<Set<number>>(new Set());
 
   readonly formatRupiah = formatRupiah;

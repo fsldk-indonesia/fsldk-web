@@ -1,0 +1,108 @@
+<div class="page-head">
+  <h1>Detail Penarikan</h1>
+  <p class="text-muted">Rincian &amp; riwayat status pencairan saldo campaign.</p>
+</div>
+
+@if (loading()) {
+  <div class="card"><div class="card-pad"><span class="skel skel-title"></span><span class="skel skel-line"></span></div></div>
+} @else if (!withdrawal()) {
+  <div class="card"><div class="card-pad">
+    <h4>Penarikan tidak ditemukan</h4>
+    <p><a [routerLink]="kantongAmalPath.adminWithdrawals">← Kembali ke daftar penarikan</a></p>
+  </div></div>
+} @else {
+  <div class="wd-hero" [class]="heroClass()">
+    <div>
+      <div class="wd-hero-label">Nominal Penarikan</div>
+      <div class="wd-hero-amount">{{ formatRupiah(withdrawal()!.amount) }}</div>
+      <div class="wd-hero-ref"><app-icon name="list" [size]="12" /> {{ withdrawal()!.withdrawalRef }}</div>
+      @if (isOngoing()) {
+        <div class="wd-polling-badge"><span class="wd-polling-dot"></span> Memeriksa status…</div>
+      }
+    </div>
+    <div class="wd-hero-right">
+      <app-icon [name]="statusIcon()" [size]="30" />
+      <div class="wd-hero-status">{{ statusLabel(withdrawal()!.status) }}</div>
+    </div>
+  </div>
+
+  <div class="grid grid-2 mt-lg">
+    <div class="card">
+      <div class="card-pad">
+        <h3 class="group-title"><app-icon name="file-text" [size]="16" /> Informasi Penarikan</h3>
+
+        <div class="wd-info-row">
+          <span class="wd-info-label">Campaign</span>
+          <a class="wd-info-val" [routerLink]="kantongAmalPath.campaignEdit(withdrawal()!.campaignID)">{{ withdrawal()!.campaignTitle }}</a>
+        </div>
+        <div class="wd-info-row">
+          <span class="wd-info-label">Rekening Tujuan</span>
+          <span class="wd-info-val">{{ withdrawal()!.beneficiaryBankCode | uppercase }} {{ withdrawal()!.beneficiaryAccountNumber }}</span>
+        </div>
+        <div class="wd-info-row">
+          <span class="wd-info-label">Pemilik Rekening</span>
+          <span class="wd-info-val">{{ withdrawal()!.beneficiaryAccountHolder }}</span>
+        </div>
+        @if (withdrawal()!.rejectionReason) {
+          <div class="wd-info-row">
+            <span class="wd-info-label">Alasan</span>
+            <span class="wd-info-val">{{ withdrawal()!.rejectionReason }}</span>
+          </div>
+        }
+
+        <div class="wd-breakdown">
+          <div class="wd-breakdown-row"><span class="text-muted">Nominal Penarikan</span><span>{{ formatRupiah(withdrawal()!.amount) }}</span></div>
+          <div class="wd-breakdown-row"><span class="text-muted">Biaya Transfer</span><span>− {{ formatRupiah(withdrawal()!.fee) }}</span></div>
+          <div class="wd-breakdown-row total"><span>Diterima</span><span>{{ formatRupiah(withdrawal()!.netAmount) }}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-pad">
+        <h3 class="group-title"><app-icon name="history" [size]="16" /> Riwayat Transfer</h3>
+
+        <ul class="wd-timeline">
+          <li class="wd-tl-item">
+            <div class="wd-tl-dot done"><app-icon name="file-text" [size]="16" /></div>
+            <div>
+              <div class="wd-tl-title">Draft Dibuat</div>
+              <div class="wd-tl-time">{{ withdrawal()!.createdDate | date:'d MMM yyyy, HH:mm' }}</div>
+            </div>
+          </li>
+          <li class="wd-tl-item">
+            <div class="wd-tl-dot" [class]="securityDotClass()"><app-icon name="shield-check" [size]="16" /></div>
+            <div>
+              <div class="wd-tl-title">Verifikasi Keamanan (OTP)</div>
+              <div class="wd-tl-time">{{ withdrawal()!.approvedDate ? (withdrawal()!.approvedDate | date:'d MMM yyyy, HH:mm') : 'Menunggu verifikasi…' }}</div>
+            </div>
+          </li>
+          <li class="wd-tl-item">
+            <div class="wd-tl-dot" [class]="executedDotClass()"><app-icon name="banknote" [size]="16" /></div>
+            <div>
+              <div class="wd-tl-title">Dikirim ke Bisabiller</div>
+              <div class="wd-tl-time">{{ withdrawal()!.executedDate ? (withdrawal()!.executedDate | date:'d MMM yyyy, HH:mm') : 'Menunggu diproses…' }}</div>
+            </div>
+          </li>
+          <li class="wd-tl-item">
+            <div class="wd-tl-dot" [class]="finalDotClass()"><app-icon [name]="finalIcon()" [size]="16" /></div>
+            <div>
+              <div class="wd-tl-title">{{ finalTitle() }}</div>
+              <div class="wd-tl-time">
+                @if (withdrawal()!.completedDate) {
+                  {{ withdrawal()!.completedDate | date:'d MMM yyyy, HH:mm' }}
+                } @else if (isOngoing()) {
+                  Menunggu konfirmasi gateway…
+                } @else {
+                  —
+                }
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-lg"><a [routerLink]="kantongAmalPath.adminWithdrawals"><app-icon name="arrow-left" [size]="14" /> Kembali ke Penarikan</a></p>
+}

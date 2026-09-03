@@ -21,7 +21,8 @@
               <td class="text-muted">{{ w.beneficiaryBankCode | uppercase }} {{ w.beneficiaryAccountNumber }}</td>
               <td><span class="status-badge" [class]="'status-' + w.status">{{ statusLabel(w.status) }}</span></td>
               <td class="text-muted">{{ w.createdDate | date:'d MMM yyyy' }}</td>
-              <td>
+              <td class="flex items-center gap-sm">
+                <a class="icon-action" [routerLink]="kantongAmalPath.withdrawalDetail(w.withdrawalID)" title="Detail"><app-icon name="eye" [size]="14" /></a>
                 @if (w.status === 'APPROVED') {
                   <button class="btn btn-primary btn-sm" [disabled]="isBusy(w.withdrawalID)" (click)="process(w, $event)">Proses Pencairan</button>
                 }

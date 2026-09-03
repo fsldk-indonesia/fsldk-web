@@ -17,5 +17,6 @@ export class WithdrawalRepository {
   inquiry(body: InquiryRequest): Observable<InquiryResponse> { return this.api.inquiry(body); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<Withdrawal>> { return this.api.cmsList(q); }
+  detail(id: number): Observable<Withdrawal> { return this.api.detail(id); }
   process(id: number): Observable<Withdrawal> { return this.api.process(id); }
 }

@@ -19,5 +19,6 @@ export class WithdrawalApiService {
   inquiry(body: InquiryRequest): Observable<InquiryResponse> { return this.api.post('/transfer/inquiry', body); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<Withdrawal>> { return this.api.get('/withdrawals', q); }
+  detail(id: number): Observable<Withdrawal> { return this.api.get(`/withdrawals/${id}`); }
   process(id: number): Observable<Withdrawal> { return this.api.post(`/withdrawals/${id}/process`); }
 }
