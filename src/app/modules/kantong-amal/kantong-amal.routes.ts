@@ -95,12 +95,6 @@ export const kantongAmalAdminRoutes: () => Routes = () => [
     loadComponent: () => import('./pages/admin-reports/kantong-amal.admin-reports.page').then((m) => m.KantongAmalAdminReportsPage),
   },
   {
-    path: 'kantong-amal/laporan/rekonsiliasi',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.report.view' },
-    loadComponent: () => import('./pages/admin-reconciliation/kantong-amal.admin-reconciliation.page').then((m) => m.KantongAmalAdminReconciliationPage),
-  },
-  {
     path: 'kantong-amal/audit-log',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'kantong_amal.audit.view' },

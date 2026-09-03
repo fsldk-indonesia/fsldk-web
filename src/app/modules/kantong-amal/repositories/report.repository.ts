@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { ReportApiService } from '../services/report-api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../entities/report';
+import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, Reconciliation, WithdrawalReportRow, WithdrawalStatusFunnel } from '../entities/report';
 import { FinanceAuditLogItem } from '../entities/audit-log';
 
 @Injectable({ providedIn: 'root' })
@@ -21,8 +21,7 @@ export class ReportRepository {
   withdrawals(q: Record<string, unknown>): Observable<{ items: Pagination<WithdrawalReportRow>; statusFunnel: WithdrawalStatusFunnel[] }> { return this.api.withdrawals(q); }
   exportWithdrawals(q: Record<string, unknown>): Observable<{ blob: Blob; filename: string }> { return this.api.exportWithdrawals(q).pipe(tap((r) => this.triggerDownload(r))); }
 
-  reconciliationHistory(q: Record<string, unknown>): Observable<Pagination<ReconciliationSnapshot>> { return this.api.reconciliationHistory(q); }
-  runReconciliation(): Observable<ReconciliationSnapshot> { return this.api.runReconciliation(); }
+  reconciliation(): Observable<Reconciliation> { return this.api.reconciliation(); }
 
   auditLog(q: Record<string, unknown>): Observable<Pagination<FinanceAuditLogItem>> { return this.api.auditLog(q); }
 
