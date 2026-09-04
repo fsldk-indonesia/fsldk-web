@@ -1,8 +1,8 @@
 <div class="flex justify-between items-center page-head">
   <div><h1>FSLDK Goods</h1><p class="text-muted">Kelola katalog produk FSLDK Goods.</p></div>
   <div class="flex gap">
-    <a routerLink="/cms/goods-categories" class="btn btn-outline">Kategori</a>
-    @if (canCreate) { <a routerLink="/cms/goods/form" class="btn btn-primary">+ Tambah Produk</a> }
+    <a routerLink="/cms/goods/categories" class="btn btn-outline">Kategori</a>
+    @if (canCreate) { <a routerLink="/cms/goods/products/form" class="btn btn-primary">+ Tambah Produk</a> }
   </div>
 </div>
 
@@ -50,7 +50,7 @@
               <td>
                 <div class="table-actions">
                   @if (canUpdate) {
-                    <a class="icon-action" [routerLink]="['/cms/goods/form', g.goodsID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+                    <a class="icon-action" [routerLink]="['/cms/goods/products/form', g.goodsID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
                     <button type="button" class="icon-action" [disabled]="isBusy(g.goodsID)" (click)="toggleFeatured(g)" [title]="g.isFeatured ? 'Lepas dari unggulan' : 'Jadikan unggulan'">
                       @if (isBusy(g.goodsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="award" [size]="14" /> }
                     </button>
@@ -74,7 +74,7 @@
                 <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="shopping-bag" [size]="26" /></span>
                 <h4>Belum ada produk</h4>
                 <p>Produk yang Anda tambahkan akan muncul di sini.</p>
-                @if (canCreate) { <a routerLink="/cms/goods/form" class="btn btn-primary btn-sm">+ Tambah Produk</a> }
+                @if (canCreate) { <a routerLink="/cms/goods/products/form" class="btn btn-primary btn-sm">+ Tambah Produk</a> }
               </div>
             </td></tr>
           }

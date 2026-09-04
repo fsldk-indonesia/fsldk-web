@@ -1,8 +1,8 @@
 <div class="flex justify-between items-center page-head">
   <div><h1>Kategori FSLDK Goods</h1><p class="text-muted">Kelola kategori produk pada katalog FSLDK Goods.</p></div>
   <div class="flex gap">
-    <a routerLink="/cms/goods" class="btn btn-outline">← Produk</a>
-    @if (canCreate) { <a routerLink="/cms/goods-categories/form" class="btn btn-primary">+ Tambah Kategori</a> }
+    <a routerLink="/cms/goods/products" class="btn btn-outline">← Produk</a>
+    @if (canCreate) { <a routerLink="/cms/goods/categories/form" class="btn btn-primary">+ Tambah Kategori</a> }
   </div>
 </div>
 
@@ -31,7 +31,7 @@
               <td>
                 <div class="table-actions">
                   @if (canUpdate) {
-                    <a class="icon-action" [routerLink]="['/cms/goods-categories/form', cat.goodsCategoryID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+                    <a class="icon-action" [routerLink]="['/cms/goods/categories/form', cat.goodsCategoryID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
                     <button type="button" class="icon-action" [disabled]="isBusy(cat.goodsCategoryID)" (click)="toggleActive(cat)" [title]="cat.isActive ? 'Nonaktifkan' : 'Aktifkan'">
                       @if (isBusy(cat.goodsCategoryID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="cat.isActive ? 'eye-off' : 'eye'" [size]="14" /> }
                     </button>
@@ -50,7 +50,7 @@
                 <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="tags" [size]="26" /></span>
                 <h4>Belum ada kategori</h4>
                 <p>Kategori produk yang Anda tambahkan akan muncul di sini.</p>
-                @if (canCreate) { <a routerLink="/cms/goods-categories/form" class="btn btn-primary btn-sm">+ Tambah Kategori</a> }
+                @if (canCreate) { <a routerLink="/cms/goods/categories/form" class="btn btn-primary btn-sm">+ Tambah Kategori</a> }
               </div>
             </td></tr>
           }

@@ -1,4 +1,4 @@
-<div class="page-head"><a routerLink="/cms/goods-categories" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Kategori' : 'Tambah Kategori' }}</h1></div>
+<div class="page-head"><a routerLink="/cms/goods/categories" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Kategori' : 'Tambah Kategori' }}</h1></div>
 
 <div class="card card-pad form-card">
   <div class="form-group"><label class="form-label">Nama Kategori</label>
@@ -14,7 +14,7 @@
   </div>
 
   <div class="flex gap justify-between">
-    <a routerLink="/cms/goods-categories" class="btn btn-ghost">Batal</a>
+    <a routerLink="/cms/goods/categories" class="btn btn-ghost">Batal</a>
     <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
       @if (saving()) { <span class="spinner"></span> } @else { Simpan Kategori }
     </button>

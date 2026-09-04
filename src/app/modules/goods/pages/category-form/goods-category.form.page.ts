@@ -37,5 +37,5 @@ export class GoodsCategoryFormPage implements OnInit, GoodsCategoryFormView {
 
   setForm(form: GoodsCategoryFormValue): void { this.form = form; }
   setSaving(saving: boolean): void { this.saving.set(saving); }
-  navigateToIndex(): void { this.router.navigate(['/cms/goods-categories']); }
+  navigateToIndex(): void { this.router.navigate(['/cms/goods/categories']); }
 }

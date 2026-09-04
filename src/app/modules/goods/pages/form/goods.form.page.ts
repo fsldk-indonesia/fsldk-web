@@ -57,5 +57,5 @@ export class GoodsFormPage implements OnInit, GoodsFormView {
   }
   setForm(form: GoodsFormValue): void { this.form = form; }
   setSaving(saving: boolean): void { this.saving.set(saving); }
-  navigateToIndex(): void { this.router.navigate(['/cms/goods']); }
+  navigateToIndex(): void { this.router.navigate(['/cms/goods/products']); }
 }

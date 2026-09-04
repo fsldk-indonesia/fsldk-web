@@ -1,4 +1,4 @@
-<div class="page-head"><a routerLink="/cms/goods" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Produk' : 'Tambah Produk' }}</h1></div>
+<div class="page-head"><a routerLink="/cms/goods/products" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Produk' : 'Tambah Produk' }}</h1></div>
 
 <div class="card card-pad form-card">
   <div class="form-group"><label class="form-label">Nama Produk</label>
@@ -41,7 +41,7 @@
   <p class="form-hint">Klik "Beli Sekarang" pada halaman publik akan mengarahkan pengunjung ke URL ini (biasanya link WhatsApp).</p>
 
   <div class="flex gap justify-between" style="margin-top:8px">
-    <a routerLink="/cms/goods" class="btn btn-ghost">Batal</a>
+    <a routerLink="/cms/goods/products" class="btn btn-ghost">Batal</a>
     <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
       @if (saving()) { <span class="spinner"></span> } @else { Simpan Produk }
     </button>
