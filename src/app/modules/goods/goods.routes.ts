@@ -1,6 +1,11 @@
 import { Routes } from '@angular/router';
 import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
+/** Rute publik goods — dipasang sebagai children dari PublicLayoutComponent. */
+export const goodsPublicRoutes: () => Routes = () => [
+  { path: 'fsldk-goods', loadComponent: () => import('./pages/public-index/goods.public-index.page').then((m) => m.GoodsPublicIndexPage) },
+];
+
 /** Rute manajemen produk goods CMS — dipasang sebagai children dari CmsLayoutComponent. */
 export const goodsCmsRoutes: () => Routes = () => [
   {
