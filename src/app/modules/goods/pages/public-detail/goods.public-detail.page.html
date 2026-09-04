@@ -1,0 +1,56 @@
+<article class="section">
+  <div class="container">
+    @if (loading()) {
+      <div class="layout">
+        <span class="skel skel-thumb" style="aspect-ratio:1/1"></span>
+        <div>
+          <span class="skel skel-line" style="width:90px;height:22px;border-radius:999px"></span>
+          <span class="skel skel-line" style="width:80%;height:34px;margin-top:16px"></span>
+          <span class="skel skel-line" style="width:40%"></span>
+          <span class="skel skel-line"></span>
+          <span class="skel skel-line" style="width:70%"></span>
+        </div>
+      </div>
+    } @else {
+      @if (item(); as g) {
+        <nav class="crumb"><a routerLink="/">Beranda</a> / <a routerLink="/fsldk-goods">FSLDK Goods</a> / <span>{{ g.goodsName }}</span></nav>
+
+        <div class="layout">
+          <div>
+            <app-image-gallery [images]="galleryImages()" [alt]="g.goodsName" />
+          </div>
+
+          <div>
+            <span class="chip chip-green">{{ g.categoryName }}</span>
+            @if (g.isFeatured) { <span class="chip" style="margin-left:6px"><app-icon name="award" [size]="12" /> Unggulan</span> }
+            <h1>{{ g.goodsName }}</h1>
+            <p class="price">{{ formatRupiah(g.price) }}</p>
+            @if (g.shortDescription) { <p class="short-desc">{{ g.shortDescription }}</p> }
+
+            <div class="meta-list">
+              <span><strong>Ketersediaan:</strong> {{ availabilityLabels[g.availabilityStatus] }}</span>
+              @if (g.skuCode) { <span><strong>SKU:</strong> {{ g.skuCode }}</span> }
+            </div>
+
+            <div class="actions">
+              <a [href]="g.purchaseUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">
+                <app-icon name="link" [size]="16" /> {{ g.purchaseButtonLabel }}
+              </a>
+            </div>
+
+            @if (g.fullDescription) {
+              <div class="content">
+                <h3>Deskripsi Produk</h3>
+                <div [innerHTML]="g.fullDescription"></div>
+              </div>
+            }
+
+            <a routerLink="/fsldk-goods" class="btn btn-outline mt-lg">← Kembali ke FSLDK Goods</a>
+          </div>
+        </div>
+      } @else {
+        <div class="text-center"><h2>Produk tidak ditemukan</h2><a routerLink="/fsldk-goods" class="btn btn-primary mt">Kembali</a></div>
+      }
+    }
+  </div>
+</article>
