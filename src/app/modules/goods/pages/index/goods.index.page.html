@@ -1,0 +1,88 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>FSLDK Goods</h1><p class="text-muted">Kelola katalog produk FSLDK Goods.</p></div>
+  <div class="flex gap">
+    <a routerLink="/cms/goods-categories" class="btn btn-outline">Kategori</a>
+    @if (canCreate) { <a routerLink="/cms/goods/form" class="btn btn-primary">+ Tambah Produk</a> }
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-pad flex gap" style="flex-wrap:wrap">
+    <input class="form-control" style="max-width:260px" [(ngModel)]="search" (keyup.enter)="apply()" placeholder="Cari nama atau SKU produk…">
+    <app-select style="max-width:200px" [(ngModel)]="categoryID" [options]="categoryOptions()" (ngModelChange)="apply()" />
+    <app-select style="max-width:200px" [(ngModel)]="availability" [options]="availabilityOptions" (ngModelChange)="apply()" />
+    <button class="btn btn-outline btn-sm" (click)="apply()">Cari</button>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th></th><th>Produk</th><th>Kategori</th><th>Harga</th><th>Ketersediaan</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><span class="skel" style="width:40px;height:40px;border-radius:6px;display:block"></span></td>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:80px"></span></td>
+              <td><span class="skel skel-line" style="width:70px"></span></td>
+              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:100px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (g of goods(); track g.goodsID) {
+            <tr>
+              <td>
+                @if (g.mainImageUrl) {
+                  <img class="thumb" [src]="g.mainImageUrl" [alt]="g.goodsName">
+                } @else {
+                  <span class="icon-badge sm icon-badge-soft"><app-icon name="empty-box" [size]="16" /></span>
+                }
+              </td>
+              <td><strong>{{ g.goodsName }}</strong>@if (g.skuCode) {<div class="text-muted" style="font-size:.8rem">{{ g.skuCode }}</div>}</td>
+              <td class="text-muted">{{ g.categoryName }}</td>
+              <td class="text-muted">{{ formatRupiah(g.price) }}</td>
+              <td><span class="badge">{{ availabilityLabels[g.availabilityStatus] }}</span></td>
+              <td>
+                <span class="badge" [class.badge-published]="g.isPublished" [class.badge-draft]="!g.isPublished">{{ g.isPublished ? 'Published' : 'Draft' }}</span>
+                @if (g.isFeatured) { <span class="badge badge-published" title="Unggulan" style="margin-left:4px"><app-icon name="award" [size]="11" /></span> }
+              </td>
+              <td>
+                <div class="table-actions">
+                  @if (canUpdate) {
+                    <a class="icon-action" [routerLink]="['/cms/goods/form', g.goodsID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+                    <button type="button" class="icon-action" [disabled]="isBusy(g.goodsID)" (click)="toggleFeatured(g)" [title]="g.isFeatured ? 'Lepas dari unggulan' : 'Jadikan unggulan'">
+                      @if (isBusy(g.goodsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="award" [size]="14" /> }
+                    </button>
+                  }
+                  @if (canPublish) {
+                    <button type="button" class="icon-action" [disabled]="isBusy(g.goodsID)" (click)="togglePublish(g)" [title]="g.isPublished ? 'Tarik publikasi' : 'Publish'">
+                      @if (isBusy(g.goodsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="g.isPublished ? 'eye-off' : 'eye'" [size]="14" /> }
+                    </button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(g.goodsID)" (click)="remove(g, $event)" title="Hapus">
+                      @if (isBusy(g.goodsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="shopping-bag" [size]="26" /></span>
+                <h4>Belum ada produk</h4>
+                <p>Produk yang Anda tambahkan akan muncul di sini.</p>
+                @if (canCreate) { <a routerLink="/cms/goods/form" class="btn btn-primary btn-sm">+ Tambah Produk</a> }
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

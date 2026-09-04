@@ -1,0 +1,49 @@
+<div class="page-head"><a routerLink="/cms/goods" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Produk' : 'Tambah Produk' }}</h1></div>
+
+<div class="card card-pad form-card">
+  <div class="form-group"><label class="form-label">Nama Produk</label>
+    <input class="form-control" [(ngModel)]="form.goodsName" placeholder="Tulis nama produk…"></div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Kategori</label>
+      <app-select [(ngModel)]="form.goodsCategoryID" [options]="categoryOptions()" placeholder="Pilih kategori" />
+    </div>
+    <div class="form-group"><label class="form-label">SKU/Kode Produk <span class="text-muted">(opsional)</span></label>
+      <input class="form-control" [(ngModel)]="form.skuCode" placeholder="mis. GDS-KAOS-01"></div>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Harga</label>
+      <input class="form-control" type="number" min="0" [(ngModel)]="form.price" placeholder="0"></div>
+    <div class="form-group"><label class="form-label">Status Ketersediaan</label>
+      <app-select [(ngModel)]="form.availabilityStatus" [options]="availabilityOptions" />
+    </div>
+  </div>
+
+  <div class="form-group"><label class="form-label">Deskripsi Singkat <span class="text-muted">(tampil di kartu produk)</span></label>
+    <input class="form-control" [(ngModel)]="form.shortDescription" placeholder="Ringkasan singkat produk…" maxlength="500"></div>
+
+  <div class="form-group"><label class="form-label">Deskripsi Lengkap</label>
+    <app-rich-text-editor [(value)]="form.fullDescription" /></div>
+
+  <div class="form-group"><label class="form-label">Gambar Utama</label>
+    <app-image-upload [(value)]="form.mainImageUrl" /></div>
+
+  <div class="form-group"><label class="form-label">Gallery Produk <span class="text-muted">(opsional, maks. 10 gambar)</span></label>
+    <app-multi-image-upload [(value)]="form.imageUrls" [max]="10" /></div>
+
+  <div class="grid grid-2">
+    <div class="form-group"><label class="form-label">Purchase URL</label>
+      <input class="form-control" type="url" [(ngModel)]="form.purchaseUrl" placeholder="https://wa.me/6281234567890"></div>
+    <div class="form-group"><label class="form-label">Label Tombol Beli</label>
+      <input class="form-control" [(ngModel)]="form.purchaseButtonLabel" placeholder="Beli Sekarang" maxlength="100"></div>
+  </div>
+  <p class="form-hint">Klik "Beli Sekarang" pada halaman publik akan mengarahkan pengunjung ke URL ini (biasanya link WhatsApp).</p>
+
+  <div class="flex gap justify-between" style="margin-top:8px">
+    <a routerLink="/cms/goods" class="btn btn-ghost">Batal</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } @else { Simpan Produk }
+    </button>
+  </div>
+</div>
