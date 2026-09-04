@@ -89,6 +89,9 @@ const ICONS: Record<string, string> = {
   'message-circle': 'fas fa-comment',
   // Navbar "Layanan" dropdown — Kalkulator Zakat.
   calculator: 'fas fa-calculator',
+  // FSLDK Goods (sidebar menuIcon lk_permission + navbar "Layanan").
+  'shopping-bag': 'fas fa-bag-shopping',
+  tags: 'fas fa-tags',
 };
 
 /**

@@ -7,6 +7,7 @@ import { shortlinkPath } from '../modules/shortlink/shortlink.path';
 import { financeformatPath } from '../modules/financeformat/financeformat.path';
 import { zakatPath } from '../modules/zakat/zakat.path';
 import { schedulePath } from '../modules/schedule/schedule.path';
+import { goodsPath } from '../modules/goods/goods.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
 
@@ -362,6 +363,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
     { icon: 'hand-heart', title: 'Kantong Amal', caption: 'Galang & Salurkan Donasi', href: '/kantong-amal' },
     { icon: 'calculator', title: 'Kalkulator Zakat', caption: 'Hitung 7 jenis zakat', href: zakatPath.calculator },
+    { icon: 'shopping-bag', title: 'FSLDK Goods', caption: 'Katalog Produk & Merchandise Resmi', href: goodsPath.publicIndex },
   ];
 
   /** Isi dropdown navbar "Lainnya" — konten pelengkap di luar layanan inti. */
