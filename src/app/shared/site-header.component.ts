@@ -441,6 +441,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   readonly tentangKamiItems = [
     { icon: 'sitemap', title: 'Struktur Organisasi', caption: 'Kepengurusan FSLDK Indonesia', href: '/tentang/struktur' },
     { icon: 'photo', title: 'Galeri', caption: 'Dokumentasi kegiatan LDK', href: '/tentang/galeri' },
+    { icon: 'file-bar-chart', title: 'Statistik Jaringan', caption: 'Data agregat LDK, Puskomda & Puskomnas', href: '/tentang/statistik-jaringan' },
     { icon: 'messages', title: 'Hubungi Kami', caption: 'Kontak resmi FSLDK Indonesia', href: '/tentang/kontak' },
   ];
 

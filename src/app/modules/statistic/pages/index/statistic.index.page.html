@@ -1,0 +1,97 @@
+<section class="section">
+  <div class="container">
+    <div class="page-header">
+      <span class="eyebrow">Tentang Kami</span>
+      <h1>Statistik Jaringan</h1>
+      <p class="page-subtitle">Data agregat jaringan LDK, Puskomda, dan Puskomnas se-Indonesia — terbuka untuk publik.</p>
+    </div>
+
+    <div class="tab-bar">
+      @for (t of tabs; track t.id) {
+        <button type="button" class="tab-btn" [class.active]="activeTab() === t.id" (click)="switchTab(t.id)">{{ t.label }}</button>
+      }
+    </div>
+
+    @if (activeTab() === 'ringkasan') {
+      @if (statsLoading()) {
+        <div class="stat-grid">
+          @for (i of [1,2,3,4]; track i) {
+            <div class="stat-card"><span class="skel skel-line" style="width:60%;margin:0 auto"></span><span class="skel skel-title" style="width:80%;margin:10px auto 0"></span></div>
+          }
+        </div>
+      } @else {
+        @if (stats(); as s) {
+          <div class="stat-grid">
+            <div class="stat-card"><b>{{ s.totalPuskomnas }}</b><span>Puskomnas</span></div>
+            <div class="stat-card"><b>{{ s.totalPuskomda }}</b><span>Puskomda</span></div>
+            <div class="stat-card"><b>{{ s.totalLDK }}</b><span>LDK Aktif</span></div>
+            <div class="stat-card"><b>{{ s.totalActiveKader }}</b><span>Kader Aktif</span></div>
+          </div>
+        } @else {
+          <p class="empty-note">Data statistik belum tersedia saat ini.</p>
+        }
+      }
+    }
+
+    @if (activeTab() === 'provinsi') {
+      @if (stats() && stats()!.byProvince.length > 0) {
+        <div class="chart-card">
+          <h3>Sebaran LDK per Provinsi</h3>
+          <div class="chart-wrap province"><canvas id="provinceChart"></canvas></div>
+        </div>
+      } @else if (!statsLoading()) {
+        <p class="empty-note">Belum ada data sebaran provinsi.</p>
+      }
+    }
+
+    @if (activeTab() === 'level') {
+      @if (stats() && stats()!.byLevel.length > 0) {
+        <div class="chart-card">
+          <h3>Distribusi Level LDK</h3>
+          <div class="chart-wrap level"><canvas id="levelChart"></canvas></div>
+        </div>
+      } @else if (!statsLoading()) {
+        <p class="empty-note">Belum ada data level LDK yang dipublikasikan.</p>
+      }
+    }
+
+    @if (activeTab() === 'direktori') {
+      <div class="directory-toolbar">
+        <input class="form-control" style="max-width:240px" [(ngModel)]="directorySearch" (keyup.enter)="applyDirectoryFilter()" placeholder="Cari nama organisasi…">
+        <app-select style="max-width:180px" [(ngModel)]="directoryType" [options]="typeOptions" (ngModelChange)="applyDirectoryFilter()" />
+        <app-select style="max-width:200px" [(ngModel)]="directoryProvince" [options]="provinceOptions()" (ngModelChange)="applyDirectoryFilter()" />
+        <button class="btn btn-outline btn-sm" (click)="applyDirectoryFilter()">Cari</button>
+      </div>
+
+      @if (directoryLoading()) {
+        <div class="directory-grid">
+          @for (i of [1,2,3,4,5,6]; track i) {
+            <div class="org-card">
+              <span class="skel" style="width:64px;height:64px;border-radius:50%;margin:0 auto 12px;display:block"></span>
+              <span class="skel skel-line" style="width:70%;margin:0 auto"></span>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="directory-grid">
+          @for (o of directory(); track o.organizationID) {
+            <div class="org-card">
+              @if (o.photoURL) {
+                <img class="org-logo" [src]="o.photoURL" [alt]="o.organizationName">
+              } @else {
+                <span class="org-logo-fallback"><app-icon name="building" [size]="26" /></span>
+              }
+              <h4>{{ o.organizationName }}</h4>
+              <p class="org-meta">{{ typeLabel(o.organizationTypeCode) }}@if (o.provinceName) { · {{ o.provinceName }} }</p>
+            </div>
+          } @empty {
+            <p class="empty-note" style="grid-column:1/-1">Tidak ada organisasi ditemukan.</p>
+          }
+        </div>
+        @if (directory().length > 0) {
+          <app-pagination [page]="directoryPage()" [limit]="directoryLimit" [count]="directoryCount()" (pageChange)="goDirectoryPage($event)" />
+        }
+      }
+    }
+  </div>
+</section>

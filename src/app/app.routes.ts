@@ -32,6 +32,7 @@ import { structurePublicRoutes, structureCmsRoutes } from './modules/structure/s
 import { galleryPublicRoutes, galleryCmsRoutes } from './modules/gallery/gallery.routes';
 import { contactPublicRoutes, contactCmsRoutes } from './modules/contact/contact.routes';
 import { subscriptionPublicRoutes, subscriptionCmsRoutes } from './modules/subscription/subscription.routes';
+import { statisticPublicRoutes } from './modules/statistic/statistic.routes';
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
@@ -76,6 +77,7 @@ export const routes: Routes = [
       ...galleryPublicRoutes(),
       ...contactPublicRoutes(),
       ...subscriptionPublicRoutes(),
+      ...statisticPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
       // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
       // jadi tidak bisa diakses akun non-Kader sama sekali karena link
