@@ -24,106 +24,91 @@ import { environment } from '../../../../../environments/environment';
         <h1>Manajemen Galeri</h1>
         <p class="text-muted">Kelola koleksi foto, video dokumentasi, dan kegiatan FSLDK Indonesia.</p>
       </div>
-      <a routerLink="/cms/galleries/create" class="btn btn-primary">
-        + Tambah Galeri
-      </a>
+      <a routerLink="/cms/galleries/create" class="btn btn-primary">+ Tambah Galeri</a>
     </div>
 
-    <!-- Search & Filters -->
-    <div class="card card-pad mb-md">
-      <div class="flex gap items-center" style="flex-wrap: wrap">
-        <div class="search-input-wrapper">
-          <app-icon name="search" [size]="14" class="search-icon" />
-          <input
-            type="text"
-            class="form-control"
-            style="padding-left: 36px; max-width: 360px"
-            placeholder="Cari event atau tema kegiatan..."
-            [ngModel]="searchQuery()"
-            (ngModelChange)="onSearch($event)"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Data Table -->
+    <!-- Data Table Card with Integrated Search Filter -->
     <div class="card">
+      <div class="card-pad flex gap items-center" style="flex-wrap: wrap">
+        <input
+          type="text"
+          class="form-control"
+          style="max-width: 320px"
+          placeholder="Cari kegiatan atau tema…"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearch($event)"
+        />
+      </div>
+
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
-              <th style="width: 60px">ID</th>
-              <th style="width: 80px">Cover</th>
-              <th>Nama Kegiatan & Tema</th>
-              <th style="width: 110px">Total Foto</th>
-              <th style="width: 90px">Video</th>
-              <th style="width: 140px">Tanggal Kegiatan</th>
-              <th style="width: 130px">Dibuat Pada</th>
-              <th style="text-align: right; width: 140px">Aksi</th>
+              <th style="width: 50px"></th>
+              <th>Nama Kegiatan &amp; Tema</th>
+              <th>Total Foto</th>
+              <th>Video</th>
+              <th>Tanggal Kegiatan</th>
+              <th>Dibuat Pada</th>
+              <th style="width: 120px"></th>
             </tr>
           </thead>
           <tbody>
             @if (repo.loading()) {
-              <tr>
-                <td colspan="8" class="text-center py-xl text-muted">
-                  <div class="spinner"></div> Memuat data...
-                </td>
-              </tr>
+              @for (i of [1, 2, 3, 4, 5]; track i) {
+                <tr>
+                  <td><span class="skel" style="width: 44px; height: 44px; border-radius: 6px; display: block"></span></td>
+                  <td><span class="skel skel-line" style="width: 70%"></span></td>
+                  <td><span class="skel skel-line" style="width: 70px; border-radius: 999px"></span></td>
+                  <td><span class="skel skel-line" style="width: 50px; border-radius: 999px"></span></td>
+                  <td><span class="skel skel-line" style="width: 90px"></span></td>
+                  <td><span class="skel skel-line" style="width: 90px"></span></td>
+                  <td><span class="skel skel-line" style="width: 80px"></span></td>
+                </tr>
+              }
             } @else if (repo.error()) {
               <tr>
-                <td colspan="8" class="text-center py-xl text-danger">
+                <td colspan="7" class="text-center py-xl text-danger">
                   <app-icon name="alert-triangle" [size]="24" class="mb-sm" />
                   <div>{{ repo.error() }}</div>
                   <button class="btn btn-sm btn-outline mt-sm" (click)="loadData()">Coba Lagi</button>
                 </td>
               </tr>
-            } @else if (!repo.cmsGalleries() || repo.cmsGalleries()!.data.length === 0) {
-              <tr>
-                <td colspan="8" class="text-center py-xl text-muted">
-                  <app-icon name="inbox" [size]="32" class="mb-sm" />
-                  <div>Belum ada data galeri.</div>
-                </td>
-              </tr>
             } @else {
-              @for (item of repo.cmsGalleries()!.data; track item.galleryID) {
+              @for (item of repo.cmsGalleries()?.data || []; track item.galleryID) {
                 <tr>
-                  <td class="text-muted">#{{ item.galleryID }}</td>
                   <td>
                     <img
                       [src]="imgUrl(item.coverImage)"
                       [alt]="item.eventName"
-                      class="table-cover-thumb"
+                      class="thumb"
+                      style="width: 44px; height: 44px; border-radius: var(--radius-xs); object-fit: cover"
                     />
                   </td>
                   <td>
-                    <div style="font-weight: 700; color: var(--color-text)">{{ item.eventTheme }}</div>
-                    <div class="text-muted text-sm">{{ item.eventName }}</div>
+                    <strong>{{ item.eventTheme }}</strong>
+                    <div class="text-muted" style="font-size: .82rem">{{ item.eventName }}</div>
                   </td>
                   <td>
-                    <span class="chip chip-blue">
-                      <app-icon name="images" [size]="12" /> {{ item.totalPhotos }} foto
+                    <span class="badge badge-published">
+                      <app-icon name="images" [size]="11" /> {{ item.totalPhotos }} foto
                     </span>
                   </td>
                   <td>
                     @if (item.youtubeVideoID) {
-                      <span class="chip chip-red"><app-icon name="play-circle" [size]="12" /> Ada</span>
-                    } @else {
-                      <span class="text-muted text-sm">-</span>
-                    }
-                  </td>
-                  <td>
-                    @if (item.eventDate) {
-                      <span class="chip chip-green">
-                        <app-icon name="calendar-days" [size]="12" />
-                        {{ item.eventDate | date: 'd MMM y' }}
+                      <span class="badge" style="background: rgba(220, 38, 38, 0.1); color: #dc2626">
+                        <app-icon name="play-circle" [size]="11" /> Ada
                       </span>
                     } @else {
-                      <span class="text-muted text-sm">-</span>
+                      <span class="text-muted">–</span>
                     }
                   </td>
-                  <td class="text-muted text-sm">{{ item.createdDate | date: 'd MMM y' }}</td>
-                  <td style="text-align: right">
-                    <div class="table-actions" style="justify-content: flex-end">
+                  <td class="text-muted">
+                    {{ item.eventDate ? (item.eventDate | date: 'd MMM yyyy') : '–' }}
+                  </td>
+                  <td class="text-muted">{{ item.createdDate | date: 'd MMM yyyy' }}</td>
+                  <td>
+                    <div class="table-actions">
                       <a
                         [routerLink]="['/tentang/galeri', item.galleryID]"
                         target="_blank"
@@ -150,6 +135,19 @@ import { environment } from '../../../../../environments/environment';
                     </div>
                   </td>
                 </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7">
+                    <div class="empty-state">
+                      <span class="icon-badge lg icon-badge-soft" style="margin: 0 auto 14px">
+                        <app-icon name="photo" [size]="26" />
+                      </span>
+                      <h4>Belum ada data galeri</h4>
+                      <p>Dokumentasi galeri kegiatan yang Anda buat akan muncul di sini.</p>
+                      <a routerLink="/cms/galleries/create" class="btn btn-primary btn-sm">+ Tambah Galeri</a>
+                    </div>
+                  </td>
+                </tr>
               }
             }
           </tbody>
@@ -157,15 +155,13 @@ import { environment } from '../../../../../environments/environment';
       </div>
 
       <!-- Pagination -->
-      @if (repo.cmsGalleries() && repo.cmsGalleries()!.count > limit()) {
-        <div style="padding: 16px; border-top: 1px solid var(--color-border); display: flex; justify-content: center">
-          <app-pagination
-            [page]="page()"
-            [count]="repo.cmsGalleries()!.count"
-            [limit]="limit()"
-            (pageChange)="onPageChange($event)"
-          />
-        </div>
+      @if (!repo.loading() && (repo.cmsGalleries()?.count || 0) > limit()) {
+        <app-pagination
+          [page]="page()"
+          [count]="repo.cmsGalleries()!.count"
+          [limit]="limit()"
+          (pageChange)="onPageChange($event)"
+        />
       }
     </div>
   `,

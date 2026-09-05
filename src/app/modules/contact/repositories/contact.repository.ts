@@ -5,6 +5,7 @@ import {
   ContactDetail,
   ContactListItem,
   ContactListQuery,
+  ReplyContactPayload,
   SendContactPayload,
 } from '../entities/contact';
 import { ApiResponse } from '../../../core/entities/api-response';
@@ -114,6 +115,21 @@ export class ContactRepository {
           if (this.selectedDetail()?.messageID === id) {
             this.selectedDetail.set(null);
           }
+        },
+      })
+    );
+  }
+
+  /**
+   * Reply to contact message via official email.
+   */
+  replyMessage(id: number, payload: ReplyContactPayload): Observable<ApiResponse<null>> {
+    return this.api.replyCMS(id, payload).pipe(
+      tap({
+        next: () => {
+          this.messages.update((list) =>
+            list.map((m) => (m.messageID === id ? { ...m, isRead: true } : m))
+          );
         },
       })
     );

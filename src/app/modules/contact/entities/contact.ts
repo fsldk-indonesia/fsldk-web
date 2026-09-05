@@ -49,3 +49,11 @@ export interface ContactListResponse {
   limit: number;
   total: number;
 }
+
+/**
+ * Payload sent by CMS admin to reply to a contact message via official email.
+ */
+export interface ReplyContactPayload {
+  subject: string;
+  message: string;
+}

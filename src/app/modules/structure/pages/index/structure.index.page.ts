@@ -20,18 +20,21 @@ import { ToastService } from '../../../../core/services/toast.service';
         <h1>Manajemen Struktur Organisasi</h1>
         <p class="text-muted">Kelola data kepengurusan dan formasi FSLDK Indonesia.</p>
       </div>
-      <a routerLink="/cms/structures/create" class="btn btn-primary">
-        + Tambah Struktur
-      </a>
-    </div>
-
-    <div class="card card-pad" style="margin-bottom: 16px">
-      <div class="flex gap" style="flex-wrap: wrap">
-        <input type="text" class="form-control" style="max-width: 360px" placeholder="Cari angkatan, periode, atau nama..." [ngModel]="searchQuery()" (ngModelChange)="onSearch($event)">
-      </div>
+      <a routerLink="/cms/structures/create" class="btn btn-primary">+ Tambah Struktur</a>
     </div>
 
     <div class="card">
+      <div class="card-pad flex gap" style="flex-wrap: wrap">
+        <input
+          type="text"
+          class="form-control"
+          style="max-width: 320px"
+          placeholder="Cari angkatan, periode, atau nama…"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearch($event)"
+        />
+      </div>
+
       <div class="table-wrap">
         <table class="table">
           <thead>
@@ -40,16 +43,20 @@ import { ToastService } from '../../../../core/services/toast.service';
               <th>Nama Kepengurusan</th>
               <th>Angkatan / Periode</th>
               <th>Dibuat Pada</th>
-              <th style="text-align: right"></th>
+              <th style="width: 100px"></th>
             </tr>
           </thead>
           <tbody>
             @if (repo.loading()) {
-              <tr>
-                <td colspan="5" class="text-center py-xl text-muted">
-                  <div class="spinner"></div> Memuat data...
-                </td>
-              </tr>
+              @for (i of [1, 2, 3, 4, 5]; track i) {
+                <tr>
+                  <td><span class="skel skel-line" style="width: 40px"></span></td>
+                  <td><span class="skel skel-line" style="width: 70%"></span></td>
+                  <td><span class="skel skel-line" style="width: 120px; border-radius: 999px"></span></td>
+                  <td><span class="skel skel-line" style="width: 90px"></span></td>
+                  <td><span class="skel skel-line" style="width: 60px"></span></td>
+                </tr>
+              }
             } @else if (repo.error()) {
               <tr>
                 <td colspan="5" class="text-center py-xl text-danger">
@@ -58,28 +65,39 @@ import { ToastService } from '../../../../core/services/toast.service';
                   <button class="btn btn-sm btn-outline mt-sm" (click)="loadData()">Coba Lagi</button>
                 </td>
               </tr>
-            } @else if (!repo.cmsStructures() || repo.cmsStructures()!.data.length === 0) {
-              <tr>
-                <td colspan="5" class="text-center py-xl text-muted">
-                  <app-icon name="inbox" [size]="32" class="mb-sm" />
-                  <div>Belum ada data struktur.</div>
-                </td>
-              </tr>
             } @else {
-              @for (item of repo.cmsStructures()!.data; track item.structureID) {
+              @for (item of repo.cmsStructures()?.data || []; track item.structureID) {
                 <tr>
                   <td class="text-muted">#{{ item.structureID }}</td>
-                  <td style="font-weight: 600">{{ item.structureName }}</td>
-                  <td><span class="chip chip-green">{{ item.batch }} ({{ item.period }})</span></td>
-                  <td class="text-muted">{{ item.createdDate | date:'mediumDate' }}</td>
-                  <td style="text-align: right">
-                    <div class="flex gap-sm justify-end">
-                      <a [routerLink]="['/cms/structures', item.structureID, 'edit']" class="btn btn-sm btn-outline" title="Edit">
-                        <app-icon name="edit" [size]="14" /> Edit
+                  <td><strong>{{ item.structureName }}</strong></td>
+                  <td><span class="badge badge-published">{{ item.batch }} ({{ item.period }})</span></td>
+                  <td class="text-muted">{{ item.createdDate | date: 'd MMM yyyy' }}</td>
+                  <td>
+                    <div class="table-actions">
+                      <a [routerLink]="['/cms/structures', item.structureID, 'edit']" class="icon-action" title="Edit">
+                        <app-icon name="edit" [size]="14" />
                       </a>
-                      <button type="button" class="btn btn-sm btn-outline text-danger" title="Hapus" (click)="confirmDelete(item.structureID, item.structureName, $event)">
+                      <button
+                        type="button"
+                        class="icon-action danger"
+                        title="Hapus"
+                        (click)="confirmDelete(item.structureID, item.structureName, $event)"
+                      >
                         <app-icon name="trash" [size]="14" />
                       </button>
+                    </div>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <span class="icon-badge lg icon-badge-soft" style="margin: 0 auto 14px">
+                        <app-icon name="sitemap" [size]="26" />
+                      </span>
+                      <h4>Belum ada data struktur</h4>
+                      <p>Data kepengurusan organisasi yang Anda buat akan muncul di sini.</p>
+                      <a routerLink="/cms/structures/create" class="btn btn-primary btn-sm">+ Tambah Struktur</a>
                     </div>
                   </td>
                 </tr>
@@ -88,16 +106,14 @@ import { ToastService } from '../../../../core/services/toast.service';
           </tbody>
         </table>
       </div>
-      
-      @if (repo.cmsStructures() && repo.cmsStructures()!.count > limit()) {
-        <div style="padding: 16px; border-top: 1px solid var(--color-border); display: flex; justify-content: center">
-          <app-pagination
-            [page]="page()"
-            [count]="repo.cmsStructures()!.count"
-            [limit]="limit()"
-            (pageChange)="onPageChange($event)">
-          </app-pagination>
-        </div>
+
+      @if (!repo.loading() && (repo.cmsStructures()?.count || 0) > limit()) {
+        <app-pagination
+          [page]="page()"
+          [count]="repo.cmsStructures()!.count"
+          [limit]="limit()"
+          (pageChange)="onPageChange($event)"
+        />
       }
     </div>
   `
