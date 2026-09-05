@@ -10,6 +10,7 @@ import { schedulePath } from '../modules/schedule/schedule.path';
 import { goodsPath } from '../modules/goods/goods.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
+import { PrayerTimeComponent } from './prayer-time.component';
 
 const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_LDK'];
 
@@ -24,7 +25,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
 @Component({
   selector: 'app-site-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, IconComponent],
+  imports: [RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
     <div class="nav-placeholder" [class.active]="scrolled()"></div>
     <header class="pub-header" [class.scrolled]="scrolled()">
@@ -77,6 +78,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         </div>
 
         <div class="flex items-center gap-sm pub-actions">
+          <app-prayer-time />
           @if (auth.isLoggedIn()) {
             <div class="user-fun-wrap" (mouseenter)="openUserMenu()" (mouseleave)="closeUserMenu()">
               <button class="btn btn-outline btn-sm btn-user-fun account-chip" type="button" (click)="toggleUserMenu($event)">
@@ -158,6 +160,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         }
       </div>
       <div class="mobile-actions">
+        <app-prayer-time />
         @if (auth.isLoggedIn()) {
           <div class="mobile-account">
             @if (auth.user()?.photoURL) {
@@ -312,6 +315,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .mobile-nav a { padding: 13px 14px; border-radius: var(--radius-md); }
     .mobile-nav a.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .mobile-actions { margin-top: auto; padding: 16px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 10px; }
+    .mobile-actions ::ng-deep .prayer-btn { width: 100%; justify-content: center; }
 
     @media (max-width: 900px) {
       .pub-nav-group, .pub-actions { display: none; }

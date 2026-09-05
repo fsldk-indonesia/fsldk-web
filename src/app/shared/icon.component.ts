@@ -92,6 +92,8 @@ const ICONS: Record<string, string> = {
   // FSLDK Goods (sidebar menuIcon lk_permission + navbar "Layanan").
   'shopping-bag': 'fas fa-bag-shopping',
   tags: 'fas fa-tags',
+  // Widget Jadwal Sholat (navbar publik & topbar CMS).
+  mosque: 'fas fa-mosque',
 };
 
 /**
