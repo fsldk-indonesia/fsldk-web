@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { CampaignLite } from '../../entities/campaign';
-import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, ReconciliationSnapshot, WithdrawalReportRow, WithdrawalStatusFunnel } from '../../entities/report';
+import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, Reconciliation, WithdrawalReportRow, WithdrawalStatusFunnel } from '../../entities/report';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
@@ -97,7 +97,6 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   tab = signal<ReportTab>('balance-report');
   loading = signal(true);
   exporting = signal(false);
-  runningReconciliation = signal(false);
 
   from = isoDateDaysAgo(30);
   to = isoDateDaysAgo(0);
@@ -113,7 +112,7 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   withdrawalFunnel = signal<WithdrawalStatusFunnel[]>([]);
   ledgerGlobalRows = signal<GlobalLedgerRow[]>([]);
   analytics = signal<AnalyticsResponse | null>(null);
-  reconciliationRows = signal<ReconciliationSnapshot[]>([]);
+  reconciliation = signal<Reconciliation | null>(null);
   page = signal(1);
   count = signal(0);
   limit = 15;
@@ -151,11 +150,9 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
       case 'withdrawals': this.presenter.loadWithdrawals(this.page(), this.limit, this.statusFilter); break;
       case 'ledger-global': this.presenter.loadLedgerGlobal(this.page(), this.limit, this.campaignID, this.ledgerDirection); break;
       case 'analytics': this.presenter.loadAnalytics(this.campaignID); break;
-      case 'balance-report': this.presenter.loadReconciliation(this.page(), this.limit); break;
+      case 'balance-report': this.presenter.loadReconciliation(); break;
     }
   }
-
-  runReconciliationNow(): void { this.presenter.runReconciliation(); }
 
   loadBalance(): void { this.presenter.loadBalance(this.from, this.to, this.campaignID); }
   applyBalanceFilter(): void { this.loadBalance(); }
@@ -189,9 +186,7 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
     this.withdrawalRows.set(rows); this.count.set(count); this.withdrawalFunnel.set(funnel);
   }
   setLedgerGlobalRows(rows: GlobalLedgerRow[], count: number): void { this.ledgerGlobalRows.set(rows); this.count.set(count); }
-  setReconciliationRows(rows: ReconciliationSnapshot[], count: number): void { this.reconciliationRows.set(rows); this.count.set(count); }
-  setRunningReconciliation(running: boolean): void { this.runningReconciliation.set(running); }
-  onReconciliationRunSuccess(): void { this.page.set(1); this.load(); }
+  setReconciliation(r: Reconciliation | null): void { this.reconciliation.set(r); }
 
   setAnalytics(data: AnalyticsResponse | null): void {
     this.analytics.set(data);

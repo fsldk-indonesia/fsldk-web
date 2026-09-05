@@ -1,0 +1,22 @@
+<div class="page-head"><a routerLink="/cms/goods/categories" class="back">← Kembali</a><h1>{{ editId ? 'Ubah Kategori' : 'Tambah Kategori' }}</h1></div>
+
+<div class="card card-pad form-card">
+  <div class="form-group"><label class="form-label">Nama Kategori</label>
+    <input class="form-control" [(ngModel)]="form.categoryName" placeholder="mis. Merchandise, Buku, Atribut…"></div>
+
+  <div class="form-group"><label class="form-label">Urutan Tampil</label>
+    <input class="form-control" type="number" min="0" [(ngModel)]="form.sortOrder" placeholder="0">
+    <p class="form-hint">Angka lebih kecil tampil lebih dulu pada katalog publik.</p>
+  </div>
+
+  <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Kategori aktif</label>
+    <p class="form-hint">Kategori nonaktif tidak muncul di filter katalog publik.</p>
+  </div>
+
+  <div class="flex gap justify-between">
+    <a routerLink="/cms/goods/categories" class="btn btn-ghost">Batal</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> } @else { Simpan Kategori }
+    </button>
+  </div>
+</div>

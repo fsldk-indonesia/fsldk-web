@@ -187,6 +187,7 @@ img { max-width: 100%; }
 .chip.active:hover { background: var(--color-text); color: #fff; }
 .chip-green { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 .chip-ember { background: var(--color-ember-soft); color: var(--color-ember-dark); }
+.chip-gold { background: var(--color-gold-soft); color: var(--color-gold-dark); }
 .chip-red { background: #fdecec; color: #9a1c1c; }
 .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 12px; border-radius: var(--radius-full); font-size: .75rem; font-weight: 700; }
 .badge-published, .badge-active { background: var(--color-primary-soft); color: var(--color-primary-dark); }

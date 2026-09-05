@@ -1,0 +1,61 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Kategori FSLDK Goods</h1><p class="text-muted">Kelola kategori produk pada katalog FSLDK Goods.</p></div>
+  <div class="flex gap">
+    <a routerLink="/cms/goods/products" class="btn btn-outline">← Produk</a>
+    @if (canCreate) { <a routerLink="/cms/goods/categories/form" class="btn btn-primary">+ Tambah Kategori</a> }
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Nama Kategori</th><th>Slug</th><th>Urutan</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:60%"></span></td>
+              <td><span class="skel skel-line" style="width:80px"></span></td>
+              <td><span class="skel skel-line" style="width:40px"></span></td>
+              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:90px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (cat of categories(); track cat.goodsCategoryID) {
+            <tr>
+              <td><strong>{{ cat.categoryName }}</strong></td>
+              <td class="text-muted">{{ cat.categorySlug }}</td>
+              <td class="text-muted">{{ cat.sortOrder }}</td>
+              <td><span class="badge" [class.badge-published]="cat.isActive" [class.badge-draft]="!cat.isActive">{{ cat.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
+              <td>
+                <div class="table-actions">
+                  @if (canUpdate) {
+                    <a class="icon-action" [routerLink]="['/cms/goods/categories/form', cat.goodsCategoryID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+                    <button type="button" class="icon-action" [disabled]="isBusy(cat.goodsCategoryID)" (click)="toggleActive(cat)" [title]="cat.isActive ? 'Nonaktifkan' : 'Aktifkan'">
+                      @if (isBusy(cat.goodsCategoryID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="cat.isActive ? 'eye-off' : 'eye'" [size]="14" /> }
+                    </button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(cat.goodsCategoryID)" (click)="remove(cat, $event)" title="Hapus">
+                      @if (isBusy(cat.goodsCategoryID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="tags" [size]="26" /></span>
+                <h4>Belum ada kategori</h4>
+                <p>Kategori produk yang Anda tambahkan akan muncul di sini.</p>
+                @if (canCreate) { <a routerLink="/cms/goods/categories/form" class="btn btn-primary btn-sm">+ Tambah Kategori</a> }
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

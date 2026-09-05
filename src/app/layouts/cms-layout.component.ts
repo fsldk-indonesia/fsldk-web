@@ -24,6 +24,7 @@ interface SidebarGroupConfig {
 }
 const SIDEBAR_GROUPS: SidebarGroupConfig[] = [
   { label: 'Kantong Amal', icon: 'hand-heart', routePrefix: '/cms/kantong-amal' },
+  { label: 'FSLDK Goods', icon: 'shopping-bag', routePrefix: '/cms/goods' },
 ];
 
 type SidebarEntry =

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { Setting } from '../../entities/setting';
 import { SettingIndexPresenter } from './setting.index.presenter';
 import { SettingIndexView } from './setting.index.view';
@@ -10,11 +11,17 @@ interface SettingGroup {
   items: Setting[];
 }
 
+// settingKey yang nilainya boolean ("true"/"false") — dirender sebagai
+// dropdown Ya/Tidak alih-alih text input bebas. Cuma 1 use-case saat ini
+// (lihat revision-prompt-4.md item 4), jadi di-special-case per key di sini
+// alih-alih bikin kolom settingType generik di skema untuk satu kasus.
+const BOOLEAN_SETTING_KEYS = new Set(['whatsapp_enabled']);
+
 @Component({
   selector: 'app-setting-index-page',
   standalone: true,
   templateUrl: './setting.index.page.html',
-  imports: [FormsModule],
+  imports: [FormsModule, SelectComponent],
   providers: [SettingIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -36,7 +43,14 @@ export class SettingIndexPage implements OnInit, SettingIndexView {
 
   canUpdate = this.auth.hasPermission('setting.update');
 
+  readonly yesNoOptions: SelectOption[] = [
+    { value: 'true', label: 'Ya' },
+    { value: 'false', label: 'Tidak' },
+  ];
+
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
+
+  isBoolean(s: Setting): boolean { return BOOLEAN_SETTING_KEYS.has(s.settingKey); }
 
   groups(): SettingGroup[] {
     const map = new Map<string, Setting[]>();

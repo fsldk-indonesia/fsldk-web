@@ -95,21 +95,13 @@ export class KantongAmalAdminReportsPresenter extends BasePresenter<KantongAmalA
 
   /** Balance Report — bandingkan saldo wallet Bisatopup (live, via gateway)
    *  terhadap ledger internal, khusus donasi QRIS/Bisatopup. Setara "Balance
-   *  Report" ldksyahid-app; di sini dipersist sebagai histori snapshot
-   *  (finance.daily_reconciliation) alih-alih hanya state sesaat. */
-  loadReconciliation(page: number, limit: number): void {
+   *  Report" ldksyahid-app; dihitung LIVE tiap dipanggil, tidak lagi
+   *  dipersist sebagai histori snapshot. */
+  loadReconciliation(): void {
     this.view.setLoading(true);
-    this.reportRepo.reconciliationHistory({ page, limit }).subscribe({
-      next: (p) => { this.view.setReconciliationRows(p.data, p.count); this.view.setLoading(false); },
-      error: () => this.view.setLoading(false),
-    });
-  }
-
-  runReconciliation(): void {
-    this.view.setRunningReconciliation(true);
-    this.reportRepo.runReconciliation().subscribe({
-      next: () => { this.view.setRunningReconciliation(false); this.view.onReconciliationRunSuccess(); },
-      error: () => this.view.setRunningReconciliation(false),
+    this.reportRepo.reconciliation().subscribe({
+      next: (r) => { this.view.setReconciliation(r); this.view.setLoading(false); },
+      error: () => { this.view.setReconciliation(null); this.view.setLoading(false); },
     });
   }
 }

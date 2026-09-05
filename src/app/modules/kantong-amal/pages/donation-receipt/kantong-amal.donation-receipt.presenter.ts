@@ -14,4 +14,12 @@ export class KantongAmalDonationReceiptPresenter extends BasePresenter<KantongAm
       error: () => { this.view.setDonation(null); this.view.setLoading(false); },
     });
   }
+
+  downloadReceipt(publicRef: string): void {
+    this.view.setDownloading(true);
+    this.donationRepo.downloadReceipt(publicRef).subscribe({
+      next: () => this.view.setDownloading(false),
+      error: () => this.view.setDownloading(false),
+    });
+  }
 }
