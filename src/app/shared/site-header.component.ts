@@ -10,6 +10,7 @@ import { schedulePath } from '../modules/schedule/schedule.path';
 import { goodsPath } from '../modules/goods/goods.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
+import { PrayerTimeComponent } from './prayer-time.component';
 
 const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_LDK'];
 
@@ -24,7 +25,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
 @Component({
   selector: 'app-site-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, IconComponent],
+  imports: [RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
     <div class="nav-placeholder" [class.active]="scrolled()"></div>
     <header class="pub-header" [class.scrolled]="scrolled()">
@@ -93,6 +94,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         </div>
 
         <div class="flex items-center gap-sm pub-actions">
+          <app-prayer-time />
           @if (auth.isLoggedIn()) {
             <div class="user-fun-wrap" (mouseenter)="openUserMenu()" (mouseleave)="closeUserMenu()">
               <button class="btn btn-outline btn-sm btn-user-fun account-chip" type="button" (click)="toggleUserMenu($event)">
@@ -188,6 +190,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         }
       </div>
       <div class="mobile-actions">
+        <app-prayer-time />
         @if (auth.isLoggedIn()) {
           <div class="mobile-account">
             @if (auth.user()?.photoURL) {
@@ -219,9 +222,16 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .nav-placeholder.active { height: 78px; }
 
     .pub-header { position: relative; top: 0; left: 0; width: 100%; z-index: 60; background: rgba(255,255,255,.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-border); padding: 16px 0; }
+    /* Navbar sengaja lebih lebar dari .container standar (1180px dipakai
+       semua section konten lain) — mengikuti pola ldksyahid-app yang
+       navbar-nya terasa lega dan hampir penuh lebar layar, bukan sekadar
+       sejajar dengan lebar konten. gap eksplisit menjaga jarak minimum
+       antar 3 grup (brand/menu/aksi) tetap ada meski justify-between
+       kehabisan sisa ruang di viewport laptop yang lebih sempit. */
+    .pub-header .container { max-width: 1600px; gap: 32px; }
     .pub-header.scrolled {
       position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
-      width: min(1240px, calc(100% - 32px));
+      width: min(1600px, calc(100% - 32px));
       border: 1px solid var(--color-border); border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg); background: #fff; padding: 8px 20px;
       animation: navFadeIn .25s ease;
@@ -381,6 +391,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .mobile-nav a { padding: 13px 14px; border-radius: var(--radius-md); }
     .mobile-nav a.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .mobile-actions { margin-top: auto; padding: 16px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 10px; }
+    .mobile-actions ::ng-deep .prayer-btn { width: 100%; justify-content: center; }
 
     @media (max-width: 1080px) {
       .pub-nav-group, .pub-actions { display: none; }
@@ -430,6 +441,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   readonly tentangKamiItems = [
     { icon: 'sitemap', title: 'Struktur Organisasi', caption: 'Kepengurusan FSLDK Indonesia', href: '/tentang/struktur' },
     { icon: 'photo', title: 'Galeri', caption: 'Dokumentasi kegiatan LDK', href: '/tentang/galeri' },
+    { icon: 'file-bar-chart', title: 'Statistik Jaringan', caption: 'Data agregat LDK, Puskomda & Puskomnas', href: '/tentang/statistik-jaringan' },
     { icon: 'messages', title: 'Hubungi Kami', caption: 'Kontak resmi FSLDK Indonesia', href: '/tentang/kontak' },
   ];
 
