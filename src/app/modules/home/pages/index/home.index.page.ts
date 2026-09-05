@@ -1,8 +1,20 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { IconComponent } from '../../../../shared/icon.component';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
+import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
+import { EventListItem } from '../../../event/entities/event';
+import { Goods } from '../../../goods/entities/goods';
+import { Schedule } from '../../../schedule/entities/schedule';
+import { Campaign } from '../../../kantong-amal/entities/campaign';
+import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
+import { eventPath } from '../../../event/event.path';
+import { goodsPath } from '../../../goods/goods.path';
+import { schedulePath } from '../../../schedule/schedule.path';
+import { kantongAmalPath } from '../../../kantong-amal/kantong-amal.path';
+import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { HomeIndexPresenter } from './home.index.presenter';
 import { HomeIndexView } from './home.index.view';
 
@@ -16,7 +28,7 @@ interface OrgMember {
   selector: 'app-home-index-page',
   standalone: true,
   templateUrl: './home.index.page.html',
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, IconComponent],
   providers: [HomeIndexPresenter],
   styles: [`
     /* ---------- Kanvas: satu warna latar lembut + motif batik Kawung yang
@@ -90,6 +102,20 @@ interface OrgMember {
     .news-body { padding: 20px; } .news-body h3 { margin: 12px 0 8px; font-size: 1.15rem; }
     .meta { color: var(--color-muted); font-size: .85rem; margin: 0; }
 
+    .fav { display: inline-flex; align-items: center; gap: 4px; color: var(--color-muted); font-size: .8rem; margin-top: 8px; }
+    .goods-price { font-weight: 700; color: var(--color-primary-dark); margin: 4px 0 0; }
+
+    .progress-track { height: 6px; background: var(--color-primary-soft); border-radius: var(--radius-full); overflow: hidden; margin-top: 12px; }
+    .progress-fill { height: 100%; background: var(--color-primary); border-radius: var(--radius-full); }
+    .progress-meta { display: flex; justify-content: space-between; font-size: .8rem; color: var(--color-text-secondary); margin-top: 6px; }
+
+    .agenda-mini-list { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin: 0 auto; }
+    .agenda-mini-item { display: flex; gap: 18px; align-items: flex-start; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; }
+    .agenda-mini-date { flex-shrink: 0; width: 56px; text-align: center; border-right: 1px solid var(--color-border); padding-right: 16px; }
+    .agenda-mini-date .day { display: block; font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--color-primary-dark); }
+    .agenda-mini-date .mon { display: block; font-size: .75rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: .05em; }
+    .agenda-mini-body h3 { margin: 6px 0 4px; font-size: 1.05rem; }
+
     .hero-about { padding: 56px 0 8px; }
     .about-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 32px; align-items: start; }
     .lead { font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; line-height: 1.5; color: var(--color-text); margin: 0; }
@@ -125,7 +151,19 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
+  catalogBooks = signal<CatalogBook[]>([]);
+  events = signal<EventListItem[]>([]);
+  goods = signal<Goods[]>([]);
+  schedules = signal<Schedule[]>([]);
+  campaigns = signal<Campaign[]>([]);
   loading = signal(true);
+
+  readonly catalogbookPath = catalogbookPath;
+  readonly eventPath = eventPath;
+  readonly goodsPath = goodsPath;
+  readonly schedulePath = schedulePath;
+  readonly kantongAmalPath = kantongAmalPath;
+  readonly formatRupiah = formatRupiah;
 
   readonly missionList: string[] = [
     'Membangkitkan kembali identitas Islam pada mahasiswa muslim dan masyarakat.',
@@ -151,7 +189,16 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
 
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
 
+  progressPercent(c: Campaign): number {
+    return c.targetAmount > 0 ? Math.min(100, Math.round((c.collectedAmount / c.targetAmount) * 100)) : 0;
+  }
+
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setNews(news: News[]): void { this.news.set(news); }
   setArticles(articles: Article[]): void { this.articles.set(articles); }
+  setCatalogBooks(books: CatalogBook[]): void { this.catalogBooks.set(books); }
+  setEvents(events: EventListItem[]): void { this.events.set(events); }
+  setGoods(goods: Goods[]): void { this.goods.set(goods); }
+  setSchedules(schedules: Schedule[]): void { this.schedules.set(schedules); }
+  setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
 }
