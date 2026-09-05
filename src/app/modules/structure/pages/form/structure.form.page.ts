@@ -3,7 +3,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { StructureRepository } from '../../repositories/structure.repository';
-import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
 import { catchError, EMPTY } from 'rxjs';
@@ -12,104 +11,123 @@ import { Location } from '@angular/common';
 @Component({
   selector: 'app-structure-form',
   standalone: true,
-  imports: [ReactiveFormsModule, IconComponent, ImageUploadComponent, RichTextEditorComponent],
+  imports: [ReactiveFormsModule, RouterLink, ImageUploadComponent, RichTextEditorComponent],
   template: `
-    <div class="cms-header">
-      <div class="cms-header-content">
-        <button type="button" class="btn btn-sm btn-icon btn-outline mr-md" (click)="back()">
-          <app-icon name="arrow-left" [size]="16" />
-        </button>
-        <div>
-          <h1 class="cms-title">{{ isEdit() ? 'Edit Struktur' : 'Tambah Struktur' }}</h1>
-          <p class="cms-subtitle">{{ isEdit() ? 'Ubah data kepengurusan.' : 'Tambahkan data kepengurusan baru ke sistem.' }}</p>
-        </div>
-      </div>
+    <div class="page-head">
+      <a routerLink="/cms/structures" class="back">← Kembali</a>
+      <h1>{{ isEdit() ? 'Ubah Struktur' : 'Tambah Struktur' }}</h1>
     </div>
 
-    @if (loading()) {
-      <div class="cms-card py-xl text-center">
-        <div class="spinner"></div>
-        <p class="mt-sm text-muted">Memuat data...</p>
-      </div>
-    } @else {
-      <div class="cms-card">
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-layout">
-          
-          <div class="form-group row">
-            <div class="col-md-6">
-              <label class="form-label" for="batch">Angkatan <span class="text-danger">*</span></label>
-              <input type="text" id="batch" class="form-control" formControlName="batch" placeholder="Cth: XXXII atau Ke-32">
-              @if (f['batch'].invalid && (f['batch'].dirty || f['batch'].touched)) {
-                <div class="form-error">Wajib diisi, maks 50 karakter.</div>
-              }
-            </div>
-            <div class="col-md-6">
-              <label class="form-label" for="period">Periode <span class="text-danger">*</span></label>
-              <input type="text" id="period" class="form-control" formControlName="period" placeholder="Cth: 2025/2026">
-              @if (f['period'].invalid && (f['period'].dirty || f['period'].touched)) {
-                <div class="form-error">Wajib diisi, maks 50 karakter.</div>
-              }
-            </div>
-          </div>
+    <div class="card card-pad form-card">
+      @if (loading()) {
+        <div class="text-center py-xl">
+          <div class="spinner"></div>
+          <p class="mt-sm text-muted">Memuat data struktur…</p>
+        </div>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <p class="section-title">Informasi Kepengurusan</p>
 
           <div class="form-group">
-            <label class="form-label" for="structureName">Nama Kepengurusan <span class="text-danger">*</span></label>
-            <input type="text" id="structureName" class="form-control" formControlName="structureName" placeholder="Cth: Kabinet Al-Fatih">
-            @if (f['structureName'].invalid && (f['structureName'].dirty || f['structureName'].touched)) {
-              <div class="form-error">Wajib diisi, maks 255 karakter.</div>
+            <label class="form-label" for="structureName">Nama Kepengurusan <span style="color:red">*</span></label>
+            <input
+              type="text"
+              id="structureName"
+              class="form-control"
+              formControlName="structureName"
+              placeholder="Contoh: Kabinet Al-Fatih"
+            />
+            @if (f['structureName'].invalid && (f['structureName'].dirty || f['structureName'].touched || submitTried())) {
+              <div class="form-error">Nama kepengurusan wajib diisi (maksimal 255 karakter).</div>
             }
           </div>
 
-          <div class="form-group row">
-            <div class="col-md-6">
-              <label class="form-label">Logo Kepengurusan @if(!isEdit()) {<span class="text-danger">*</span>}</label>
-              <app-image-upload
-                [value]="logoPath() || ''"
-                (valueChange)="logoPath.set($event)">
-              </app-image-upload>
-              <p class="form-text mt-sm text-muted">Rasio 1:1 direkomendasikan. Maks 2MB.</p>
-              @if (submitTried() && !logoPath() && !isEdit()) {
-                <div class="form-error">Logo wajib diunggah.</div>
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label class="form-label" for="batch">Angkatan <span style="color:red">*</span></label>
+              <input
+                type="text"
+                id="batch"
+                class="form-control"
+                formControlName="batch"
+                placeholder="Contoh: Ke-32 atau XXXII"
+              />
+              @if (f['batch'].invalid && (f['batch'].dirty || f['batch'].touched || submitTried())) {
+                <div class="form-error">Angkatan wajib diisi (maksimal 50 karakter).</div>
               }
             </div>
-            
-            <div class="col-md-6">
-              <label class="form-label">Bagan Struktur @if(!isEdit()) {<span class="text-danger">*</span>}</label>
+
+            <div class="form-group">
+              <label class="form-label" for="period">Periode <span style="color:red">*</span></label>
+              <input
+                type="text"
+                id="period"
+                class="form-control"
+                formControlName="period"
+                placeholder="Contoh: 2025/2026"
+              />
+              @if (f['period'].invalid && (f['period'].dirty || f['period'].touched || submitTried())) {
+                <div class="form-error">Periode wajib diisi (maksimal 50 karakter).</div>
+              }
+            </div>
+          </div>
+
+          <p class="section-title">Logo &amp; Bagan Organisasi</p>
+          <div class="grid grid-2">
+            <div class="form-group">
+              <label class="form-label">Logo Kepengurusan @if (!isEdit()) { <span style="color:red">*</span> }</label>
+              <app-image-upload
+                [value]="logoPath() || ''"
+                (valueChange)="logoPath.set($event)"
+              />
+              <p class="form-hint">Format JPG/PNG/WebP, rasio 1:1 direkomendasikan. Maks 2MB.</p>
+              @if (submitTried() && !logoPath() && !isEdit()) {
+                <div class="form-error">Logo kepengurusan wajib diunggah.</div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Bagan Struktur @if (!isEdit()) { <span style="color:red">*</span> }</label>
               <app-image-upload
                 [value]="chartPath() || ''"
-                (valueChange)="chartPath.set($event)">
-              </app-image-upload>
-              <p class="form-text mt-sm text-muted">Gambar bagan hierarki organisasi. Maks 5MB.</p>
+                (valueChange)="chartPath.set($event)"
+              />
+              <p class="form-hint">Gambar hierarki struktur organisasi. Maks 5MB.</p>
               @if (submitTried() && !chartPath() && !isEdit()) {
                 <div class="form-error">Bagan struktur wajib diunggah.</div>
               }
             </div>
           </div>
 
+          <p class="section-title">Deskripsi &amp; Profil</p>
           <div class="form-group">
-            <label class="form-label">Deskripsi & Penjelasan <span class="text-danger">*</span></label>
+            <label class="form-label">Deskripsi Lengkap <span style="color:red">*</span></label>
             <app-rich-text-editor
               [value]="form.value.structureDescription || ''"
-              (valueChange)="onDescriptionChange($event)">
-            </app-rich-text-editor>
+              (valueChange)="onDescriptionChange($event)"
+            />
             @if (submitTried() && (!form.value.structureDescription || !form.value.structureDescription.trim())) {
-              <div class="form-error">Wajib diisi.</div>
+              <div class="form-error">Deskripsi kepengurusan wajib diisi.</div>
             }
           </div>
 
-          <div class="form-actions mt-lg">
-            <button type="button" class="btn btn-outline" (click)="back()" [disabled]="submitting()">Batal</button>
+          <div class="flex gap justify-between" style="margin-top:32px; padding-top:20px; border-top:1px solid var(--color-border)">
+            <a routerLink="/cms/structures" class="btn btn-ghost">Batal</a>
             <button type="submit" class="btn btn-primary" [disabled]="submitting()">
-              @if (submitting()) { <div class="spinner spinner-sm mr-xs"></div> }
-              {{ isEdit() ? 'Simpan Perubahan' : 'Buat Struktur' }}
+              @if (submitting()) { <span class="spinner"></span> } @else { {{ isEdit() ? 'Simpan Perubahan' : 'Simpan Struktur' }} }
             </button>
           </div>
         </form>
-      </div>
-    }
+      }
+    </div>
   `,
   styles: [`
-    .form-layout { max-width: 960px; }
+    .form-card { max-width: 840px; margin: 0 auto; }
+    .section-title { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--color-muted); margin: 24px 0 14px; padding-bottom: 6px; border-bottom: 1px solid var(--color-border); }
+    .section-title:first-child { margin-top: 0; }
+    .form-error { color: var(--color-danger, #dc2626); font-size: .8rem; margin-top: 4px; font-weight: 500; }
+    .form-hint { color: var(--color-muted); font-size: .8rem; margin-top: 4px; }
   `]
 })
 export class StructureFormPage implements OnInit {

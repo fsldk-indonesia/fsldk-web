@@ -24,9 +24,9 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
       </div>
     </div>
 
-    <!-- Filters and Search Toolbar -->
-    <div class="card mb-md toolbar-card">
-      <div class="toolbar-grid">
+    <!-- Messages Table Card with Integrated Toolbar -->
+    <div class="card">
+      <div class="toolbar-grid" style="padding: 16px 20px; border-bottom: 1px solid var(--color-border)">
         <div class="search-wrap">
           <app-icon name="search" [size]="16" class="search-icon" />
           <input
@@ -61,10 +61,6 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
           }
         </div>
       </div>
-    </div>
-
-    <!-- Messages Table Card -->
-    <div class="card">
       <div class="table-wrap">
         <table class="table">
           <thead>
@@ -217,15 +213,145 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
           </div>
 
           <div class="modal-footer flex justify-between items-center">
-            <a
-              [href]="'mailto:' + selectedMessage()!.email + '?subject=' + replySubject(selectedMessage()!.subject)"
+            <button
+              type="button"
               class="btn btn-primary"
-              target="_blank"
+              (click)="openReplyModal(selectedMessage()!)"
             >
               <app-icon name="send" [size]="14" class="mr-xs" /> Balas via Email
-            </a>
+            </button>
             <button type="button" class="btn btn-outline" (click)="closeDetailModal()">
               Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Reply Email Modal -->
+    @if (replyModalOpen() && selectedMessage()) {
+      <div class="modal-backdrop" (click)="closeReplyModal()">
+        <div class="modal modal-pop modal-reply" (click)="$event.stopPropagation()">
+          <div class="modal-header flex justify-between items-center">
+            <h3 class="modal-title">
+              <app-icon name="envelope" [size]="18" class="mr-xs text-primary" /> Balas Pesan via Email
+            </h3>
+            <button type="button" class="btn-close-modal" (click)="closeReplyModal()" [disabled]="sendingReply()">
+              <app-icon name="x" [size]="16" />
+            </button>
+          </div>
+
+          <div class="modal-body" style="padding: 24px 28px">
+            <!-- Recipient Information Alert -->
+            <div class="reply-recipient-card mb-md">
+              <div class="flex items-center gap-sm" style="flex-wrap: wrap">
+                <span class="text-xs text-muted font-bold">Penerima:</span>
+                <span class="badge badge-published" style="font-size: .85rem">
+                  {{ selectedMessage()!.senderName }} &lt;{{ selectedMessage()!.email }}&gt;
+                </span>
+              </div>
+              <div class="text-muted text-xs mt-xs">
+                <app-icon name="info-circle" [size]="12" /> Email balasan akan dikirim otomatis oleh sistem dari alamat noreply resmi.
+              </div>
+            </div>
+
+            <!-- Original Message Preview -->
+            <div class="reply-original-box mb-md">
+              <span class="text-xs font-bold text-muted" style="display:block; margin-bottom: 4px;">
+                Pesan dari {{ selectedMessage()!.senderName }}:
+              </span>
+              <p class="text-sm text-secondary" style="margin: 0; white-space: pre-wrap; max-height: 80px; overflow-y: auto; font-style: italic;">
+                "{{ selectedMessage()!.message }}"
+              </p>
+            </div>
+
+            <!-- Subject Input -->
+            <div class="form-group mb-md">
+              <label class="form-label" for="replySubject">Subjek Email <span style="color:red">*</span></label>
+              <input
+                type="text"
+                id="replySubject"
+                class="form-control"
+                [ngModel]="replySubjectText()"
+                (ngModelChange)="replySubjectText.set($event)"
+                placeholder="Subjek balasan..."
+              />
+            </div>
+
+            <!-- Reply Message Body -->
+            <div class="form-group mb-0">
+              <label class="form-label" for="replyBody">Pesan Balasan <span style="color:red">*</span></label>
+              <textarea
+                id="replyBody"
+                class="form-control"
+                rows="7"
+                [ngModel]="replyBodyText()"
+                (ngModelChange)="replyBodyText.set($event)"
+                placeholder="Tulis balasan resmi untuk pengirim pesan..."
+                style="resize: vertical; font-family: inherit; line-height: 1.6;"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer flex justify-between items-center">
+            <button type="button" class="btn btn-outline" (click)="closeReplyModal()" [disabled]="sendingReply()">
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="promptSendReply()"
+              [disabled]="sendingReply() || !replyBodyText().trim() || !replySubjectText().trim()"
+            >
+              @if (sendingReply()) {
+                <div class="spinner spinner-sm mr-xs"></div> Mengirim...
+              } @else {
+                <app-icon name="send" [size]="14" class="mr-xs" /> Kirim Balasan
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Confirm Send Reply Modal -->
+    @if (confirmReplyModalOpen() && selectedMessage()) {
+      <div class="modal-backdrop" (click)="cancelConfirmReply()">
+        <div class="modal modal-pop modal-confirm" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3 class="modal-title text-primary">
+              <app-icon name="send" [size]="18" class="mr-xs" /> Konfirmasi Kirim Balasan
+            </h3>
+          </div>
+          <div class="modal-body">
+            <p>
+              Apakah Anda yakin ingin mengirimkan balasan email ini ke
+              <strong>{{ selectedMessage()!.senderName }}</strong> (<em>{{ selectedMessage()!.email }}</em>)?
+            </p>
+            <p class="text-muted text-sm mt-xs">
+              Email akan dikirim secara resmi dari alamat noreply sistem.
+            </p>
+          </div>
+          <div class="modal-footer flex justify-end gap-sm">
+            <button
+              type="button"
+              class="btn btn-outline"
+              (click)="cancelConfirmReply()"
+              [disabled]="sendingReply()"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              (click)="executeSubmitReply()"
+              [disabled]="sendingReply()"
+            >
+              @if (sendingReply()) {
+                <div class="spinner spinner-sm mr-xs"></div> Mengirim...
+              } @else {
+                <app-icon name="send" [size]="14" class="mr-xs" /> Ya, Kirim Sekarang
+              }
             </button>
           </div>
         </div>
@@ -416,6 +542,21 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
     .modal-detail {
       max-width: 680px;
     }
+    .modal-reply {
+      max-width: 600px;
+    }
+    .reply-recipient-card {
+      background: var(--color-bg-alt);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+    }
+    .reply-original-box {
+      background: var(--color-bg);
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+    }
     .modal-confirm {
       max-width: 440px;
       padding: 24px;
@@ -593,6 +734,12 @@ export class ContactIndexPage implements OnInit {
   detailModalOpen = signal<boolean>(false);
   selectedMessage = signal<ContactDetail | null>(null);
 
+  replyModalOpen = signal<boolean>(false);
+  replySubjectText = signal<string>('');
+  replyBodyText = signal<string>('');
+  sendingReply = signal<boolean>(false);
+  confirmReplyModalOpen = signal<boolean>(false);
+
   deleteModalOpen = signal<boolean>(false);
   itemToDelete = signal<ContactListItem | null>(null);
   deleting = signal<boolean>(false);
@@ -672,6 +819,76 @@ export class ContactIndexPage implements OnInit {
   closeDetailModal(): void {
     this.detailModalOpen.set(false);
     this.selectedMessage.set(null);
+  }
+
+  openReplyModal(msg: ContactDetail): void {
+    const rawSubj = msg.subject || '';
+    const subj = rawSubj.toLowerCase().startsWith('re:') ? rawSubj : 'Re: ' + rawSubj;
+    this.replySubjectText.set(subj);
+    this.replyBodyText.set('');
+    // Tutup detail modal agar tidak bertumpuk dan tidak double-blur
+    this.detailModalOpen.set(false);
+    this.replyModalOpen.set(true);
+  }
+
+  closeReplyModal(): void {
+    if (this.sendingReply()) return;
+    this.replyModalOpen.set(false);
+    // Kembalikan ke modal detail jika dibatalkan
+    if (this.selectedMessage()) {
+      this.detailModalOpen.set(true);
+    }
+  }
+
+  promptSendReply(): void {
+    const subject = this.replySubjectText().trim();
+    const message = this.replyBodyText().trim();
+    if (!subject || !message) {
+      this.toast.error('Subjek dan pesan balasan wajib diisi.');
+      return;
+    }
+    // Sembunyikan form balas dan buka modal konfirmasi
+    this.replyModalOpen.set(false);
+    this.confirmReplyModalOpen.set(true);
+  }
+
+  cancelConfirmReply(): void {
+    if (this.sendingReply()) return;
+    this.confirmReplyModalOpen.set(false);
+    // Kembalikan ke form balas agar admin bisa periksa/edit kembali
+    this.replyModalOpen.set(true);
+  }
+
+  executeSubmitReply(): void {
+    const msg = this.selectedMessage();
+    if (!msg) return;
+
+    const subject = this.replySubjectText().trim();
+    const message = this.replyBodyText().trim();
+    if (!subject || !message) {
+      this.toast.error('Subjek dan pesan balasan wajib diisi.');
+      this.confirmReplyModalOpen.set(false);
+      this.replyModalOpen.set(true);
+      return;
+    }
+
+    this.sendingReply.set(true);
+    this.repo.replyMessage(msg.messageID, { subject, message }).subscribe({
+      next: () => {
+        this.sendingReply.set(false);
+        this.confirmReplyModalOpen.set(false);
+        this.replyModalOpen.set(false);
+        this.detailModalOpen.set(false);
+        this.selectedMessage.set(null);
+        this.toast.success(`Balasan resmi berhasil dikirim ke ${msg.email}.`);
+      },
+      error: (err) => {
+        this.sendingReply.set(false);
+        this.confirmReplyModalOpen.set(false);
+        this.replyModalOpen.set(true);
+        this.toast.error(err.error?.message || 'Gagal mengirimkan balasan email.');
+      },
+    });
   }
 
   replySubject(subject: string): string {

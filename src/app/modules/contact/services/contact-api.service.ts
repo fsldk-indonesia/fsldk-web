@@ -8,6 +8,7 @@ import {
   ContactListItem,
   ContactListQuery,
   ContactListResponse,
+  ReplyContactPayload,
   SendContactPayload,
 } from '../entities/contact';
 
@@ -60,5 +61,12 @@ export class ContactApiService {
    */
   deleteCMS(id: number): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.apiBase}/contact-messages/${id}`);
+  }
+
+  /**
+   * Reply to a contact message via email.
+   */
+  replyCMS(id: number, payload: ReplyContactPayload): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.apiBase}/contact-messages/${id}/reply`, payload);
   }
 }
