@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { IconComponent } from './icon.component';
+import { NewsletterFormComponent } from './newsletter-form.component';
 
 /** Footer landing page — dipakai di PublicLayoutComponent dan KaderLayoutComponent
  *  (miss-development-prompt-2.md poin 4: navbar & footer Portal Kader HARUS identik
@@ -7,7 +8,7 @@ import { IconComponent } from './icon.component';
 @Component({
   selector: 'app-site-footer',
   standalone: true,
-  imports: [IconComponent],
+  imports: [IconComponent, NewsletterFormComponent],
   template: `
     <footer class="pub-footer pattern-motif pattern-motif-dark">
       <div class="container">
@@ -24,6 +25,11 @@ import { IconComponent } from './icon.component';
             </svg>
             Menyatukan Langkah Dakwah Kampus se-Indonesia
           </span>
+        </div>
+
+        <div class="foot-newsletter">
+          <span class="foot-newsletter-label"><app-icon name="mail" [size]="15" /> Berlangganan kabar FSLDK</span>
+          <app-newsletter-form />
         </div>
 
         <nav class="foot-social" aria-label="Media sosial FSLDK Indonesia">
@@ -50,6 +56,9 @@ import { IconComponent } from './icon.component';
     .foot-top { padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.1); flex-wrap: wrap; gap: 12px; }
     .foot-tagline { display: flex; align-items: center; gap: 10px; }
     .foot-glyph { flex-shrink: 0; overflow: visible; }
+    .foot-newsletter { margin-top: 20px; max-width: 420px; }
+    .foot-newsletter-label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .88rem; color: #fff; margin-bottom: 10px; }
+    .foot-newsletter-label app-icon { color: var(--color-primary-bright); }
     .foot-social { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
     .foot-social-link {
       display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px;

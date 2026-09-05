@@ -4,6 +4,7 @@ import { Title } from '@angular/platform-browser';
 import { ContactRepository } from '../../repositories/contact.repository';
 import { ToastService } from '../../../../core/services/toast.service';
 import { IconComponent } from '../../../../shared/icon.component';
+import { NewsletterFormComponent } from '../../../../shared/newsletter-form.component';
 
 /**
  * Public Contact Us page with official organization contacts and interactive inquiry form.
@@ -11,7 +12,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 @Component({
   selector: 'app-contact-public-index',
   standalone: true,
-  imports: [ReactiveFormsModule, IconComponent],
+  imports: [ReactiveFormsModule, IconComponent, NewsletterFormComponent],
   template: `
     <section class="section">
       <div class="container pb-xl">
@@ -86,6 +87,18 @@ import { IconComponent } from '../../../../shared/icon.component';
                 <strong>Respons Cepat</strong>
                 <p>Setiap pesan yang masuk melalui formulir ini akan diteruskan langsung ke divisi terkait dan dijawab dalam 1x24 jam kerja.</p>
               </div>
+            </div>
+
+            <!-- Newsletter Signup Card -->
+            <div class="card newsletter-card">
+              <div class="newsletter-card-header">
+                <span class="item-icon"><app-icon name="mail" [size]="18" /></span>
+                <div>
+                  <strong>Berlangganan Newsletter</strong>
+                  <p>Dapatkan kabar berita, artikel, dan agenda dakwah kampus langsung ke email Anda.</p>
+                </div>
+              </div>
+              <app-newsletter-form />
             </div>
           </div>
 
@@ -347,6 +360,11 @@ import { IconComponent } from '../../../../shared/icon.component';
     .notice-icon { color: #16a34a; flex-shrink: 0; margin-top: 2px; }
     .notice-text strong { display: block; font-size: 0.92rem; color: #166534; margin-bottom: 2px; }
     .notice-text p { margin: 0; font-size: 0.85rem; color: #15803d; line-height: 1.4; }
+
+    .newsletter-card { margin-top: 20px; padding: 24px; }
+    .newsletter-card-header { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+    .newsletter-card-header strong { display: block; font-size: 0.95rem; color: var(--color-text); margin-bottom: 2px; }
+    .newsletter-card-header p { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.4; }
 
     /* Right Column Styling */
     .form-card {
