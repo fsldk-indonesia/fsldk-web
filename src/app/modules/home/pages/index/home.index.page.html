@@ -314,3 +314,37 @@
     </div>
   </div>
 </section>
+
+<section class="section">
+  <div class="container">
+    <div class="contact-cta-inner reveal">
+      <span class="eyebrow">Hubungi Kami</span>
+      <h2>Ada Pertanyaan atau Ingin Berkolaborasi?</h2>
+      <p class="text-muted">Sampaikan pertanyaan, aspirasi, atau ajakan kolaborasi dakwah kampus kepada kami — tim sekretariat FSLDK Indonesia siap menindaklanjuti.</p>
+      <a [routerLink]="contactPath.public" class="btn btn-primary">Kirim Pesan</a>
+    </div>
+  </div>
+</section>
+
+@if (!loading() && latestGallery(); as gallery) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Galeri</span>
+        <h2>Dokumentasi Kegiatan Terbaru</h2>
+      </div>
+      <a class="gallery-card reveal" [routerLink]="['/tentang/galeri', gallery.galleryID]">
+        <div class="gallery-thumb">@if (gallery.coverImage) { <img [src]="gallery.coverImage" [alt]="gallery.eventName"> } @else { <span>GALERI</span> }</div>
+        <div class="gallery-body">
+          <span class="chip chip-green">{{ gallery.eventTheme }}</span>
+          <h3>{{ gallery.eventName }}</h3>
+          <p class="meta">{{ (gallery.eventDate ?? gallery.createdDate) | date:'d MMM yyyy' }}</p>
+          <span class="gallery-count"><app-icon name="images" [size]="14" /> {{ gallery.totalPhotos }} foto</span>
+        </div>
+      </a>
+      <div class="text-center mt-lg">
+        <a routerLink="/tentang/galeri" class="btn btn-outline">Lihat Semua Galeri</a>
+      </div>
+    </div>
+  </section>
+}

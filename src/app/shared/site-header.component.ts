@@ -222,9 +222,16 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .nav-placeholder.active { height: 78px; }
 
     .pub-header { position: relative; top: 0; left: 0; width: 100%; z-index: 60; background: rgba(255,255,255,.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-border); padding: 16px 0; }
+    /* Navbar sengaja lebih lebar dari .container standar (1180px dipakai
+       semua section konten lain) — mengikuti pola ldksyahid-app yang
+       navbar-nya terasa lega dan hampir penuh lebar layar, bukan sekadar
+       sejajar dengan lebar konten. gap eksplisit menjaga jarak minimum
+       antar 3 grup (brand/menu/aksi) tetap ada meski justify-between
+       kehabisan sisa ruang di viewport laptop yang lebih sempit. */
+    .pub-header .container { max-width: 1600px; gap: 32px; }
     .pub-header.scrolled {
       position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
-      width: min(1240px, calc(100% - 32px));
+      width: min(1600px, calc(100% - 32px));
       border: 1px solid var(--color-border); border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg); background: #fff; padding: 8px 20px;
       animation: navFadeIn .25s ease;

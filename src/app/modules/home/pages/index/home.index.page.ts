@@ -9,6 +9,8 @@ import { EventListItem } from '../../../event/entities/event';
 import { Goods } from '../../../goods/entities/goods';
 import { Schedule } from '../../../schedule/entities/schedule';
 import { Campaign } from '../../../kantong-amal/entities/campaign';
+import { GalleryListItem } from '../../../gallery/entities/gallery';
+import { contactPath } from '../../../contact/contact.path';
 import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
 import { eventPath } from '../../../event/event.path';
 import { goodsPath } from '../../../goods/goods.path';
@@ -116,6 +118,21 @@ interface OrgMember {
     .agenda-mini-date .mon { display: block; font-size: .75rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: .05em; }
     .agenda-mini-body h3 { margin: 6px 0 4px; font-size: 1.05rem; }
 
+    .contact-cta-inner {
+      max-width: 640px; margin: 0 auto; text-align: center; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 40px 36px; box-shadow: var(--shadow-sm);
+    }
+    .contact-cta-inner p { max-width: 46ch; margin: 8px auto 20px; }
+
+    .gallery-card { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0; max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
+    .gallery-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); text-decoration: none; }
+    .gallery-thumb { aspect-ratio: 4/3; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
+    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .gallery-body { padding: 28px; display: flex; flex-direction: column; justify-content: center; }
+    .gallery-body h3 { margin: 12px 0 8px; font-size: 1.3rem; }
+    .gallery-count { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .85rem; margin-top: 10px; }
+    @media (max-width: 640px) { .gallery-card { grid-template-columns: 1fr; } }
+
     .hero-about { padding: 56px 0 8px; }
     .about-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 32px; align-items: start; }
     .lead { font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; line-height: 1.5; color: var(--color-text); margin: 0; }
@@ -156,6 +173,7 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
   goods = signal<Goods[]>([]);
   schedules = signal<Schedule[]>([]);
   campaigns = signal<Campaign[]>([]);
+  latestGallery = signal<GalleryListItem | null>(null);
   loading = signal(true);
 
   readonly catalogbookPath = catalogbookPath;
@@ -163,6 +181,7 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
   readonly goodsPath = goodsPath;
   readonly schedulePath = schedulePath;
   readonly kantongAmalPath = kantongAmalPath;
+  readonly contactPath = contactPath;
   readonly formatRupiah = formatRupiah;
 
   readonly missionList: string[] = [
@@ -201,4 +220,5 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
   setGoods(goods: Goods[]): void { this.goods.set(goods); }
   setSchedules(schedules: Schedule[]): void { this.schedules.set(schedules); }
   setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
+  setLatestGallery(gallery: GalleryListItem | null): void { this.latestGallery.set(gallery); }
 }

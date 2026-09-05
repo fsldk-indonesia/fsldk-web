@@ -7,6 +7,7 @@ import { EventRepository } from '../../../event/repositories/event.repository';
 import { GoodsRepository } from '../../../goods/repositories/goods.repository';
 import { ScheduleRepository } from '../../../schedule/repositories/schedule.repository';
 import { CampaignRepository } from '../../../kantong-amal/repositories/campaign.repository';
+import { GalleryApiService } from '../../../gallery/services/gallery-api.service';
 import { HomeIndexView } from './home.index.view';
 
 /** "YYYY-MM-DD" for a date offset by the given number of days from today. */
@@ -25,11 +26,19 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
   private goodsRepo = inject(GoodsRepository);
   private scheduleRepo = inject(ScheduleRepository);
   private campaignRepo = inject(CampaignRepository);
+  // GalleryApiService dipakai langsung (bukan GalleryRepository) — repository
+  // itu menyimpan hasil publicGalleries sebagai signal singleton yang juga
+  // dipakai halaman daftar galeri penuh; memanggil loadPublic() dari sini
+  // akan menimpa state itu dan bikin flash data 1 item saat pindah halaman.
+  private galleryApi = inject(GalleryApiService);
 
   load(): void {
     this.view.setLoading(true);
-    this.newsRepo.featured(3).subscribe({
-      next: (news) => { this.view.setNews(news); this.view.setLoading(false); },
+    // publicList (bukan featured()) — featured() hanya mengambil berita ber-flag
+    // isFeatured=1 (kurasi manual editor), yang bisa saja bukan berita terbaru.
+    // publicList default sort backend-nya sudah "-createdDate" (terbaru dulu).
+    this.newsRepo.publicList({ page: 1, limit: 3 }).subscribe({
+      next: (p) => { this.view.setNews(p.data); this.view.setLoading(false); },
       error: () => this.view.setLoading(false),
     });
     this.articleRepo.publicList({ page: 1, limit: 3 }).subscribe({
@@ -55,6 +64,10 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
     this.campaignRepo.publicList({ page: 1, limit: 5 }).subscribe({
       next: (p) => this.view.setCampaigns(p.data),
       error: () => this.view.setCampaigns([]),
+    });
+    this.galleryApi.listPublic(1, 1, 'newest').subscribe({
+      next: (res) => this.view.setLatestGallery(res.result.data[0] ?? null),
+      error: () => this.view.setLatestGallery(null),
     });
   }
 }
