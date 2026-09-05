@@ -92,6 +92,34 @@ const ICONS: Record<string, string> = {
   // FSLDK Goods (sidebar menuIcon lk_permission + navbar "Layanan").
   'shopping-bag': 'fas fa-bag-shopping',
   tags: 'fas fa-tags',
+  // Widget Jadwal Sholat (navbar publik & topbar CMS).
+  mosque: 'fas fa-mosque',
+  // Navbar "Tentang Kami" dropdown & Modul Struktur, Galeri, Kontak.
+  sitemap: 'fas fa-sitemap',
+  photo: 'fas fa-images',
+  images: 'fas fa-images',
+  image: 'fas fa-image',
+  messages: 'fas fa-envelope',
+  envelope: 'fas fa-envelope',
+  mail: 'fas fa-envelope',
+  'mail-open': 'fas fa-envelope-open',
+  send: 'fas fa-paper-plane',
+  'paper-plane': 'fas fa-paper-plane',
+  'map-pin': 'fas fa-map-marker-alt',
+  'rotate-ccw': 'fas fa-rotate-left',
+  comments: 'fas fa-comments',
+  'zoom-in': 'fas fa-search-plus',
+  plus: 'fas fa-plus',
+  inbox: 'fas fa-inbox',
+  star: 'fas fa-star',
+  play: 'fas fa-play',
+  'play-circle': 'fas fa-play-circle',
+  video: 'fas fa-video',
+  'external-link': 'fas fa-external-link-alt',
+  'chevron-left': 'fas fa-chevron-left',
+  'chevron-right': 'fas fa-chevron-right',
+  'arrow-up': 'fas fa-arrow-up',
+  'arrow-down': 'fas fa-arrow-down',
 };
 
 /**

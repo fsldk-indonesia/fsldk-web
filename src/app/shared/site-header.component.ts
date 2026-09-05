@@ -10,6 +10,7 @@ import { schedulePath } from '../modules/schedule/schedule.path';
 import { goodsPath } from '../modules/goods/goods.path';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from './cms-tier';
 import { IconComponent } from './icon.component';
+import { PrayerTimeComponent } from './prayer-time.component';
 
 const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_LDK'];
 
@@ -24,7 +25,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
 @Component({
   selector: 'app-site-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, IconComponent],
+  imports: [RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
     <div class="nav-placeholder" [class.active]="scrolled()"></div>
     <header class="pub-header" [class.scrolled]="scrolled()">
@@ -37,6 +38,22 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         <div class="pub-nav-group">
           <nav class="pub-nav">
             <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Beranda</a>
+            <div class="nav-dropdown-wrap" (mouseenter)="openTentangKamiMenu()" (mouseleave)="closeTentangKamiMenu()">
+              <button type="button" class="nav-dropdown-trigger" [class.active]="isTentangKamiActive()" (click)="toggleTentangKamiMenu($event)">
+                Tentang Kami <app-icon name="chevron-down" [size]="12" />
+              </button>
+              <div class="nav-dropdown-panel" [class.open]="tentangKamiMenuOpen()">
+                @for (item of tentangKamiItems; track item.href) {
+                  <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeTentangKamiMenu()">
+                    <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
+                    <span class="nav-dropdown-item-text">
+                      <span class="nav-dropdown-item-title">{{ item.title }}</span>
+                      <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
+                    </span>
+                  </a>
+                }
+              </div>
+            </div>
             <a routerLink="/berita" routerLinkActive="active">Berita</a>
             <a routerLink="/artikel" routerLinkActive="active">Artikel</a>
             <a routerLink="/perpustakaan" routerLinkActive="active">Perpustakaan</a>
@@ -77,6 +94,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         </div>
 
         <div class="flex items-center gap-sm pub-actions">
+          <app-prayer-time />
           @if (auth.isLoggedIn()) {
             <div class="user-fun-wrap" (mouseenter)="openUserMenu()" (mouseleave)="closeUserMenu()">
               <button class="btn btn-outline btn-sm btn-user-fun account-chip" type="button" (click)="toggleUserMenu($event)">
@@ -128,6 +146,20 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
       </div>
       <nav class="mobile-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeMobile()">Beranda</a>
+      </nav>
+      <div class="mobile-nav-extra">
+        <span class="mobile-nav-label">Tentang Kami</span>
+        @for (item of tentangKamiItems; track item.href) {
+          <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMobile()">
+            <span class="icon-badge sm icon-badge-soft"><app-icon [name]="item.icon" [size]="15" /></span>
+            <span class="nav-dropdown-item-text">
+              <span class="nav-dropdown-item-title">{{ item.title }}</span>
+              <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
+            </span>
+          </a>
+        }
+      </div>
+      <nav class="mobile-nav">
         <a routerLink="/berita" routerLinkActive="active" (click)="closeMobile()">Berita</a>
         <a routerLink="/artikel" routerLinkActive="active" (click)="closeMobile()">Artikel</a>
         <a routerLink="/perpustakaan" routerLinkActive="active" (click)="closeMobile()">Perpustakaan</a>
@@ -158,6 +190,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
         }
       </div>
       <div class="mobile-actions">
+        <app-prayer-time />
         @if (auth.isLoggedIn()) {
           <div class="mobile-account">
             @if (auth.user()?.photoURL) {
@@ -189,33 +222,41 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .nav-placeholder.active { height: 78px; }
 
     .pub-header { position: relative; top: 0; left: 0; width: 100%; z-index: 60; background: rgba(255,255,255,.9); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-border); padding: 16px 0; }
+    /* Navbar sengaja lebih lebar dari .container standar (1180px dipakai
+       semua section konten lain) — mengikuti pola ldksyahid-app yang
+       navbar-nya terasa lega dan hampir penuh lebar layar, bukan sekadar
+       sejajar dengan lebar konten. gap eksplisit menjaga jarak minimum
+       antar 3 grup (brand/menu/aksi) tetap ada meski justify-between
+       kehabisan sisa ruang di viewport laptop yang lebih sempit. */
+    .pub-header .container { max-width: 1600px; gap: 32px; }
     .pub-header.scrolled {
       position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
-      width: min(1180px, calc(100% - 32px));
+      width: min(1600px, calc(100% - 32px));
       border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg); background: #fff; padding: 10px 8px;
+      box-shadow: var(--shadow-lg); background: #fff; padding: 8px 20px;
       animation: navFadeIn .25s ease;
     }
     @keyframes navFadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-12px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
-    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-right: 16px; flex-shrink: 0; }
     .brand:hover { text-decoration: none; }
     .brand-logo-img { width: 44px; height: 44px; border-radius: 12px; object-fit: cover; border: 1px solid var(--color-border); flex-shrink: 0; transition: transform .2s ease; }
     .brand:hover .brand-logo-img { transform: rotate(-4deg) scale(1.04); }
     .brand-logo-img.sm { width: 36px; height: 36px; }
-    .brand-text { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; display: flex; flex-direction: column; line-height: 1.1; }
+    .brand-text { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; display: flex; flex-direction: column; line-height: 1.1; white-space: nowrap; }
     .brand-text b { color: var(--color-primary); display: inline; }
 
-    .pub-nav-group { display: flex; align-items: center; gap: 6px; }
-    .pub-nav { display: flex; gap: 6px; }
+    .pub-nav-group { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .pub-nav { display: flex; align-items: center; gap: 4px; }
     .mobile-nav a { position: relative; display: flex; align-items: center; gap: 7px; color: var(--color-text); font-weight: 600; transition: color var(--motion-fast) ease; }
     .pub-nav a svg, .mobile-nav a svg { opacity: .75; }
     .pub-nav a.active svg, .mobile-nav a.active svg { opacity: 1; }
     .mobile-nav a:hover { text-decoration: none; color: var(--color-primary-dark); }
     .pub-nav a {
-      position: relative; display: flex; align-items: center; gap: 7px;
-      padding: 9px 16px; border-radius: var(--radius-full); color: var(--color-text); font-weight: 600; font-size: .95rem;
+      position: relative; display: flex; align-items: center; gap: 6px;
+      padding: 8px 13px; border-radius: var(--radius-full); color: var(--color-text); font-weight: 600; font-size: .92rem;
       transition: color var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+      white-space: nowrap;
     }
     .pub-nav a:hover { text-decoration: none; color: var(--color-primary-dark); background: var(--color-primary-soft); transform: translateY(-1px); }
     .pub-nav a.active { color: #fff; background: var(--color-primary); box-shadow: 0 4px 12px rgba(0,147,59,.28); }
@@ -254,12 +295,14 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
        itu, ia ikut kena gaya pill hijau solid milik link nav biasa
        (spesifisitas .pub-nav a.active lebih tinggi dari .nav-dropdown-item
        sendiri) alih-alih gaya dua-baris di bawah ini. */
+    .pub-actions { flex-shrink: 0; margin-left: 12px; }
     .nav-dropdown-wrap { position: relative; }
     .nav-dropdown-trigger {
-      display: flex; align-items: center; gap: 6px; margin: 0; appearance: none;
-      padding: 9px 16px; border-radius: var(--radius-full); border: none; background: none; cursor: pointer;
-      color: var(--color-text); font-weight: 600; font-size: .95rem; font-family: var(--font-body); line-height: normal;
+      display: flex; align-items: center; gap: 5px; margin: 0; appearance: none;
+      padding: 8px 13px; border-radius: var(--radius-full); border: none; background: none; cursor: pointer;
+      color: var(--color-text); font-weight: 600; font-size: .92rem; font-family: var(--font-body); line-height: normal;
       transition: color var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+      white-space: nowrap;
     }
     .nav-dropdown-trigger:hover { color: var(--color-primary-dark); background: var(--color-primary-soft); transform: translateY(-1px); }
     .nav-dropdown-trigger:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-xs); }
@@ -281,13 +324,49 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .nav-dropdown-panel.open { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
     @media (prefers-reduced-motion: reduce) { .nav-dropdown-panel { transition: opacity var(--motion-base) ease, visibility var(--motion-base); transform: none !important; } }
 
-    .nav-dropdown-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-xs); color: var(--color-text); transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
-    /* Sama seperti hover .pub-nav a (background primary-soft + teks primary-dark)
-       supaya konsisten dengan hover item navbar lainnya — geser seluruh baris
-       (bukan cuma ikon, yang sudah punya animasi sendiri dari selector global
-       a:hover > .icon-badge di styles.scss) supaya terasa satu kesatuan yang bergerak. */
-    .nav-dropdown-item:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none; transform: translateX(4px); }
-    .nav-dropdown-item.active { background: var(--color-primary-soft); }
+    .pub-nav a.nav-dropdown-item,
+    .nav-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-xs);
+      color: var(--color-text);
+      background: transparent;
+      box-shadow: none;
+      transform: none;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .pub-nav a.nav-dropdown-item:hover,
+    .nav-dropdown-item:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      text-decoration: none;
+      transform: translateX(4px);
+      box-shadow: none;
+    }
+    .pub-nav a.nav-dropdown-item.active,
+    .nav-dropdown-item.active {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      box-shadow: none;
+      transform: none;
+    }
+    .pub-nav a.nav-dropdown-item.active:hover,
+    .nav-dropdown-item.active:hover {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      transform: translateX(4px);
+      box-shadow: none;
+    }
+    .pub-nav a.nav-dropdown-item.active .nav-dropdown-item-title,
+    .nav-dropdown-item.active .nav-dropdown-item-title {
+      color: var(--color-primary-dark);
+    }
+    .pub-nav a.nav-dropdown-item.active .nav-dropdown-item-caption,
+    .nav-dropdown-item.active .nav-dropdown-item-caption {
+      color: var(--color-text-secondary);
+    }
     .nav-dropdown-item-text { display: flex; flex-direction: column; gap: 1px; }
     .nav-dropdown-item-title { font-weight: 700; font-size: .9rem; }
     .nav-dropdown-item-caption { font-size: .78rem; color: var(--color-muted); }
@@ -312,12 +391,13 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
     .mobile-nav a { padding: 13px 14px; border-radius: var(--radius-md); }
     .mobile-nav a.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .mobile-actions { margin-top: auto; padding: 16px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 10px; }
+    .mobile-actions ::ng-deep .prayer-btn { width: 100%; justify-content: center; }
 
-    @media (max-width: 900px) {
+    @media (max-width: 1080px) {
       .pub-nav-group, .pub-actions { display: none; }
       .mobile-toggle { display: flex; }
       .pub-header { padding: 12px 0; }
-      .pub-header.scrolled { top: 10px; width: calc(100% - 24px); padding: 8px 6px; }
+      .pub-header.scrolled { top: 10px; width: calc(100% - 24px); padding: 8px 14px; }
       .nav-placeholder.active { height: 64px; }
     }
   `],
@@ -357,6 +437,14 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     }
   });
 
+  /** Isi dropdown navbar "Tentang Kami" */
+  readonly tentangKamiItems = [
+    { icon: 'sitemap', title: 'Struktur Organisasi', caption: 'Kepengurusan FSLDK Indonesia', href: '/tentang/struktur' },
+    { icon: 'photo', title: 'Galeri', caption: 'Dokumentasi kegiatan LDK', href: '/tentang/galeri' },
+    { icon: 'file-bar-chart', title: 'Statistik Jaringan', caption: 'Data agregat LDK, Puskomda & Puskomnas', href: '/tentang/statistik-jaringan' },
+    { icon: 'messages', title: 'Hubungi Kami', caption: 'Kontak resmi FSLDK Indonesia', href: '/tentang/kontak' },
+  ];
+
   /** Isi dropdown navbar "Layanan" — data-driven (bukan `<a>` di-hardcode)
    *  supaya item baru tinggal ditambah ke array ini. */
   readonly lainnyaItems = [
@@ -375,6 +463,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   scrolled = signal(false);
   mobileOpen = signal(false);
   userMenuOpen = signal(false);
+  tentangKamiMenuOpen = signal(false);
   lainnyaMenuOpen = signal(false);
   moreMenuOpen = signal(false);
 
@@ -399,6 +488,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.userMenuOpen.set(false);
+    this.tentangKamiMenuOpen.set(false);
     this.lainnyaMenuOpen.set(false);
     this.moreMenuOpen.set(false);
   }
@@ -413,6 +503,13 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     this.userMenuOpen.update((v) => !v);
   }
 
+  openTentangKamiMenu(): void { this.tentangKamiMenuOpen.set(true); }
+  closeTentangKamiMenu(): void { this.tentangKamiMenuOpen.set(false); }
+  toggleTentangKamiMenu(event: Event): void {
+    event.stopPropagation();
+    this.tentangKamiMenuOpen.update((v) => !v);
+  }
+
   openLainnyaMenu(): void { this.lainnyaMenuOpen.set(true); }
   closeLainnyaMenu(): void { this.lainnyaMenuOpen.set(false); }
   toggleLainnyaMenu(event: Event): void {
@@ -425,6 +522,11 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   toggleMoreMenu(event: Event): void {
     event.stopPropagation();
     this.moreMenuOpen.update((v) => !v);
+  }
+
+  isTentangKamiActive(): boolean {
+    const path = this.router.url.split('?')[0];
+    return this.tentangKamiItems.some((item) => path === item.href);
   }
 
   /** Trigger dropdown ikut tersorot solid saat halaman aktif adalah salah
