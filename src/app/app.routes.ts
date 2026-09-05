@@ -1,4 +1,4 @@
-﻿import { Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { PublicLayoutComponent } from './layouts/public-layout.component';
 import { AuthLayoutComponent } from './layouts/auth-layout.component';
 import { CmsLayoutComponent } from './layouts/cms-layout.component';
@@ -28,6 +28,9 @@ import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
 import { settingRoutes } from './modules/setting/setting.routes';
 import { jobqueueRoutes } from './modules/jobqueue/jobqueue.routes';
+import { structurePublicRoutes, structureCmsRoutes } from './modules/structure/structure.routes';
+import { galleryPublicRoutes, galleryCmsRoutes } from './modules/gallery/gallery.routes';
+import { contactPublicRoutes, contactCmsRoutes } from './modules/contact/contact.routes';
 
 /**
  * Rute aplikasi disusun per modul (lihat `modules/<nama>/<nama>.routes.ts`)
@@ -68,6 +71,9 @@ export const routes: Routes = [
       ...kantongAmalPublicRoutes(),
       ...shortlinkPublicRoutes(),
       ...zakatPublicRoutes(),
+      ...structurePublicRoutes(),
+      ...galleryPublicRoutes(),
+      ...contactPublicRoutes(),
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
       // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
       // jadi tidak bisa diakses akun non-Kader sama sekali karena link
@@ -115,7 +121,10 @@ export const routes: Routes = [
       ...commentCmsRoutes(),
       ...settingRoutes(),
       ...jobqueueRoutes(),
+      ...structureCmsRoutes(),
+      ...galleryCmsRoutes(),
       ...kantongAmalAdminRoutes(),
+      ...contactCmsRoutes(),
     ],
   },
   {
