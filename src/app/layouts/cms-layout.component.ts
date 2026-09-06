@@ -7,6 +7,7 @@ import { OrgContextService } from '../core/services/org-context.service';
 import { MenuItem } from '../modules/permission/entities/menu-item';
 import { MeOrganization } from '../modules/organization/entities/organization';
 import { IconComponent } from '../shared/icon.component';
+import { PrayerTimeComponent } from '../shared/prayer-time.component';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from '../shared/cms-tier';
 
 type Tier = CmsTier;
@@ -26,6 +27,7 @@ interface SidebarGroupConfig {
 const SIDEBAR_GROUPS: SidebarGroupConfig[] = [
   { label: 'Kantong Amal', icon: 'hand-heart', routePrefix: '/cms/kantong-amal' },
   { label: 'Shortlink', icon: 'link', routePrefix: '/cms/shortlink' },
+  { label: 'FSLDK Goods', icon: 'shopping-bag', routePrefix: '/cms/goods' },
 ];
 
 type SidebarEntry =
@@ -45,7 +47,7 @@ type SidebarEntry =
 @Component({
   selector: 'app-cms-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
     <div class="cms" [class.tier-ldk]="tier() === 'LDK'" [class.tier-puskomda]="tier() === 'PUSKOMDA'" [class.tier-puskomnas]="tier() === 'PUSKOMNAS'">
       <aside class="sidebar" [class.open]="sidebarOpen()">
@@ -107,6 +109,7 @@ type SidebarEntry =
             </div>
           }
           <div class="spacer"></div>
+          <app-prayer-time />
           <a routerLink="/" class="nav-website-link">
             <span class="icon-badge sm icon-badge-neutral"><app-icon name="globe" [size]="15" /></span>
             Website

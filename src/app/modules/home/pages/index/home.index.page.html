@@ -118,6 +118,150 @@
   </section>
 }
 
+@if (!loading() && catalogBooks().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Perpustakaan</span>
+        <h2>Koleksi Buku Digital</h2>
+      </div>
+      <div class="grid grid-3">
+        @for (b of catalogBooks(); track b.bookID) {
+          <a class="news-card reveal" [routerLink]="catalogbookPath.publicDetail(b.bookSlug)">
+            <div class="news-thumb">@if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle"> } @else { <span>BUKU</span> }</div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ b.bookCategoryName }}</span>
+              <h3>{{ b.bookTitle }}</h3>
+              <p class="meta">{{ b.authorName }} · {{ b.year }}</p>
+              <span class="fav"><app-icon name="heart" [size]="13" /> {{ b.favoriteCount }}</span>
+            </div>
+          </a>
+        }
+      </div>
+      <div class="text-center mt-lg">
+        <a [routerLink]="catalogbookPath.publicIndex" class="btn btn-outline">Lihat Semua Buku</a>
+      </div>
+    </div>
+  </section>
+}
+
+@if (!loading() && events().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Agenda &amp; Kegiatan</span>
+        <h2>Event Terbaru</h2>
+      </div>
+      <div class="grid grid-3">
+        @for (e of events(); track e.eventID) {
+          <a class="news-card reveal" [routerLink]="eventPath.publicDetail(e.eventSlug)">
+            <div class="news-thumb">@if (e.eventImage) { <img [src]="e.eventImage" [alt]="e.eventTitle"> } @else { <span>EVENT</span> }</div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ e.eventDivision }}</span>
+              <h3>{{ e.eventTitle }}</h3>
+              <p class="meta">
+                @if (e.startDate) { {{ e.startDate | date:'d MMM yyyy' }} }
+                @if (e.location) { · {{ e.location }} }
+              </p>
+            </div>
+          </a>
+        }
+      </div>
+      <div class="text-center mt-lg">
+        <a [routerLink]="eventPath.publicIndex" class="btn btn-outline">Lihat Semua Event</a>
+      </div>
+    </div>
+  </section>
+}
+
+@if (!loading() && goods().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Layanan</span>
+        <h2>FSLDK Goods</h2>
+      </div>
+      <div class="grid grid-3">
+        @for (g of goods(); track g.goodsID) {
+          <a class="news-card reveal" [routerLink]="goodsPath.publicDetail(g.goodsSlug)">
+            <div class="news-thumb">@if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }</div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ g.categoryName }}</span>
+              <h3>{{ g.goodsName }}</h3>
+              <p class="goods-price">{{ formatRupiah(g.price) }}</p>
+            </div>
+          </a>
+        }
+      </div>
+      <div class="text-center mt-lg">
+        <a [routerLink]="goodsPath.publicIndex" class="btn btn-outline">Lihat Semua Produk</a>
+      </div>
+    </div>
+  </section>
+}
+
+@if (!loading() && schedules().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Jadwal</span>
+        <h2>Agenda Kegiatan Terdekat</h2>
+      </div>
+      <div class="agenda-mini-list">
+        @for (s of schedules(); track s.scheduleID) {
+          <div class="agenda-mini-item reveal">
+            <div class="agenda-mini-date">
+              <span class="day">{{ s.startDate | date:'d' }}</span>
+              <span class="mon">{{ s.startDate | date:'MMM' }}</span>
+            </div>
+            <div class="agenda-mini-body">
+              <span class="chip chip-green">{{ s.category }}</span>
+              <h3>{{ s.title }}</h3>
+              <p class="meta">
+                @if (!s.isAllDay && s.startTime) { {{ s.startTime }} · }
+                @if (s.location) { {{ s.location }} }
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="text-center mt-lg">
+        <a [routerLink]="schedulePath.publicIndex" class="btn btn-outline">Lihat Semua Jadwal</a>
+      </div>
+    </div>
+  </section>
+}
+
+@if (!loading() && campaigns().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Kantong Amal</span>
+        <h2>Salurkan Kebaikan, Bantu Sesama</h2>
+      </div>
+      <div class="grid grid-3">
+        @for (c of campaigns(); track c.campaignID) {
+          <a class="news-card reveal" [routerLink]="kantongAmalPath.detail(c.slug)">
+            <div class="news-thumb">@if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }</div>
+            <div class="news-body">
+              <span class="chip chip-green">{{ c.categoryName }}</span>
+              <h3>{{ c.title }}</h3>
+              <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent(c)"></div></div>
+              <div class="progress-meta">
+                <span><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</span>
+                <span>{{ progressPercent(c) }}%</span>
+              </div>
+            </div>
+          </a>
+        }
+      </div>
+      <div class="text-center mt-lg">
+        <a [routerLink]="kantongAmalPath.list" class="btn btn-outline">Lihat Semua Campaign</a>
+      </div>
+    </div>
+  </section>
+}
+
 <section class="section hero-about" id="tentang">
   <div class="container about-grid">
     <div class="reveal">
@@ -170,3 +314,37 @@
     </div>
   </div>
 </section>
+
+<section class="section">
+  <div class="container">
+    <div class="contact-cta-inner reveal">
+      <span class="eyebrow">Hubungi Kami</span>
+      <h2>Ada Pertanyaan atau Ingin Berkolaborasi?</h2>
+      <p class="text-muted">Sampaikan pertanyaan, aspirasi, atau ajakan kolaborasi dakwah kampus kepada kami — tim sekretariat FSLDK Indonesia siap menindaklanjuti.</p>
+      <a [routerLink]="contactPath.public" class="btn btn-primary">Kirim Pesan</a>
+    </div>
+  </div>
+</section>
+
+@if (!loading() && latestGallery(); as gallery) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Galeri</span>
+        <h2>Dokumentasi Kegiatan Terbaru</h2>
+      </div>
+      <a class="gallery-card reveal" [routerLink]="['/tentang/galeri', gallery.galleryID]">
+        <div class="gallery-thumb">@if (gallery.coverImage) { <img [src]="gallery.coverImage" [alt]="gallery.eventName"> } @else { <span>GALERI</span> }</div>
+        <div class="gallery-body">
+          <span class="chip chip-green">{{ gallery.eventTheme }}</span>
+          <h3>{{ gallery.eventName }}</h3>
+          <p class="meta">{{ (gallery.eventDate ?? gallery.createdDate) | date:'d MMM yyyy' }}</p>
+          <span class="gallery-count"><app-icon name="images" [size]="14" /> {{ gallery.totalPhotos }} foto</span>
+        </div>
+      </a>
+      <div class="text-center mt-lg">
+        <a routerLink="/tentang/galeri" class="btn btn-outline">Lihat Semua Galeri</a>
+      </div>
+    </div>
+  </section>
+}

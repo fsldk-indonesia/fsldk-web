@@ -15,4 +15,5 @@ export const kantongAmalPath = {
 
   adminWithdrawals: '/cms/kantong-amal/penarikan',
   withdrawalCreate: '/cms/kantong-amal/penarikan/baru',
+  withdrawalDetail: (id: number) => `/cms/kantong-amal/penarikan/${id}`,
 };

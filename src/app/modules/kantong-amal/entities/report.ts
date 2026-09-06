@@ -98,9 +98,9 @@ export interface AnalyticsResponse {
   campaignProgress: CampaignReportRow[];
 }
 
-export interface ReconciliationSnapshot {
-  snapshotID: number;
-  snapshotDate: string;
+/** Hasil rekonsiliasi ledger vs wallet gateway — dihitung LIVE tiap
+ *  GET /reconciliation dipanggil, bukan histori snapshot tersimpan. */
+export interface Reconciliation {
   donationPaidCount: number;
   donationPaidAmount: number;
   ledgerDonationCreditAmount: number;
@@ -109,13 +109,12 @@ export interface ReconciliationSnapshot {
   expectedBalance: number;
   gatewayWalletBalance: number;
   discrepancyAmount: number;
-  /** Donasi PAID dalam settlementMinutes menit sebelum snapshot ini dijalankan
-   *  — mungkin belum settle penuh di wallet gateway, jadi selisih sebesar ini
-   *  ditoleransi (tidak dianggap anomali). Setara "Settlement Pending" di
-   *  ldksyahid-app. */
+  /** Donasi PAID dalam settlementMinutes menit terakhir — mungkin belum
+   *  settle penuh di wallet gateway, jadi selisih sebesar ini ditoleransi
+   *  (tidak dianggap anomali). Setara "Settlement Pending" di ldksyahid-app. */
   settlementPendingAmount: number;
   settlementMinutes: number;
   hasAnomaly: boolean;
   gatewayError?: string;
-  createdDate: string;
+  checkedDate: string;
 }

@@ -15,9 +15,13 @@
             <label class="form-label">{{ s.settingLabel }}</label>
             <div class="field-input-row">
               @if (canUpdate) {
-                <input class="form-control" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID">
+                @if (isBoolean(s)) {
+                  <app-select [options]="yesNoOptions" [(ngModel)]="s.settingValue" />
+                } @else {
+                  <input class="form-control" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID">
+                }
               } @else {
-                <p class="text-muted" style="margin:0">{{ s.settingValue || '–' }}</p>
+                <p class="text-muted" style="margin:0">{{ isBoolean(s) ? (s.settingValue === 'true' ? 'Ya' : 'Tidak') : (s.settingValue || '–') }}</p>
               }
               @if (canUpdate) {
                 <button class="btn btn-primary btn-sm" [disabled]="isBusy(s.settingID)" (click)="save(s)">

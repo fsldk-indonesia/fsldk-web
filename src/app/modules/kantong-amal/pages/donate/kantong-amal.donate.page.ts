@@ -5,6 +5,7 @@ import { CampaignDetail } from '../../entities/campaign';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
 import { IconComponent } from '../../../../shared/icon.component';
+import { PhoneInputComponent } from '../../../../shared/phone-input.component';
 import { KantongAmalDonatePresenter } from './kantong-amal.donate.presenter';
 import { KantongAmalDonateView } from './kantong-amal.donate.view';
 
@@ -14,7 +15,7 @@ const QUICK_AMOUNTS = [20_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
   selector: 'app-kantong-amal-donate-page',
   standalone: true,
   templateUrl: './kantong-amal.donate.page.html',
-  imports: [RouterLink, FormsModule, IconComponent],
+  imports: [RouterLink, FormsModule, IconComponent, PhoneInputComponent],
   providers: [KantongAmalDonatePresenter],
   styles: [`
     .layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }

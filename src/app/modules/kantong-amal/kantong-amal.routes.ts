@@ -83,16 +83,16 @@ export const kantongAmalAdminRoutes: () => Routes = () => [
     loadComponent: () => import('./pages/withdrawal-form/kantong-amal.withdrawal-form.page').then((m) => m.KantongAmalWithdrawalFormPage),
   },
   {
+    path: 'kantong-amal/penarikan/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.withdrawal.approve' },
+    loadComponent: () => import('./pages/withdrawal-detail/kantong-amal.withdrawal-detail.page').then((m) => m.KantongAmalWithdrawalDetailPage),
+  },
+  {
     path: 'kantong-amal/laporan',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'kantong_amal.report.view' },
     loadComponent: () => import('./pages/admin-reports/kantong-amal.admin-reports.page').then((m) => m.KantongAmalAdminReportsPage),
-  },
-  {
-    path: 'kantong-amal/laporan/rekonsiliasi',
-    canActivate: [verifiedGuard, permissionGuard],
-    data: { permission: 'kantong_amal.report.view' },
-    loadComponent: () => import('./pages/admin-reconciliation/kantong-amal.admin-reconciliation.page').then((m) => m.KantongAmalAdminReconciliationPage),
   },
   {
     path: 'kantong-amal/audit-log',

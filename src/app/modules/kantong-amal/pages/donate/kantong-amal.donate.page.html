@@ -70,7 +70,7 @@
             </div>
             <div class="form-group">
               <label class="form-label">Nomor WhatsApp</label>
-              <input class="form-control" [(ngModel)]="donorPhone" placeholder="08xxxxxxxxxx">
+              <app-phone-input [(ngModel)]="donorPhone" />
             </div>
           </div>
 
@@ -95,7 +95,7 @@
         </div>
 
         <button class="btn btn-primary mt-lg" style="width:100%" [disabled]="!canSubmit()" (click)="submit()">
-          {{ submitting() ? 'Memproses…' : 'Lanjutkan Pembayaran' }}
+          @if (submitting()) { <span class="spinner"></span> } @else { Lanjutkan Pembayaran }
         </button>
       </div>
 
