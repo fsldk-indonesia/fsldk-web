@@ -50,11 +50,13 @@ export interface PuskomnasSummary extends StatusCounts {
   perPuskomda: PuskomdaBreakdown[];
 }
 
-/** Ringkasan dashboard khusus CMS Utama — metrik administrasi sistem, terpisah
- *  dari metrik Levelisasi/Kader Puskomnas. Satu field per modul sidebar CMS
- *  Utama (lihat dashboard_dto.UtamaSummary di backend — tambah modul baru di
- *  kedua sisi sekaligus). */
-export interface UtamaSummary {
+/** Ringkasan dashboard khusus CMS Utama — metrik administrasi sistem (satu
+ *  field per modul sidebar CMS Utama, lihat dashboard_dto.UtamaSummary di
+ *  backend — tambah modul baru di kedua sisi sekaligus) PLUS ringkasan
+ *  jaringan Levelisasi nasional (StatusCounts + network*), sama persis
+ *  dengan yang dipakai PuskomnasSummary — supaya Super Admin bisa melihat
+ *  kondisi jaringan nasional langsung dari CMS Utama. */
+export interface UtamaSummary extends StatusCounts {
   totalUsers: number;
   totalRoles: number;
   totalNews: number;
@@ -74,6 +76,11 @@ export interface UtamaSummary {
   totalSubscribers: number;
   unreadContactMessages: number;
   pendingJobs: number;
+  networkTotalLDK: number;
+  networkTotalPuskomda: number;
+  networkKaderAktif: number;
+  networkLevelDistribution: LevelCount[];
+  networkPerPuskomda: PuskomdaBreakdown[];
 }
 
 /** Response GET /dashboard/summary — hanya satu dari utama/ldk/puskomda/puskomnas terisi. */

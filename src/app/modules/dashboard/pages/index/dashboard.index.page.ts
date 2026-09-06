@@ -2,31 +2,17 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { DatePipe } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
-import { StatBarComponent } from '../../../../shared/stat-bar.component';
 import { StatTileComponent } from '../../../../shared/stat-tile.component';
 import { HadithQuranWidgetComponent } from './hadith-quran-widget.component';
+import { NetworkBreakdownChartsComponent } from './network-breakdown-charts.component';
+import { CHART_COLORS } from './chart-colors';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { SUBMISSION_STATUS_LABELS } from '../../../submission/entities/submission';
-import { DashboardSummary, LDKSummary, PuskomdaBreakdown, PuskomdaSummary, PuskomnasSummary } from '../../entities/dashboard-summary';
+import { DashboardSummary, LDKSummary } from '../../entities/dashboard-summary';
 import { DashboardIndexPresenter } from './dashboard.index.presenter';
 import { DashboardIndexView } from './dashboard.index.view';
 
 Chart.register(...registerables);
-
-// Palet warna chart mengikuti token warna di styles.scss (--color-primary,
-// --color-gold, dst.) — di-hardcode sebagai hex karena Chart.js butuh nilai
-// warna langsung, bukan var() CSS (sama seperti pola di
-// kantong-amal.admin-reports.page.ts).
-const CHART_COLORS = {
-  primary: '#00933b',
-  primaryBright: '#3dbe6b',
-  gold: '#d99a1f',
-  ember: '#c1622e',
-  info: '#3573a6',
-  muted: '#8a978f',
-};
-const STATUS_BUCKET_LABELS = ['Belum Mengisi', 'Menunggu Verifikasi', 'Perlu Revisi', 'Terverifikasi'];
-const STATUS_BUCKET_COLORS = [CHART_COLORS.muted, CHART_COLORS.info, CHART_COLORS.gold, CHART_COLORS.primary];
 
 interface StatTileConfig {
   icon: string;
@@ -66,7 +52,7 @@ function formatRupiah(value: number): string {
   selector: 'app-dashboard-index-page',
   standalone: true,
   templateUrl: './dashboard.index.page.html',
-  imports: [DatePipe, IconComponent, StatBarComponent, StatTileComponent, HadithQuranWidgetComponent],
+  imports: [DatePipe, IconComponent, StatTileComponent, HadithQuranWidgetComponent, NetworkBreakdownChartsComponent],
   providers: [DashboardIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -79,9 +65,6 @@ function formatRupiah(value: number): string {
     .note-item { padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
     .note-item:last-child { border-bottom: none; padding-bottom: 0; }
     .note-item .note-date { color: var(--color-muted); font-size: .8rem; }
-    .breakdown-table { width: 100%; border-collapse: collapse; }
-    .breakdown-table th, .breakdown-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--color-border); font-size: .9rem; }
-    .breakdown-table th { color: var(--color-text-secondary); font-weight: 600; }
 
     /* ---------- Kartu sapaan + kutipan motivasi ---------- */
     .greeting-card {
@@ -136,10 +119,6 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
   private quoteTimer?: ReturnType<typeof setInterval>;
 
   private ldkKaderChart: Chart | null = null;
-  private puskomdaStatusChart: Chart | null = null;
-  private puskomnasStatusChart: Chart | null = null;
-  private puskomnasLevelChart: Chart | null = null;
-  private puskomnasPerPuskomdaChart: Chart | null = null;
 
   clockLabel = computed(() => {
     const wib = toWIB(new Date(this.clockTick()));
@@ -162,13 +141,9 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
 
   puskomdaMax = computed(() => this.summary()?.puskomda?.totalLDK ?? 0);
   puskomnasMax = computed(() => this.summary()?.puskomnas?.totalLDKNasional ?? 0);
-  levelDistMax = computed(() => Math.max(1, ...(this.summary()?.puskomnas?.levelDistribution.map((l) => l.count) ?? [1])));
-  perPuskomdaLDKMax = computed(() => Math.max(1, ...(this.summary()?.puskomnas?.perPuskomda.map((p: PuskomdaBreakdown) => p.totalLDK) ?? [1])));
-
-  // Tinggi kanvas bar horizontal "Sebaran per Puskomda" mengikuti jumlah baris
-  // data — daftar Puskomda nasional bisa panjang, tinggi tetap akan membuat
-  // label saling tumpuk tak terbaca.
-  perPuskomdaChartHeight = computed(() => Math.max(220, (this.summary()?.puskomnas?.perPuskomda.length ?? 0) * 34));
+  // Statistik jaringan nasional yang juga ditampilkan di CMS Utama (lihat
+  // dashboard_dto.UtamaSummary) — denominator stat-bar/chart proporsinya.
+  utamaNetworkMax = computed(() => this.summary()?.utama?.networkTotalLDK ?? 0);
 
   statTiles = computed<StatTileConfig[]>(() => {
     const u = this.summary()?.utama;
@@ -235,17 +210,15 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
 
   private destroyCharts(): void {
     this.ldkKaderChart?.destroy(); this.ldkKaderChart = null;
-    this.puskomdaStatusChart?.destroy(); this.puskomdaStatusChart = null;
-    this.puskomnasStatusChart?.destroy(); this.puskomnasStatusChart = null;
-    this.puskomnasLevelChart?.destroy(); this.puskomnasLevelChart = null;
-    this.puskomnasPerPuskomdaChart?.destroy(); this.puskomnasPerPuskomdaChart = null;
   }
 
+  // Hanya chart LDK (kader aktif vs menunggu) yang masih dirender langsung di
+  // sini — status/level/per-Puskomda (Puskomda, Puskomnas, dan sekarang juga
+  // Utama) sudah pindah ke NetworkBreakdownChartsComponent, yang me-render
+  // dirinya sendiri lewat ngOnChanges saat @Input()-nya berubah.
   private renderCharts(s: DashboardSummary): void {
     this.destroyCharts();
     if (s.ldk) this.renderLdkChart(s.ldk);
-    if (s.puskomda) this.renderPuskomdaChart(s.puskomda);
-    if (s.puskomnas) this.renderPuskomnasCharts(s.puskomnas);
   }
 
   private renderLdkChart(ldk: LDKSummary): void {
@@ -260,65 +233,5 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
     });
-  }
-
-  private renderPuskomdaChart(p: PuskomdaSummary): void {
-    const canvas = document.getElementById('puskomdaStatusChart') as HTMLCanvasElement | null;
-    if (!canvas) return;
-    this.puskomdaStatusChart = new Chart(canvas, {
-      type: 'doughnut',
-      data: {
-        labels: STATUS_BUCKET_LABELS,
-        datasets: [{ data: [p.belumMengisi, p.menungguVerifikasi, p.perluRevisi, p.terverifikasi], backgroundColor: STATUS_BUCKET_COLORS }],
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-    });
-  }
-
-  private renderPuskomnasCharts(p: PuskomnasSummary): void {
-    const statusCanvas = document.getElementById('puskomnasStatusChart') as HTMLCanvasElement | null;
-    if (statusCanvas) {
-      this.puskomnasStatusChart = new Chart(statusCanvas, {
-        type: 'doughnut',
-        data: {
-          labels: STATUS_BUCKET_LABELS,
-          datasets: [{ data: [p.belumMengisi, p.menungguVerifikasi, p.perluRevisi, p.terverifikasi], backgroundColor: STATUS_BUCKET_COLORS }],
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-      });
-    }
-
-    const levelCanvas = document.getElementById('puskomnasLevelChart') as HTMLCanvasElement | null;
-    if (levelCanvas && p.levelDistribution.length) {
-      this.puskomnasLevelChart = new Chart(levelCanvas, {
-        type: 'bar',
-        data: {
-          labels: p.levelDistribution.map((l) => l.levelLabel || l.levelCode),
-          datasets: [{ label: 'Jumlah LDK', data: p.levelDistribution.map((l) => l.count), backgroundColor: CHART_COLORS.primary, borderRadius: 6 }],
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
-        },
-      });
-    }
-
-    const perPuskomdaCanvas = document.getElementById('puskomnasPerPuskomdaChart') as HTMLCanvasElement | null;
-    if (perPuskomdaCanvas && p.perPuskomda.length) {
-      this.puskomnasPerPuskomdaChart = new Chart(perPuskomdaCanvas, {
-        type: 'bar',
-        data: {
-          labels: p.perPuskomda.map((row) => row.organizationName),
-          datasets: [{ label: 'Total LDK', data: p.perPuskomda.map((row) => row.totalLDK), backgroundColor: CHART_COLORS.primaryBright, borderRadius: 6 }],
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
-        },
-      });
-    }
   }
 }

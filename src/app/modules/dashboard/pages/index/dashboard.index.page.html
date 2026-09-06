@@ -28,7 +28,7 @@
 } @else {
   @if (summary(); as s) {
 
-    @if (s.utama) {
+    @if (s.utama; as u) {
       <div class="card-section" style="margin-top:20px">
         <h3><app-icon name="chart-bar" [size]="18" /> Statistik Seluruh Modul</h3>
         <div class="stat-grid">
@@ -37,6 +37,19 @@
           }
         </div>
       </div>
+
+      <div class="card-section">
+        <h3><app-icon name="landmark" [size]="18" /> Kondisi Jaringan Nasional</h3>
+        <div class="grid grid-3">
+          <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-solid"><app-icon name="landmark" [size]="19" /></span><span><span class="stat-label">Total LDK Nasional</span><span class="stat-num">{{ u.networkTotalLDK }}</span></span></div>
+          <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-soft"><app-icon name="building-2" [size]="19" /></span><span><span class="stat-label">Total Puskomda</span><span class="stat-num">{{ u.networkTotalPuskomda }}</span></span></div>
+          <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-ember"><app-icon name="users" [size]="19" /></span><span><span class="stat-label">Kader Aktif Nasional</span><span class="stat-num">{{ u.networkKaderAktif }}</span></span></div>
+        </div>
+      </div>
+      <app-network-breakdown-charts
+        [statusCounts]="u" [statusMax]="utamaNetworkMax()"
+        [levelDistribution]="u.networkLevelDistribution" [perPuskomda]="u.networkPerPuskomda"
+        scopeLabel="Nasional" idPrefix="utamaNetwork" />
     }
 
     @if (s.ldk; as ldk) {
@@ -76,17 +89,9 @@
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-ember"><app-icon name="users" [size]="19" /></span><span><span class="stat-label">Total Kader Aktif</span><span class="stat-num">{{ p.totalKaderAktif }}</span></span></div>
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-gold"><app-icon name="clipboard-check" [size]="19" /></span><span><span class="stat-label">Terverifikasi</span><span class="stat-num">{{ p.terverifikasi }}</span></span></div>
       </div>
-      <div class="card-section">
-        <h3><app-icon name="list-checks" [size]="18" /> Rekap Status Pendataan Wilayah</h3>
-        <app-stat-bar label="Belum Mengisi" [value]="p.belumMengisi" [max]="puskomdaMax()" />
-        <app-stat-bar label="Menunggu Verifikasi" [value]="p.menungguVerifikasi" [max]="puskomdaMax()" />
-        <app-stat-bar label="Perlu Revisi" [value]="p.perluRevisi" [max]="puskomdaMax()" />
-        <app-stat-bar label="Terverifikasi" [value]="p.terverifikasi" [max]="puskomdaMax()" />
-      </div>
-      <div class="card-section">
-        <h3><app-icon name="chart-pie" [size]="18" /> Proporsi Status Pendataan</h3>
-        <div class="chart-box"><canvas id="puskomdaStatusChart"></canvas></div>
-      </div>
+      <app-network-breakdown-charts
+        [statusCounts]="p" [statusMax]="puskomdaMax()"
+        scopeLabel="Wilayah" idPrefix="puskomda" />
     }
 
     @if (s.puskomnas; as p) {
@@ -97,56 +102,10 @@
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-ember"><app-icon name="users" [size]="19" /></span><span><span class="stat-label">Kader Aktif Nasional</span><span class="stat-num">{{ p.totalKaderAktifNasional }}</span></span></div>
       </div>
 
-      <div class="card-section">
-        <h3><app-icon name="list-checks" [size]="18" /> Rekap Status Pendataan Nasional</h3>
-        <app-stat-bar label="Belum Mengisi" [value]="p.belumMengisi" [max]="puskomnasMax()" />
-        <app-stat-bar label="Menunggu Verifikasi" [value]="p.menungguVerifikasi" [max]="puskomnasMax()" />
-        <app-stat-bar label="Perlu Revisi" [value]="p.perluRevisi" [max]="puskomnasMax()" />
-        <app-stat-bar label="Terverifikasi" [value]="p.terverifikasi" [max]="puskomnasMax()" />
-      </div>
-      <div class="card-section">
-        <h3><app-icon name="chart-pie" [size]="18" /> Proporsi Status Pendataan Nasional</h3>
-        <div class="chart-box"><canvas id="puskomnasStatusChart"></canvas></div>
-      </div>
-
-      <div class="card-section">
-        <h3><app-icon name="award" [size]="18" /> Distribusi Level</h3>
-        @for (l of p.levelDistribution; track l.levelCode) {
-          <app-stat-bar [label]="l.levelLabel || l.levelCode" [value]="l.count" [max]="levelDistMax()" />
-        } @empty {
-          <p class="text-muted">Belum ada LDK dengan level ditetapkan.</p>
-        }
-      </div>
-      @if (p.levelDistribution.length) {
-        <div class="card-section">
-          <h3><app-icon name="chart-bar" [size]="18" /> Grafik Distribusi Level</h3>
-          <div class="chart-box"><canvas id="puskomnasLevelChart"></canvas></div>
-        </div>
-      }
-
-      <div class="card-section">
-        <h3><app-icon name="building-2" [size]="18" /> Sebaran per Puskomda</h3>
-        <table class="breakdown-table">
-          <thead><tr><th>Puskomda</th><th>Total LDK</th><th>Kader Aktif</th></tr></thead>
-          <tbody>
-            @for (row of p.perPuskomda; track row.organizationID) {
-              <tr>
-                <td>{{ row.organizationName }}</td>
-                <td>{{ row.totalLDK }}</td>
-                <td>{{ row.kaderAktif }}</td>
-              </tr>
-            } @empty {
-              <tr><td colspan="3" class="text-muted">Belum ada data Puskomda.</td></tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      @if (p.perPuskomda.length) {
-        <div class="card-section">
-          <h3><app-icon name="chart-bar" [size]="18" /> Grafik Sebaran per Puskomda</h3>
-          <div class="chart-box" [style.height.px]="perPuskomdaChartHeight()"><canvas id="puskomnasPerPuskomdaChart"></canvas></div>
-        </div>
-      }
+      <app-network-breakdown-charts
+        [statusCounts]="p" [statusMax]="puskomnasMax()"
+        [levelDistribution]="p.levelDistribution" [perPuskomda]="p.perPuskomda"
+        scopeLabel="Nasional" idPrefix="puskomnas" />
     }
 
     @if (!s.utama && !s.ldk && !s.puskomda && !s.puskomnas) {
