@@ -50,6 +50,7 @@ const ICONS: Record<string, string> = {
   eye: 'fas fa-eye',
   'eye-off': 'fas fa-eye-slash',
   copy: 'fas fa-copy',
+  wrench: 'fas fa-wrench',
   // Menu modul organization/submission/report (menuIcon dari lk_permission).
   building: 'fas fa-building',
   'building-2': 'fas fa-city',
@@ -63,7 +64,9 @@ const ICONS: Record<string, string> = {
   megaphone: 'fas fa-bullhorn',
   'file-bar-chart': 'fas fa-chart-column',
   'chevron-down': 'fas fa-chevron-down',
+  'chevron-up': 'fas fa-chevron-up',
   'chevrons-up-down': 'fas fa-sort',
+  'grip-vertical': 'fas fa-grip-vertical',
   'arrow-left': 'fas fa-arrow-left',
   info: 'fas fa-circle-info',
   settings: 'fas fa-gear',

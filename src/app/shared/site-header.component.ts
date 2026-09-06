@@ -448,6 +448,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   /** Isi dropdown navbar "Layanan" — data-driven (bukan `<a>` di-hardcode)
    *  supaya item baru tinggal ditambah ke array ini. */
   readonly lainnyaItems = [
+    { icon: 'file-spreadsheet', title: 'Format Keuangan', caption: 'Template Excel Laporan Keuangan', href: financeformatPath.publicIndex },
     { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
     { icon: 'hand-heart', title: 'Kantong Amal', caption: 'Galang & Salurkan Donasi', href: '/kantong-amal' },
     { icon: 'calculator', title: 'Kalkulator Zakat', caption: 'Hitung 7 jenis zakat', href: zakatPath.calculator },
@@ -456,7 +457,6 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
 
   /** Isi dropdown navbar "Lainnya" — konten pelengkap di luar layanan inti. */
   readonly moreItems = [
-    { icon: 'file-spreadsheet', title: 'Format Keuangan', caption: 'Template Excel Laporan Keuangan', href: financeformatPath.publicIndex },
     { icon: 'calendar', title: 'Jadwal', caption: 'Kalender kegiatan LDK', href: schedulePath.publicIndex },
   ];
 

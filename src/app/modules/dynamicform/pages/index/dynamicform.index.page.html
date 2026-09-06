@@ -1,0 +1,105 @@
+<div class="page-head">
+  <div>
+    <h1>Formulir Dinamis</h1>
+    <p class="text-muted">Bangun formulir publik gaya Google Forms, bagikan lewat tautan, dan lihat rekap tanggapannya.</p>
+  </div>
+  @if (canCreate) {
+    <a class="btn btn-primary" [routerLink]="path.create"><app-icon name="user-plus" [size]="15" /> Buat Formulir</a>
+  }
+</div>
+
+<div class="card">
+  <div class="card-pad flex gap items-center toolbar" style="flex-wrap:wrap">
+    <input class="form-control" [(ngModel)]="search" (keyup.enter)="apply()" placeholder="Cari judul formulir…">
+    <app-select style="max-width:200px" [options]="statusOptions" [(ngModel)]="status" (ngModelChange)="apply()" />
+    <button class="btn btn-outline btn-sm" (click)="apply()">Cari</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th style="width:48px">No</th>
+          <th>Judul Formulir</th>
+          <th>Status</th>
+          <th>Tanggapan</th>
+          <th>Dibuat Oleh</th>
+          <th>Tanggal Dibuat</th>
+          <th style="text-align:center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:20px"></span></td>
+              <td><span class="skel skel-line" style="width:60%"></span></td>
+              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:30px"></span></td>
+              <td><span class="skel skel-line" style="width:100px"></span></td>
+              <td><span class="skel skel-line" style="width:90px"></span></td>
+              <td><span class="skel skel-line" style="width:160px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (f of forms(); track f.formID; let i = $index) {
+            <tr>
+              <td class="text-muted">{{ (page() - 1) * limit + i + 1 }}</td>
+              <td><strong>{{ f.title }}</strong></td>
+              <td>
+                <span class="badge" [class.badge-published]="f.status === 'published'" [class.badge-draft]="f.status === 'draft'"
+                      [class.badge-danger]="f.status === 'closed'">
+                  {{ statusMeta(f.status).label }}
+                </span>
+              </td>
+              <td class="text-muted">{{ f.totalSubmission }}</td>
+              <td class="text-muted">{{ f.creatorName || '—' }}</td>
+              <td class="text-muted">{{ f.createdDate | date: 'd MMM yyyy' }}</td>
+              <td>
+                <div class="table-actions" style="justify-content:center">
+                  <a class="icon-action" [href]="'/form/' + f.slug" target="_blank" rel="noopener" title="Pratinjau">
+                    <app-icon name="eye" [size]="14" />
+                  </a>
+                  @if (canUpdate) {
+                    <a class="icon-action" [routerLink]="path.edit(f.formID)" title="Setelan"><app-icon name="edit" [size]="14" /></a>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(f.formID)" (click)="remove(f, $event)" title="Hapus">
+                      @if (isBusy(f.formID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
+                  @if (canUpdate) {
+                    <a class="icon-action" [routerLink]="path.builder(f.formID)" title="Builder"><app-icon name="wrench" [size]="14" /></a>
+                  }
+                  @if (canPublish) {
+                    @for (s of nextStatuses(f); track s.value) {
+                      <button type="button" class="icon-action" [disabled]="isBusy(f.formID)"
+                              (click)="changeStatus(f, s.value)" [title]="s.label">
+                        <app-icon [name]="s.icon" [size]="14" />
+                      </button>
+                    }
+                  }
+                  <a class="icon-action" [routerLink]="path.analytics(f.formID)" title="Analitik"><app-icon name="file-bar-chart" [size]="14" /></a>
+                  <a class="icon-action" [routerLink]="path.responses(f.formID)" title="Rekap"><app-icon name="clipboard-list" [size]="14" /></a>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="7">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="clipboard-list" [size]="26" /></span>
+                <h4>Belum ada formulir</h4>
+                <p>Formulir yang Anda buat akan muncul di sini.</p>
+                @if (canCreate) { <a class="btn btn-primary btn-sm" [routerLink]="path.create">+ Buat Formulir</a> }
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

@@ -9,6 +9,7 @@ import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
 import { articlePublicRoutes, articleCmsRoutes } from './modules/article/article.routes';
 import { catalogbookPublicRoutes, catalogbookCmsRoutes } from './modules/catalogbook/catalogbook.routes';
+import { dynamicFormPublicRoutes, dynamicFormCmsRoutes } from './modules/dynamicform/dynamicform.routes';
 import { goodsPublicRoutes, goodsCmsRoutes, goodsCategoryCmsRoutes } from './modules/goods/goods.routes';
 import { schedulePublicRoutes, scheduleCmsRoutes } from './modules/schedule/schedule.routes';
 import { financeformatPublicRoutes, financeformatCmsRoutes } from './modules/financeformat/financeformat.routes';
@@ -73,6 +74,7 @@ export const routes: Routes = [
       ...kantongAmalPublicRoutes(),
       ...shortlinkPublicRoutes(),
       ...zakatPublicRoutes(),
+      ...dynamicFormPublicRoutes(),
       ...structurePublicRoutes(),
       ...galleryPublicRoutes(),
       ...contactPublicRoutes(),
@@ -116,6 +118,7 @@ export const routes: Routes = [
       ...newsCmsRoutes(),
       ...articleCmsRoutes(),
       ...catalogbookCmsRoutes(),
+      ...dynamicFormCmsRoutes(),
       ...goodsCmsRoutes(),
       ...goodsCategoryCmsRoutes(),
       ...scheduleCmsRoutes(),

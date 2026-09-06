@@ -56,12 +56,13 @@ interface DayCell {
         <span class="dtp-text" [class.placeholder]="!value">
           {{ displayValue() }}
         </span>
-        <span class="dtp-icon"><i class="fas fa-calendar-alt"></i></span>
+        <span class="dtp-icon"><i class="fas" [class.fa-calendar-alt]="!timeOnly" [class.fa-clock]="timeOnly"></i></span>
       </button>
 
       <!-- Panel -->
       @if (open()) {
-        <div class="dtp-panel" [class.dropup]="isDropup()" role="dialog">
+        <div class="dtp-panel" [class.dropup]="isDropup()" [class.time-only]="timeOnly" role="dialog">
+          @if (!timeOnly) {
           <!-- Calendar Header -->
           <div class="dtp-cal-header">
             <button
@@ -137,8 +138,10 @@ interface DayCell {
             </div>
           }
 
+          }
+
           <!-- Time Section (Optional / Default for DateTime) -->
-          @if (showTime && mode() === 'day') {
+          @if ((showTime || timeOnly) && (timeOnly || mode() === 'day')) {
             <div class="dtp-time-section">
               <div class="dtp-time-label">Waktu</div>
               <div class="dtp-time-cols">
@@ -180,8 +183,9 @@ interface DayCell {
           <!-- Footer Actions -->
           <div class="dtp-footer">
             <button type="button" class="dtp-btn dtp-btn-clear" (click)="clear()">Hapus</button>
+            <button type="button" class="dtp-btn dtp-btn-ok" (click)="close()">OK</button>
             <button type="button" class="dtp-btn dtp-btn-now" (click)="setNow()">
-              {{ showTime ? 'Sekarang' : 'Hari ini' }}
+              {{ showTime || timeOnly ? 'Sekarang' : 'Hari ini' }}
             </button>
           </div>
         </div>
@@ -191,16 +195,15 @@ interface DayCell {
   styles: [`
     .dtp-wrap { position: relative; width: 100%; }
 
-    /* Trigger Button */
+    /* Trigger Button — matches .app-select-control exactly (one shared field look). */
     .dtp-trigger {
       width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      padding: 10px 14px; min-height: 44px;
+      padding: 12px 14px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs, 8px);
       font-family: var(--font-body); font-size: .95rem; color: var(--color-text);
       cursor: pointer; text-align: left; transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
       user-select: none;
     }
-    .dtp-trigger:hover:not(:disabled) { border-color: var(--color-primary-dark); }
     .dtp-wrap.open .dtp-trigger {
       border-color: var(--color-primary);
       box-shadow: 0 0 0 3px var(--color-primary-soft);
@@ -216,11 +219,11 @@ interface DayCell {
     .dtp-text.placeholder { color: var(--color-muted, #9aa0a6); }
     .dtp-icon { color: var(--color-muted); font-size: .9rem; flex-shrink: 0; line-height: 1; }
 
-    /* Floating Panel */
+    /* Floating Panel — same border/radius/shadow as .app-select-menu. */
     .dtp-panel {
       position: absolute; top: calc(100% + 6px); left: 0;
-      background: #fff; border: 1px solid var(--color-border); border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06);
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs);
+      box-shadow: var(--shadow-lg);
       z-index: 300; width: 284px; max-width: calc(100vw - 2rem); overflow: hidden;
       animation: dtpSlideDown .15s ease;
     }
@@ -228,6 +231,8 @@ interface DayCell {
       top: auto; bottom: calc(100% + 6px);
       animation: dtpSlideUp .15s ease;
     }
+    .dtp-panel.time-only { width: 208px; }
+    .dtp-panel.time-only .dtp-time-section { border-top: none; padding-top: 4px; }
 
     @keyframes dtpSlideDown {
       from { opacity: 0; transform: translateY(-4px); }
@@ -363,6 +368,8 @@ interface DayCell {
     }
     .dtp-btn-clear { color: var(--color-muted); }
     .dtp-btn-clear:hover { background: rgba(0,0,0,.05); color: var(--color-text); }
+    .dtp-btn-ok { background: var(--color-primary); color: #fff; font-weight: 700; padding: 5px 18px; }
+    .dtp-btn-ok:hover { background: var(--color-primary-dark); }
     .dtp-btn-now { color: var(--color-primary-dark); font-weight: 700; }
     .dtp-btn-now:hover { background: var(--color-primary-soft); }
   `],
@@ -379,9 +386,11 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
 
   @Input() placeholder = 'dd/mm/yyyy --:--';
   @Input() showTime = true;
+  /** Time-only mode: hide the calendar, value is stored as "HH:mm". */
+  @Input() timeOnly = false;
   @Input() disabled = false;
 
-  value = ''; // format: YYYY-MM-DDTHH:mm or YYYY-MM-DD
+  value = ''; // format: YYYY-MM-DDTHH:mm, YYYY-MM-DD, or HH:mm (timeOnly)
   open = signal(false);
   isDropup = signal(false);
   mode = signal<'day' | 'month' | 'year'>('day');
@@ -409,8 +418,9 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
   }
 
   ngOnInit(): void {
-    if (!this.showTime && this.placeholder === 'dd/mm/yyyy --:--') {
-      this.placeholder = 'Pilih tanggal…';
+    if (this.placeholder === 'dd/mm/yyyy --:--') {
+      if (this.timeOnly) this.placeholder = 'Pilih waktu…';
+      else if (!this.showTime) this.placeholder = 'Pilih tanggal…';
     }
   }
 
@@ -442,7 +452,7 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
     // Calculate position
     const rect = this.el.nativeElement.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
-    this.isDropup.set(spaceBelow < 360);
+    this.isDropup.set(spaceBelow < (this.timeOnly ? 230 : 360));
 
     this.open.set(true);
 
@@ -540,10 +550,7 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
 
     const newDate = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, min);
     this.updateValue(newDate);
-
-    if (!this.showTime) {
-      this.close();
-    }
+    // Panel stays open — the user confirms with the OK button (or clicks away).
   }
 
   pickMonth(mIndex: number): void {
@@ -611,6 +618,10 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
     const d = this.parseDate(this.value);
     if (!d) return this.value;
 
+    if (this.timeOnly) {
+      return `${this.pad(d.getHours())}:${this.pad(d.getMinutes())}`;
+    }
+
     const day = this.pad(d.getDate());
     const mon = this.pad(d.getMonth() + 1);
     const yr = d.getFullYear();
@@ -629,6 +640,13 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
   }
 
   private updateValue(d: Date): void {
+    if (this.timeOnly) {
+      this.value = `${this.pad(d.getHours())}:${this.pad(d.getMinutes())}`;
+      this.onChange(this.value);
+      this.onTouched();
+      return;
+    }
+
     const y = d.getFullYear();
     const m = this.pad(d.getMonth() + 1);
     const day = this.pad(d.getDate());
@@ -647,6 +665,10 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
 
   private parseDate(val: string): Date | null {
     if (!val) return null;
+    const timeMatch = /^(\d{1,2}):(\d{2})$/.exec(val);
+    if (timeMatch) {
+      return new Date(2000, 0, 1, Number(timeMatch[1]), Number(timeMatch[2]));
+    }
     const d = new Date(val);
     return isNaN(d.getTime()) ? null : d;
   }
@@ -681,7 +703,8 @@ export class DateTimePickerComponent implements OnInit, ControlValueAccessor, On
 
   // ControlValueAccessor
   writeValue(value: string): void {
-    this.value = value ? value.substring(0, 16) : '';
+    if (!value) { this.value = ''; return; }
+    this.value = this.timeOnly ? value.substring(0, 5) : value.substring(0, 16);
   }
   registerOnChange(fn: (value: string) => void): void {
     this.onChange = fn;

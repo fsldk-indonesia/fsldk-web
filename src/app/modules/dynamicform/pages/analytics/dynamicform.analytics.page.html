@@ -1,0 +1,64 @@
+<a class="back-link" [routerLink]="path.index"><app-icon name="arrow-left" [size]="14" /> Kembali ke daftar formulir</a>
+<h1>Analitik</h1>
+@if (form()) { <p class="text-muted">{{ form()!.title }}</p> }
+
+@if (data(); as d) {
+  <div class="stat-row">
+    <div class="card card-pad stat"><div class="n">{{ d.validCount + d.invalidCount }}</div><div class="l">Total tanggapan</div></div>
+    <div class="card card-pad stat"><div class="n">{{ d.validCount }}</div><div class="l">Valid</div></div>
+    <div class="card card-pad stat"><div class="n">{{ d.uniqueRespondents }}</div><div class="l">Responden unik</div></div>
+    <div class="card card-pad stat"><div class="n">{{ d.invalidCount }}</div><div class="l">Terindikasi spam</div></div>
+    <div class="card card-pad stat"><div class="n">{{ d.totalFiles }}</div><div class="l">Berkas terunggah</div></div>
+  </div>
+
+  <div class="card card-pad chart-block">
+    <h4>Pengiriman per hari (30 hari terakhir)</h4>
+    <div class="spark">
+      @for (day of d.submissionsPerDay; track day.date) {
+        <div class="bar" [style.height.%]="pct(day.count, maxPerDay())" [title]="day.date + ': ' + day.count"></div>
+      }
+    </div>
+  </div>
+
+  @for (chart of d.fieldCharts ?? []; track chart.fieldID) {
+    <div class="card card-pad chart-block">
+      <h4>{{ chart.label }}</h4>
+      @if (chart.buckets.length === 0) {
+        <p class="text-muted">Belum ada data.</p>
+      } @else {
+        @for (b of chart.buckets; track b.label) {
+          <div class="hbar">
+            <span class="name">{{ b.label || '(kosong)' }}</span>
+            <span class="track"><span class="fill" [style.width.%]="pct(b.count, maxBucket(chart))"></span></span>
+            <span class="val">{{ b.count }}</span>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <div class="card card-pad chart-block">
+    <h4>10 tanggapan terbaru</h4>
+    @if ((d.recent ?? []).length === 0) {
+      <p class="text-muted">Belum ada tanggapan.</p>
+    } @else {
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Nama</th><th>Email</th><th>Tanggal</th><th>Status</th></tr></thead>
+          <tbody>
+            @for (r of d.recent ?? []; track r.submissionID) {
+              <tr>
+                <td>{{ r.respondentName || '—' }}</td>
+                <td class="text-muted">{{ r.respondentEmail }}</td>
+                <td class="text-muted">{{ r.submittedDate | date: 'd MMM, HH:mm' }}</td>
+                <td><span class="badge" [class.badge-published]="r.isValid" [class.badge-danger]="!r.isValid">{{ r.isValid ? 'Valid' : 'Spam' }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="text-muted">Memuat…</p>
+}

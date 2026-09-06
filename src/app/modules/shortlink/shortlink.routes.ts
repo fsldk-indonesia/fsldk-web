@@ -1,16 +1,22 @@
 import { Routes } from '@angular/router';
 import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
-/** Rute manajemen shortlink CMS — dipasang sebagai children dari CmsLayoutComponent. */
+/**
+ * Rute manajemen shortlink CMS — dipasang sebagai children dari
+ * CmsLayoutComponent. Kedua path berbagi prefix `shortlink/` supaya
+ * dikelompokkan jadi satu grup dropdown "Shortlink" di sidebar (lihat
+ * SIDEBAR_GROUPS di cms-layout.component.ts, pola yang sama dengan
+ * "Kantong Amal") — bukan berdiri sendiri-sendiri seperti sebelumnya.
+ */
 export const shortlinkRoutes: () => Routes = () => [
   {
-    path: 'shortlinks',
+    path: 'shortlink/list',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'shortlink.view' },
     loadComponent: () => import('./pages/index/shortlink.index.page').then((m) => m.ShortlinkIndexPage),
   },
   {
-    path: 'shortlink-requests',
+    path: 'shortlink/permintaan',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'shortlink.view' },
     loadComponent: () => import('./pages/request-index/shortlinkrequest.index.page').then((m) => m.ShortLinkRequestIndexPage),

@@ -1,0 +1,69 @@
+@if (detail(); as d) {
+  <div class="page-head">
+    <a class="back-link" [routerLink]="path.responses(formId)"><app-icon name="arrow-left" [size]="14" /> Kembali ke rekap</a>
+    <h1>Ubah Tanggapan #{{ d.submissionID }}</h1>
+    <p class="text-muted">{{ d.respondentEmail }} · dikirim {{ d.submittedDate }} · versi form {{ d.formVersion }}</p>
+  </div>
+
+  <div class="card card-pad form-card">
+    @for (f of editableFields(); track f.fieldID) {
+      <div class="form-group">
+        <label class="form-label" [for]="'f' + f.fieldID">
+          {{ f.label }} @if (f.isRequired) { <span style="color:var(--color-danger)">*</span> }
+        </label>
+
+        @switch (f.fieldType) {
+          @case ('long_text') {
+            <textarea class="form-control" [id]="'f' + f.fieldID" rows="3" [(ngModel)]="values['field_' + f.fieldID]" [name]="'field_' + f.fieldID"></textarea>
+          }
+          @case ('checkbox') {
+            <div class="opt-list">
+              @for (opt of f.options ?? []; track opt.value) {
+                <label class="check-inline" style="display:flex;align-items:center;gap:8px">
+                  <input type="checkbox" [checked]="isChecked('field_' + f.fieldID, opt.value)"
+                         (change)="toggleCheckbox('field_' + f.fieldID, opt.value, $any($event.target).checked)">
+                  {{ opt.label }}
+                </label>
+              }
+            </div>
+          }
+          @case ('dropdown') {
+            <select class="form-control" [id]="'f' + f.fieldID" [(ngModel)]="values['field_' + f.fieldID]" [name]="'field_' + f.fieldID">
+              <option value="">— pilih —</option>
+              @for (opt of f.options ?? []; track opt.value) { <option [value]="opt.value">{{ opt.label }}</option> }
+            </select>
+          }
+          @case ('radio') {
+            <div class="opt-list">
+              @for (opt of f.options ?? []; track opt.value) {
+                <label class="check-inline" style="display:flex;align-items:center;gap:8px">
+                  <input type="radio" [name]="'field_' + f.fieldID" [value]="opt.value" [(ngModel)]="values['field_' + f.fieldID]">
+                  {{ opt.label }}
+                </label>
+              }
+            </div>
+          }
+          @case ('file') {
+            @if (fileFor(f.fieldID); as fl) {
+              <p style="margin:0 0 6px"><a [href]="fl.fileURL" target="_blank" rel="noopener">{{ fl.originalFileName }} ↗</a></p>
+            }
+            <input type="file" class="form-control" (change)="onFilePicked(f.fieldID, $event)">
+            <p class="form-hint">Kosongkan bila tidak ingin mengganti berkas.</p>
+          }
+          @default {
+            <input class="form-control" [id]="'f' + f.fieldID"
+                   [type]="f.fieldType === 'number' || f.fieldType === 'linear_scale' || f.fieldType === 'rating' ? 'number' : (f.fieldType === 'date' ? 'date' : (f.fieldType === 'email' ? 'email' : 'text'))"
+                   [(ngModel)]="values['field_' + f.fieldID]" [name]="'field_' + f.fieldID">
+          }
+        }
+      </div>
+    }
+
+    <div class="flex gap justify-between" style="margin-top:20px; padding-top:20px; border-top:1px solid var(--color-border)">
+      <a class="btn btn-ghost" [routerLink]="path.responses(formId)">Batal</a>
+      <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">
+        @if (saving()) { <span class="spinner"></span> } @else { Simpan Perubahan }
+      </button>
+    </div>
+  </div>
+}

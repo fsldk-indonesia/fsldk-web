@@ -1,0 +1,157 @@
+<div class="page-head">
+  <a class="back" [routerLink]="path.index"><app-icon name="arrow-left" [size]="13" /> Kembali ke daftar formulir</a>
+  <h1>{{ editId ? 'Ubah Formulir' : 'Buat Formulir Baru' }}</h1>
+</div>
+
+<div class="card form-card">
+  <div class="cols">
+    <!-- LEFT: Basic information -->
+    <section class="col">
+      <p class="section-title"><app-icon name="info-circle" [size]="15" /> Informasi Dasar</p>
+
+      <div class="form-group">
+        <label class="form-label">Judul Formulir <span class="req">*</span></label>
+        <input class="form-control" [(ngModel)]="form.title" maxlength="255" placeholder="Nama/judul formulir…">
+        <p class="form-hint">Judul juga dipakai sebagai nama folder Google Drive formulir ini.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Deskripsi</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="form.description" maxlength="5000"
+                  placeholder="Jelaskan tujuan formulir ini atau instruksi pengisian…"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pesan Konfirmasi</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="form.confirmationMessage" maxlength="2000"
+                  placeholder="Pesan yang tampil setelah tanggapan terkirim…"></textarea>
+        <p class="form-hint">Ditampilkan ke responden setelah pengiriman berhasil (bila URL pengalihan tidak diisi).</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">URL Pengalihan <span class="muted-note">(opsional)</span></label>
+        <input class="form-control" type="url" [(ngModel)]="form.redirectUrl" placeholder="https://…">
+        <p class="form-hint">Bila diisi, responden dialihkan ke URL ini alih-alih melihat pesan konfirmasi.</p>
+      </div>
+    </section>
+
+    <!-- RIGHT: Submission rules -->
+    <section class="col">
+      <p class="section-title"><app-icon name="settings" [size]="15" /> Aturan Pengiriman</p>
+
+      <div class="form-group">
+        <label class="form-label">Kuota Tanggapan</label>
+        <input class="form-control" type="number" min="1" [(ngModel)]="form.maxSubmission" placeholder="Kosongkan = tanpa batas">
+      </div>
+
+      <div class="form-group">
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="form.isMultipleSubmit">
+          <span class="switch-track"></span>
+          <span class="switch-label">Izinkan responden mengisi lebih dari sekali</span>
+        </label>
+        <p class="form-hint">Nonaktif = hanya satu tanggapan per alamat email.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="form.requireLogin">
+          <span class="switch-track"></span>
+          <span class="switch-label">Wajib login untuk mengisi</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Mulai Dibuka</label>
+        <input class="form-control" type="datetime-local" [(ngModel)]="form.startDate">
+        <p class="form-hint">Kosongkan = aktif segera setelah dipublikasikan.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Batas Akhir</label>
+        <input class="form-control" type="datetime-local" [(ngModel)]="form.endDate">
+        <p class="form-hint">Kosongkan = tanpa batas waktu.</p>
+      </div>
+
+      <p class="section-title"><app-icon name="message-circle" [size]="15" /> Notifikasi</p>
+
+      <div class="form-group">
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="form.sendConfirmationEmail">
+          <span class="switch-track"></span>
+          <span class="switch-label">Kirim email konfirmasi ke responden</span>
+        </label>
+      </div>
+
+      <div class="info-box">
+        <app-icon name="info-circle" [size]="15" />
+        <span>Folder Google Drive untuk menyimpan spreadsheet &amp; berkas lampiran dibuat otomatis lewat service
+          account — tambahkan email Anda di daftar di bawah untuk mendapat akses.</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Notifikasi</label>
+        <textarea class="form-control" rows="2" [(ngModel)]="form.notifyEmails"
+                  placeholder="email1@gmail.com, email2@gmail.com"></textarea>
+        <p class="form-hint">Pisahkan dengan koma. Mereka menerima akses Editor ke folder Google Drive &amp; notifikasi tiap tanggapan baru.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- FULL WIDTH: advanced -->
+  <div class="advanced">
+    <p class="section-title"><app-icon name="shield-check" [size]="15" /> Anti-spam</p>
+    <div class="grid grid-2">
+      <div class="form-group">
+        <label class="form-label">Batas kirim per IP</label>
+        <input class="form-control" type="number" min="1" max="100" [(ngModel)]="form.rateLimitPerIP">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Dalam jendela (menit)</label>
+        <input class="form-control" type="number" min="1" max="1440" [(ngModel)]="form.rateLimitWindowMinutes">
+      </div>
+    </div>
+
+    <p class="section-title"><app-icon name="file-spreadsheet" [size]="15" /> Google Sheets</p>
+    <div class="form-group">
+      <label class="switch" [class.is-disabled]="!gsheetAvailable()">
+        <input type="checkbox" [(ngModel)]="form.gsheetEnabled" [disabled]="!gsheetAvailable()">
+        <span class="switch-track"></span>
+        <span class="switch-label">Sinkronkan jawaban ke Google Sheets</span>
+      </label>
+      @if (gsheetAvailable()) {
+        <p class="form-hint">Cermin best-effort — kegagalan Sheets tidak pernah menggagalkan pengiriman. Sheet dibuat otomatis saat formulir dipublish, atau tekan “Hubungkan”.</p>
+      } @else {
+        <p class="form-hint">Integrasi Google Sheets belum dikonfigurasi administrator server.</p>
+      }
+    </div>
+    @if (editId && gsheetAvailable() && gsheet(); as gs) {
+      <div class="gsheet-status">
+        @if (gs.spreadsheetUrl) {
+          <p><a [href]="gs.spreadsheetUrl" target="_blank" rel="noopener">Buka di Google Sheets ↗</a></p>
+        }
+        @if (gs.lastSyncDate) { <p>Sinkron terakhir: {{ gs.lastSyncDate }}</p> }
+        @if (gs.lastSyncError) { <p class="gsheet-error">Kesalahan sinkron: {{ gs.lastSyncError }}</p> }
+        <div class="flex gap" style="margin-top:4px">
+          @if (!gs.spreadsheetUrl) {
+            <button type="button" class="btn btn-outline btn-sm" (click)="connect()">Hubungkan</button>
+          } @else {
+            <button type="button" class="btn btn-outline btn-sm" (click)="resync()">Resync</button>
+            <button type="button" class="btn btn-outline btn-sm danger" (click)="disconnect()">Putuskan</button>
+          }
+        </div>
+      </div>
+    } @else if (!editId) {
+      <p class="form-hint">Simpan formulir dulu untuk mengatur koneksi Google Sheets.</p>
+    }
+  </div>
+
+  <!-- FOOTER -->
+  <div class="form-footer">
+    <a class="btn btn-ghost" [routerLink]="path.index">Batal</a>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+      @if (saving()) { <span class="spinner"></span> }
+      @else { {{ editId ? 'Simpan Perubahan' : 'Buat Formulir & Lanjut ke Builder' }} }
+    </button>
+  </div>
+</div>

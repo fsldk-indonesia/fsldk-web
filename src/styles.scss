@@ -218,6 +218,39 @@ select.form-control {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2371807A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px;
 }
+/* Tombol "Choose File" bawaan browser diganti jadi tombol bergaya .btn-outline;
+   dipakai di mana pun input berkas ber-.form-control muncul (unggahan formulir
+   dinamis, dll.). Input berkas tersembunyi milik komponen dropzone tak tersentuh. */
+input[type="file"].form-control {
+  display: flex; align-items: center; padding: 8px 12px;
+  font-family: var(--font-body); font-size: .9rem; color: var(--color-muted); cursor: pointer;
+}
+input[type="file"].form-control::file-selector-button {
+  margin-right: 14px; padding: 9px 18px; border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-xs); background: var(--color-bg-alt); color: var(--color-text);
+  font-family: var(--font-body); font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+input[type="file"].form-control::file-selector-button:hover {
+  border-color: var(--color-primary); color: var(--color-primary-dark); background: var(--color-primary-soft);
+}
+
+/* Input tanggal/waktu: samakan tinggi & rapikan ikon kalender bawaan. */
+input[type="date"].form-control,
+input[type="time"].form-control,
+input[type="datetime-local"].form-control,
+input[type="month"].form-control { cursor: pointer; }
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+  cursor: pointer; opacity: .5; padding-left: 6px;
+  transition: opacity var(--motion-fast) ease;
+}
+input[type="date"]:hover::-webkit-calendar-picker-indicator,
+input[type="time"]:hover::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]:hover::-webkit-calendar-picker-indicator,
+input[type="month"]:hover::-webkit-calendar-picker-indicator { opacity: 1; }
 
 /* Checkbox kustom (bukan kotak biru bawaan browser) — dipakai di mana pun
    ("Ingat saya", "Aktif", daftar permission role, dst.) tanpa perlu kelas
@@ -238,6 +271,23 @@ input[type="checkbox"]:checked::before { transform: scale(1); }
 input[type="checkbox"]:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 input[type="checkbox"]:disabled { opacity: .5; cursor: not-allowed; }
 
+/* Radio kustom — pasangan dari checkbox di atas, supaya semua pilihan ganda
+   (skala linear, radio group, dst.) konsisten dan tidak memakai dot bawaan OS. */
+input[type="radio"] {
+  appearance: none; -webkit-appearance: none; margin: 0; flex-shrink: 0; cursor: pointer;
+  width: 20px; height: 20px; border: 2px solid var(--color-border-strong); border-radius: 50%;
+  background: #fff; display: inline-grid; place-content: center; vertical-align: middle;
+  transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease;
+}
+input[type="radio"]::before {
+  content: ""; width: 10px; height: 10px; border-radius: 50%; background: #fff; transform: scale(0);
+  transition: transform var(--motion-fast) var(--ease-out);
+}
+input[type="radio"]:checked { background: var(--color-primary); border-color: var(--color-primary); }
+input[type="radio"]:checked::before { transform: scale(1); }
+input[type="radio"]:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+input[type="radio"]:disabled { opacity: .5; cursor: not-allowed; }
+
 /* Field checkbox tunggal (mis. "Aktif", "Jadikan unggulan") dibungkus jadi
    satu kotak field yang sejajar dengan input/select di sekitarnya — sebelumnya
    checkbox+label mengambang lepas tanpa border sehingga terasa tidak rata
@@ -249,6 +299,30 @@ input[type="checkbox"]:disabled { opacity: .5; cursor: not-allowed; }
   transition: border-color var(--motion-fast) ease, background var(--motion-fast) ease;
 }
 .form-check:has(input:checked) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+
+/* ---------- Toggle switch ----------
+   Sakelar on/off untuk setelan boolean yang lebih pas sebagai switch daripada
+   kotak centang (mis. "Boleh isi >1x", "Wajib login"). Markup:
+   <label class="switch"><input type="checkbox" ...><span class="switch-track"></span>
+     <span class="switch-label">…</span></label> */
+.switch { display: inline-flex; align-items: flex-start; gap: 12px; cursor: pointer; user-select: none; }
+.switch input[type="checkbox"] {
+  position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; pointer-events: none;
+}
+.switch .switch-track {
+  flex-shrink: 0; width: 42px; height: 24px; margin-top: 1px; border-radius: var(--radius-full);
+  background: var(--color-border-strong); position: relative;
+  transition: background var(--motion-fast) ease;
+}
+.switch .switch-track::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; box-shadow: var(--shadow-sm); transition: transform var(--motion-fast) var(--ease-out);
+}
+.switch input:checked + .switch-track { background: var(--color-primary); }
+.switch input:checked + .switch-track::after { transform: translateX(18px); }
+.switch input:focus-visible + .switch-track { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.switch .switch-label { font-size: .9rem; font-weight: 600; color: var(--color-text); line-height: 1.45; }
+.switch.is-disabled { opacity: .55; cursor: not-allowed; }
 
 /* ---------- Pagination (tabel CMS) ---------- */
 .pagination { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 20px 16px; flex-wrap: wrap; }
@@ -498,12 +572,30 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
    dihitung lewat popupOriginFromEvent()) dipasang sebagai inline style di
    elemen modal; tanpa nilai itu popup tetap tumbuh dari titik tengahnya
    sendiri (fallback 0,0), tidak pernah pecah kalau originnya tak tersedia. */
+/* No `both`/`forwards` fill-mode here — verified via CDP that it's not
+   just a matter of what the "to" keyframe declares. Chrome resolves an
+   animated `transform` (even one that lands on the literal keyword
+   "none") into its equivalent identity matrix for the animation's
+   computed output, and ANY element that is (or, via a held fill-mode,
+   still counts as) the target of a `transform` animation becomes a new
+   containing block for position:fixed/absolute descendants — for as
+   long as that holds, regardless of the actual matrix. With `both`,
+   that lasted forever (as long as the modal stayed open), silently
+   breaking every position:fixed dropdown menu (app-select) opened from
+   inside a .modal-pop modal: it rendered relative to the modal's box
+   instead of the viewport, landing far from its trigger. Dropping the
+   fill-mode keeps the identical pop-in visual (the animation still
+   plays 0%→100% right away) but lets the animation's effects — and the
+   containing-block side effect with them — end when it finishes
+   (`--motion-slow`, 250ms) instead of persisting for the modal's
+   lifetime; the "to" state already matches the element's un-animated
+   default (opacity 1, no transform), so nothing visually snaps back. */
 .modal-pop {
-  animation: modal-pop-in var(--motion-slow) var(--ease-out) both;
+  animation: modal-pop-in var(--motion-slow) var(--ease-out);
 }
 @keyframes modal-pop-in {
   from { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25); }
-  to { opacity: 1; transform: translate(0, 0) scale(1); }
+  to { opacity: 1; transform: none; }
 }
 
 /* ---------- Scrollbar kustom untuk seluruh popup/modal ----------

@@ -1,0 +1,262 @@
+<div class="wrap">
+  @switch (state()) {
+    @case ('loading') {
+      <p>Memuat formulir…</p>
+    }
+
+    @case ('closed') {
+      <div class="closed-card">
+        @switch (closedReason()) {
+          @case ('needs_login') {
+            <h2>Masuk untuk Mengisi</h2>
+            <p>{{ closedMessage() || 'Formulir ini hanya bisa diisi setelah Anda masuk.' }}</p>
+            <button class="btn btn-primary" (click)="login()">Masuk sekarang</button>
+          }
+          @case ('already_submitted') {
+            <h2>Tanggapan Sudah Terkirim</h2>
+            <p>{{ closedMessage() || 'Anda sudah pernah mengisi formulir ini.' }}</p>
+          }
+          @case ('quota_full') {
+            <h2>Kuota Penuh</h2>
+            <p>{{ closedMessage() || 'Kuota tanggapan formulir ini sudah terpenuhi.' }}</p>
+          }
+          @case ('ended') {
+            <h2>Formulir Telah Berakhir</h2>
+            <p>{{ closedMessage() || 'Periode pengisian formulir ini sudah lewat.' }}</p>
+          }
+          @case ('not_started') {
+            <h2>Formulir Belum Dibuka</h2>
+            <p>{{ closedMessage() || 'Formulir ini baru dibuka pada jadwal yang ditentukan.' }}</p>
+          }
+          @case ('draft') {
+            <h2>Formulir Belum Tersedia</h2>
+            <p>{{ closedMessage() || 'Formulir ini belum dibuka untuk umum.' }}</p>
+          }
+          @default {
+            <h2>Formulir Ditutup</h2>
+            <p>{{ closedMessage() || 'Formulir ini sedang tidak menerima tanggapan.' }}</p>
+          }
+        }
+      </div>
+    }
+
+    @case ('done') {
+      <div class="done-card">
+        <h2>Jazakallah khair! 🤍</h2>
+        <p [innerHTML]="(submitResult()?.confirmationMessage || 'Tanggapan Anda telah kami terima.') | linkifyText"></p>
+        @if (submitResult()?.isMultipleSubmit) {
+          <button class="btn btn-primary" (click)="refill()">Isi Lagi</button>
+        }
+      </div>
+    }
+
+    @case ('form') {
+      @if (form(); as f) {
+        @if (f.headerImageUrl) {
+          <div class="header-image-card">
+            <img [src]="f.headerImageUrl" alt="" />
+          </div>
+        }
+
+        <div class="head-card">
+          @if (isMultiStep() || draftEnabled()) {
+            <div class="head-top">
+              @if (isMultiStep()) {
+                <span class="step-chip">
+                  {{ stepLabel() }}@if (sectionIdx() > 0 && currentSection()?.title) { <span class="step-chip-name">— {{ currentSection()?.title }}</span> }
+                </span>
+              }
+              @if (draftEnabled()) { <span class="autosave">Tersimpan otomatis</span> }
+            </div>
+          }
+
+          <h1>{{ f.title }}</h1>
+
+          @if (f.description) {
+            @if (isMultiStep() && sectionIdx() > 0 && !descExpanded()) {
+              <div class="form-desc clamp" [innerHTML]="f.description | linkifyText"></div>
+              <button type="button" class="desc-toggle" (click)="descExpanded.set(true)">Lihat selengkapnya</button>
+            } @else {
+              <div class="form-desc" [innerHTML]="f.description | linkifyText"></div>
+              @if (isMultiStep() && sectionIdx() > 0) {
+                <button type="button" class="desc-toggle" (click)="descExpanded.set(false)">Tampilkan lebih sedikit</button>
+              }
+            }
+          }
+
+          @if (f.isPreview) { <p class="preview-note">Mode pratinjau — pengiriman tidak akan disimpan sebagai tanggapan publik biasa.</p> }
+
+          @if (isMultiStep()) {
+            <div class="progress"><span [style.width.%]="progressPct()"></span></div>
+            <div class="dots">
+              @for (s of sections(); track $index) { <i [class]="dotState($index)"></i> }
+            </div>
+          }
+        </div>
+
+        @if (isMultiStep() && sectionIdx() > 0 && currentSection(); as sec) {
+          <div class="section-head">
+            <h2>{{ sec.title }}</h2>
+            @if (sec.description) { <div class="help" [innerHTML]="sec.description | linkifyText"></div> }
+          </div>
+        }
+
+        @if (fieldErrors['_rate']) {
+          <div class="banner">{{ fieldErrors['_rate'] }} @if (retryCountdown() > 0) { — coba lagi dalam {{ countdownText() }}. }</div>
+        }
+
+        <form (ngSubmit)="submit()">
+          <!-- honeypot -->
+          <input class="hp" type="text" name="_hp_website" tabindex="-1" autocomplete="off" [(ngModel)]="honeypot" />
+
+          @for (fld of currentFields(); track fld.fieldID) {
+            @if (isDisplay(fld.fieldType)) {
+              @if (fld.fieldType !== 'section_break') {
+                <div class="fld">
+                  @switch (fld.fieldType) {
+                    @case ('paragraph') { <div [innerHTML]="fld.helpText | linkifyText"></div> }
+                    @case ('image') {
+                      @if (fld.helpText) { <img [src]="fld.helpText" [alt]="fld.label" style="max-width:100%; border-radius:8px;" /> }
+                      @if (fld.label) { <p class="help">{{ fld.label }}</p> }
+                    }
+                    @case ('video') {
+                      @if (fld.helpText) { <iframe class="video-frame" [src]="videoEmbedUrl(fld.helpText)" allowfullscreen></iframe> }
+                      @if (fld.label) { <p class="help">{{ fld.label }}</p> }
+                    }
+                  }
+                </div>
+              }
+            } @else {
+              <div class="fld">
+                <label class="q" [for]="'f' + fld.fieldID">
+                  {{ fld.label }} @if (fld.isRequired) { <span class="req">*</span> }
+                </label>
+                @if (fld.helpText) { <div class="help" [innerHTML]="fld.helpText | linkifyText"></div> }
+
+                @switch (fld.fieldType) {
+                  @case ('long_text') {
+                    <textarea class="form-control" [id]="'f' + fld.fieldID" rows="3" [name]="'field_' + fld.fieldID"
+                              [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()"
+                              [attr.aria-required]="fld.isRequired"></textarea>
+                  }
+                  @case ('dropdown') {
+                    <app-select [options]="fld.options ?? []" placeholder="— pilih —" [name]="'field_' + fld.fieldID"
+                                [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()" />
+                  }
+                  @case ('date') {
+                    <app-datetime-picker [showTime]="false" [name]="'field_' + fld.fieldID"
+                                         [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()" />
+                  }
+                  @case ('datetime') {
+                    <div class="datetime-split">
+                      <app-datetime-picker [showTime]="false" [ngModel]="dtDate(fld)"
+                                           [ngModelOptions]="{ standalone: true }" (ngModelChange)="setDtDate(fld, $any($event))" />
+                      <app-datetime-picker [timeOnly]="true" [ngModel]="dtTime(fld)"
+                                           [ngModelOptions]="{ standalone: true }" (ngModelChange)="setDtTime(fld, $any($event))" />
+                    </div>
+                  }
+                  @case ('time') {
+                    <app-datetime-picker [timeOnly]="true" [name]="'field_' + fld.fieldID"
+                                         [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()" />
+                  }
+                  @case ('phone') {
+                    <input class="form-control" [id]="'f' + fld.fieldID" type="tel" inputmode="tel"
+                           autocomplete="tel" [placeholder]="fld.placeholder || ''" [name]="'field_' + fld.fieldID"
+                           [ngModel]="answers['field_' + fld.fieldID]" (input)="onPhoneInput(fld, $any($event.target))"
+                           [attr.aria-required]="fld.isRequired" />
+                  }
+                  @case ('radio') {
+                    @for (o of fld.options ?? []; track o.value) {
+                      <label class="opt">
+                        <input type="radio" [name]="'field_' + fld.fieldID" [value]="o.value"
+                               [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()" />
+                        {{ o.label }}
+                      </label>
+                    }
+                  }
+                  @case ('checkbox') {
+                    @for (o of fld.options ?? []; track o.value) {
+                      <label class="opt">
+                        <input type="checkbox" [checked]="isChecked('field_' + fld.fieldID, o.value)"
+                               (change)="toggleCheckbox('field_' + fld.fieldID, o.value, $any($event.target).checked)" />
+                        {{ o.label }}
+                      </label>
+                    }
+                  }
+                  @case ('linear_scale') {
+                    <div class="scale">
+                      @if (fld.fieldConfig?.minLabel) { <span class="scale-label">{{ fld.fieldConfig?.minLabel }}</span> }
+                      @for (n of scaleRange(fld); track n) {
+                        <label class="scale-item" [class.checked]="answers['field_' + fld.fieldID] === ('' + n)">
+                          <input type="radio" [name]="'field_' + fld.fieldID" [value]="'' + n"
+                                 [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()" />
+                          <span class="scale-num">{{ n }}</span>
+                        </label>
+                      }
+                      @if (fld.fieldConfig?.maxLabel) { <span class="scale-label">{{ fld.fieldConfig?.maxLabel }}</span> }
+                    </div>
+                  }
+                  @case ('rating') {
+                    <div class="stars">
+                      @for (n of ratingRange(fld); track n) {
+                        <span (click)="answers['field_' + fld.fieldID] = n.toString(); onChange()">
+                          {{ +(answers['field_' + fld.fieldID] || 0) >= n ? '★' : '☆' }}
+                        </span>
+                      }
+                    </div>
+                  }
+                  @case ('file') {
+                    @if (stagedFiles[fld.fieldID]) {
+                      <div class="file-chip">
+                        <i class="fas fa-paperclip"></i>
+                        <span class="file-chip-name">{{ stagedFiles[fld.fieldID] }}</span>
+                        <button type="button" class="file-chip-remove" (click)="removeFile(fld)" aria-label="Hapus berkas">
+                          <i class="fas fa-xmark"></i>
+                        </button>
+                      </div>
+                    } @else {
+                      <input class="form-control" type="file" (change)="onFilePicked(fld, $event)" />
+                    }
+                  }
+                  @default {
+                    <input class="form-control" [id]="'f' + fld.fieldID" [name]="'field_' + fld.fieldID"
+                           [type]="fld.fieldType === 'email' ? 'email' : (fld.fieldType === 'number' ? 'number' : (fld.fieldType === 'url' ? 'url' : 'text'))"
+                           [placeholder]="fld.placeholder || ''"
+                           [readonly]="isSystemEmail(fld) && !!form()?.prefillEmail"
+                           [(ngModel)]="answers['field_' + fld.fieldID]" (ngModelChange)="onChange()"
+                           [attr.aria-required]="fld.isRequired" />
+                  }
+                }
+
+                @if (fieldErrors['field_' + fld.fieldID]) {
+                  <div class="err">{{ fieldErrors['field_' + fld.fieldID] }}</div>
+                }
+              </div>
+            }
+          }
+
+          <div class="nav-row">
+            @if (isMultiStep() && (sectionIdx() > 0)) {
+              <button type="button" class="btn btn-ghost" (click)="prev()">Sebelumnya</button>
+            }
+            <span class="grow"></span>
+            @if (isMultiStep() && hasNextSection()) {
+              <button type="button" class="btn btn-primary" (click)="next()">Selanjutnya</button>
+            } @else {
+              <button type="submit" class="btn btn-primary submit-btn" [disabled]="submitting()">
+                {{ submitting() ? 'Mengirim…' : 'Kirim' }}
+              </button>
+            }
+          </div>
+        </form>
+
+        @if (f.endDate || remainingQuota() !== null) {
+          <div class="footer-meta">
+            @if (f.endDate) { Ditutup pada {{ f.endDate }}. }
+            @if (remainingQuota() !== null) { Sisa kuota: {{ remainingQuota() }} tanggapan. }
+          </div>
+        }
+      }
+    }
+  }
+</div>
