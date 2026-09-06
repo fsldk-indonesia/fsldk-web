@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
@@ -10,6 +11,8 @@ import { Goods } from '../../../goods/entities/goods';
 import { Schedule } from '../../../schedule/entities/schedule';
 import { Campaign } from '../../../kantong-amal/entities/campaign';
 import { GalleryListItem } from '../../../gallery/entities/gallery';
+import { NetworkStats } from '../../../statistic/entities/statistic';
+import { statisticPath } from '../../../statistic/statistic.path';
 import { contactPath } from '../../../contact/contact.path';
 import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
 import { eventPath } from '../../../event/event.path';
@@ -19,6 +22,8 @@ import { kantongAmalPath } from '../../../kantong-amal/kantong-amal.path';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { HomeIndexPresenter } from './home.index.presenter';
 import { HomeIndexView } from './home.index.view';
+
+Chart.register(...registerables);
 
 interface OrgMember {
   memberName: string;
@@ -97,6 +102,19 @@ interface OrgMember {
     .stat-item b { display: block; font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: var(--color-primary-dark); }
     .stat-item span { font-size: .85rem; color: var(--color-text-secondary); font-weight: 600; }
 
+    /* ---------- Statistik Jaringan Nasional — ringkasan angka jaringan
+       LDK/Puskomda/Puskomnas + satu chart, versi ringkas dari halaman penuh
+       /tentang/statistik-jaringan (link "Lihat Selengkapnya" di bawahnya). ---------- */
+    .network-stats-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 36px; }
+    .network-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+    .network-stat-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+    .network-stat-tile { background: var(--color-bg-warm); border-radius: var(--radius-md); padding: 20px; text-align: center; }
+    .network-stat-tile b { display: block; font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: var(--color-primary-dark); }
+    .network-stat-tile span { font-size: .82rem; color: var(--color-text-secondary); font-weight: 600; }
+    .network-chart-wrap { position: relative; height: 260px; }
+    .network-stats-more { text-align: center; margin-top: 28px; }
+    @media (max-width: 900px) { .network-stats-grid { grid-template-columns: 1fr; } }
+
     .news-card { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
     .news-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); text-decoration: none; }
     .news-thumb { aspect-ratio: 16/10; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
@@ -163,7 +181,7 @@ interface OrgMember {
     }
   `],
 })
-export class HomeIndexPage implements OnInit, HomeIndexView {
+export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
   private presenter = inject(HomeIndexPresenter);
 
   news = signal<News[]>([]);
@@ -174,7 +192,10 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
   schedules = signal<Schedule[]>([]);
   campaigns = signal<Campaign[]>([]);
   latestGallery = signal<GalleryListItem | null>(null);
+  networkStats = signal<NetworkStats | null>(null);
   loading = signal(true);
+
+  private networkLevelChart: Chart | null = null;
 
   readonly catalogbookPath = catalogbookPath;
   readonly eventPath = eventPath;
@@ -182,6 +203,7 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
   readonly schedulePath = schedulePath;
   readonly kantongAmalPath = kantongAmalPath;
   readonly contactPath = contactPath;
+  readonly statisticPath = statisticPath;
   readonly formatRupiah = formatRupiah;
 
   readonly missionList: string[] = [
@@ -208,6 +230,8 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
 
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
 
+  ngOnDestroy(): void { this.networkLevelChart?.destroy(); }
+
   progressPercent(c: Campaign): number {
     return c.targetAmount > 0 ? Math.min(100, Math.round((c.collectedAmount / c.targetAmount) * 100)) : 0;
   }
@@ -221,4 +245,28 @@ export class HomeIndexPage implements OnInit, HomeIndexView {
   setSchedules(schedules: Schedule[]): void { this.schedules.set(schedules); }
   setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
   setLatestGallery(gallery: GalleryListItem | null): void { this.latestGallery.set(gallery); }
+
+  setNetworkStats(stats: NetworkStats | null): void {
+    this.networkStats.set(stats);
+    // Kanvas baru ada di DOM setelah @if di template merender ulang dengan
+    // data ini — ditunda satu tick (pola sama dipakai dashboard CMS &
+    // statistic.index.page.ts untuk chart Chart.js-nya).
+    setTimeout(() => this.renderNetworkChart(stats), 0);
+  }
+
+  private renderNetworkChart(stats: NetworkStats | null): void {
+    this.networkLevelChart?.destroy();
+    this.networkLevelChart = null;
+    if (!stats || stats.byLevel.length === 0) return;
+    const canvas = document.getElementById('networkLevelChart') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    this.networkLevelChart = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: stats.byLevel.map((l) => l.levelLabel),
+        datasets: [{ data: stats.byLevel.map((l) => l.count), backgroundColor: ['#00933b', '#00b34d', '#5cd685', '#a7ecc0', '#d7f3e2'] }],
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+    });
+  }
 }

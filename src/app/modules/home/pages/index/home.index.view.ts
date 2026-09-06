@@ -6,6 +6,7 @@ import { Goods } from '../../../goods/entities/goods';
 import { Schedule } from '../../../schedule/entities/schedule';
 import { Campaign } from '../../../kantong-amal/entities/campaign';
 import { GalleryListItem } from '../../../gallery/entities/gallery';
+import { NetworkStats } from '../../../statistic/entities/statistic';
 
 export interface HomeIndexView {
   setLoading(loading: boolean): void;
@@ -17,4 +18,5 @@ export interface HomeIndexView {
   setSchedules(schedules: Schedule[]): void;
   setCampaigns(campaigns: Campaign[]): void;
   setLatestGallery(gallery: GalleryListItem | null): void;
+  setNetworkStats(stats: NetworkStats | null): void;
 }

@@ -123,6 +123,13 @@ const ICONS: Record<string, string> = {
   'chevron-right': 'fas fa-chevron-right',
   'arrow-up': 'fas fa-arrow-up',
   'arrow-down': 'fas fa-arrow-down',
+  // Widget Hadis & Al-Qur'an + kutipan motivasi harian (dashboard CMS Utama).
+  sun: 'fas fa-sun',
+  moon: 'fas fa-moon',
+  sparkles: 'fas fa-wand-magic-sparkles',
+  'quote-left': 'fas fa-quote-left',
+  'chart-bar': 'fas fa-chart-column',
+  'chart-pie': 'fas fa-chart-pie',
 };
 
 /**
