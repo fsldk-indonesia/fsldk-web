@@ -14,9 +14,10 @@ type Tier = CmsTier;
 /** Konfigurasi grup sidebar collapsible — dikelompokkan berdasarkan prefix
  *  `menuRoute` (bukan field baru dari backend; `GET /me/menus` tetap
  *  mengembalikan daftar flat, `menuLabel`/`menuIcon`/`menuRoute`/`sortOrder`
- *  saja). Array satu entri untuk saat ini (Kantong Amal), tapi ditulis
- *  generik supaya modul lain bisa ikut dikelompokkan nanti tanpa perlu
- *  menulis ulang mekanismenya. */
+ *  saja). Ditulis generik supaya modul lain bisa ikut dikelompokkan tanpa
+ *  perlu menulis ulang mekanismenya — dipakai "Kantong Amal" dan
+ *  "Shortlink" (Shortlink + Permintaan Shortlink, lihat migrasi
+ *  0033_shortlink_sidebar_group.up.sql di fsldk-api). */
 interface SidebarGroupConfig {
   label: string;
   icon: string;
@@ -24,6 +25,7 @@ interface SidebarGroupConfig {
 }
 const SIDEBAR_GROUPS: SidebarGroupConfig[] = [
   { label: 'Kantong Amal', icon: 'hand-heart', routePrefix: '/cms/kantong-amal' },
+  { label: 'Shortlink', icon: 'link', routePrefix: '/cms/shortlink' },
 ];
 
 type SidebarEntry =

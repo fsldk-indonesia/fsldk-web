@@ -1,164 +1,280 @@
 @if (form(); as f) {
-  <a class="back" [routerLink]="path.index"><app-icon name="arrow-left" /> Kembali</a>
+  <a class="back-link" [routerLink]="path.index"><app-icon name="arrow-left" [size]="14" /> Kembali ke daftar formulir</a>
 
   <div class="header-bar">
     <div>
-      <h1 style="margin-bottom:4px;">{{ f.title }}</h1>
-      <span class="status" [class]="statusMeta(f.status).badgeClass">{{ statusMeta(f.status).label }}</span>
-      <span class="muted"> · versi {{ f.version }}</span>
+      <h1>{{ f.title }}</h1>
+      <span class="badge" [class.badge-published]="f.status === 'published'" [class.badge-draft]="f.status === 'draft'"
+            [class.badge-danger]="f.status === 'closed'">
+        {{ statusMeta(f.status).label }}
+      </span>
+      <span class="text-muted" style="font-size:.85rem"> · versi {{ f.version }}</span>
     </div>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <a class="btn btn-sm" [routerLink]="path.edit(f.formID)">Setelan</a>
-      <a class="btn btn-sm" [href]="'/form/' + f.slug" target="_blank" rel="noopener">Pratinjau</a>
+    <div class="header-actions">
+      <a class="btn btn-outline btn-sm" [routerLink]="path.edit(f.formID)">Setelan</a>
+      <a class="btn btn-outline btn-sm" [href]="'/form/' + f.slug" target="_blank" rel="noopener">Pratinjau</a>
       @if (f.status !== 'published') {
-        <button class="btn btn-sm btn-primary" (click)="setStatus('published')">Publish</button>
+        <button class="btn btn-primary btn-sm" (click)="setStatus('published')">Publish</button>
       } @else {
-        <button class="btn btn-sm" (click)="setStatus('closed')">Tutup</button>
+        <button class="btn btn-outline btn-sm" (click)="setStatus('closed')">Tutup</button>
       }
     </div>
   </div>
 
   <div class="builder">
+    <!-- Column 1 — palette -->
     <div class="palette">
-      <strong style="font-size:.85rem;">Tambah Field</strong>
-      @for (g of groups; track g) {
-        <h4>{{ g }}</h4>
-        @for (t of typesInGroup(g); track t.value) {
-          <button type="button" (click)="openCreate(t.value)"><app-icon [name]="t.icon" /> {{ t.label }}</button>
+      <div class="card card-pad">
+        <span class="col-title"><app-icon name="list-checks" [size]="16" /> Tambah Field</span>
+        @for (g of groups; track g) {
+          <h4>{{ g }}</h4>
+          @for (t of typesInGroup(g); track t.value) {
+            <button type="button" (click)="openCreate(t.value, $event)"><app-icon [name]="t.icon" [size]="15" /> {{ t.label }}</button>
+          }
         }
-      }
+      </div>
     </div>
 
+    <!-- Column 2 — active fields -->
     <div>
+      <div class="active-head">
+        <span class="col-title"><app-icon name="file-text" [size]="16" /> Field Aktif</span>
+        <span class="count-badge">{{ fieldCount() }} field</span>
+      </div>
+
+      <div class="quick-add">
+        <input #hiInput type="file" accept="image/*" hidden (change)="onHeaderImagePicked($event)">
+        <button type="button" class="btn btn-outline btn-sm" (click)="hiInput.click()" [disabled]="headerImageUploading()">
+          <app-icon name="book-open" [size]="14" /> {{ headerImageUploading() ? 'Mengunggah…' : 'Gambar Header' }}
+        </button>
+        <button type="button" class="btn btn-outline btn-sm" (click)="addSection($event)">
+          <app-icon name="file-sliders" [size]="14" /> Tambah Bagian
+        </button>
+      </div>
+
+      @if (f.headerImageUrl) {
+        <div class="header-image-preview">
+          <img [src]="f.headerImageUrl" alt="Gambar header" />
+          <div class="hi-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="hiInput.click()">Ganti</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeHeaderImage()">Hapus</button>
+          </div>
+        </div>
+      }
+
       @if (fields().length === 0) {
-        <p class="muted">Belum ada field. Tambahkan dari palet di kiri.</p>
+        <div class="card"><div class="empty-state">
+          <h4>Belum ada field</h4>
+          <p>Tambahkan field dari palet di kiri untuk mulai menyusun formulir.</p>
+        </div></div>
       }
       @for (fld of fields(); track fld.fieldID; let i = $index) {
-        <div class="field-card">
+        <div class="field-card" draggable="true"
+             [class.section-card]="fld.fieldType === 'section_break'"
+             [class.dragging]="dragIndex() === i"
+             [class.drag-over]="dragOverIndex() === i && dragIndex() !== i"
+             (dragstart)="onDragStart(i, $event)" (dragover)="onDragOver(i, $event)"
+             (drop)="onDrop(i, $event)" (dragend)="onDragEnd()">
+          <span class="grip" title="Seret untuk mengurutkan"><app-icon name="grip-vertical" [size]="14" /></span>
           <div class="field-meta">
             <div>
-              <strong>{{ fld.label || '(tanpa label)' }}</strong>
-              @if (fld.isRequired) { <span class="badge badge-req">Wajib</span> }
-              @if (fld.isSystemField) { <span class="badge badge-sys">Sistem</span> }
+              <strong>{{ fld.fieldType === 'section_break' ? ('Bagian: ' + (fld.label || '(tanpa judul)')) : (fld.label || '(tanpa label)') }}</strong>
+              @if (fld.isRequired) { <span class="badge badge-danger" style="margin-left:6px">Wajib</span> }
+              @if (fld.isSystemField) { <span class="badge badge-info" style="margin-left:6px">Sistem</span> }
+              @if (hasRouting(fld)) { <span class="badge badge-published" style="margin-left:6px">Routing</span> }
             </div>
             <span class="type">{{ fieldTypeLabel(fld.fieldType) }}</span>
-            @if (fld.helpText && !isDisplay(fld.fieldType)) { <span class="muted">{{ fld.helpText }}</span> }
+            @if (fld.helpText && !isDisplay(fld.fieldType)) { <span class="help">{{ fld.helpText }}</span> }
           </div>
           <div class="card-actions">
-            <button type="button" title="Naik" (click)="move(i, -1)">▲</button>
-            <button type="button" title="Turun" (click)="move(i, 1)">▼</button>
-            <button type="button" title="Ubah" (click)="openEdit(fld)"><app-icon name="file-sliders" /></button>
+            <button type="button" class="icon-action" title="Naik" (click)="move(i, -1)"><app-icon name="chevron-up" [size]="14" /></button>
+            <button type="button" class="icon-action" title="Turun" (click)="move(i, 1)"><app-icon name="chevron-down" [size]="14" /></button>
+            <button type="button" class="icon-action" title="Ubah" (click)="openEdit(fld, $event)"><app-icon name="edit" [size]="14" /></button>
             @if (!fld.isSystemField) {
-              <button type="button" title="Hapus" (click)="remove(fld, $event)">✕</button>
+              <button type="button" class="icon-action danger" title="Hapus" (click)="remove(fld, $event)"><app-icon name="trash" [size]="14" /></button>
             }
           </div>
         </div>
       }
+    </div>
+
+    <!-- Column 3 — sidebar -->
+    <div class="sidebar">
+      <div class="card sidebar-card">
+        <p class="sidebar-title"><app-icon name="file-spreadsheet" [size]="16" /> Google Drive</p>
+        @if (f.gsheetSpreadsheetUrl) {
+          <a class="drive-row" [href]="f.gsheetSpreadsheetUrl" target="_blank" rel="noopener">
+            <app-icon name="file-spreadsheet" [size]="16" />
+            <span><strong>Spreadsheet Tanggapan</strong><span>Semua tanggapan ditulis di sini sebagai baris.</span></span>
+          </a>
+          @if (f.gdriveAttachmentsUrl) {
+            <a class="drive-row" [href]="f.gdriveAttachmentsUrl" target="_blank" rel="noopener">
+              <app-icon name="download" [size]="16" />
+              <span><strong>Folder Lampiran</strong><span>Berkas yang diunggah responden.</span></span>
+            </a>
+          }
+          @if (f.gdriveAssetsUrl) {
+            <a class="drive-row" [href]="f.gdriveAssetsUrl" target="_blank" rel="noopener">
+              <app-icon name="book-open" [size]="16" />
+              <span><strong>Folder Aset</strong><span>Gambar yang dipakai di builder.</span></span>
+            </a>
+          }
+        } @else {
+          <p class="form-hint">Sinkronisasi Google Sheets belum aktif. Aktifkan di <a [routerLink]="path.edit(f.formID)">Setelan</a> untuk mendapat spreadsheet & folder Drive otomatis.</p>
+        }
+      </div>
+
+      <div class="card sidebar-card">
+        <p class="sidebar-title"><app-icon name="info-circle" [size]="16" /> Tips</p>
+        <ul class="tips-list">
+          <li><app-icon name="lock" [size]="14" /> Field <strong>Alamat Email</strong> tidak bisa dihapus — wajib ada di setiap formulir.</li>
+          <li><app-icon name="chevrons-up-down" [size]="14" /> Seret kartu atau pakai tombol naik/turun untuk mengurutkan field.</li>
+          <li><app-icon name="refresh" [size]="14" /> Perubahan tersimpan otomatis ke database.</li>
+        </ul>
+      </div>
     </div>
   </div>
 }
 
 @if (showModal()) {
   <div class="modal-backdrop" appModalBackdrop [dismissible]="true" (backdropClose)="closeModal()">
-    <div class="modal">
+    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
       <h3>{{ editFieldId ? 'Ubah Field' : 'Tambah Field' }} — {{ fieldTypeLabel(fieldForm.fieldType) }}</h3>
       <div class="modal-body">
-        <label>Label</label>
-        <input type="text" [(ngModel)]="fieldForm.label" />
+        <div class="form-group">
+          <label class="form-label">{{ fieldForm.fieldType === 'section_break' ? 'Judul bagian' : 'Label / Pertanyaan' }}</label>
+          <input class="form-control" [(ngModel)]="fieldForm.label" placeholder="mis. Nama Lengkap">
+        </div>
 
-        @if (!isDisplay(fieldForm.fieldType)) {
-          <label>Placeholder</label>
-          <input type="text" [(ngModel)]="fieldForm.placeholder" />
+        @if (isDisplay(fieldForm.fieldType)) {
+          <!-- Display elements have no separate answer; the help text carries their content. -->
+          <div class="form-group">
+            <label class="form-label">{{ fieldForm.fieldType === 'paragraph' ? 'Isi teks' : (fieldForm.fieldType === 'video' ? 'URL video (embed)' : 'Teks bantuan / keterangan') }}</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="fieldForm.helpText"
+                      placeholder="{{ fieldForm.fieldType === 'section_break' ? 'Keterangan singkat untuk bagian ini' : '' }}"></textarea>
+          </div>
+        } @else {
+          <!-- Placeholder + help text are offered on every add/edit of an input field. -->
+          <div class="form-group">
+            <label class="form-label">Placeholder</label>
+            <input class="form-control" [(ngModel)]="fieldForm.placeholder" placeholder="mis. Masukkan nama Anda">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Teks bantuan</label>
+            <textarea class="form-control" rows="2" [(ngModel)]="fieldForm.helpText"
+                      placeholder="Opsional — petunjuk singkat yang tampil di bawah field"></textarea>
+          </div>
         }
 
-        <label>{{ fieldForm.fieldType === 'paragraph' ? 'Isi teks' : 'Teks bantuan / keterangan' }}</label>
-        <textarea rows="2" [(ngModel)]="fieldForm.helpText"></textarea>
-
         @if (!isDisplay(fieldForm.fieldType)) {
-          <label class="check"><input type="checkbox" [(ngModel)]="fieldForm.isRequired" /> Wajib diisi</label>
+          <div class="form-group">
+            <label class="form-check"><input type="checkbox" [(ngModel)]="fieldForm.isRequired"> Wajib diisi</label>
+          </div>
         }
 
         @if (isOptionType(fieldForm.fieldType)) {
-          <label>Opsi</label>
-          @for (o of fieldForm.options; track $index) {
-            <div class="opt-row">
-              <input type="text" placeholder="Label" [(ngModel)]="o.label" (ngModelChange)="o.value = o.label" />
-              <button type="button" class="btn btn-sm" (click)="removeOption($index)">✕</button>
-            </div>
-          }
-          <button type="button" class="btn btn-sm" (click)="addOption()">+ Opsi</button>
+          <div class="form-group">
+            <label class="form-label">Opsi</label>
+            @for (o of fieldForm.options; track $index) {
+              <div class="opt-row">
+                <input class="form-control" placeholder="Label opsi" [(ngModel)]="o.label" (ngModelChange)="onOptionLabelChange(o)">
+                <button type="button" class="icon-action danger" (click)="removeOption($index)"><app-icon name="trash" [size]="14" /></button>
+              </div>
+            }
+            <button type="button" class="btn btn-outline btn-sm" (click)="addOption()">+ Opsi</button>
+          </div>
         }
 
         @if (fieldForm.fieldType === 'linear_scale') {
-          <div class="grid-2">
-            <div><label>Nilai min</label><input type="number" [(ngModel)]="fieldForm.cfgMinValue" /></div>
-            <div><label>Nilai max</label><input type="number" [(ngModel)]="fieldForm.cfgMaxValue" /></div>
-            <div><label>Label min</label><input type="text" [(ngModel)]="fieldForm.cfgMinLabel" /></div>
-            <div><label>Label max</label><input type="text" [(ngModel)]="fieldForm.cfgMaxLabel" /></div>
+          <div class="grid-cols-2">
+            <div class="form-group"><label class="form-label">Nilai min (0/1)</label><input type="number" min="0" max="1" class="form-control" [(ngModel)]="fieldForm.cfgMinValue"></div>
+            <div class="form-group"><label class="form-label">Nilai max (2–10)</label><input type="number" min="2" max="10" class="form-control" [(ngModel)]="fieldForm.cfgMaxValue"></div>
+            <div class="form-group"><label class="form-label">Label min</label><input class="form-control" [(ngModel)]="fieldForm.cfgMinLabel"></div>
+            <div class="form-group"><label class="form-label">Label max</label><input class="form-control" [(ngModel)]="fieldForm.cfgMaxLabel"></div>
           </div>
         }
         @if (fieldForm.fieldType === 'rating') {
-          <label>Jumlah bintang</label>
-          <input type="number" min="3" max="10" [(ngModel)]="fieldForm.cfgMaxRating" />
+          <div class="form-group">
+            <label class="form-label">Jumlah bintang (3–10)</label>
+            <input type="number" min="3" max="10" class="form-control" [(ngModel)]="fieldForm.cfgMaxRating">
+          </div>
         }
 
         @if (fieldForm.fieldType === 'number' || fieldForm.fieldType === 'short_text' || fieldForm.fieldType === 'long_text') {
-          <div class="grid-2">
-            <div><label>Min {{ fieldForm.fieldType === 'number' ? 'nilai' : 'karakter' }}</label><input type="number" [(ngModel)]="fieldForm.vMin" /></div>
-            <div><label>Max {{ fieldForm.fieldType === 'number' ? 'nilai' : 'karakter' }}</label><input type="number" [(ngModel)]="fieldForm.vMax" /></div>
+          <div class="grid-cols-2">
+            <div class="form-group"><label class="form-label">Min {{ fieldForm.fieldType === 'number' ? 'nilai' : 'karakter' }}</label><input type="number" class="form-control" [(ngModel)]="fieldForm.vMin"></div>
+            <div class="form-group"><label class="form-label">Max {{ fieldForm.fieldType === 'number' ? 'nilai' : 'karakter' }}</label><input type="number" class="form-control" [(ngModel)]="fieldForm.vMax"></div>
           </div>
         }
         @if (fieldForm.fieldType === 'short_text') {
-          <label>Pola regex (opsional)</label>
-          <input type="text" [(ngModel)]="fieldForm.vPattern" />
+          <div class="form-group">
+            <label class="form-label">Pola regex (opsional)</label>
+            <input class="form-control" [(ngModel)]="fieldForm.vPattern">
+          </div>
         }
         @if (fieldForm.fieldType === 'file') {
-          <div class="grid-2">
-            <div><label>Ekstensi diizinkan (koma)</label><input type="text" placeholder="pdf, jpg, png" [(ngModel)]="fieldForm.vAcceptedTypes" /></div>
-            <div><label>Ukuran maks (KB)</label><input type="number" [(ngModel)]="fieldForm.vMaxSizeKB" /></div>
+          <div class="grid-cols-2">
+            <div class="form-group"><label class="form-label">Ekstensi diizinkan (koma)</label><input class="form-control" placeholder="pdf, jpg, png" [(ngModel)]="fieldForm.vAcceptedTypes"></div>
+            <div class="form-group"><label class="form-label">Ukuran maks (KB)</label><input type="number" class="form-control" [(ngModel)]="fieldForm.vMaxSizeKB"></div>
           </div>
         }
         @if (fieldForm.fieldType === 'image') {
-          <label>Gambar</label>
-          <input type="file" accept="image/*" (change)="onImagePicked($event)" />
-          @if (fieldForm.imageURL) { <img [src]="fieldForm.imageURL" alt="" style="max-width:100%; margin-top:8px; border-radius:8px;" /> }
+          <div class="form-group">
+            <label class="form-label">Gambar</label>
+            <input type="file" class="form-control" accept="image/*" (change)="onImagePicked($event)">
+            @if (fieldForm.imageURL) { <img [src]="fieldForm.imageURL" alt="" style="max-width:100%; margin-top:8px; border-radius:var(--radius-xs)"> }
+          </div>
         }
 
-        @if (!isDisplay(fieldForm.fieldType) && otherFields().length > 0) {
-          <hr style="margin:14px 0;" />
-          <label>Logika kondisional (opsional)</label>
-          <div class="grid-2">
-            <div>
-              <select [(ngModel)]="fieldForm.condAction">
-                <option value="show">Tampilkan jika</option>
-                <option value="hide">Sembunyikan jika</option>
-              </select>
-            </div>
-            <div>
-              <select [(ngModel)]="fieldForm.condFieldID">
-                <option [ngValue]="null">— pilih field —</option>
-                @for (of of otherFields(); track of.fieldID) {
-                  <option [ngValue]="of.fieldID">{{ of.label }}</option>
-                }
-              </select>
-            </div>
-            <div>
-              <select [(ngModel)]="fieldForm.condOperator">
-                <option value="eq">sama dengan</option>
-                <option value="neq">tidak sama dengan</option>
-                <option value="contains">mengandung</option>
-                <option value="gt">lebih dari</option>
-                <option value="lt">kurang dari</option>
-                <option value="filled">terisi</option>
-                <option value="empty">kosong</option>
-              </select>
-            </div>
-            <div><input type="text" placeholder="Nilai" [(ngModel)]="fieldForm.condValue" /></div>
+        <!-- Section routing — Edit modal only, radio/dropdown, forward jumps -->
+        @if (editFieldId && canRoute(fieldForm.fieldType) && routingTargetOptions().length > 0) {
+          <p class="divider-label">Routing bagian (opsional)</p>
+          <div class="form-group">
+            <label class="form-check">
+              <input type="checkbox" [ngModel]="fieldForm.routingEnabled" (ngModelChange)="toggleRouting()">
+              Lompat ke bagian tertentu berdasarkan jawaban
+            </label>
+          </div>
+          @if (fieldForm.routingEnabled) {
+            @for (r of fieldForm.routingRoutes; track r.optionValue) {
+              <div class="route-row">
+                <span class="opt-name">{{ r.optionValue }}</span>
+                <app-select [options]="routingTargetOptions()" [(ngModel)]="r.targetSectionFieldID"
+                            [ngModelOptions]="{ standalone: true }" placeholder="— lanjut normal —" />
+              </div>
+            }
+            <p class="form-hint">Hanya boleh melompat MAJU. Opsi tanpa target akan lanjut ke bagian berikutnya.</p>
+          }
+        }
+
+        <!-- Live preview -->
+        @if (!isDisplay(fieldForm.fieldType)) {
+          <p class="divider-label">Pratinjau</p>
+          <div class="preview-head">
+            <span class="form-hint">Tampilan di formulir publik</span>
+            <span class="preview-toggle">
+              <button type="button" [class.on]="previewMode() === 'desktop'" (click)="previewMode.set('desktop')">Desktop</button>
+              <button type="button" [class.on]="previewMode() === 'mobile'" (click)="previewMode.set('mobile')">Mobile</button>
+            </span>
+          </div>
+          <div class="preview-frame" [class.mobile]="previewMode() === 'mobile'">
+            <div class="p-label">{{ fieldForm.label || 'Label field' }} @if (fieldForm.isRequired) { <span style="color:var(--color-danger)">*</span> }</div>
+            @if (fieldForm.helpText) { <div class="p-help">{{ fieldForm.helpText }}</div> }
+            @switch (fieldForm.fieldType) {
+              @case ('long_text') { <div class="p-ctrl" style="min-height:60px">{{ fieldForm.placeholder || 'Jawaban panjang…' }}</div> }
+              @case ('checkbox') { @for (o of fieldForm.options; track $index) { <label class="p-opt"><input type="checkbox" disabled> {{ o.label }}</label> } }
+              @case ('radio') { @for (o of fieldForm.options; track $index) { <label class="p-opt"><input type="radio" disabled> {{ o.label }}</label> } }
+              @case ('dropdown') { <div class="p-ctrl">— pilih —</div> }
+              @case ('rating') { <div style="font-size:1.3rem; color:var(--color-primary)">★★★★★</div> }
+              @case ('linear_scale') { <div class="p-opt">{{ fieldForm.cfgMinValue ?? 1 }} — {{ fieldForm.cfgMaxValue ?? 5 }}</div> }
+              @case ('file') { <div class="p-ctrl">Pilih berkas…</div> }
+              @default { <div class="p-ctrl">{{ fieldForm.placeholder || 'Jawaban…' }}</div> }
+            }
           </div>
         }
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn" (click)="closeModal()">Batal</button>
+        <button type="button" class="btn btn-ghost" (click)="closeModal()">Batal</button>
         <button type="button" class="btn btn-primary" (click)="save()">Simpan</button>
       </div>
     </div>

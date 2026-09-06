@@ -16,11 +16,10 @@ import { DynamicFormResponseEditView } from './dynamicform.response-edit.view';
   imports: [FormsModule, RouterLink, IconComponent],
   providers: [DynamicFormResponseEditPresenter],
   styles: [`
-    .form-card { max-width: 720px; margin: 0 auto; }
-    .field { margin-bottom: 16px; }
-    label { display: block; font-weight: 600; font-size: .88rem; margin-bottom: 4px; }
-    .muted { color: var(--color-text-secondary); font-size: .8rem; }
-    .actions { display: flex; gap: 10px; margin-top: 8px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .88rem; margin-bottom: 8px; }
+    .page-head { max-width: 760px; margin: 0 auto 20px; }
+    .form-card { max-width: 760px; margin: 0 auto; }
+    .opt-list { display: flex; flex-direction: column; gap: 4px; }
   `],
 })
 export class DynamicFormResponseEditPage implements OnInit, DynamicFormResponseEditView {

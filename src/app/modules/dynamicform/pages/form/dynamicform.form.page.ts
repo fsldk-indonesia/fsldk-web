@@ -5,7 +5,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { GSheetStatus } from '../../entities/dynamic-form';
 import { dynamicFormPath } from '../../dynamicform.path';
 import {
-  CollaboratorRow, DynamicFormFormPresenter, DynamicFormFormValue, emptyDynamicFormForm,
+  DynamicFormFormPresenter, DynamicFormFormValue, emptyDynamicFormForm,
 } from './dynamicform.form.presenter';
 import { DynamicFormFormView } from './dynamicform.form.view';
 
@@ -16,20 +16,36 @@ import { DynamicFormFormView } from './dynamicform.form.view';
   imports: [FormsModule, RouterLink, IconComponent],
   providers: [DynamicFormFormPresenter],
   styles: [`
-    .page-head { max-width: 780px; margin: 0 auto 20px; }
-    .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }
-    .form-card { max-width: 780px; margin: 0 auto; }
-    fieldset { border: 1px solid var(--color-border); border-radius: var(--radius-md, 10px); padding: 18px; margin-bottom: 18px; }
-    legend { font-weight: 600; padding: 0 8px; }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: 4px; }
-    .check { display: flex; align-items: center; gap: 8px; font-weight: 500; margin: 8px 0; }
-    .check input { width: auto; }
-    .muted { color: var(--color-text-secondary); font-size: .8rem; }
-    .collab-row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; }
-    .gsheet-status { background: var(--color-surface-2, #f6faf7); border-radius: 8px; padding: 12px; margin-top: 10px; font-size: .85rem; }
-    .gsheet-error { color: #92600a; }
-    .actions { display: flex; gap: 10px; margin-top: 8px; }
+    .page-head { max-width: 960px; margin: 0 auto 20px; }
+    .back { display: flex; width: fit-content; align-items: center; gap: 6px; margin-bottom: 10px; color: var(--color-text-secondary); font-size: .9rem; }
+    .page-head h1 { margin: 0; display: inline-block; padding-bottom: 6px; border-bottom: 3px solid var(--color-primary); }
+    .form-card { max-width: 960px; margin: 0 auto; padding: 28px; }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .col { min-width: 0; }
+    .section-title { display: flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .07em; color: var(--color-muted);
+      margin: 26px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
+    .section-title:first-child { margin-top: 0; }
+    .section-title app-icon { color: var(--color-primary); }
+    .req { color: var(--color-danger); }
+    .muted-note { color: var(--color-muted); font-weight: 400; }
+    .info-box { display: flex; gap: 10px; align-items: flex-start; background: var(--color-primary-soft);
+      color: var(--color-primary-dark); border-radius: var(--radius-xs); padding: 12px 14px;
+      font-size: .84rem; line-height: 1.5; margin-bottom: 14px; }
+    .info-box app-icon { flex-shrink: 0; margin-top: 1px; }
+    .advanced { margin-top: 4px; }
+    .gsheet-status { background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius-xs); padding: 14px; margin-top: 4px; font-size: .88rem; }
+    .gsheet-status p { margin: 0 0 6px; }
+    .gsheet-status p:last-child { margin-bottom: 0; }
+    .gsheet-error { color: var(--color-warning); }
+    .form-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+    @media (max-width: 900px) {
+      .cols { grid-template-columns: 1fr; gap: 4px; }
+    }
+    @media (max-width: 560px) {
+      .form-footer { flex-direction: column-reverse; }
+      .form-footer .btn { width: 100%; justify-content: center; }
+    }
   `],
 })
 export class DynamicFormFormPage implements OnInit, DynamicFormFormView {
@@ -42,18 +58,12 @@ export class DynamicFormFormPage implements OnInit, DynamicFormFormView {
   saving = signal(false);
   form: DynamicFormFormValue = structuredClone(emptyDynamicFormForm);
   gsheet = signal<GSheetStatus | null>(null);
+  gsheetAvailable = signal(true);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
     const id = this.route.snapshot.paramMap.get('id');
     if (id) { this.editId = +id; this.presenter.loadForEdit(this.editId); }
-  }
-
-  addCollaborator(): void {
-    this.form.collaborators = [...this.form.collaborators, { userID: 0, role: 'editor' }];
-  }
-  removeCollaborator(row: CollaboratorRow): void {
-    this.form.collaborators = this.form.collaborators.filter((c) => c !== row);
   }
 
   save(): void { this.presenter.save(this.editId, this.form); }
@@ -65,6 +75,7 @@ export class DynamicFormFormPage implements OnInit, DynamicFormFormView {
   setForm(form: DynamicFormFormValue): void { this.form = form; }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   setGsheetStatus(status: GSheetStatus): void { this.gsheet.set(status); this.form.gsheetEnabled = status.enabled; }
+  setGsheetAvailable(available: boolean): void { this.gsheetAvailable.set(available); }
   navigateToIndex(): void { this.router.navigate([this.path.index]); }
   navigateToBuilder(id: number): void { this.router.navigate([this.path.builder(id)]); }
 }

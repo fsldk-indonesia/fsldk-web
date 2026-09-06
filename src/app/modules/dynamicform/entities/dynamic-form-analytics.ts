@@ -28,6 +28,7 @@ export interface DynamicFormAnalytics {
   submissionsPerDay: DayCount[];
   validCount: number;
   invalidCount: number;
+  uniqueRespondents: number;
   totalFiles: number;
   recent: RecentSubmission[] | null;
   fieldCharts: FieldChart[] | null;

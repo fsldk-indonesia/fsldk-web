@@ -1,58 +1,80 @@
+<a class="back-link" [routerLink]="path.index"><app-icon name="arrow-left" [size]="14" /> Kembali ke daftar formulir</a>
+
 <div class="page-head">
   <div>
-    <a class="back" [routerLink]="path.index"><app-icon name="arrow-left" /> Kembali</a>
     <h1>Rekap Tanggapan</h1>
-    @if (form()) { <p class="muted">{{ form()!.title }} · {{ count() }} tanggapan</p> }
+    @if (form()) { <p class="text-muted">{{ form()!.title }} · {{ count() }} tanggapan</p> }
   </div>
-  <div style="display:flex; gap:8px; flex-wrap:wrap;">
-    <a class="btn btn-sm" [routerLink]="path.analytics(formId)">Analitik</a>
+  <div class="flex gap" style="flex-wrap:wrap">
+    <a class="btn btn-outline btn-sm" [routerLink]="path.analytics(formId)">Analitik</a>
     @if (form()?.gsheetSpreadsheetUrl) {
-      <a class="btn btn-sm" [href]="form()!.gsheetSpreadsheetUrl" target="_blank" rel="noopener">Buka di Google Sheets ↗</a>
+      <a class="btn btn-outline btn-sm" [href]="form()!.gsheetSpreadsheetUrl" target="_blank" rel="noopener">Buka di Google Sheets ↗</a>
     }
   </div>
 </div>
 
-<div class="toolbar">
-  <input type="text" placeholder="Cari email / nama…" [(ngModel)]="search" (keyup.enter)="apply()" />
-  <label class="muted"><input type="checkbox" [(ngModel)]="validOnly" (ngModelChange)="apply()" /> Hanya valid</label>
-  <button class="btn btn-sm" (click)="apply()">Terapkan</button>
-  <span style="flex:1"></span>
-  <button class="btn btn-sm" (click)="exportCsv()"><app-icon name="download" /> Unduh CSV</button>
-  @if (canDelete) {
-    <button class="btn btn-sm btn-danger" (click)="deleteAll($event)">Hapus Semua Respons</button>
-  }
-</div>
+<div class="card">
+  <div class="card-pad flex gap items-center toolbar">
+    <input class="form-control" type="text" placeholder="Cari email / nama…" [(ngModel)]="search" (keyup.enter)="apply()">
+    <label class="check-inline"><input type="checkbox" [(ngModel)]="validOnly" (ngModelChange)="apply()"> Hanya valid</label>
+    <button class="btn btn-outline btn-sm" (click)="apply()">Cari</button>
+    <span class="grow" style="flex:1"></span>
+    <button class="btn btn-outline btn-sm" (click)="exportCsv()"><app-icon name="download" [size]="14" /> Unduh CSV</button>
+    @if (canDelete) {
+      <button class="btn btn-danger btn-sm" (click)="deleteAll($event)">Hapus Semua Respons</button>
+    }
+  </div>
 
-@if (loading()) {
-  <p class="muted">Memuat…</p>
-} @else if (rows().length === 0) {
-  <p class="muted">Belum ada tanggapan.</p>
-} @else {
-  <div style="overflow-x:auto;">
-    <table>
+  <div class="table-wrap">
+    <table class="table">
       <thead>
-        <tr><th>#</th><th>Nama</th><th>Email</th><th>Tanggal</th><th>Status</th><th>Aksi</th></tr>
+        <tr><th>#</th><th>Nama</th><th>Email</th><th>Tanggal</th><th>Status</th><th></th></tr>
       </thead>
       <tbody>
-        @for (r of rows(); track r.submissionID; let i = $index) {
-          <tr>
-            <td>{{ (page() - 1) * limit + i + 1 }}</td>
-            <td>{{ r.respondentName || '—' }}</td>
-            <td>{{ r.respondentEmail }}</td>
-            <td class="muted">{{ r.submittedDate | date: 'dd MMM yyyy HH:mm' }}</td>
-            <td><span class="badge" [class]="r.isValid ? 'badge-ok' : 'badge-bad'">{{ r.isValid ? 'Valid' : 'Spam' }}</span></td>
-            <td class="row-actions">
-              @if (canUpdate) {
-                <a [routerLink]="path.responseEdit(formId, r.submissionID)">Lihat / Edit</a>
-              }
-              @if (canDelete) {
-                <a class="link-danger" href="javascript:void(0)" (click)="deleteRow(r, $event)">Hapus</a>
-              }
-            </td>
-          </tr>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:24px"></span></td>
+              <td><span class="skel skel-line" style="width:90px"></span></td>
+              <td><span class="skel skel-line" style="width:140px"></span></td>
+              <td><span class="skel skel-line" style="width:110px"></span></td>
+              <td><span class="skel skel-line" style="width:60px;border-radius:999px"></span></td>
+              <td><span class="skel skel-line" style="width:80px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (r of rows(); track r.submissionID; let i = $index) {
+            <tr>
+              <td class="text-muted">{{ (page() - 1) * limit + i + 1 }}</td>
+              <td>{{ r.respondentName || '—' }}</td>
+              <td class="text-muted">{{ r.respondentEmail }}</td>
+              <td class="text-muted">{{ r.submittedDate | date: 'd MMM yyyy, HH:mm' }}</td>
+              <td><span class="badge" [class.badge-published]="r.isValid" [class.badge-danger]="!r.isValid">{{ r.isValid ? 'Valid' : 'Spam' }}</span></td>
+              <td>
+                <div class="table-actions">
+                  @if (canUpdate) {
+                    <a class="link-action" [routerLink]="path.responseEdit(formId, r.submissionID)">Lihat / Edit</a>
+                  }
+                  @if (canDelete) {
+                    <span class="link-danger" (click)="deleteRow(r, $event)">Hapus</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="clipboard-list" [size]="26" /></span>
+                <h4>Belum ada tanggapan</h4>
+                <p>Tanggapan yang masuk lewat tautan publik akan muncul di sini.</p>
+              </div>
+            </td></tr>
+          }
         }
       </tbody>
     </table>
   </div>
-  <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
-}
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

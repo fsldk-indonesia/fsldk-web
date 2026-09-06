@@ -3,7 +3,7 @@ export type DynamicFieldType =
   | 'date' | 'time' | 'datetime'
   | 'dropdown' | 'radio' | 'checkbox' | 'linear_scale' | 'rating'
   | 'file'
-  | 'section_break' | 'paragraph' | 'image';
+  | 'section_break' | 'paragraph' | 'image' | 'video';
 
 export interface FieldOption {
   label: string;
@@ -18,16 +18,17 @@ export interface FieldValidation {
   maxSizeKB?: number | null;
 }
 
-export interface ConditionalCondition {
-  fieldID: number;
-  operator: 'eq' | 'neq' | 'contains' | 'gt' | 'lt' | 'filled' | 'empty';
-  value: string;
+/** One forward-only section jump: picking `optionValue` on a radio/dropdown
+ *  sends the respondent to the section that starts at `targetSectionFieldID`
+ *  (the fieldID of that `section_break`). */
+export interface SectionRoute {
+  optionValue: string;
+  targetSectionFieldID: number;
 }
 
-export interface ConditionalLogic {
-  action: 'show' | 'hide';
-  match: 'all' | 'any';
-  conditions: ConditionalCondition[];
+export interface SectionRouting {
+  enabled: boolean;
+  routes: SectionRoute[];
 }
 
 export interface FieldConfig {
@@ -36,13 +37,15 @@ export interface FieldConfig {
   minLabel?: string;
   maxLabel?: string;
   maxRating?: number;
+  sectionRouting?: SectionRouting;
 }
 
-/** One field. *JSON columns arrive parsed (backend passes them through raw). */
+/** One field. *JSON columns arrive parsed (backend passes them through raw).
+ *  Sections are not a table — they are the runs of fields between `section_break`
+ *  fields (techspec Part 2, K1). */
 export interface DynamicFormField {
   fieldID: number;
   formID: number;
-  sectionID: number | null;
   fieldType: DynamicFieldType;
   label: string;
   placeholder: string | null;
@@ -53,14 +56,5 @@ export interface DynamicFormField {
   options: FieldOption[] | null;
   validation: FieldValidation | null;
   defaultValue: string | null;
-  conditionalLogic: ConditionalLogic | null;
   fieldConfig: FieldConfig | null;
-}
-
-export interface DynamicFormSection {
-  sectionID: number;
-  formID?: number;
-  title: string;
-  description: string | null;
-  sortOrder: number;
 }

@@ -1,4 +1,5 @@
 export const shortlinkPath = {
-  index: '/cms/shortlinks',
+  index: '/cms/shortlink/list',
+  requests: '/cms/shortlink/permintaan',
   ajukan: '/shortlink/ajukan',
 };

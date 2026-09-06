@@ -20,14 +20,12 @@ import { DynamicFormResponsesView } from './dynamicform.responses.view';
   imports: [DatePipe, RouterLink, FormsModule, IconComponent, PaginationComponent],
   providers: [DynamicFormResponsesPresenter],
   styles: [`
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .88rem; margin-bottom: 8px; }
     .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; align-items: center; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--color-border); font-size: .88rem; }
-    .badge { padding: 2px 9px; border-radius: 999px; font-size: .7rem; font-weight: 600; }
-    .badge-ok { background: #e1f5e9; color: #00712e; } .badge-bad { background: #fdecec; color: #b42318; }
-    .muted { color: var(--color-text-secondary); font-size: .82rem; }
-    .row-actions a { margin-right: 10px; }
+    .page-head h1 { margin-bottom: 2px; }
+    .toolbar { flex-wrap: wrap; }
+    .toolbar .form-control { max-width: 260px; }
+    .check-inline { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--color-text); }
   `],
 })
 export class DynamicFormResponsesPage implements OnInit, DynamicFormResponsesView {

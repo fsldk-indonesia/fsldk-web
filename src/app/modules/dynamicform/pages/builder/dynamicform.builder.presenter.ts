@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { DynamicFormRepository } from '../../repositories/dynamic-form.repository';
+import { DynamicForm } from '../../entities/dynamic-form';
 import { DynamicFormBuilderView } from './dynamicform.builder.view';
 
 @Injectable()
@@ -46,6 +47,31 @@ export class DynamicFormBuilderPresenter extends BasePresenter<DynamicFormBuilde
   setStatus(id: number, status: string): void {
     this.repo.setStatus(id, status).subscribe({
       next: () => { this.toast.success('Status formulir diperbarui'); this.view.reload(); },
+      error: () => {},
+    });
+  }
+
+  /** Header image lives on the form (not a field). Round-trip the current
+   *  metadata so a PUT that only changes headerImageUrl keeps everything else. */
+  setHeaderImage(id: number, url: string, form: DynamicForm): void {
+    this.repo.update(id, {
+      title: form.title,
+      description: form.description || null,
+      headerImageUrl: url || null,
+      maxSubmission: form.maxSubmission,
+      isMultipleSubmit: form.isMultipleSubmit,
+      requireLogin: form.requireLogin,
+      startDate: form.startDate || null,
+      endDate: form.endDate || null,
+      confirmationMessage: form.confirmationMessage || null,
+      redirectUrl: form.redirectUrl || null,
+      notifyEmails: form.notifyEmails ?? [],
+      sendConfirmationEmail: form.sendConfirmationEmail,
+      rateLimitPerIP: form.rateLimitPerIP,
+      rateLimitWindowMinutes: form.rateLimitWindowMinutes,
+      gsheetEnabled: form.gsheetEnabled,
+    }).subscribe({
+      next: () => { this.toast.success(url ? 'Gambar header diperbarui' : 'Gambar header dihapus'); this.view.reload(); },
       error: () => {},
     });
   }

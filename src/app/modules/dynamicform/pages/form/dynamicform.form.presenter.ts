@@ -5,14 +5,10 @@ import { DynamicFormRepository } from '../../repositories/dynamic-form.repositor
 import { DynamicForm } from '../../entities/dynamic-form';
 import { DynamicFormFormView } from './dynamicform.form.view';
 
-export interface CollaboratorRow {
-  userID: number;
-  role: 'editor' | 'manager';
-}
-
 export interface DynamicFormFormValue {
   title: string;
   description: string;
+  headerImageUrl: string;
   requireLogin: boolean;
   isMultipleSubmit: boolean;
   maxSubmission: number | null;
@@ -25,14 +21,13 @@ export interface DynamicFormFormValue {
   rateLimitPerIP: number;
   rateLimitWindowMinutes: number;
   gsheetEnabled: boolean;
-  collaborators: CollaboratorRow[];
 }
 
 export const emptyDynamicFormForm: DynamicFormFormValue = {
-  title: '', description: '', requireLogin: false, isMultipleSubmit: false, maxSubmission: null,
+  title: '', description: '', headerImageUrl: '', requireLogin: false, isMultipleSubmit: false, maxSubmission: null,
   startDate: '', endDate: '', confirmationMessage: '', redirectUrl: '',
   sendConfirmationEmail: true, notifyEmails: '', rateLimitPerIP: 5, rateLimitWindowMinutes: 10,
-  gsheetEnabled: false, collaborators: [],
+  gsheetEnabled: false,
 };
 
 @Injectable()
@@ -44,6 +39,7 @@ export class DynamicFormFormPresenter extends BasePresenter<DynamicFormFormView>
     this.repo.cmsGet(id).subscribe({
       next: (f) => {
         this.view.setForm(this.toFormValue(f));
+        this.view.setGsheetAvailable(f.gsheetAvailable ?? false);
         this.view.setGsheetStatus({
           enabled: f.gsheetEnabled, spreadsheetUrl: f.gsheetSpreadsheetUrl ?? '',
           lastSyncDate: f.gsheetLastSyncDate ?? '', lastSyncError: f.gsheetLastSyncError ?? '',
@@ -55,7 +51,7 @@ export class DynamicFormFormPresenter extends BasePresenter<DynamicFormFormView>
 
   private toFormValue(f: DynamicForm): DynamicFormFormValue {
     return {
-      title: f.title, description: f.description ?? '', requireLogin: f.requireLogin,
+      title: f.title, description: f.description ?? '', headerImageUrl: f.headerImageUrl ?? '', requireLogin: f.requireLogin,
       isMultipleSubmit: f.isMultipleSubmit, maxSubmission: f.maxSubmission,
       startDate: (f.startDate ?? '').replace(' ', 'T').slice(0, 16),
       endDate: (f.endDate ?? '').replace(' ', 'T').slice(0, 16),
@@ -63,7 +59,6 @@ export class DynamicFormFormPresenter extends BasePresenter<DynamicFormFormView>
       sendConfirmationEmail: f.sendConfirmationEmail, notifyEmails: (f.notifyEmails ?? []).join(', '),
       rateLimitPerIP: f.rateLimitPerIP || 5, rateLimitWindowMinutes: f.rateLimitWindowMinutes || 10,
       gsheetEnabled: f.gsheetEnabled,
-      collaborators: (f.collaborators ?? []).map((c) => ({ userID: c.userID, role: c.role })),
     };
   }
 
@@ -72,6 +67,7 @@ export class DynamicFormFormPresenter extends BasePresenter<DynamicFormFormView>
     return {
       title: form.title.trim(),
       description: form.description.trim() || null,
+      headerImageUrl: form.headerImageUrl.trim() || null,
       requireLogin: form.requireLogin,
       isMultipleSubmit: form.isMultipleSubmit,
       maxSubmission: form.maxSubmission ? Number(form.maxSubmission) : null,
@@ -84,9 +80,6 @@ export class DynamicFormFormPresenter extends BasePresenter<DynamicFormFormView>
       rateLimitPerIP: Number(form.rateLimitPerIP) || 5,
       rateLimitWindowMinutes: Number(form.rateLimitWindowMinutes) || 10,
       gsheetEnabled: form.gsheetEnabled,
-      collaborators: form.collaborators
-        .filter((c) => c.userID)
-        .map((c) => ({ userID: Number(c.userID), role: c.role })),
     };
   }
 

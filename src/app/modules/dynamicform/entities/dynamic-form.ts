@@ -1,13 +1,6 @@
-import { DynamicFormField, DynamicFormSection } from './dynamic-form-field';
+import { DynamicFormField } from './dynamic-form-field';
 
-export type DynamicFormStatus = 'draft' | 'published' | 'closed' | 'archived';
-
-export interface DynamicFormCollaborator {
-  userID: number;
-  role: 'editor' | 'manager';
-  userName: string;
-  userEmail: string;
-}
+export type DynamicFormStatus = 'draft' | 'published' | 'closed';
 
 /** One dynamic form row as served by the CMS endpoints. */
 export interface DynamicForm {
@@ -15,6 +8,7 @@ export interface DynamicForm {
   title: string;
   slug: string;
   description: string;
+  headerImageUrl: string;
   status: DynamicFormStatus;
   version: number;
   maxSubmission: number | null;
@@ -29,9 +23,12 @@ export interface DynamicForm {
   rateLimitPerIP: number;
   rateLimitWindowMinutes: number;
   gsheetEnabled: boolean;
+  gsheetAvailable?: boolean;
   gsheetSpreadsheetUrl?: string;
   gsheetLastSyncDate?: string;
   gsheetLastSyncError?: string;
+  gdriveAttachmentsUrl?: string;
+  gdriveAssetsUrl?: string;
   totalSubmission: number;
   isActive: boolean;
   createdDate: string;
@@ -39,22 +36,27 @@ export interface DynamicForm {
   updatedDate: string;
   fieldCount?: number;
   publicUrl?: string;
-  collaborators?: DynamicFormCollaborator[];
-  sections?: DynamicFormSection[];
   fields?: DynamicFormField[];
 }
 
-/** The public renderer payload (GET /public/dynamic-forms/:slug). */
+/** The public renderer payload (GET /public/dynamic-forms/:slug).
+ *  Sections are built client-side by splitting `fields` on `section_break`. */
 export interface PublicDynamicForm {
   formID: number;
   title: string;
   description: string;
+  headerImageUrl: string;
   slug: string;
   status: DynamicFormStatus;
   requireLogin: boolean;
   isMultipleSubmit: boolean;
+  maxSubmission: number | null;
+  totalSubmission: number;
+  endDate?: string;
   version: number;
-  sections: DynamicFormSection[];
+  /** Server clock (unix millis) at render time — echoed back on submit for the
+   *  <3s anti-bot timing check (techspec Part 2, S1). */
+  formStartTs: number;
   fields: DynamicFormField[];
   prefillEmail?: string;
   draftAnswers?: Record<string, unknown>;
