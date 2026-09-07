@@ -153,7 +153,9 @@ const TIER_CAPTION: Record<CmsTier, string> = {
               <div class="dropdown-panel">
                 @for (t of auth.accessibleCmsTiers(); track t) {
                   <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"
-                     class="portal-item" [class.active]="tier() === t" [style.--tier-color]="tierColorOf(t)">
+                     class="portal-item" [class.active]="tier() === t"
+                     [style.border-color]="tierColorOf(t)"
+                     [style.background]="tier() === t ? tierColorOf(t) : null">
                     <span class="icon-badge sm icon-badge-soft"><app-icon [name]="shellIconOf(t)" [size]="15" /></span>
                     <span class="dropdown-item-text">
                       <span class="dropdown-item-title">{{ shellLabelOf(t) }}</span>
@@ -342,13 +344,15 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .dropdown-item-title { font-weight: 700; color: var(--color-text); font-size: .9rem; }
     .dropdown-item-caption { font-size: .76rem; color: var(--color-muted); font-weight: 500; line-height: 1.3; }
     /* Outline berwarna per-tier (lihat TIER_COLOR) — hijau untuk Portal
-       Admin, biru/hijau tua/ungu untuk LDK/Puskomda/Puskomnas. Kalau tier
-       ini yang SEDANG dibuka (tier() === t), jadi solid berwarna alih-alih
-       cuma outline, sama seperti pola active di sidebar. */
-    .portal-item { border-color: var(--tier-color); }
-    .portal-item:hover { background: color-mix(in srgb, var(--tier-color) 10%, transparent); }
-    .portal-item.active { background: var(--tier-color); }
-    .portal-item.active:hover { background: var(--tier-color); }
+       Admin, biru/hijau tua/ungu untuk LDK/Puskomda/Puskomnas — diset lewat
+       [style.border-color]/[style.background] LANGSUNG di template (bukan
+       custom property var(--tier-color) + var() di CSS: itu sempat dicoba
+       lebih dulu tapi background-nya gagal ke-resolve, membuat teks putih
+       "active" jadi tak terbaca di atas background yang tetap putih). Kalau
+       tier ini yang SEDANG dibuka (tier() === t), background solid berwarna;
+       kalau tidak, cuma outline (border-color saja, background tetap none
+       dari rule dasar di atas). */
+    .portal-item:not(.active):hover { background: var(--color-bg-warm); }
     .portal-item.active .dropdown-item-title { color: #fff; }
     .portal-item.active .dropdown-item-caption { color: rgba(255,255,255,.85); }
     .portal-item.active .icon-badge { background: rgba(255,255,255,.25); color: #fff; box-shadow: none; }
@@ -359,8 +363,18 @@ const TIER_CAPTION: Record<CmsTier, string> = {
        pola opacity dim lama tidak lagi relevan — item lain sekarang pakai
        icon-badge berwarna (lihat markup), bukan ikon polos. */
     .cms-content { padding: 32px 28px; flex: 1; }
-    .cms-footer { padding: 0 28px 28px; }
-    .cms-footer-inner { background: var(--color-bg-alt); border-radius: var(--radius-lg); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .85rem; color: var(--color-text-secondary); }
+    /* Footer nempel penuh di tepi BAWAH (padding-bottom 0, radius bawah 0 —
+       kebalikan dari topbar yang nempel di ATAS dengan radius atas 0), tapi
+       radius atas & lebar/center-nya (max-width + margin:auto) SAMA dengan
+       topbar. Statis di akhir flex column .cms-main seperti sebelumnya —
+       BUKAN position:sticky/fixed, cukup normal flow. */
+    .cms-footer { padding: 0; }
+    .cms-footer-inner {
+      background: var(--color-bg-alt); border-radius: var(--radius-md) var(--radius-md) 0 0;
+      max-width: 1060px; margin: 0 auto; padding: 18px 24px;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+      font-size: .85rem; color: var(--color-text-secondary);
+    }
     @media (max-width: 900px) {
       /* Di bawah 900px sidebar jadi drawer mengambang (overlay), bukan
          mendorong konten — z-index dinaikkan & .cms-main/.topbar SELALU
