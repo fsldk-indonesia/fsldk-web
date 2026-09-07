@@ -12,6 +12,10 @@ import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON } from '../sha
 
 type Tier = CmsTier;
 
+// Harus sama persis dengan breakpoint @media (max-width: 900px) di styles
+// komponen ini — dipakai default sidebarOpen() & close()-on-navigate.
+const MOBILE_BREAKPOINT = 900;
+
 /** Konfigurasi grup sidebar collapsible — dikelompokkan berdasarkan prefix
  *  `menuRoute` (bukan field baru dari backend; `GET /me/menus` tetap
  *  mengembalikan daftar flat, `menuLabel`/`menuIcon`/`menuRoute`/`sortOrder`
@@ -49,8 +53,22 @@ type SidebarEntry =
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
-    <div class="cms" [class.tier-ldk]="tier() === 'LDK'" [class.tier-puskomda]="tier() === 'PUSKOMDA'" [class.tier-puskomnas]="tier() === 'PUSKOMNAS'">
-      <aside class="sidebar" [class.open]="sidebarOpen()">
+    <div class="cms" [class.tier-ldk]="tier() === 'LDK'" [class.tier-puskomda]="tier() === 'PUSKOMDA'" [class.tier-puskomnas]="tier() === 'PUSKOMNAS'" [class.sidebar-collapsed]="!sidebarOpen()">
+      <aside class="sidebar pattern-motif" [class.open]="sidebarOpen()">
+        <svg class="side-illustration" viewBox="0 0 260 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+          <g fill="var(--color-primary)">
+            <rect x="18" y="92" width="10" height="108" rx="2" />
+            <circle cx="23" cy="88" r="7" />
+            <path d="M23,74 L17,85 L29,85 Z" />
+            <rect x="232" y="92" width="10" height="108" rx="2" />
+            <circle cx="237" cy="88" r="7" />
+            <path d="M237,74 L231,85 L243,85 Z" />
+            <path d="M88,200 L88,132 Q88,80 130,80 Q172,80 172,132 L172,200 Z" />
+            <circle cx="130" cy="72" r="13" />
+            <path d="M130,48 L123,63 L137,63 Z" />
+            <rect x="127" y="38" width="6" height="14" />
+          </g>
+        </svg>
         <div class="side-brand">
           <span class="brand-icon"><img src="assets/logo-fsldk.svg" alt="Logo FSLDK"></span>
           <span>{{ brandLabel() }}</span>
@@ -70,15 +88,15 @@ type SidebarEntry =
                 <span class="side-nav-group-label">{{ entry.config.label }}</span>
                 <app-icon name="chevron-down" [size]="12" class="side-nav-group-chevron" [class.open]="isGroupExpanded(entry.config.label)" />
               </button>
-              @if (isGroupExpanded(entry.config.label)) {
-                <div class="side-nav-group-children">
+              <div class="side-nav-group-children" [class.expanded]="isGroupExpanded(entry.config.label)">
+                <div class="side-nav-group-children-inner">
                   @for (child of entry.children; track child.menuRoute) {
                     <a [routerLink]="child.menuRoute" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()">
                       <span class="icon-badge sm icon-badge-soft"><app-icon [name]="child.menuIcon" [size]="15" /></span> {{ child.menuLabel }}
                     </a>
                   }
                 </div>
-              }
+              </div>
             }
           }
         </nav>
@@ -86,7 +104,9 @@ type SidebarEntry =
 
       <div class="cms-main">
         <header class="topbar">
-          <button class="hamburger" (click)="toggle()" aria-label="Menu">&#9776;</button>
+          <button class="hamburger" (click)="toggle()" [class.active]="sidebarOpen()" aria-label="Buka/tutup sidebar">
+            <span></span><span></span><span></span>
+          </button>
           @if (showOrgSwitcher()) {
             <div class="org-switcher">
               <button class="org-switcher-btn" type="button" (click)="toggleOrgDropdown($event)">
@@ -154,14 +174,40 @@ type SidebarEntry =
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%2300933b' stroke-width='1' stroke-opacity='.02'%3E%3Cellipse cx='24' cy='12' rx='6' ry='10'/%3E%3Cellipse cx='24' cy='36' rx='6' ry='10'/%3E%3Cellipse cx='36' cy='24' rx='10' ry='6'/%3E%3Cellipse cx='12' cy='24' rx='10' ry='6'/%3E%3Ccircle cx='24' cy='24' r='2.4' fill='%2300933b' fill-opacity='.02' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
       background-size: 48px 48px;
     }
-    .sidebar { width: 260px; background: #fff; border-right: 1px solid var(--color-border); color: var(--color-text); display: flex; flex-direction: column; padding: 24px 16px; position: fixed; top: 0; left: 0; height: 100dvh; overflow-y: auto; z-index: 40; }
-    .side-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; padding: 8px; margin-bottom: 24px; color: var(--color-text); }
-    .brand-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); overflow: hidden; flex-shrink: 0; }
+    /* Sidebar sekarang bisa ditutup/dibuka di SEMUA lebar layar (dulu hanya
+       mobile) — .sidebar:not(.open) selalu geser keluar lewat transform,
+       .cms-main mengikuti lewat margin-left di .cms.sidebar-collapsed
+       (lihat rule-nya di bawah). "pattern-motif" (kelas global, sama dipakai
+       section landing page) + .side-illustration (siluet kubah masjid)
+       memberi tekstur latar supaya sidebar tidak polos. */
+    .sidebar {
+      width: 260px; background: #fff; border-right: 1px solid var(--color-border); color: var(--color-text);
+      display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100dvh; z-index: 40;
+      overflow: hidden; box-shadow: 2px 0 28px rgba(15,23,20,.05);
+      transition: transform var(--motion-slow) var(--ease-out), box-shadow var(--motion-slow) ease;
+    }
+    .sidebar:not(.open) { transform: translateX(-100%); box-shadow: none; }
+    .side-illustration { position: absolute; bottom: 0; left: 0; width: 100%; height: auto; opacity: .05; pointer-events: none; z-index: 0; }
+    .side-brand {
+      position: relative; z-index: 1; flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+      font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; padding: 22px 16px 18px;
+      color: var(--color-text); background: #fff; border-bottom: 1px solid var(--color-border);
+    }
+    .brand-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); overflow: hidden; flex-shrink: 0; box-shadow: var(--shadow-sm); }
     .brand-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .side-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-    .side-nav a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    /* .side-nav adalah SATU-SATUNYA yang discroll — .side-brand di atas tetap
+       diam (poin 6): min-height:0 wajib supaya flex child ini benar-benar
+       bisa menciut & memicu overflow, bukan mendorong tinggi .sidebar. */
+    .side-nav {
+      position: relative; z-index: 1; display: flex; flex-direction: column; gap: 6px; flex: 1; min-height: 0;
+      overflow-y: auto; padding: 16px; scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent;
+    }
+    .side-nav::-webkit-scrollbar { width: 6px; }
+    .side-nav::-webkit-scrollbar-track { background: transparent; }
+    .side-nav::-webkit-scrollbar-thumb { background-color: var(--color-border-strong); border-radius: var(--radius-full); }
+    .side-nav a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease; }
     .side-nav a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; transform: translateX(3px); }
-    .side-nav a.active { background: var(--color-primary); color: #fff; }
+    .side-nav a.active { background: var(--color-primary); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent); }
     .side-nav a.active:hover { background: var(--color-primary-dark); color: #fff; transform: translateX(3px); }
     .side-nav a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
     .side-nav a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
@@ -170,12 +216,22 @@ type SidebarEntry =
     .side-nav-group-label { flex: 1; text-align: left; }
     .side-nav-group-chevron { color: var(--color-muted); transition: transform var(--motion-fast) ease; flex-shrink: 0; }
     .side-nav-group-chevron.open { transform: rotate(180deg); }
-    .side-nav-group-children { display: flex; flex-direction: column; gap: 4px; padding-left: 18px; margin: 2px 0 4px; border-left: 2px solid var(--color-border); }
+    /* Ekspand/ciut submenu "grid-template-rows: 0fr -> 1fr" — animasi tinggi
+       otomatis tanpa perlu tahu/hitung tinggi kontennya lebih dulu (jumlah
+       anak per grup beda-beda), plus overflow:hidden di -inner supaya
+       kontennya benar-benar terciutkan sampai 0, bukan cuma ketutup. */
+    .side-nav-group-children { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--motion-base) var(--ease-out); }
+    .side-nav-group-children.expanded { grid-template-rows: 1fr; }
+    .side-nav-group-children-inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 4px; padding-left: 18px; margin: 2px 0 4px; border-left: 2px solid var(--color-border); }
     .side-nav-group-children a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .88rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
     .side-nav-group-children a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; transform: translateX(3px); }
     .side-nav-group-children a.active { background: var(--color-primary); color: #fff; }
     .side-nav-group-children a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
-    .cms-main { margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; }
+    @media (prefers-reduced-motion: reduce) {
+      .sidebar, .cms-main, .side-nav-group-children, .hamburger span { transition: none !important; }
+    }
+    .cms-main { margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; transition: margin-left var(--motion-slow) var(--ease-out); }
+    .cms.sidebar-collapsed .cms-main { margin-left: 0; }
     .topbar { display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
     .spacer { flex: 1; }
     .org-switcher { position: relative; }
@@ -186,7 +242,20 @@ type SidebarEntry =
     .org-dropdown-panel input { margin-bottom: 6px; }
     .org-dropdown-panel button.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .org-empty { padding: 8px 12px; font-size: .85rem; }
-    .hamburger { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; }
+    /* Hamburger sekarang selalu tampil di topbar (dulu cuma mobile) — satu
+       tombol men-toggle sidebarOpen di semua lebar layar. 3 <span> di-morph
+       jadi "X" lewat transform saat .active, bukan diganti ikon lain, supaya
+       transisinya mulus. */
+    .hamburger {
+      display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+      width: 38px; height: 38px; border-radius: var(--radius-xs); background: none; border: none;
+      cursor: pointer; flex-shrink: 0; transition: background var(--motion-fast) ease;
+    }
+    .hamburger:hover { background: var(--color-bg-warm); }
+    .hamburger span { display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--color-text); transition: transform var(--motion-base) var(--ease-out), opacity var(--motion-fast) ease; }
+    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
     .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
     .nav-website-link:hover { background: var(--color-bg-warm); color: var(--color-primary-dark); text-decoration: none; }
     .user-dropdown { position: relative; }
@@ -220,10 +289,12 @@ type SidebarEntry =
     .cms-footer { padding: 0 28px 28px; }
     .cms-footer-inner { background: var(--color-bg-alt); border-radius: var(--radius-lg); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .85rem; color: var(--color-text-secondary); }
     @media (max-width: 900px) {
-      .sidebar { z-index: 60; transform: translateX(-100%); transition: transform var(--motion-slow) var(--ease-out); box-shadow: var(--shadow-lg); }
-      .sidebar.open { transform: none; }
-      .hamburger { display: block; color: var(--color-text); }
-      .cms-main { margin-left: 0; }
+      /* Di bawah 900px sidebar jadi drawer mengambang (overlay), bukan
+         mendorong konten — z-index dinaikkan & .cms-main SELALU margin-left
+         0 di sini, apa pun status sidebarOpen/.sidebar-collapsed (override
+         base rule di atas yang berlaku untuk desktop). */
+      .sidebar.open { box-shadow: var(--shadow-lg); z-index: 60; }
+      .cms-main, .cms.sidebar-collapsed .cms-main { margin-left: 0; }
     }
 
     /* Tema per tier (poin 2 miss-development-clarification.md): CMS Utama
@@ -315,7 +386,11 @@ export class CmsLayoutComponent implements OnInit {
   orgOptions = signal<MeOrganization[]>([]);
   orgSearch = signal('');
 
-  sidebarOpen = signal(false);
+  // Default terbuka di desktop (>900px, cocok dengan breakpoint CSS-nya),
+  // tertutup di mobile (overlay, harus dibuka manual lewat hamburger) —
+  // dievaluasi sekali saat komponen dibuat, tidak disinkronkan ulang saat
+  // resize (pengguna bebas toggle manual setelahnya di lebar layar manapun).
+  sidebarOpen = signal(window.innerWidth > MOBILE_BREAKPOINT);
   dropdownOpen = signal(false);
   orgDropdownOpen = signal(false);
   year = new Date().getFullYear();
@@ -399,7 +474,10 @@ export class CmsLayoutComponent implements OnInit {
   }
 
   toggle(): void { this.sidebarOpen.update((v) => !v); }
-  close(): void { this.sidebarOpen.set(false); }
+  // Hanya auto-tutup saat navigasi di lebar mobile (sidebar overlay) — di
+  // desktop sidebar mendorong konten, jadi ikut tertutup tiap klik menu
+  // justru mengganggu, bukan membantu.
+  close(): void { if (window.innerWidth <= MOBILE_BREAKPOINT) this.sidebarOpen.set(false); }
 
   logout(): void {
     this.auth.logout();
