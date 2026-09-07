@@ -26,9 +26,10 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
       if (err.status === 401 && auth.isLoggedIn()) {
         // Sesi kedaluwarsa (token akses sudah expired) — bukan percobaan
-        // login yang gagal (di kondisi itu auth.isLoggedIn() masih false),
-        // jadi jangan tampilkan toast, cukup logout & arahkan ke /login.
-        auth.logout();
+        // login yang gagal (di kondisi itu auth.isLoggedIn() masih false).
+        // logout('expired') menampilkan toast infonya sendiri, jadi tidak
+        // perlu toast tambahan di sini.
+        auth.logout('expired');
         router.navigate(['/login']);
       } else if (err.status === 403 && code === '43-EMAIL') {
         router.navigate(['/verifikasi-email']);
