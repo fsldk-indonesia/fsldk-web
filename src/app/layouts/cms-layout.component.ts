@@ -38,6 +38,22 @@ type SidebarEntry =
   | { kind: 'item'; item: MenuItem }
   | { kind: 'group'; config: SidebarGroupConfig; children: MenuItem[] };
 
+// Warna outline per-tier di dropdown akun — SAMA dengan --color-primary yang
+// dipakai tema .cms.tier-* (lihat styles di bawah), tapi harus di-hardcode
+// terpisah di sini karena dropdown ini menampilkan SEMUA tier yang bisa
+// diakses akun sekaligus (bisa lebih dari satu), bukan cuma tier yang lagi
+// aktif — CSS custom property tema hanya merefleksikan tier yang aktif saat
+// ini, tidak bisa dipakai untuk mewarnai tier LAIN yang sedang tidak dibuka.
+const TIER_COLOR: Record<CmsTier, string> = {
+  FSLDK: '#00933b', PUSKOMNAS: '#55408f', PUSKOMDA: '#186541', LDK: '#063c84',
+};
+const TIER_CAPTION: Record<CmsTier, string> = {
+  FSLDK: 'Kelola seluruh konten & pengguna sistem',
+  PUSKOMNAS: 'Verifikasi & penetapan level nasional',
+  PUSKOMDA: 'Verifikasi & pendataan wilayah',
+  LDK: 'Kelola pendataan & kader LDK Anda',
+};
+
 /**
  * Shell CMS — dipakai untuk 4 route tree terpisah (cms/cms-ldk/cms-puskomda/
  * cms-puskomnas, lihat app.routes.ts). `tier` datang dari route `data` dan
@@ -136,18 +152,28 @@ type SidebarEntry =
             @if (dropdownOpen()) {
               <div class="dropdown-panel">
                 @for (t of auth.accessibleCmsTiers(); track t) {
-                  <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()">
+                  <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"
+                     class="portal-item" [class.active]="tier() === t" [style.--tier-color]="tierColorOf(t)">
                     <span class="icon-badge sm icon-badge-soft"><app-icon [name]="shellIconOf(t)" [size]="15" /></span>
-                    {{ shellLabelOf(t) }}
+                    <span class="dropdown-item-text">
+                      <span class="dropdown-item-title">{{ shellLabelOf(t) }}</span>
+                      <span class="dropdown-item-caption">{{ tierCaptionOf(t) }}</span>
+                    </span>
                   </a>
                 }
                 <a routerLink="/akun/profil" (click)="closeAllDropdowns()">
                   <span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="15" /></span>
-                  Profil Saya
+                  <span class="dropdown-item-text">
+                    <span class="dropdown-item-title">Profil Saya</span>
+                    <span class="dropdown-item-caption">Lihat &amp; ubah profil Anda</span>
+                  </span>
                 </a>
-                <button type="button" (click)="logout()">
+                <button type="button" class="dropdown-divider-top" (click)="logout()">
                   <span class="icon-badge sm icon-badge-danger"><app-icon name="log-out" [size]="15" /></span>
-                  Keluar
+                  <span class="dropdown-item-text">
+                    <span class="dropdown-item-title">Keluar</span>
+                    <span class="dropdown-item-caption">Keluar dari akun Anda</span>
+                  </span>
                 </button>
               </div>
             }
@@ -234,11 +260,11 @@ type SidebarEntry =
       transition: margin-left var(--motion-slow) var(--ease-out);
     }
     .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-    /* Topbar "mengambang" — ada jarak dari sidebar & tepi layar (bukan bar
-       penuh nempel pojok-ke-pojok seperti sebelumnya), meniru gaya
-       ldksyahid-app: kartu tersendiri dengan border+shadow+radius, bukan
-       cuma garis pembatas di bawahnya. Jaraknya sengaja tipis (8px, bukan
-       16px) supaya tetap terasa "nempel"/ringkas, bukan mengambang jauh.
+    /* Topbar nempel penuh di tepi ATAS (top:0, tanpa jarak) tapi mengambang
+       LEBAR di kanan-kiri: left/right diset ke tepi track yang tersedia
+       (edge sidebar s/d edge layar), lalu max-width + margin:0 auto
+       men-center bar-nya di tengah track itu — memberi jarak kosong yang
+       renggang di kedua sisi, bukan sekadar gap kecil tetap.
        position:fixed (bukan sticky) — sticky sebelumnya kadang gagal nempel
        tergantung konteks scroll/stacking ancestor-nya; fixed selalu pasti
        nempel di viewport terlepas dari itu. left mengikuti lebar sidebar
@@ -246,11 +272,12 @@ type SidebarEntry =
        dengan .cms-main supaya topbar & konten tetap sejajar saat toggle. */
     .topbar {
       display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #fff;
-      border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
-      position: fixed; top: 8px; left: 268px; right: 8px; z-index: 20;
+      border: 1px solid var(--color-border); border-radius: 0 0 var(--radius-md) var(--radius-md); box-shadow: var(--shadow-sm);
+      position: fixed; top: 0; left: 260px; right: 0; z-index: 20;
+      max-width: 1060px; margin: 0 auto;
       transition: left var(--motion-slow) var(--ease-out);
     }
-    .cms.sidebar-collapsed .topbar { left: 8px; }
+    .cms.sidebar-collapsed .topbar { left: 0; }
     .spacer { flex: 1; }
     /* PrayerTimeComponent (dipakai bersama navbar publik) defaultnya pil
        penuh (--radius-full) — di topbar CMS ini SENGAJA dikotakkan (radius
@@ -279,20 +306,15 @@ type SidebarEntry =
     .hamburger:hover { background: var(--color-primary); }
     .hamburger span { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--color-primary-dark); transition: background var(--motion-fast) ease; }
     .hamburger:hover span { background: #fff; }
-    /* Website & akun sebelumnya latar abu netral (--color-bg-warm) —
-       diganti ke tint hijau (senada hamburger & badge lain di topbar ini)
-       supaya terlihat "hidup"/menyatu dengan identitas warna aplikasi,
-       bukan abu-abu polos. Hover pindah ke hijau solid + teks putih. */
-    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); border: 1px solid transparent; background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
-    .nav-website-link:hover { background: var(--color-primary); color: #fff; text-decoration: none; }
+    /* Website & akun: tanpa latar sama sekali di kondisi diam (dicoba pakai
+       latar abu, lalu hijau — keduanya ditolak), hover cukup highlight
+       netral tipis seperti item dropdown lain di app ini. */
+    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); background: none; border: none; color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
+    .nav-website-link:hover { background: var(--color-bg-warm); color: var(--color-primary-dark); text-decoration: none; }
     .user-dropdown { position: relative; }
-    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--color-primary-soft); border: 1px solid transparent; cursor: pointer; padding: 5px 12px 5px 5px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease; }
-    .user-chip:hover { background: var(--color-primary); }
-    .user-chip:hover .user-meta strong, .user-chip:hover .user-meta small, .user-chip:hover .caret { color: #fff; }
-    /* Avatar sengaja solid (bukan soft-tint lagi) supaya tetap terlihat
-       jelas sebagai lingkaran tersendiri di atas chip yang kini juga hijau —
-       dua tint hijau serupa bertumpuk akan membuat avatar "hilang". */
-    .avatar { width: 38px; height: 38px; border-radius: var(--radius-full); background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease; }
+    .user-chip:hover { background: var(--color-bg-warm); }
+    .avatar { width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; }
     img.avatar { object-fit: cover; }
     .user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
     .user-meta strong { transition: color var(--motion-fast) ease; }
@@ -301,8 +323,8 @@ type SidebarEntry =
     .caret.open { transform: rotate(180deg); }
     .dropdown-panel {
       position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 200px; padding: 8px;
-      display: flex; flex-direction: column; z-index: 30;
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg); min-width: 280px; padding: 8px;
+      display: flex; flex-direction: column; gap: 3px; z-index: 30;
       transform-origin: top right; animation: dropdown-panel-in var(--motion-base) var(--ease-out) both;
     }
     /* Invisible hover bridge over the 8px gap above the panel — without it,
@@ -314,8 +336,25 @@ type SidebarEntry =
     .dropdown-panel::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }
     @keyframes dropdown-panel-in { from { opacity: 0; transform: scale(.85) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
-    .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--radius-xs); border: none; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; font-weight: 600; color: var(--color-text); transition: background var(--motion-fast) ease; }
+    .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--radius-xs); border: 1.5px solid transparent; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; font-weight: 600; color: var(--color-text); transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
     .dropdown-panel a:hover, .dropdown-panel button:hover { background: var(--color-bg-warm); text-decoration: none; }
+    .dropdown-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .dropdown-item-title { font-weight: 700; color: var(--color-text); font-size: .9rem; }
+    .dropdown-item-caption { font-size: .76rem; color: var(--color-muted); font-weight: 500; line-height: 1.3; }
+    /* Outline berwarna per-tier (lihat TIER_COLOR) — hijau untuk Portal
+       Admin, biru/hijau tua/ungu untuk LDK/Puskomda/Puskomnas. Kalau tier
+       ini yang SEDANG dibuka (tier() === t), jadi solid berwarna alih-alih
+       cuma outline, sama seperti pola active di sidebar. */
+    .portal-item { border-color: var(--tier-color); }
+    .portal-item:hover { background: color-mix(in srgb, var(--tier-color) 10%, transparent); }
+    .portal-item.active { background: var(--tier-color); }
+    .portal-item.active:hover { background: var(--tier-color); }
+    .portal-item.active .dropdown-item-title { color: #fff; }
+    .portal-item.active .dropdown-item-caption { color: rgba(255,255,255,.85); }
+    .portal-item.active .icon-badge { background: rgba(255,255,255,.25); color: #fff; box-shadow: none; }
+    /* Garis pemisah sebelum "Keluar" — dipisah dari aksi navigasi portal/
+       profil di atasnya karena ini aksi destruktif (keluar akun). */
+    .dropdown-panel .dropdown-divider-top { border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 14px; }
     /* Kotak "Cari organisasi..." tetap teks biasa (tanpa icon-badge), jadi
        pola opacity dim lama tidak lagi relevan — item lain sekarang pakai
        icon-badge berwarna (lihat markup), bukan ikon polos. */
@@ -330,7 +369,7 @@ type SidebarEntry =
          desktop), karena sidebar tidak lagi mendorong apa pun di mobile. */
       .sidebar.open { box-shadow: var(--shadow-lg); z-index: 60; }
       .cms-main, .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-      .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 8px; padding: 8px 14px; gap: 10px; }
+      .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 0; padding: 8px 14px; gap: 10px; }
     }
 
     /* Tema per tier (poin 2 miss-development-clarification.md): CMS Utama
@@ -384,6 +423,8 @@ export class CmsLayoutComponent implements OnInit {
   shellBaseOf(t: CmsTier): string { return CMS_SHELL_BASE[t]; }
   shellLabelOf(t: CmsTier): string { return CMS_SHELL_LABEL[t]; }
   shellIconOf(t: CmsTier): string { return CMS_SHELL_ICON[t]; }
+  tierColorOf(t: CmsTier): string { return TIER_COLOR[t]; }
+  tierCaptionOf(t: CmsTier): string { return TIER_CAPTION[t]; }
 
   allMenus = signal<MenuItem[]>([]);
   menus = computed(() => this.allMenus().filter((m) => m.menuRoute.startsWith(this.shellBase() + '/')));
