@@ -136,10 +136,19 @@ type SidebarEntry =
             @if (dropdownOpen()) {
               <div class="dropdown-panel">
                 @for (t of auth.accessibleCmsTiers(); track t) {
-                  <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"><app-icon [name]="shellIconOf(t)" [size]="16" />{{ shellLabelOf(t) }}</a>
+                  <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()">
+                    <span class="icon-badge sm icon-badge-soft"><app-icon [name]="shellIconOf(t)" [size]="15" /></span>
+                    {{ shellLabelOf(t) }}
+                  </a>
                 }
-                <a routerLink="/akun/profil" (click)="closeAllDropdowns()"><app-icon name="user-circle" [size]="16" />Profil Saya</a>
-                <button type="button" (click)="logout()"><app-icon name="log-out" [size]="16" />Keluar</button>
+                <a routerLink="/akun/profil" (click)="closeAllDropdowns()">
+                  <span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="15" /></span>
+                  Profil Saya
+                </a>
+                <button type="button" (click)="logout()">
+                  <span class="icon-badge sm icon-badge-danger"><app-icon name="log-out" [size]="15" /></span>
+                  Keluar
+                </button>
               </div>
             }
           </div>
@@ -215,27 +224,39 @@ type SidebarEntry =
     }
     .cms-main {
       margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh;
-      /* Topbar sekarang position:fixed (bukan sticky lagi — lihat catatan di
-         .topbar), jadi keluar dari flex flow ini; padding-top di sini
-         menggantikan ruangnya supaya .cms-content tidak start ketiban di
-         bawah topbar. Nilainya = tinggi topbar (padding 16px atas+bawah +
-         konten setinggi 40px, avatar-nya). */
-      padding-top: 72px;
+      /* Topbar sekarang position:fixed & "mengambang" (bukan bar penuh
+         nempel ke pojok — lihat catatan di .topbar), jadi keluar dari flex
+         flow ini; padding-top di sini menggantikan ruangnya supaya
+         .cms-content tidak start ketiban di bawah topbar. Nilainya = jarak
+         atas topbar (16px) + tinggi topbar (~68px) + jarak sebelum konten
+         (16px). */
+      padding-top: 100px;
       transition: margin-left var(--motion-slow) var(--ease-out);
     }
     .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-    /* position:fixed (bukan sticky) — sticky sebelumnya kadang gagal nempel
-       tergantung konteks scroll/stacking ancestor-nya; fixed selalu pasti
-       nempel di viewport terlepas dari itu. left mengikuti lebar sidebar
-       (geser ke 0 saat sidebar collapsed/mobile) via transition yang sama
-       dengan .cms-main supaya topbar & konten tetap sejajar saat toggle. */
+    /* Topbar "mengambang" — ada jarak dari sidebar & tepi layar (bukan bar
+       penuh nempel pojok-ke-pojok seperti sebelumnya), meniru gaya
+       ldksyahid-app: kartu tersendiri dengan border+shadow+radius, bukan
+       cuma garis pembatas di bawahnya. position:fixed (bukan sticky) —
+       sticky sebelumnya kadang gagal nempel tergantung konteks scroll/
+       stacking ancestor-nya; fixed selalu pasti nempel di viewport terlepas
+       dari itu. left mengikuti lebar sidebar (geser saat sidebar collapsed/
+       mobile) via transition yang sama dengan .cms-main supaya topbar &
+       konten tetap sejajar saat toggle. */
     .topbar {
-      display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff;
-      border-bottom: 1px solid var(--color-border); position: fixed; top: 0; left: 260px; right: 0; z-index: 20;
+      display: flex; align-items: center; gap: 16px; padding: 14px 22px; background: #fff;
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+      position: fixed; top: 16px; left: 276px; right: 16px; z-index: 20;
       transition: left var(--motion-slow) var(--ease-out);
     }
-    .cms.sidebar-collapsed .topbar { left: 0; }
+    .cms.sidebar-collapsed .topbar { left: 16px; }
     .spacer { flex: 1; }
+    /* PrayerTimeComponent (dipakai bersama navbar publik) defaultnya pil
+       penuh (--radius-full) — di topbar CMS ini SENGAJA dikotakkan (radius
+       kecil, bukan pil) supaya konsisten dengan tombol lain di topbar ini.
+       ::ng-deep dipilih karena stylenya ada di komponen anak yang encapsulated
+       (pola sama dipakai tema per-tier .cms-content ::ng-deep .card di bawah). */
+    .topbar ::ng-deep .prayer-btn { border-radius: var(--radius-xs); }
     .org-switcher { position: relative; }
     .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: var(--color-bg-warm); color: var(--color-text); font-weight: 600; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
     .org-switcher-btn:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
@@ -246,19 +267,25 @@ type SidebarEntry =
     .org-empty { padding: 8px 12px; font-size: .85rem; }
     /* Hamburger sekarang selalu tampil di topbar (dulu cuma mobile) — satu
        tombol men-toggle sidebarOpen di semua lebar layar. Ikonnya TETAP 3
-       garis apa pun status sidebar-nya (tidak berubah jadi "X"). */
+       garis apa pun status sidebar-nya (tidak berubah jadi "X"). Diberi
+       badge hijau (bukan transparan) supaya ikonnya tidak "menyatu" dengan
+       latar topbar putih. */
     .hamburger {
       display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
-      width: 38px; height: 38px; border-radius: var(--radius-xs); background: none; border: none;
+      width: 38px; height: 38px; border-radius: var(--radius-xs); background: var(--color-primary-soft); border: none;
       cursor: pointer; flex-shrink: 0; transition: background var(--motion-fast) ease;
     }
-    .hamburger:hover { background: var(--color-bg-warm); }
-    .hamburger span { display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--color-text); }
-    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
-    .nav-website-link:hover { background: var(--color-bg-warm); color: var(--color-primary-dark); text-decoration: none; }
+    .hamburger:hover { background: var(--color-primary); }
+    .hamburger span { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--color-primary-dark); transition: background var(--motion-fast) ease; }
+    .hamburger:hover span { background: #fff; }
+    /* Website & akun sebelumnya transparan sampai di-hover — sekarang selalu
+       punya latar+border sendiri (senada .org-switcher-btn) supaya tidak
+       menyatu dengan latar putih topbar. */
+    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: var(--color-bg-warm); color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, border-color var(--motion-fast) ease; }
+    .nav-website-link:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); border-color: var(--color-primary); text-decoration: none; }
     .user-dropdown { position: relative; }
-    .user-chip { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease; }
-    .user-chip:hover { background: var(--color-bg-warm); }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--color-bg-warm); border: 1px solid var(--color-border); cursor: pointer; padding: 6px 12px 6px 6px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
+    .user-chip:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
     .avatar { width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; }
     img.avatar { object-fit: cover; }
     .user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
@@ -280,9 +307,11 @@ type SidebarEntry =
     .dropdown-panel::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }
     @keyframes dropdown-panel-in { from { opacity: 0; transform: scale(.85) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
-    .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 10px 12px; border-radius: var(--radius-xs); border: none; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; color: var(--color-text); transition: background var(--motion-fast) ease; }
-    .dropdown-panel svg, .dropdown-panel app-icon { opacity: .7; flex-shrink: 0; }
+    .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--radius-xs); border: none; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; font-weight: 600; color: var(--color-text); transition: background var(--motion-fast) ease; }
     .dropdown-panel a:hover, .dropdown-panel button:hover { background: var(--color-bg-warm); text-decoration: none; }
+    /* Kotak "Cari organisasi..." tetap teks biasa (tanpa icon-badge), jadi
+       pola opacity dim lama tidak lagi relevan — item lain sekarang pakai
+       icon-badge berwarna (lihat markup), bukan ikon polos. */
     .cms-content { padding: 32px 28px; flex: 1; }
     .cms-footer { padding: 0 28px 28px; }
     .cms-footer-inner { background: var(--color-bg-alt); border-radius: var(--radius-lg); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .85rem; color: var(--color-text-secondary); }
@@ -294,7 +323,7 @@ type SidebarEntry =
          desktop), karena sidebar tidak lagi mendorong apa pun di mobile. */
       .sidebar.open { box-shadow: var(--shadow-lg); z-index: 60; }
       .cms-main, .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-      .topbar, .cms.sidebar-collapsed .topbar { left: 0; }
+      .topbar, .cms.sidebar-collapsed .topbar { left: 12px; right: 12px; top: 12px; padding: 12px 16px; gap: 10px; }
     }
 
     /* Tema per tier (poin 2 miss-development-clarification.md): CMS Utama
