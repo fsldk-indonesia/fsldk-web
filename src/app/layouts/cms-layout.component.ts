@@ -47,6 +47,15 @@ type SidebarEntry =
 const TIER_COLOR: Record<CmsTier, string> = {
   FSLDK: '#00933b', PUSKOMNAS: '#55408f', PUSKOMDA: '#186541', LDK: '#063c84',
 };
+// Varian lebih terang (--color-primary-bright per tier) dipakai KHUSUS untuk
+// outline resting-state di dropdown — TIER_COLOR di atas (dark/primary) sudah
+// pas untuk background solid saat aktif (kontras dengan teks putih), tapi
+// sebagai garis tipis 1.5px warna gelap seperti itu gampang salah dibaca
+// sebagai hitam (terutama Puskomda/Puskomnas). Nilainya sama persis dengan
+// --color-primary-bright di blok tema .cms.tier-* di bawah.
+const TIER_BORDER_COLOR: Record<CmsTier, string> = {
+  FSLDK: '#3dbe6b', PUSKOMNAS: '#7a63b8', PUSKOMDA: '#2f9161', LDK: '#1f5db3',
+};
 const TIER_CAPTION: Record<CmsTier, string> = {
   FSLDK: 'Kelola seluruh konten & pengguna sistem',
   PUSKOMNAS: 'Verifikasi & penetapan level nasional',
@@ -154,7 +163,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
                 @for (t of auth.accessibleCmsTiers(); track t) {
                   <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"
                      class="portal-item" [class.active]="tier() === t"
-                     [style.border-color]="tierColorOf(t)"
+                     [style.border-color]="tier() === t ? tierColorOf(t) : tierBorderColorOf(t)"
                      [style.background]="tier() === t ? tierColorOf(t) : null">
                     <span class="icon-badge sm icon-badge-soft"><app-icon [name]="shellIconOf(t)" [size]="15" /></span>
                     <span class="dropdown-item-text">
@@ -438,6 +447,7 @@ export class CmsLayoutComponent implements OnInit {
   shellLabelOf(t: CmsTier): string { return CMS_SHELL_LABEL[t]; }
   shellIconOf(t: CmsTier): string { return CMS_SHELL_ICON[t]; }
   tierColorOf(t: CmsTier): string { return TIER_COLOR[t]; }
+  tierBorderColorOf(t: CmsTier): string { return TIER_BORDER_COLOR[t]; }
   tierCaptionOf(t: CmsTier): string { return TIER_CAPTION[t]; }
 
   allMenus = signal<MenuItem[]>([]);
