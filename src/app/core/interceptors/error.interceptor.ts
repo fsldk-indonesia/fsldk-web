@@ -24,11 +24,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       const message = fieldMessages || body?.message || 'Terjadi kesalahan. Silakan coba lagi.';
       const code = body?.code as string | undefined;
 
-      if (err.status === 401) {
-        if (auth.isLoggedIn()) {
-          auth.logout();
-          router.navigate(['/login']);
-        }
+      if (err.status === 401 && auth.isLoggedIn()) {
+        // Sesi kedaluwarsa (token akses sudah expired) — bukan percobaan
+        // login yang gagal (di kondisi itu auth.isLoggedIn() masih false),
+        // jadi jangan tampilkan toast, cukup logout & arahkan ke /login.
+        auth.logout();
+        router.navigate(['/login']);
       } else if (err.status === 403 && code === '43-EMAIL') {
         router.navigate(['/verifikasi-email']);
       } else if (err.status !== 0 && !req.context.get(SILENT_ERROR)) {
