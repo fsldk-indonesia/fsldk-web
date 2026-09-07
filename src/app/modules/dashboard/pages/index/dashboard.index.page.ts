@@ -56,8 +56,14 @@ function formatRupiah(value: number): string {
   providers: [DashboardIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    .stat { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
+    .stat { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 26px 24px; box-shadow: var(--shadow-sm); }
     .stat-with-icon { display: flex; align-items: flex-start; gap: 14px; }
+    /* Grid statistik jaringan (LDK/Puskomda/dst) terasa mepet dengan gap
+       default .grid (24px) karena kartunya lebar & padat teks — dinaikkan
+       KHUSUS di halaman ini (scoped via Angular style encapsulation, tidak
+       bocor ke .grid di halaman lain). Dinaikkan lagi ke 36px (28px masih
+       terasa kurang kentara bedanya). */
+    .grid { gap: 36px; }
     .stat-label { color: var(--color-text-secondary); font-size: .9rem; } .stat-num { display: block; font-family: var(--font-heading); font-weight: 800; font-size: 2.6rem; margin-top: 8px; }
     .card-section { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); margin-top: 20px; }
     .card-section h3 { margin-bottom: 16px; display: flex; align-items: center; gap: 9px; }

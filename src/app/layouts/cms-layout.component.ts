@@ -144,7 +144,7 @@ function canvasSilhouetteUrl(hex: string): string {
             </div>
           }
           <div class="spacer"></div>
-          <app-prayer-time />
+          <app-prayer-time [tier]="tier()" />
           <a routerLink="/" class="nav-website-link">
             <app-icon name="globe" [size]="15" />
             Website
@@ -230,7 +230,7 @@ function canvasSilhouetteUrl(hex: string): string {
     .side-brand {
       position: relative; z-index: 1; flex-shrink: 0; display: flex; align-items: center; gap: 10px;
       font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; padding: 22px 16px 18px;
-      color: var(--color-text); background: #fff; border-bottom: 1px solid var(--color-border);
+      color: var(--color-primary); background: transparent; box-shadow: 0 1px 3px rgba(0,0,0,.04);
     }
     .brand-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); overflow: hidden; flex-shrink: 0; box-shadow: var(--shadow-sm); }
     .brand-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -295,7 +295,7 @@ function canvasSilhouetteUrl(hex: string): string {
       display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #fff;
       border: 1px solid var(--color-border); border-radius: 0 0 var(--radius-md) var(--radius-md); box-shadow: var(--shadow-sm);
       position: fixed; top: 0; left: 260px; right: 0; z-index: 20;
-      max-width: 1100px; margin: 0 auto;
+      max-width: 1150px; margin: 0 auto;
       transition: left var(--motion-slow) var(--ease-out);
     }
     .cms.sidebar-collapsed .topbar { left: 0; }
@@ -411,7 +411,7 @@ function canvasSilhouetteUrl(hex: string): string {
     .cms-footer { padding: 0; }
     .cms-footer-inner {
       background: var(--color-bg-alt); border-radius: var(--radius-md) var(--radius-md) 0 0;
-      max-width: 1060px; margin: 0 auto; padding: 18px 24px;
+      max-width: 1100px; margin: 0 auto; padding: 18px 24px;
       display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
       font-size: .85rem; color: var(--color-text-secondary);
     }

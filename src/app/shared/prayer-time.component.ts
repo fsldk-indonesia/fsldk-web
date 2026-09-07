@@ -1,6 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
 import { IconComponent } from './icon.component';
 import { ModalBackdropDirective } from './modal-backdrop.directive';
+import { CmsTier, CMS_TIER_ACCENT } from './cms-tier';
 
 interface PrayerJadwal {
   imsak: string;
@@ -69,7 +70,9 @@ function toMinutes(time: string | undefined): number {
       </span>
     </button>
 
-    <div class="prayer-modal-overlay" [class.active]="isOpen()" appModalBackdrop #overlayEl>
+    <div class="prayer-modal-overlay" [class.active]="isOpen()" appModalBackdrop #overlayEl
+         [style.--color-primary]="accent()?.primary" [style.--color-primary-bright]="accent()?.bright"
+         [style.--color-primary-dark]="accent()?.dark" [style.--color-primary-soft]="accent()?.soft">
       <div class="prayer-modal" (click)="$event.stopPropagation()">
         <div class="prayer-modal-hero">
           <button type="button" class="prayer-modal-close" (click)="close()" aria-label="Tutup">&times;</button>
@@ -159,6 +162,17 @@ export class PrayerTimeComponent implements OnInit, AfterViewInit, OnDestroy {
   // referensi parent logis aslinya (bukan document.body) dan `removeChild`
   // saat destroy akan gagal karena node sudah dipindah ke parent lain.
   @ViewChild('overlayEl', { static: true }) private overlayRef!: ElementRef<HTMLElement>;
+
+  // Tier CMS (LDK/Puskomda/Puskomnas/FSLDK) — dipakai untuk mewarnai modal
+  // sesuai portal aktif. WAJIB di-pass eksplisit (bukan andalkan inheritance
+  // var(--color-primary) dari ancestor .cms.tier-*) karena overlay ini
+  // dipindah ke document.body (lihat ngAfterViewInit) sehingga keluar dari
+  // scope custom property tier tsb — tanpa ini modal akan selalu tampil
+  // hijau default FSLDK di portal LDK/Puskomda/Puskomnas manapun.
+  @Input() tier: CmsTier | null = null;
+  accent(): { primary: string; bright: string; dark: string; soft: string } | null {
+    return this.tier ? CMS_TIER_ACCENT[this.tier] ?? null : null;
+  }
 
   readonly prayers = PRAYERS;
   readonly dateLabel = `${DAY_NAMES[new Date().getDay()]}, ${new Date().getDate()} ${MONTH_NAMES[new Date().getMonth()]} ${new Date().getFullYear()}`;

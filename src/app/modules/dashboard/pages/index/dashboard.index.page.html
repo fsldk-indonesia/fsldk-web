@@ -69,7 +69,7 @@
     }
 
     @if (s.ldk; as ldk) {
-      <div class="grid grid-3">
+      <div class="grid grid-3" style="margin-top:20px">
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-solid"><app-icon name="clipboard-list" [size]="19" /></span><span><span class="stat-label">Status Pendataan</span><span class="stat-num" style="font-size:1.6rem">{{ statusLabel(ldk.submissionStatus) }}</span></span></div>
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-gold"><app-icon name="award" [size]="19" /></span><span><span class="stat-label">Level Saat Ini</span><span class="stat-num" style="font-size:1.6rem">{{ ldk.levelLabel || ldk.levelCode || '—' }}</span></span></div>
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-soft"><app-icon name="clock" [size]="19" /></span><span><span class="stat-label">Terakhir Diperbarui</span><span class="stat-num" style="font-size:1.2rem">{{ (ldk.lastUpdatedDate | date:'d MMM yyyy, HH:mm') || '—' }}</span></span></div>
@@ -100,7 +100,7 @@
     }
 
     @if (s.puskomda; as p) {
-      <div class="grid grid-3">
+      <div class="grid grid-3" style="margin-top:20px">
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-solid"><app-icon name="building" [size]="19" /></span><span><span class="stat-label">Total LDK Wilayah</span><span class="stat-num">{{ p.totalLDK }}</span></span></div>
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-ember"><app-icon name="users" [size]="19" /></span><span><span class="stat-label">Total Kader Aktif</span><span class="stat-num">{{ p.totalKaderAktif }}</span></span></div>
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-gold"><app-icon name="clipboard-check" [size]="19" /></span><span><span class="stat-label">Terverifikasi</span><span class="stat-num">{{ p.terverifikasi }}</span></span></div>
@@ -111,7 +111,7 @@
     }
 
     @if (s.puskomnas; as p) {
-      <div class="grid grid-4">
+      <div class="grid grid-4" style="margin-top:20px">
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-solid"><app-icon name="landmark" [size]="19" /></span><span><span class="stat-label">Total LDK Nasional</span><span class="stat-num">{{ p.totalLDKNasional }}</span></span></div>
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-soft"><app-icon name="building-2" [size]="19" /></span><span><span class="stat-label">Total Puskomda</span><span class="stat-num">{{ p.totalPuskomda }}</span></span></div>
         <div class="stat stat-with-icon"><span class="icon-badge md icon-badge-gold"><app-icon name="award" [size]="19" /></span><span><span class="stat-label">Level Ditetapkan</span><span class="stat-num">{{ p.levelEstablishedCount }}</span></span></div>
