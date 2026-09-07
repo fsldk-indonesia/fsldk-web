@@ -399,6 +399,8 @@ img.avatar { object-fit: cover; }
 .icon-badge-ember { background: linear-gradient(150deg, #fff, var(--color-ember-soft)); color: var(--color-ember-dark); }
 .icon-badge-neutral { background: linear-gradient(150deg, #fff, var(--color-bg-alt)); color: var(--color-text-secondary); }
 .icon-badge-danger { background: linear-gradient(150deg, #fff, var(--color-danger-soft)); color: var(--color-danger); }
+.icon-badge-gold { background: linear-gradient(150deg, #fff, var(--color-gold-soft)); color: var(--color-gold-dark); }
+.icon-badge-info { background: linear-gradient(150deg, #fff, var(--color-info-soft)); color: var(--color-info); }
 a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) scale(1.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), var(--shadow); }
 @media (prefers-reduced-motion: reduce) { .icon-badge { transition: none; } a:hover > .icon-badge, .icon-badge-hover:hover { transform: none; } }
 

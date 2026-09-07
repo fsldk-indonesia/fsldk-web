@@ -5,6 +5,7 @@ import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { GoodsDetail } from '../../entities/goods';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ImageGalleryComponent } from '../../../../shared/image-gallery.component';
+import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { GoodsPublicDetailPresenter } from './goods.public-detail.presenter';
 import { GoodsPublicDetailView } from './goods.public-detail.view';
 
@@ -70,12 +71,14 @@ const AVAILABILITY_BADGE_CLASS: Record<string, string> = {
 export class GoodsPublicDetailPage implements OnInit, GoodsPublicDetailView {
   private presenter = inject(GoodsPublicDetailPresenter);
   private route = inject(ActivatedRoute);
+  private auth = inject(AuthRepository);
 
   item = signal<GoodsDetail | null>(null);
   loading = signal(true);
   readonly formatRupiah = formatRupiah;
   readonly availabilityLabels = AVAILABILITY_LABELS;
   readonly availabilityBadgeClass = AVAILABILITY_BADGE_CLASS;
+  readonly isLoggedIn = this.auth.isLoggedIn;
 
   galleryImages = computed(() => {
     const g = this.item();
