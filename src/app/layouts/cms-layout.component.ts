@@ -349,6 +349,14 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
     .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--radius-xs); border: 1.5px solid transparent; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; font-weight: 600; color: var(--color-text); transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
     .dropdown-panel a:hover, .dropdown-panel button:hover { background: var(--color-bg-warm); text-decoration: none; }
+    /* Ini yang sebenarnya bikin "outline hitam" yang dilaporkan — bukan
+       border tier-color-nya, tapi outline FOKUS bawaan browser (muncul di
+       link/tombol manapun yang baru diklik/di-tab), yang sebelumnya tidak
+       pernah di-reset di sini. Ditiadakan untuk klik mouse biasa, diganti
+       cincin hijau bermerek HANYA untuk navigasi keyboard (:focus-visible)
+       — pola yang sama persis dipakai .side-nav a di atas. */
+    .dropdown-panel a:focus, .dropdown-panel button:focus { outline: none; }
+    .dropdown-panel a:focus-visible, .dropdown-panel button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
     .dropdown-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
     .dropdown-item-title { font-weight: 700; color: var(--color-text); font-size: .9rem; }
     .dropdown-item-caption { font-size: .76rem; color: var(--color-muted); font-weight: 500; line-height: 1.3; }
