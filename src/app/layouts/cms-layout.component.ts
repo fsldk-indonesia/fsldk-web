@@ -56,6 +56,17 @@ const TIER_CAPTION: Record<CmsTier, string> = {
   LDK: 'Kelola pendataan & kader LDK Anda',
 };
 
+/** Siluet kanvas CMS (pola sama persis dengan dashboard admin ldksyahid-app:
+ *  pennant, lingkaran target, dokumen+baris, panah/play, check-circle, chat
+ *  bubble — tile 120px, opacity .18), diwarnai sesuai --color-primary tier
+ *  aktif. Dibangun sebagai fungsi (bukan 4 blok CSS statis) karena data-URI
+ *  SVG tidak bisa baca CSS custom property, dan menduplikasi string SVG ini
+ *  4x sebagai styles component sempat membuat bundle lewat batas anyComponentStyle. */
+function canvasSilhouetteUrl(hex: string): string {
+  const c = hex.replace('#', '%23');
+  return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cpath d='M30 12l-5 8h10l-5-8zm0 4l2.5 4h-5l2.5-4z' fill='${c}' fill-opacity='0.18'/%3E%3Ccircle cx='90' cy='20' r='6' fill='none' stroke='${c}' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Ccircle cx='90' cy='20' r='2.2' fill='${c}' fill-opacity='0.18'/%3E%3Crect x='10' y='75' width='14' height='16' rx='2' fill='none' stroke='${c}' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Cline x1='13' y1='80' x2='21' y2='80' stroke='${c}' stroke-opacity='0.18' stroke-width='1'/%3E%3Cline x1='13' y1='83.5' x2='21' y2='83.5' stroke='${c}' stroke-opacity='0.18' stroke-width='1'/%3E%3Cline x1='13' y1='87' x2='19' y2='87' stroke='${c}' stroke-opacity='0.18' stroke-width='1'/%3E%3Cpath d='M82 72l8 5-8 5z' fill='none' stroke='${c}' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Ccircle cx='58' cy='52' r='8' fill='none' stroke='${c}' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Cpath d='M55 52l2.5 2.5 5-5' fill='none' stroke='${c}' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Cpath d='M85 100a6 6 0 01-6 6h-2v3l-5-3h-3a6 6 0 01-6-6v-3a6 6 0 016-6h10a6 6 0 016 6z' fill='none' stroke='${c}' stroke-opacity='0.18' stroke-width='1.2'/%3E%3C/svg%3E")`;
+}
+
 /**
  * Shell CMS — dipakai untuk 4 route tree terpisah (cms/cms-ldk/cms-puskomda/
  * cms-puskomnas, lihat app.routes.ts). `tier` datang dari route `data` dan
@@ -71,7 +82,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
   standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
-    <div class="cms" [class.tier-ldk]="tier() === 'LDK'" [class.tier-puskomda]="tier() === 'PUSKOMDA'" [class.tier-puskomnas]="tier() === 'PUSKOMNAS'" [class.sidebar-collapsed]="!sidebarOpen()">
+    <div class="cms" [class.tier-ldk]="tier() === 'LDK'" [class.tier-puskomda]="tier() === 'PUSKOMDA'" [class.tier-puskomnas]="tier() === 'PUSKOMNAS'" [class.sidebar-collapsed]="!sidebarOpen()" [style.background-image]="canvasBackgroundImage()">
       <aside class="sidebar" [class.open]="sidebarOpen()">
         <div class="side-brand">
           <span class="brand-icon"><img src="assets/logo-fsldk.svg" alt="Logo FSLDK"></span>
@@ -203,7 +214,6 @@ const TIER_CAPTION: Record<CmsTier, string> = {
        .18 disamakan; hanya warna diganti ke primary hijau FSLDK. */
     .cms {
       min-height: 100dvh; background-color: var(--color-bg-warm);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cpath d='M30 12l-5 8h10l-5-8zm0 4l2.5 4h-5l2.5-4z' fill='%2300933b' fill-opacity='0.18'/%3E%3Ccircle cx='90' cy='20' r='6' fill='none' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Ccircle cx='90' cy='20' r='2.2' fill='%2300933b' fill-opacity='0.18'/%3E%3Crect x='10' y='75' width='14' height='16' rx='2' fill='none' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Cline x1='13' y1='80' x2='21' y2='80' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1'/%3E%3Cline x1='13' y1='83.5' x2='21' y2='83.5' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1'/%3E%3Cline x1='13' y1='87' x2='19' y2='87' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1'/%3E%3Cpath d='M82 72l8 5-8 5z' fill='none' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Ccircle cx='58' cy='52' r='8' fill='none' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Cpath d='M55 52l2.5 2.5 5-5' fill='none' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1.2'/%3E%3Cpath d='M85 100a6 6 0 01-6 6h-2v3l-5-3h-3a6 6 0 01-6-6v-3a6 6 0 016-6h10a6 6 0 016 6z' fill='none' stroke='%2300933b' stroke-opacity='0.18' stroke-width='1.2'/%3E%3C/svg%3E");
       background-size: 120px 120px;
     }
     /* Sidebar sekarang bisa ditutup/dibuka di SEMUA lebar layar (dulu hanya
@@ -445,6 +455,7 @@ export class CmsLayoutComponent implements OnInit {
   brandLabel = computed(() => CMS_SHELL_LABEL[this.tier()]);
   showOrgSwitcher = computed(() => this.tier() === 'LDK' || this.tier() === 'PUSKOMDA');
   switcherIcon = computed(() => CMS_SHELL_ICON[this.tier()]);
+  canvasBackgroundImage = computed(() => canvasSilhouetteUrl(TIER_COLOR[this.tier()]));
 
   shellBaseOf(t: CmsTier): string { return CMS_SHELL_BASE[t]; }
   shellLabelOf(t: CmsTier): string { return CMS_SHELL_LABEL[t]; }
