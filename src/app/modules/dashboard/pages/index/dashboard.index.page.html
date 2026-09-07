@@ -1,6 +1,22 @@
-<div class="page-head"><h1>Dashboard</h1><p class="text-muted">Ringkasan pendataan sesuai organisasi Anda.</p></div>
+<div class="dashboard-shell">
+  <svg class="dashboard-illustration" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <path class="network-line thick" d="M110,420 L260,140" style="animation-delay:.1s" />
+    <path class="network-line thick" d="M110,420 L430,240" style="animation-delay:.2s" />
+    <path class="network-line thick" d="M110,420 L620,320" style="animation-delay:.3s" />
+    <path class="network-line thick" d="M110,420 L720,110" style="animation-delay:.4s" />
+    <path class="network-line" d="M260,140 L430,240" style="animation-delay:.6s" />
+    <path class="network-line" d="M430,240 L620,320" style="animation-delay:.8s" />
+    <path class="network-line" d="M620,320 L720,110" style="animation-delay:1s" />
+    <circle class="network-node" cx="110" cy="420" r="16" style="animation-delay:0s" />
+    <circle class="network-node gold" cx="260" cy="140" r="10" style="animation-delay:.3s" />
+    <circle class="network-node ember" cx="430" cy="240" r="9" style="animation-delay:.6s" />
+    <circle class="network-node gold" cx="620" cy="320" r="10" style="animation-delay:.4s" />
+    <circle class="network-node ember" cx="720" cy="110" r="9" style="animation-delay:.8s" />
+  </svg>
 
-<div class="greeting-card pattern-motif pattern-motif-dark">
+  <div class="page-head"><h1>Dashboard</h1><p class="text-muted">Ringkasan pendataan sesuai organisasi Anda.</p></div>
+
+  <div class="greeting-card pattern-motif pattern-motif-dark">
   <div class="greeting-main">
     <div class="greeting-text"><app-icon name="sparkles" [size]="20" /> {{ greetingLabel() }}</div>
     <div class="greeting-quote" [class.is-fading]="quoteFading()">
@@ -113,3 +129,4 @@
     }
   }
 }
+</div>

@@ -66,6 +66,17 @@ function formatRupiah(value: number): string {
     .note-item:last-child { border-bottom: none; padding-bottom: 0; }
     .note-item .note-date { color: var(--color-muted); font-size: .8rem; }
 
+    /* ---------- Shell kartu pembungkus seluruh dashboard ----------
+       Latar canvas lembut (bukan putih polos) supaya .stat/.card-section
+       putih di dalamnya tetap menonjol sebagai "kartu di atas kartu" — motif
+       jaringan simpul (bukan batik, sesuai revisi) mengisi latar paling
+       belakang di dalam shell ini, sangat pupus (opacity rendah) supaya
+       tetap jadi tekstur, bukan elemen yang bersaing dengan konten. */
+    .dashboard-shell { position: relative; overflow: hidden; background: var(--color-bg-warm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 28px; }
+    .dashboard-illustration { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .05; pointer-events: none; z-index: 0; }
+    .dashboard-shell > *:not(.dashboard-illustration) { position: relative; z-index: 1; }
+    @media (max-width: 640px) { .dashboard-shell { padding: 18px; } }
+
     /* ---------- Kartu sapaan + kutipan motivasi ---------- */
     .greeting-card {
       position: relative; overflow: hidden; border-radius: var(--radius-lg); color: #fff; padding: 28px 30px;
