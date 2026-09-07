@@ -117,7 +117,7 @@ type SidebarEntry =
           <div class="spacer"></div>
           <app-prayer-time />
           <a routerLink="/" class="nav-website-link">
-            <span class="icon-badge sm icon-badge-neutral"><app-icon name="globe" [size]="15" /></span>
+            <app-icon name="globe" [size]="15" />
             Website
           </a>
           <div class="user-dropdown" (mouseenter)="openDropdown()" (mouseleave)="closeDropdown()">
@@ -228,28 +228,29 @@ type SidebarEntry =
          nempel ke pojok — lihat catatan di .topbar), jadi keluar dari flex
          flow ini; padding-top di sini menggantikan ruangnya supaya
          .cms-content tidak start ketiban di bawah topbar. Nilainya = jarak
-         atas topbar (16px) + tinggi topbar (~68px) + jarak sebelum konten
-         (16px). */
-      padding-top: 100px;
+         atas topbar (8px) + tinggi topbar (~56px) + jarak sebelum konten
+         (12px). */
+      padding-top: 76px;
       transition: margin-left var(--motion-slow) var(--ease-out);
     }
     .cms.sidebar-collapsed .cms-main { margin-left: 0; }
     /* Topbar "mengambang" — ada jarak dari sidebar & tepi layar (bukan bar
        penuh nempel pojok-ke-pojok seperti sebelumnya), meniru gaya
        ldksyahid-app: kartu tersendiri dengan border+shadow+radius, bukan
-       cuma garis pembatas di bawahnya. position:fixed (bukan sticky) —
-       sticky sebelumnya kadang gagal nempel tergantung konteks scroll/
-       stacking ancestor-nya; fixed selalu pasti nempel di viewport terlepas
-       dari itu. left mengikuti lebar sidebar (geser saat sidebar collapsed/
-       mobile) via transition yang sama dengan .cms-main supaya topbar &
-       konten tetap sejajar saat toggle. */
+       cuma garis pembatas di bawahnya. Jaraknya sengaja tipis (8px, bukan
+       16px) supaya tetap terasa "nempel"/ringkas, bukan mengambang jauh.
+       position:fixed (bukan sticky) — sticky sebelumnya kadang gagal nempel
+       tergantung konteks scroll/stacking ancestor-nya; fixed selalu pasti
+       nempel di viewport terlepas dari itu. left mengikuti lebar sidebar
+       (geser saat sidebar collapsed/mobile) via transition yang sama
+       dengan .cms-main supaya topbar & konten tetap sejajar saat toggle. */
     .topbar {
-      display: flex; align-items: center; gap: 16px; padding: 14px 22px; background: #fff;
-      border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
-      position: fixed; top: 16px; left: 276px; right: 16px; z-index: 20;
+      display: flex; align-items: center; gap: 12px; padding: 10px 18px; background: #fff;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
+      position: fixed; top: 8px; left: 268px; right: 8px; z-index: 20;
       transition: left var(--motion-slow) var(--ease-out);
     }
-    .cms.sidebar-collapsed .topbar { left: 16px; }
+    .cms.sidebar-collapsed .topbar { left: 8px; }
     .spacer { flex: 1; }
     /* PrayerTimeComponent (dipakai bersama navbar publik) defaultnya pil
        penuh (--radius-full) — di topbar CMS ini SENGAJA dikotakkan (radius
@@ -278,19 +279,25 @@ type SidebarEntry =
     .hamburger:hover { background: var(--color-primary); }
     .hamburger span { display: block; width: 18px; height: 2px; border-radius: 2px; background: var(--color-primary-dark); transition: background var(--motion-fast) ease; }
     .hamburger:hover span { background: #fff; }
-    /* Website & akun sebelumnya transparan sampai di-hover — sekarang selalu
-       punya latar+border sendiri (senada .org-switcher-btn) supaya tidak
-       menyatu dengan latar putih topbar. */
-    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: var(--color-bg-warm); color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, border-color var(--motion-fast) ease; }
-    .nav-website-link:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); border-color: var(--color-primary); text-decoration: none; }
+    /* Website & akun sebelumnya latar abu netral (--color-bg-warm) —
+       diganti ke tint hijau (senada hamburger & badge lain di topbar ini)
+       supaya terlihat "hidup"/menyatu dengan identitas warna aplikasi,
+       bukan abu-abu polos. Hover pindah ke hijau solid + teks putih. */
+    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); border: 1px solid transparent; background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
+    .nav-website-link:hover { background: var(--color-primary); color: #fff; text-decoration: none; }
     .user-dropdown { position: relative; }
-    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--color-bg-warm); border: 1px solid var(--color-border); cursor: pointer; padding: 6px 12px 6px 6px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
-    .user-chip:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
-    .avatar { width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; }
+    .user-chip { display: flex; align-items: center; gap: 10px; background: var(--color-primary-soft); border: 1px solid transparent; cursor: pointer; padding: 5px 12px 5px 5px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease; }
+    .user-chip:hover { background: var(--color-primary); }
+    .user-chip:hover .user-meta strong, .user-chip:hover .user-meta small, .user-chip:hover .caret { color: #fff; }
+    /* Avatar sengaja solid (bukan soft-tint lagi) supaya tetap terlihat
+       jelas sebagai lingkaran tersendiri di atas chip yang kini juga hijau —
+       dua tint hijau serupa bertumpuk akan membuat avatar "hilang". */
+    .avatar { width: 38px; height: 38px; border-radius: var(--radius-full); background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.4); }
     img.avatar { object-fit: cover; }
     .user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
-    .user-meta small { color: var(--color-muted); font-size: .78rem; }
-    .caret { color: var(--color-muted); transition: transform var(--motion-fast) ease; flex-shrink: 0; }
+    .user-meta strong { transition: color var(--motion-fast) ease; }
+    .user-meta small { color: var(--color-muted); font-size: .78rem; transition: color var(--motion-fast) ease; }
+    .caret { color: var(--color-muted); transition: transform var(--motion-fast) ease, color var(--motion-fast) ease; flex-shrink: 0; }
     .caret.open { transform: rotate(180deg); }
     .dropdown-panel {
       position: absolute; right: 0; top: calc(100% + 8px); background: #fff; border: 1px solid var(--color-border);
@@ -323,7 +330,7 @@ type SidebarEntry =
          desktop), karena sidebar tidak lagi mendorong apa pun di mobile. */
       .sidebar.open { box-shadow: var(--shadow-lg); z-index: 60; }
       .cms-main, .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-      .topbar, .cms.sidebar-collapsed .topbar { left: 12px; right: 12px; top: 12px; padding: 12px 16px; gap: 10px; }
+      .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 8px; padding: 8px 14px; gap: 10px; }
     }
 
     /* Tema per tier (poin 2 miss-development-clarification.md): CMS Utama
