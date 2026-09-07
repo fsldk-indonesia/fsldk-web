@@ -54,21 +54,7 @@ type SidebarEntry =
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
     <div class="cms" [class.tier-ldk]="tier() === 'LDK'" [class.tier-puskomda]="tier() === 'PUSKOMDA'" [class.tier-puskomnas]="tier() === 'PUSKOMNAS'" [class.sidebar-collapsed]="!sidebarOpen()">
-      <aside class="sidebar pattern-motif" [class.open]="sidebarOpen()">
-        <svg class="side-illustration" viewBox="0 0 260 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
-          <g fill="var(--color-primary)">
-            <rect x="18" y="92" width="10" height="108" rx="2" />
-            <circle cx="23" cy="88" r="7" />
-            <path d="M23,74 L17,85 L29,85 Z" />
-            <rect x="232" y="92" width="10" height="108" rx="2" />
-            <circle cx="237" cy="88" r="7" />
-            <path d="M237,74 L231,85 L243,85 Z" />
-            <path d="M88,200 L88,132 Q88,80 130,80 Q172,80 172,132 L172,200 Z" />
-            <circle cx="130" cy="72" r="13" />
-            <path d="M130,48 L123,63 L137,63 Z" />
-            <rect x="127" y="38" width="6" height="14" />
-          </g>
-        </svg>
+      <aside class="sidebar" [class.open]="sidebarOpen()">
         <div class="side-brand">
           <span class="brand-icon"><img src="assets/logo-fsldk.svg" alt="Logo FSLDK"></span>
           <span>{{ brandLabel() }}</span>
@@ -104,7 +90,7 @@ type SidebarEntry =
 
       <div class="cms-main">
         <header class="topbar">
-          <button class="hamburger" (click)="toggle()" [class.active]="sidebarOpen()" aria-label="Buka/tutup sidebar">
+          <button class="hamburger" (click)="toggle()" aria-label="Buka/tutup sidebar">
             <span></span><span></span><span></span>
           </button>
           @if (showOrgSwitcher()) {
@@ -177,9 +163,7 @@ type SidebarEntry =
     /* Sidebar sekarang bisa ditutup/dibuka di SEMUA lebar layar (dulu hanya
        mobile) — .sidebar:not(.open) selalu geser keluar lewat transform,
        .cms-main mengikuti lewat margin-left di .cms.sidebar-collapsed
-       (lihat rule-nya di bawah). "pattern-motif" (kelas global, sama dipakai
-       section landing page) + .side-illustration (siluet kubah masjid)
-       memberi tekstur latar supaya sidebar tidak polos. */
+       (lihat rule-nya di bawah). */
     .sidebar {
       width: 260px; background: #fff; border-right: 1px solid var(--color-border); color: var(--color-text);
       display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100dvh; z-index: 40;
@@ -187,7 +171,6 @@ type SidebarEntry =
       transition: transform var(--motion-slow) var(--ease-out), box-shadow var(--motion-slow) ease;
     }
     .sidebar:not(.open) { transform: translateX(-100%); box-shadow: none; }
-    .side-illustration { position: absolute; bottom: 0; left: 0; width: 100%; height: auto; opacity: .05; pointer-events: none; z-index: 0; }
     .side-brand {
       position: relative; z-index: 1; flex-shrink: 0; display: flex; align-items: center; gap: 10px;
       font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; padding: 22px 16px 18px;
@@ -228,11 +211,30 @@ type SidebarEntry =
     .side-nav-group-children a.active { background: var(--color-primary); color: #fff; }
     .side-nav-group-children a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
     @media (prefers-reduced-motion: reduce) {
-      .sidebar, .cms-main, .side-nav-group-children, .hamburger span { transition: none !important; }
+      .sidebar, .cms-main, .topbar, .side-nav-group-children, .hamburger span { transition: none !important; }
     }
-    .cms-main { margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh; transition: margin-left var(--motion-slow) var(--ease-out); }
+    .cms-main {
+      margin-left: 260px; display: flex; flex-direction: column; min-width: 0; min-height: 100dvh;
+      /* Topbar sekarang position:fixed (bukan sticky lagi — lihat catatan di
+         .topbar), jadi keluar dari flex flow ini; padding-top di sini
+         menggantikan ruangnya supaya .cms-content tidak start ketiban di
+         bawah topbar. Nilainya = tinggi topbar (padding 16px atas+bawah +
+         konten setinggi 40px, avatar-nya). */
+      padding-top: 72px;
+      transition: margin-left var(--motion-slow) var(--ease-out);
+    }
     .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-    .topbar { display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff; border-bottom: 1px solid var(--color-border); position: sticky; top: 0; z-index: 20; }
+    /* position:fixed (bukan sticky) — sticky sebelumnya kadang gagal nempel
+       tergantung konteks scroll/stacking ancestor-nya; fixed selalu pasti
+       nempel di viewport terlepas dari itu. left mengikuti lebar sidebar
+       (geser ke 0 saat sidebar collapsed/mobile) via transition yang sama
+       dengan .cms-main supaya topbar & konten tetap sejajar saat toggle. */
+    .topbar {
+      display: flex; align-items: center; gap: 16px; padding: 16px 28px; background: #fff;
+      border-bottom: 1px solid var(--color-border); position: fixed; top: 0; left: 260px; right: 0; z-index: 20;
+      transition: left var(--motion-slow) var(--ease-out);
+    }
+    .cms.sidebar-collapsed .topbar { left: 0; }
     .spacer { flex: 1; }
     .org-switcher { position: relative; }
     .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: var(--color-bg-warm); color: var(--color-text); font-weight: 600; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
@@ -243,19 +245,15 @@ type SidebarEntry =
     .org-dropdown-panel button.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .org-empty { padding: 8px 12px; font-size: .85rem; }
     /* Hamburger sekarang selalu tampil di topbar (dulu cuma mobile) — satu
-       tombol men-toggle sidebarOpen di semua lebar layar. 3 <span> di-morph
-       jadi "X" lewat transform saat .active, bukan diganti ikon lain, supaya
-       transisinya mulus. */
+       tombol men-toggle sidebarOpen di semua lebar layar. Ikonnya TETAP 3
+       garis apa pun status sidebar-nya (tidak berubah jadi "X"). */
     .hamburger {
       display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
       width: 38px; height: 38px; border-radius: var(--radius-xs); background: none; border: none;
       cursor: pointer; flex-shrink: 0; transition: background var(--motion-fast) ease;
     }
     .hamburger:hover { background: var(--color-bg-warm); }
-    .hamburger span { display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--color-text); transition: transform var(--motion-base) var(--ease-out), opacity var(--motion-fast) ease; }
-    .hamburger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-    .hamburger.active span:nth-child(2) { opacity: 0; }
-    .hamburger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .hamburger span { display: block; width: 20px; height: 2px; border-radius: 2px; background: var(--color-text); }
     .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
     .nav-website-link:hover { background: var(--color-bg-warm); color: var(--color-primary-dark); text-decoration: none; }
     .user-dropdown { position: relative; }
@@ -290,11 +288,13 @@ type SidebarEntry =
     .cms-footer-inner { background: var(--color-bg-alt); border-radius: var(--radius-lg); padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; font-size: .85rem; color: var(--color-text-secondary); }
     @media (max-width: 900px) {
       /* Di bawah 900px sidebar jadi drawer mengambang (overlay), bukan
-         mendorong konten — z-index dinaikkan & .cms-main SELALU margin-left
-         0 di sini, apa pun status sidebarOpen/.sidebar-collapsed (override
-         base rule di atas yang berlaku untuk desktop). */
+         mendorong konten — z-index dinaikkan & .cms-main/.topbar SELALU
+         left/margin-left 0 di sini, apa pun status sidebarOpen/
+         .sidebar-collapsed (override base rule di atas yang berlaku untuk
+         desktop), karena sidebar tidak lagi mendorong apa pun di mobile. */
       .sidebar.open { box-shadow: var(--shadow-lg); z-index: 60; }
       .cms-main, .cms.sidebar-collapsed .cms-main { margin-left: 0; }
+      .topbar, .cms.sidebar-collapsed .topbar { left: 0; }
     }
 
     /* Tema per tier (poin 2 miss-development-clarification.md): CMS Utama
