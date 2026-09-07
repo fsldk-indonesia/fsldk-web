@@ -67,12 +67,18 @@ function formatRupiah(value: number): string {
     .note-item .note-date { color: var(--color-muted); font-size: .8rem; }
 
     /* ---------- Shell kartu pembungkus seluruh dashboard ----------
-       Latar canvas lembut (bukan putih polos) supaya .stat/.card-section
-       putih di dalamnya tetap menonjol sebagai "kartu di atas kartu" — motif
-       jaringan simpul (bukan batik, sesuai revisi) mengisi latar paling
-       belakang di dalam shell ini, sangat pupus (opacity rendah) supaya
-       tetap jadi tekstur, bukan elemen yang bersaing dengan konten. */
-    .dashboard-shell { position: relative; overflow: hidden; background: var(--color-bg-warm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 28px; }
+       Putih polos (bukan tint abu-abu var(--color-bg-warm) — dicoba lebih
+       dulu, diminta diputihkan lagi). .stat/.card-section di dalamnya tetap
+       kebaca sebagai kartu tersendiri lewat border+shadow-nya sendiri, bukan
+       lewat kontras warna latar. Motif jaringan simpul (bukan batik, sesuai
+       revisi) mengisi latar paling belakang di dalam shell ini, sangat pupus
+       (opacity rendah) supaya tetap jadi tekstur, bukan elemen yang bersaing
+       dengan konten. */
+    /* max-width + margin:auto sama persis dengan topbar/footer CMS (lihat
+       cms-layout.component.ts) supaya kartu ini ikut "mengambang" center
+       dengan jarak kiri-kanan yang senada, bukan melebar penuh mengikuti
+       .cms-content apa adanya. */
+    .dashboard-shell { position: relative; overflow: hidden; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 28px; max-width: 1060px; margin: 0 auto; }
     .dashboard-illustration { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .05; pointer-events: none; z-index: 0; }
     .dashboard-shell > *:not(.dashboard-illustration) { position: relative; z-index: 1; }
     @media (max-width: 640px) { .dashboard-shell { padding: 18px; } }

@@ -197,10 +197,19 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     </div>
   `,
   styles: [`
+    /* Latar kanvas CMS — sebelumnya motif batik Kawung (titik/elips) yang
+       sama dipakai landing page; diganti siluet ikon berulang bertema
+       ISLAMI (kubah masjid + 2 menara, bulan sabit + bintang, bintang
+       geometris 8-sudut, lengkung mihrab, plus beberapa aksen bintang/
+       sabit kecil buat mengisi kerapatan) — mirip pola "ikon tersebar"
+       ldksyahid-app tapi ikonnya beda & bertema islami, bukan generik.
+       Opacity dinaikkan bertahap (.02 asli → .06 → .12 sekarang) atas
+       permintaan berulang supaya makin kelihatan, bukan cuma tekstur
+       nyaris tak kasat mata. */
     .cms {
       min-height: 100dvh; background-color: var(--color-bg-warm);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%2300933b' stroke-width='1' stroke-opacity='.02'%3E%3Cellipse cx='24' cy='12' rx='6' ry='10'/%3E%3Cellipse cx='24' cy='36' rx='6' ry='10'/%3E%3Cellipse cx='36' cy='24' rx='10' ry='6'/%3E%3Cellipse cx='12' cy='24' rx='10' ry='6'/%3E%3Ccircle cx='24' cy='24' r='2.4' fill='%2300933b' fill-opacity='.02' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
-      background-size: 48px 48px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%2300933b' stroke-width='2' stroke-linejoin='round' stroke-opacity='.12'%3E%3Crect x='29' y='29' width='22' height='22'/%3E%3Crect x='29' y='29' width='22' height='22' transform='rotate(45 40 40)'/%3E%3Cpath d='M164,17 A15,15 0 1,0 164,47 A10,13 0 1,1 164,17 Z'/%3E%3Cpath d='M182,15 L183.6,19.6 L188,19.6 L184.5,22.5 L186,27 L182,24 L178,27 L179.5,22.5 L176,19.6 L180.4,19.6 Z'/%3E%3Crect x='15' y='140' width='6' height='38' rx='1'/%3E%3Cpath d='M18,140 L15,148 L21,148 Z'/%3E%3Crect x='66' y='140' width='6' height='38' rx='1'/%3E%3Cpath d='M69,140 L66,148 L72,148 Z'/%3E%3Cpath d='M28,178 L28,150 Q28,128 43.5,128 Q59,128 59,150 L59,178 Z'/%3E%3Cpath d='M38,178 L38,163 Q38,155 43.5,155 Q49,155 49,163 L49,178'/%3E%3Cpath d='M46,120 A5,5 0 1,1 41,120 A3.5,3.5 0 1,0 46,120 Z'/%3E%3Cpath d='M138,180 L138,160 Q138,140 155,133 Q172,140 172,160 L172,180 Z'/%3E%3Cpath d='M100,90 L102,98 L110,100 L102,102 L100,110 L98,102 L90,100 L98,98 Z'/%3E%3Cpath d='M106,14 A8,8 0 1,0 106,30 A5.5,7 0 1,1 106,14 Z'/%3E%3Cpath d='M25,92 L27,100 L25,108 L23,100 Z'/%3E%3Cpath d='M100,163 L102,170 L100,177 L98,170 Z'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 200px 200px;
     }
     /* Sidebar sekarang bisa ditutup/dibuka di SEMUA lebar layar (dulu hanya
        mobile) — .sidebar:not(.open) selalu geser keluar lewat transform,
