@@ -1,0 +1,90 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>QR Code</h1><p class="text-muted">Buat kode QR yang mengarah langsung ke tautan tujuan, lengkap dengan warna, ikon, dan teks.</p></div>
+  @if (canCreate) { <button class="btn btn-primary" (click)="openCreate()">+ Buat QR Code</button> }
+</div>
+
+<div class="card">
+  <div class="card-pad">
+    <input class="form-control" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari berdasarkan label, tujuan, atau teks…">
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>QR</th><th>Label</th><th>Tujuan</th><th>Dibuat</th><th></th></tr></thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4]; track i) {
+            <tr>
+              <td><span class="skel skel-line" style="width:46px;height:46px"></span></td>
+              <td><span class="skel skel-line" style="width:120px"></span></td>
+              <td><span class="skel skel-line" style="width:80%"></span></td>
+              <td><span class="skel skel-line" style="width:70px"></span></td>
+              <td><span class="skel skel-line" style="width:80px"></span></td>
+            </tr>
+          }
+        } @else {
+          @for (q of qrcodes(); track q.qrCodeID) {
+            <tr>
+              <td><img class="qr-thumb" [src]="q.imageURL" [alt]="'QR ' + (q.label || q.qrCodeID)" loading="lazy"></td>
+              <td>{{ q.label || '—' }}</td>
+              <td class="text-muted destination" [title]="q.destinationURL">{{ q.destinationURL }}</td>
+              <td class="text-muted">{{ q.createdDate | date:'d MMM yyyy' }}</td>
+              <td>
+                <div class="table-actions">
+                  <button type="button" class="icon-action" (click)="download(q)" title="Unduh PNG"><app-icon name="download" [size]="14" /></button>
+                  @if (canUpdate) {
+                    <button type="button" class="icon-action" (click)="openEdit(q)" title="Edit"><app-icon name="edit" [size]="14" /></button>
+                  }
+                  @if (canDelete) {
+                    <button type="button" class="icon-action danger" [disabled]="isBusy(q.qrCodeID)" (click)="remove(q, $event)" title="Hapus">
+                      @if (isBusy(q.qrCodeID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="qr-code" [size]="26" /></span>
+                <h4>Belum ada QR Code</h4>
+                <p>Buat kode QR untuk membagikan tautan lewat pindaian kamera.</p>
+                @if (canCreate) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Buat QR Code</button> }
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>
+
+@if (showForm()) {
+  <div class="modal-backdrop" appModalBackdrop (backdropClose)="close()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <h3>{{ editId ? 'Ubah QR Code' : 'Buat QR Code' }}</h3>
+      <div class="modal-body">
+        <div class="form-group"><label class="form-label">URL Tujuan</label>
+          <input class="form-control" [(ngModel)]="form.destinationURL" placeholder="https://...">
+          <p class="form-hint">Kode QR akan mengarahkan pemindai langsung ke tautan ini.</p>
+        </div>
+        <div class="form-group"><label class="form-label">Label (opsional)</label>
+          <input class="form-control" [(ngModel)]="form.label" placeholder="mis. Banner Agenda 2026">
+          <p class="form-hint">Hanya untuk pengelolaan di CMS, tidak tampil di gambar.</p>
+        </div>
+        <app-qrcode-style-editor
+          [(value)]="style"
+          [previewContent]="form.destinationURL"
+          previewNote="Pratinjau langsung. Gambar final dirender server saat disimpan." />
+      </div>
+      <div class="flex gap justify-between modal-footer">
+        <button class="btn btn-ghost" (click)="close()">Batal</button>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+          @if (saving()) { <span class="spinner"></span> } @else { Simpan }
+        </button>
+      </div>
+    </div>
+  </div>
+}

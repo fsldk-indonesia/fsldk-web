@@ -4,6 +4,7 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { SubmissionRepository } from '../modules/submission/repositories/submission.repository';
 import { FORM_CODE_SENSUS_KADER } from '../modules/submission/entities/submission';
 import { shortlinkPath } from '../modules/shortlink/shortlink.path';
+import { qrcodePath } from '../modules/qrcode/qrcode.path';
 import { financeformatPath } from '../modules/financeformat/financeformat.path';
 import { zakatPath } from '../modules/zakat/zakat.path';
 import { schedulePath } from '../modules/schedule/schedule.path';
@@ -450,6 +451,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   readonly lainnyaItems = [
     { icon: 'file-spreadsheet', title: 'Format Keuangan', caption: 'Template Excel Laporan Keuangan', href: financeformatPath.publicIndex },
     { icon: 'link', title: 'Shortlink', caption: 'Permintaan Pembuatan Shortlink', href: shortlinkPath.ajukan },
+    { icon: 'qr-code', title: 'QR Code', caption: 'Permintaan Pembuatan QR Code', href: qrcodePath.ajukan },
     { icon: 'hand-heart', title: 'Kantong Amal', caption: 'Galang & Salurkan Donasi', href: '/kantong-amal' },
     { icon: 'calculator', title: 'Kalkulator Zakat', caption: 'Hitung 7 jenis zakat', href: zakatPath.calculator },
     { icon: 'shopping-bag', title: 'FSLDK Goods', caption: 'Katalog Produk & Merchandise Resmi', href: goodsPath.publicIndex },
