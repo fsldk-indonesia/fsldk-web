@@ -38,23 +38,16 @@ type SidebarEntry =
   | { kind: 'item'; item: MenuItem }
   | { kind: 'group'; config: SidebarGroupConfig; children: MenuItem[] };
 
-// Warna outline per-tier di dropdown akun — SAMA dengan --color-primary yang
-// dipakai tema .cms.tier-* (lihat styles di bawah), tapi harus di-hardcode
-// terpisah di sini karena dropdown ini menampilkan SEMUA tier yang bisa
-// diakses akun sekaligus (bisa lebih dari satu), bukan cuma tier yang lagi
-// aktif — CSS custom property tema hanya merefleksikan tier yang aktif saat
-// ini, tidak bisa dipakai untuk mewarnai tier LAIN yang sedang tidak dibuka.
+// Warna solid per-tier untuk item AKTIF di dropdown akun — SAMA dengan
+// --color-primary yang dipakai tema .cms.tier-* (lihat styles di bawah),
+// tapi harus di-hardcode terpisah di sini karena dropdown ini menampilkan
+// SEMUA tier yang bisa diakses akun sekaligus (bisa lebih dari satu), bukan
+// cuma tier yang lagi aktif — CSS custom property tema hanya merefleksikan
+// tier yang aktif saat ini, tidak bisa dipakai untuk mewarnai tier LAIN yang
+// sedang tidak dibuka. (Outline resting-state pernah dicoba di sini juga,
+// lalu diminta dihilangkan lagi — kini polos seperti item lain sampai aktif.)
 const TIER_COLOR: Record<CmsTier, string> = {
   FSLDK: '#00933b', PUSKOMNAS: '#55408f', PUSKOMDA: '#186541', LDK: '#063c84',
-};
-// Varian lebih terang (--color-primary-bright per tier) dipakai KHUSUS untuk
-// outline resting-state di dropdown — TIER_COLOR di atas (dark/primary) sudah
-// pas untuk background solid saat aktif (kontras dengan teks putih), tapi
-// sebagai garis tipis 1.5px warna gelap seperti itu gampang salah dibaca
-// sebagai hitam (terutama Puskomda/Puskomnas). Nilainya sama persis dengan
-// --color-primary-bright di blok tema .cms.tier-* di bawah.
-const TIER_BORDER_COLOR: Record<CmsTier, string> = {
-  FSLDK: '#3dbe6b', PUSKOMNAS: '#7a63b8', PUSKOMDA: '#2f9161', LDK: '#1f5db3',
 };
 const TIER_CAPTION: Record<CmsTier, string> = {
   FSLDK: 'Kelola seluruh konten & pengguna sistem',
@@ -163,11 +156,14 @@ const TIER_CAPTION: Record<CmsTier, string> = {
                 @for (t of auth.accessibleCmsTiers(); track t) {
                   <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"
                      class="portal-item" [class.active]="tier() === t"
-                     [style.border-color]="tier() === t ? tierColorOf(t) : tierBorderColorOf(t)"
-                     [style.background]="tier() === t ? tierColorOf(t) : null">
-                    <span class="icon-badge sm icon-badge-soft"><app-icon [name]="shellIconOf(t)" [size]="15" /></span>
+                     [style.background]="tier() === t ? tierTintOf(t) : null">
+                    <span class="icon-badge sm" [class.icon-badge-soft]="tier() !== t"
+                          [style.background]="tier() === t ? tierColorOf(t) : null"
+                          [style.color]="tier() === t ? '#fff' : null">
+                      <app-icon [name]="shellIconOf(t)" [size]="15" />
+                    </span>
                     <span class="dropdown-item-text">
-                      <span class="dropdown-item-title">{{ shellLabelOf(t) }}</span>
+                      <span class="dropdown-item-title" [style.color]="tier() === t ? tierColorOf(t) : null">{{ shellLabelOf(t) }}</span>
                       <span class="dropdown-item-caption">{{ tierCaptionOf(t) }}</span>
                     </span>
                   </a>
@@ -360,19 +356,14 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .dropdown-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
     .dropdown-item-title { font-weight: 700; color: var(--color-text); font-size: .9rem; }
     .dropdown-item-caption { font-size: .76rem; color: var(--color-muted); font-weight: 500; line-height: 1.3; }
-    /* Outline berwarna per-tier (lihat TIER_COLOR) — hijau untuk Portal
-       Admin, biru/hijau tua/ungu untuk LDK/Puskomda/Puskomnas — diset lewat
-       [style.border-color]/[style.background] LANGSUNG di template (bukan
-       custom property var(--tier-color) + var() di CSS: itu sempat dicoba
-       lebih dulu tapi background-nya gagal ke-resolve, membuat teks putih
-       "active" jadi tak terbaca di atas background yang tetap putih). Kalau
-       tier ini yang SEDANG dibuka (tier() === t), background solid berwarna;
-       kalau tidak, cuma outline (border-color saja, background tetap none
-       dari rule dasar di atas). */
+    /* Item aktif: latar putih dicampur warna tier (color-mix, lihat
+       tierTintOf) — bukan outline (dihilangkan lagi atas permintaan) dan
+       bukan solid+teks putih (diganti tint lembut+teks berwarna, senada
+       gaya "soft" icon-badge/chip lain di app ini). Semua warnanya di-set
+       LANGSUNG lewat [style.background]/[style.color] di template, bukan
+       custom property var() — custom property sempat dicoba lebih dulu
+       untuk versi outline, background-nya gagal ke-resolve dengan CSS var(). */
     .portal-item:not(.active):hover { background: var(--color-bg-warm); }
-    .portal-item.active .dropdown-item-title { color: #fff; }
-    .portal-item.active .dropdown-item-caption { color: rgba(255,255,255,.85); }
-    .portal-item.active .icon-badge { background: rgba(255,255,255,.25); color: #fff; box-shadow: none; }
     /* Garis pemisah sebelum "Keluar" — dipisah dari aksi navigasi portal/
        profil di atasnya karena ini aksi destruktif (keluar akun). */
     .dropdown-panel .dropdown-divider-top { border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 14px; }
@@ -455,7 +446,11 @@ export class CmsLayoutComponent implements OnInit {
   shellLabelOf(t: CmsTier): string { return CMS_SHELL_LABEL[t]; }
   shellIconOf(t: CmsTier): string { return CMS_SHELL_ICON[t]; }
   tierColorOf(t: CmsTier): string { return TIER_COLOR[t]; }
-  tierBorderColorOf(t: CmsTier): string { return TIER_BORDER_COLOR[t]; }
+  // Latar item aktif: putih dicampur warna tier (bukan solid penuh) —
+  // permintaan revisi terbaru, ganti dari fill solid+teks putih ke tint
+  // lembut+teks berwarna, senada gaya "soft" (icon-badge-soft, chip-green,
+  // dst.) yang sudah dipakai di seluruh app ini.
+  tierTintOf(t: CmsTier): string { return `color-mix(in srgb, #fff 85%, ${TIER_COLOR[t]} 15%)`; }
   tierCaptionOf(t: CmsTier): string { return TIER_CAPTION[t]; }
 
   allMenus = signal<MenuItem[]>([]);
