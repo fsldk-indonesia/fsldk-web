@@ -197,7 +197,7 @@ function canvasSilhouetteUrl(hex: string): string {
             }
           </div>
         </header>
-        <main class="cms-content"><router-outlet /></main>
+        <main class="cms-content"><div class="page-shell"><router-outlet /></div></main>
         <footer class="cms-footer">
           <div class="cms-footer-inner">
             <span>&copy; {{ year }} FSLDK Indonesia. Seluruh hak cipta dilindungi.</span>
@@ -385,6 +385,24 @@ function canvasSilhouetteUrl(hex: string): string {
        pola opacity dim lama tidak lagi relevan — item lain sekarang pakai
        icon-badge berwarna (lihat markup), bukan ikon polos. */
     .cms-content { padding: 32px 28px; flex: 1; }
+    /* Pembungkus card seragam untuk SEMUA halaman index & form CMS (4 portal),
+       dipasang sekali di sini (bukan per-halaman) supaya konsisten & mudah
+       diubah dari satu tempat — mengikuti lebar+center yang sama dengan
+       topbar/footer. Banyak halaman index/form sudah punya .page-head lalu
+       satu .card/.card-pad pembungkus tabel/form-nya sendiri; kalau
+       dibiarkan, itu akan tampak sebagai card-di-dalam-card (border+shadow
+       dobel) di dalam page-shell ini — makanya pola itu diratakan lewat rule
+       kedua di bawah (HANYA .page-head + .card, bukan semua .card, supaya
+       card lain yang memang sengaja terpisah — mis. grup stat berdampingan —
+       tidak ikut kehilangan border-nya). */
+    .page-shell {
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm); padding: 28px; max-width: 1100px; margin: 0 auto;
+    }
+    .page-shell ::ng-deep .page-head + .card {
+      background: transparent; border: none; box-shadow: none;
+    }
+    @media (max-width: 640px) { .page-shell { padding: 18px; } }
     /* Footer nempel penuh di tepi BAWAH (padding-bottom 0, radius bawah 0 —
        kebalikan dari topbar yang nempel di ATAS dengan radius atas 0), tapi
        radius atas & lebar/center-nya (max-width + margin:auto) SAMA dengan

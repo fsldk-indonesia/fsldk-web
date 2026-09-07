@@ -74,14 +74,14 @@ function formatRupiah(value: number): string {
        revisi) mengisi latar paling belakang di dalam shell ini, sangat pupus
        (opacity rendah) supaya tetap jadi tekstur, bukan elemen yang bersaing
        dengan konten. */
-    /* max-width + margin:auto sama persis dengan topbar/footer CMS (lihat
-       cms-layout.component.ts) supaya kartu ini ikut "mengambang" center
-       dengan jarak kiri-kanan yang senada, bukan melebar penuh mengikuti
-       .cms-content apa adanya. */
-    .dashboard-shell { position: relative; overflow: hidden; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 28px; max-width: 1060px; margin: 0 auto; }
+    /* Card putih + max-width/center sekarang datang dari .page-shell global
+       (cms-layout.component.ts, dipasang untuk SEMUA halaman CMS) — kalau
+       diulang lagi di sini, dashboard tampil card-di-dalam-card (border+
+       shadow dobel). .dashboard-shell tinggal jadi konteks posisi untuk
+       overlay siluet (position:relative + overflow:hidden), bukan card. */
+    .dashboard-shell { position: relative; overflow: hidden; }
     .dashboard-illustration { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .05; pointer-events: none; z-index: 0; }
     .dashboard-shell > *:not(.dashboard-illustration) { position: relative; z-index: 1; }
-    @media (max-width: 640px) { .dashboard-shell { padding: 18px; } }
 
     /* ---------- Kartu sapaan + kutipan motivasi ---------- */
     .greeting-card {
