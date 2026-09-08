@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ContactRepository } from '../../repositories/contact.repository';
@@ -724,7 +723,6 @@ import { PaginationComponent } from '../../../../shared/pagination.component';
 export class ContactIndexPage implements OnInit {
   repo = inject(ContactRepository);
   private toast = inject(ToastService);
-  private title = inject(Title);
 
   searchQuery = signal<string>('');
   statusFilter = signal<string>('');
@@ -745,7 +743,6 @@ export class ContactIndexPage implements OnInit {
   deleting = signal<boolean>(false);
 
   ngOnInit(): void {
-    this.title.setTitle('Pesan Kontak — CMS FSLDK Indonesia');
     this.loadData();
   }
 

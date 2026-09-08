@@ -13,12 +13,14 @@ export const shortlinkRoutes: () => Routes = () => [
     path: 'shortlink/list',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'shortlink.view' },
+    title: 'Daftar Shortlink',
     loadComponent: () => import('./pages/index/shortlink.index.page').then((m) => m.ShortlinkIndexPage),
   },
   {
     path: 'shortlink/permintaan',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'shortlink.view' },
+    title: 'Permintaan Shortlink',
     loadComponent: () => import('./pages/request-index/shortlinkrequest.index.page').then((m) => m.ShortLinkRequestIndexPage),
   },
 ];

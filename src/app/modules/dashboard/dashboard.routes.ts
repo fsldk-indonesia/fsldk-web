@@ -6,6 +6,7 @@ export const dashboardRoutes: () => Routes = () => [
   {
     path: 'dashboard',
     canActivate: [verifiedGuard],
+    title: 'Dashboard',
     loadComponent: () => import('./pages/index/dashboard.index.page').then((m) => m.DashboardIndexPage),
   },
 ];

@@ -11,18 +11,21 @@ export const submissionRoutes: () => Routes = () => [
     path: 'submissions/pendataan',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'submission.create', formCode: FORM_CODE_LEVELISASI },
+    title: 'Pendataan',
     loadComponent: () => import('./pages/pendataan/submission.pendataan.page').then((m) => m.SubmissionPendataanPage),
   },
   {
     path: 'submissions/status',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'submission.view', formCode: FORM_CODE_LEVELISASI },
+    title: 'Status Pendataan',
     loadComponent: () => import('./pages/status/submission.status.page').then((m) => m.SubmissionStatusPage),
   },
   {
     path: 'kaders/persetujuan',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'submission.review.ldk' },
+    title: 'Persetujuan Kader',
     loadComponent: () => import('./pages/kader-persetujuan/submission.kader-persetujuan.page').then((m) => m.SubmissionKaderPersetujuanPage),
   },
   {
@@ -38,6 +41,7 @@ export const submissionRoutes: () => Routes = () => [
       permission: 'submission.approve.tier1', reviewTier: 'PUSKOMDA', statuses: ['SUBMITTED', 'PUSKOMDA_REVIEW'],
       title: 'Verifikasi & Persetujuan Wilayah', canApprove: true,
     },
+    title: 'Verifikasi & Persetujuan Wilayah',
     loadComponent: () => import('./pages/review-queue/submission.review-queue.page').then((m) => m.SubmissionReviewQueuePage),
   },
   {
@@ -47,18 +51,21 @@ export const submissionRoutes: () => Routes = () => [
       permission: 'submission.review.tier2', reviewTier: 'PUSKOMNAS', statuses: ['APPROVED_PUSKOMDA', 'PUSKOMNAS_REVIEW'],
       title: 'Verifikasi Akhir Nasional', canApprove: true,
     },
+    title: 'Verifikasi Akhir Nasional',
     loadComponent: () => import('./pages/review-queue/submission.review-queue.page').then((m) => m.SubmissionReviewQueuePage),
   },
   {
     path: 'submissions/penetapan-level',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'submission.level.establish' },
+    title: 'Penetapan Levelisasi',
     loadComponent: () => import('./pages/penetapan-level/submission.penetapan-level.page').then((m) => m.SubmissionPenetapanLevelPage),
   },
   {
     path: 'submissions/publikasi',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'submission.publish' },
+    title: 'Publikasi Hasil',
     loadComponent: () => import('./pages/publikasi/submission.publikasi.page').then((m) => m.SubmissionPublikasiPage),
   },
 ];

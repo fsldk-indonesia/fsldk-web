@@ -22,6 +22,7 @@ export const contactCmsRoutes: () => Routes = () => [
     path: 'contact-messages',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'contact.view' },
+    title: 'Pesan Kontak',
     loadComponent: () =>
       import('./pages/index/contact.index.page').then((m) => m.ContactIndexPage),
   },

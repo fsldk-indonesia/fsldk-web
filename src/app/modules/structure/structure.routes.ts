@@ -16,18 +16,21 @@ export function structureCmsRoutes(): Routes {
       path: 'structures',
       canActivate: [permissionGuard],
       data: { permission: 'structure.view' },
+      title: 'Struktur Org',
       loadComponent: () => import('./pages/index/structure.index.page').then((m) => m.StructureIndexPage),
     },
     {
       path: 'structures/create',
       canActivate: [permissionGuard],
       data: { permission: 'structure.create' },
+      title: 'Tambah Struktur',
       loadComponent: () => import('./pages/form/structure.form.page').then((m) => m.StructureFormPage),
     },
     {
       path: 'structures/:id/edit',
       canActivate: [permissionGuard],
       data: { permission: 'structure.update' },
+      title: 'Edit Struktur',
       loadComponent: () => import('./pages/form/structure.form.page').then((m) => m.StructureFormPage),
     },
   ];

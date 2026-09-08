@@ -12,18 +12,21 @@ export const scheduleCmsRoutes: () => Routes = () => [
     path: 'schedules',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'schedule.view' },
+    title: 'Jadwal',
     loadComponent: () => import('./pages/index/schedule.index.page').then((m) => m.ScheduleIndexPage),
   },
   {
     path: 'schedules/form',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'schedule.create' },
+    title: 'Tambah Jadwal',
     loadComponent: () => import('./pages/form/schedule.form.page').then((m) => m.ScheduleFormPage),
   },
   {
     path: 'schedules/form/:id',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'schedule.update' },
+    title: 'Edit Jadwal',
     loadComponent: () => import('./pages/form/schedule.form.page').then((m) => m.ScheduleFormPage),
   },
 ];
