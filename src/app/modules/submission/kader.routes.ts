@@ -14,18 +14,21 @@ export const kaderRoutes: () => Routes = () => [
   {
     path: 'ringkasan',
     canActivate: [verifiedGuard],
+    title: 'Ringkasan',
     loadComponent: () => import('./pages/kader-ringkasan/submission.kader-ringkasan.page').then((m) => m.SubmissionKaderRingkasanPage),
   },
   {
     path: 'pendataan',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'submission.create', formCode: FORM_CODE_SENSUS_KADER },
+    title: 'Pendataan',
     loadComponent: () => import('./pages/pendataan/submission.pendataan.page').then((m) => m.SubmissionPendataanPage),
   },
   {
     path: 'status',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'submission.view', formCode: FORM_CODE_SENSUS_KADER },
+    title: 'Status Pendataan',
     loadComponent: () => import('./pages/status/submission.status.page').then((m) => m.SubmissionStatusPage),
   },
   // Profil Saya dipindah keluar dari sini ke rute publik /akun/profil (lihat

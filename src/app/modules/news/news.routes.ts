@@ -13,18 +13,21 @@ export const newsCmsRoutes: () => Routes = () => [
     path: 'news',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'news.view' },
+    title: 'Berita',
     loadComponent: () => import('./pages/index/news.index.page').then((m) => m.NewsIndexPage),
   },
   {
     path: 'news/form',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'news.create' },
+    title: 'Tambah Berita',
     loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
   },
   {
     path: 'news/form/:id',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'news.update' },
+    title: 'Edit Berita',
     loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
   },
 ];

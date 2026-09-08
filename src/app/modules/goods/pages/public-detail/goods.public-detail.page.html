@@ -38,10 +38,21 @@
             </div>
 
             <div class="actions">
-              <a [href]="g.purchaseUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg btn-block">
-                <app-icon name="link" [size]="16" /> {{ g.purchaseButtonLabel }}
-              </a>
-              <p class="purchase-hint">Anda akan diarahkan ke tautan eksternal untuk menyelesaikan pembelian.</p>
+              @if (g.purchaseUrl) {
+                <a [href]="g.purchaseUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg btn-block">
+                  <app-icon name="link" [size]="16" /> {{ g.purchaseButtonLabel }}
+                </a>
+                <p class="purchase-hint">Anda akan diarahkan ke tautan eksternal untuk menyelesaikan pembelian.</p>
+              } @else {
+                <button type="button" class="btn btn-outline btn-lg btn-block" disabled>
+                  <app-icon name="lock" [size]="16" /> {{ g.purchaseButtonLabel || 'Beli Sekarang' }}
+                </button>
+                @if (isLoggedIn()) {
+                  <p class="purchase-hint">Tautan pembelian khusus untuk Kader dan anggota jaringan FSLDK (LDK/Puskomda/Puskomnas).</p>
+                } @else {
+                  <p class="purchase-hint">Tautan pembelian khusus untuk Kader dan anggota jaringan FSLDK. <a routerLink="/login">Masuk</a> jika Anda sudah terdaftar.</p>
+                }
+              }
             </div>
 
             @if (g.fullDescription) {

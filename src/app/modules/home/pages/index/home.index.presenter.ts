@@ -8,6 +8,7 @@ import { GoodsRepository } from '../../../goods/repositories/goods.repository';
 import { ScheduleRepository } from '../../../schedule/repositories/schedule.repository';
 import { CampaignRepository } from '../../../kantong-amal/repositories/campaign.repository';
 import { GalleryApiService } from '../../../gallery/services/gallery-api.service';
+import { StatisticRepository } from '../../../statistic/repositories/statistic.repository';
 import { HomeIndexView } from './home.index.view';
 
 /** "YYYY-MM-DD" for a date offset by the given number of days from today. */
@@ -31,6 +32,7 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
   // dipakai halaman daftar galeri penuh; memanggil loadPublic() dari sini
   // akan menimpa state itu dan bikin flash data 1 item saat pindah halaman.
   private galleryApi = inject(GalleryApiService);
+  private statisticRepo = inject(StatisticRepository);
 
   load(): void {
     this.view.setLoading(true);
@@ -68,6 +70,13 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
     this.galleryApi.listPublic(1, 1, 'newest').subscribe({
       next: (res) => this.view.setLatestGallery(res.result.data[0] ?? null),
       error: () => this.view.setLatestGallery(null),
+    });
+    // Angka jaringan nasional (Puskomnas/Puskomda/LDK/Kader) + distribusi
+    // level — versi ringkas dari halaman penuh /tentang/statistik-jaringan,
+    // supaya kredibilitas jaringan sudah terlihat sejak Beranda.
+    this.statisticRepo.networkStats().subscribe({
+      next: (stats) => this.view.setNetworkStats(stats),
+      error: () => this.view.setNetworkStats(null),
     });
   }
 }

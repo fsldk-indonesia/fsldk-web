@@ -57,6 +57,36 @@
   </div>
 </section>
 
+@if (networkStats(); as ns) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center" style="margin-bottom:40px">
+        <span class="eyebrow">Data Jaringan</span>
+        <h2>Statistik Jaringan Nasional</h2>
+        <p class="page-subtitle" style="max-width:620px;margin:0 auto">Angka agregat LDK, Puskomda, dan Puskomnas se-Indonesia — terbuka untuk publik dan diperbarui langsung dari data pendataan.</p>
+      </div>
+      <div class="network-stats-card reveal">
+        <div class="network-stats-grid">
+          <div class="network-stat-tiles">
+            <div class="network-stat-tile"><b>{{ ns.totalPuskomnas }}</b><span>Puskomnas</span></div>
+            <div class="network-stat-tile"><b>{{ ns.totalPuskomda }}</b><span>Puskomda</span></div>
+            <div class="network-stat-tile"><b>{{ ns.totalLDK }}</b><span>LDK Aktif</span></div>
+            <div class="network-stat-tile"><b>{{ ns.totalActiveKader }}</b><span>Kader Aktif</span></div>
+          </div>
+          @if (ns.byLevel.length > 0) {
+            <div class="network-chart-wrap"><canvas id="networkLevelChart"></canvas></div>
+          } @else {
+            <p class="text-muted text-center">Distribusi level LDK belum tersedia.</p>
+          }
+        </div>
+        <div class="network-stats-more">
+          <a [routerLink]="statisticPath.publicIndex" class="btn btn-outline">Lihat Statistik Lengkap &amp; Sebaran Provinsi <app-icon name="chevron-right" [size]="14" /></a>
+        </div>
+      </div>
+    </div>
+  </section>
+}
+
 @if (loading() || news().length > 0) {
   <section class="section">
     <div class="container">

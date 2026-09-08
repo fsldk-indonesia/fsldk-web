@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
-import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Location, CommonModule } from '@angular/common';
 import { catchError, EMPTY } from 'rxjs';
@@ -654,7 +653,6 @@ export class GalleryFormPage implements OnInit {
   private repo = inject(GalleryRepository);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private title = inject(Title);
   private location = inject(Location);
   private toast = inject(ToastService);
   private alert = inject(AlertService);
@@ -698,11 +696,8 @@ export class GalleryFormPage implements OnInit {
     if (idParam) {
       this.isEdit.set(true);
       this.editId.set(Number(idParam));
-      this.title.setTitle('Edit Galeri - CMS FSLDK');
       this.loadData(Number(idParam));
       this.loadPhotos(Number(idParam));
-    } else {
-      this.title.setTitle('Tambah Galeri - CMS FSLDK');
     }
   }
 

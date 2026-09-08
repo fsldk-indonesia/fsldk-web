@@ -1,6 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { StructureRepository } from '../../repositories/structure.repository';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
@@ -135,7 +134,6 @@ export class StructureFormPage implements OnInit {
   private repo = inject(StructureRepository);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
-  private title = inject(Title);
   private location = inject(Location);
 
   isEdit = signal(false);
@@ -164,10 +162,7 @@ export class StructureFormPage implements OnInit {
     if (id) {
       this.isEdit.set(true);
       this.editId.set(Number(id));
-      this.title.setTitle('Edit Struktur - CMS FSLDK');
       this.loadData(Number(id));
-    } else {
-      this.title.setTitle('Tambah Struktur - CMS FSLDK');
     }
   }
 

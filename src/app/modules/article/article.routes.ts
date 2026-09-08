@@ -13,18 +13,21 @@ export const articleCmsRoutes: () => Routes = () => [
     path: 'articles',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'article.view' },
+    title: 'Artikel',
     loadComponent: () => import('./pages/index/article.index.page').then((m) => m.ArticleIndexPage),
   },
   {
     path: 'articles/form',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'article.create' },
+    title: 'Tambah Artikel',
     loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
   },
   {
     path: 'articles/form/:id',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'article.update' },
+    title: 'Edit Artikel',
     loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
   },
 ];

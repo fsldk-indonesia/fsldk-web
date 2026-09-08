@@ -1,10 +1,11 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter, withComponentInputBinding, withViewTransitions, withRouterConfig } from '@angular/router';
+import { provideRouter, withComponentInputBinding, withViewTransitions, withRouterConfig, TitleStrategy } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { AppTitleStrategy } from './core/services/title-strategy.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,5 +18,6 @@ export const appConfig: ApplicationConfig = {
     // default HANYA memberi data milik rute itu sendiri, bukan leluhurnya).
     provideRouter(routes, withComponentInputBinding(), withViewTransitions(), withRouterConfig({ paramsInheritanceStrategy: 'always' })),
     provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    { provide: TitleStrategy, useClass: AppTitleStrategy },
   ],
 };

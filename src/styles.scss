@@ -161,7 +161,7 @@ img { max-width: 100%; }
 .btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 .btn-primary { background: var(--color-primary); color: #fff; }
-.btn-primary:hover { background: var(--color-primary-dark); text-decoration: none; color:#fff; box-shadow: 0 6px 16px rgba(0,147,59,.25); }
+.btn-primary:hover { background: var(--color-primary-dark); text-decoration: none; color:#fff; box-shadow: 0 6px 16px color-mix(in srgb, var(--color-primary) 25%, transparent); }
 .btn-outline { background: transparent; color: var(--color-text); border-color: var(--color-border-strong); }
 .btn-outline:hover { border-color: var(--color-primary); color: var(--color-primary-dark); text-decoration: none; }
 .btn-ghost { background: var(--color-bg-alt); color: var(--color-text); }
@@ -399,6 +399,8 @@ img.avatar { object-fit: cover; }
 .icon-badge-ember { background: linear-gradient(150deg, #fff, var(--color-ember-soft)); color: var(--color-ember-dark); }
 .icon-badge-neutral { background: linear-gradient(150deg, #fff, var(--color-bg-alt)); color: var(--color-text-secondary); }
 .icon-badge-danger { background: linear-gradient(150deg, #fff, var(--color-danger-soft)); color: var(--color-danger); }
+.icon-badge-gold { background: linear-gradient(150deg, #fff, var(--color-gold-soft)); color: var(--color-gold-dark); }
+.icon-badge-info { background: linear-gradient(150deg, #fff, var(--color-info-soft)); color: var(--color-info); }
 a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) scale(1.05); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), var(--shadow); }
 @media (prefers-reduced-motion: reduce) { .icon-badge { transition: none; } a:hover > .icon-badge, .icon-badge-hover:hover { transform: none; } }
 

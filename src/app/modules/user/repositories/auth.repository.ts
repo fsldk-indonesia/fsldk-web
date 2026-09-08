@@ -5,6 +5,7 @@ import { AuthSessionService } from '../services/auth-session.service';
 import { AuthResult } from '../entities/auth-result';
 import { UserProfile } from '../entities/user';
 import { CmsTier, CMS_SHELL_BASE } from '../../../shared/cms-tier';
+import { ToastService } from '../../../core/services/toast.service';
 
 /** Peringkat tier organisasi tertinggi (0 = tidak ada) — dipakai untuk
  *  visibilitas link CMS hierarkis ke bawah (miss-development-clarification.md
@@ -21,6 +22,7 @@ const TIER_RANK: Record<string, number> = { LDK: 1, PUSKOMDA: 2, PUSKOMNAS: 3 };
 export class AuthRepository {
   private api = inject(AuthApiService);
   private session = inject(AuthSessionService);
+  private toast = inject(ToastService);
 
   readonly user = signal<UserProfile | null>(this.session.loadUser());
   readonly isLoggedIn = computed(() => this.user() !== null);
@@ -153,9 +155,21 @@ export class AuthRepository {
     return null;
   }
 
-  logout(): void {
+  /**
+   * `reason` bedakan pesan toast: logout manual (tombol "Keluar" di navbar/
+   * dropdown akun) vs logout otomatis saat token akses kedaluwarsa/tidak
+   * valid (errorInterceptor pada 401). Dipusatkan di sini supaya SEMUA
+   * pemicu logout (cms-layout, site-header, errorInterceptor) otomatis
+   * konsisten tanpa perlu memanggil toast sendiri-sendiri di tiap tempat.
+   */
+  logout(reason: 'manual' | 'expired' = 'manual'): void {
     this.session.clear();
     this.user.set(null);
+    if (reason === 'expired') {
+      this.toast.info('Sesi Anda telah berakhir. Silakan masuk kembali.');
+    } else {
+      this.toast.success('Anda berhasil keluar. Sampai jumpa!');
+    }
   }
 
   private applySession(res: AuthResult): void {

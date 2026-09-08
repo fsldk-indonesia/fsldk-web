@@ -41,6 +41,7 @@ export function galleryCmsRoutes(): Routes {
       path: 'galleries',
       canActivate: [permissionGuard],
       data: { permission: 'gallery.view' },
+      title: 'Galeri',
       loadComponent: () =>
         import('./pages/index/gallery.index.page').then((m) => m.GalleryIndexPage),
     },
@@ -48,6 +49,7 @@ export function galleryCmsRoutes(): Routes {
       path: 'galleries/create',
       canActivate: [permissionGuard],
       data: { permission: 'gallery.create' },
+      title: 'Tambah Galeri',
       loadComponent: () =>
         import('./pages/form/gallery.form.page').then((m) => m.GalleryFormPage),
     },
@@ -55,6 +57,7 @@ export function galleryCmsRoutes(): Routes {
       path: 'galleries/:id/edit',
       canActivate: [permissionGuard],
       data: { permission: 'gallery.update' },
+      title: 'Edit Galeri',
       loadComponent: () =>
         import('./pages/form/gallery.form.page').then((m) => m.GalleryFormPage),
     },

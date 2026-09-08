@@ -185,53 +185,6 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [...kaderRoutes()],
   },
-  {
-    path: 'cms-ldk',
-    component: CmsLayoutComponent,
-    canActivate: [authGuard],
-    data: { tier: 'LDK' },
-    children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      ...dashboardRoutes(),
-      ...organizationRoutes(),
-      ...submissionRoutes(),
-    ],
-  },
-  {
-    path: 'cms-puskomda',
-    component: CmsLayoutComponent,
-    canActivate: [authGuard],
-    data: { tier: 'PUSKOMDA' },
-    children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      ...dashboardRoutes(),
-      ...organizationRoutes(),
-      ...submissionRoutes(),
-      ...reportRoutes(),
-    ],
-  },
-  {
-    path: 'cms-puskomnas',
-    component: CmsLayoutComponent,
-    canActivate: [authGuard],
-    data: { tier: 'PUSKOMNAS' },
-    children: [
-      { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      ...dashboardRoutes(),
-      ...organizationRoutes(),
-      ...submissionRoutes(),
-      ...reportRoutes(),
-      ...submissionFormRoutes(),
-    ],
-  },
-
-  // ---------- Kader (self-service, tema landing page + sidebar ringkas) ----------
-  {
-    path: 'kader',
-    component: KaderLayoutComponent,
-    canActivate: [authGuard],
-    children: [...kaderRoutes()],
-  },
 
   ...shortlinkRedirectRoutes(),
 

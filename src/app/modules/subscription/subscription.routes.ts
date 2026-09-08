@@ -16,6 +16,7 @@ export const subscriptionCmsRoutes: () => Routes = () => [
     path: 'subscribers',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'subscription.view' },
+    title: 'Subscription',
     loadComponent: () =>
       import('./pages/index/subscription.index.page').then((m) => m.SubscriptionIndexPage),
   },
