@@ -126,12 +126,12 @@ function canvasSilhouetteUrl(hex: string): string {
             <div class="org-switcher">
               <button class="org-switcher-btn" type="button" (click)="toggleOrgDropdown($event)">
                 <app-icon [name]="switcherIcon()" [size]="14" />
-                <span>{{ currentOrgName() ?? 'Pilih Organisasi' }}</span>
+                <span>{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
                 <app-icon name="chevron-down" [size]="12" />
               </button>
               @if (orgDropdownOpen()) {
                 <div class="dropdown-panel org-dropdown-panel">
-                  <input class="form-control" placeholder="Cari organisasi..." [value]="orgSearch()" (input)="onOrgSearch($event)" (click)="$event.stopPropagation()">
+                  <input class="form-control" [placeholder]="'Cari ' + orgNoun() + '...'" [value]="orgSearch()" (input)="onOrgSearch($event)" (click)="$event.stopPropagation()">
                   @for (o of orgOptions(); track o.organizationID) {
                     <button type="button" [class.active]="o.organizationID === currentOrgID()" (click)="selectOrganization(o.organizationID)">
                       {{ o.organizationName }}
@@ -245,13 +245,13 @@ function canvasSilhouetteUrl(hex: string): string {
     .side-nav::-webkit-scrollbar-track { background: transparent; }
     .side-nav::-webkit-scrollbar-thumb { background-color: var(--color-border-strong); border-radius: var(--radius-full); }
     .side-nav a { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease; }
-    .side-nav a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; transform: translateX(3px); }
+    .side-nav a:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none; transform: translateX(3px); }
     .side-nav a.active { background: var(--color-primary); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent); }
     .side-nav a.active:hover { background: var(--color-primary-dark); color: #fff; transform: translateX(3px); }
     .side-nav a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
     .side-nav a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
     .side-nav-group-trigger { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 10px; border: none; background: none; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .95rem; font-family: var(--font-body); cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
-    .side-nav-group-trigger:hover { background: var(--color-bg-alt); color: var(--color-text); }
+    .side-nav-group-trigger:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .side-nav-group-label { flex: 1; text-align: left; }
     .side-nav-group-chevron { color: var(--color-muted); transition: transform var(--motion-fast) ease; flex-shrink: 0; }
     .side-nav-group-chevron.open { transform: rotate(180deg); }
@@ -263,7 +263,7 @@ function canvasSilhouetteUrl(hex: string): string {
     .side-nav-group-children.expanded { grid-template-rows: 1fr; }
     .side-nav-group-children-inner { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 4px; padding-left: 18px; margin: 2px 0 4px; border-left: 2px solid var(--color-border); }
     .side-nav-group-children a { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: var(--radius-md); color: var(--color-text-secondary); font-weight: 600; font-size: .88rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
-    .side-nav-group-children a:hover { background: var(--color-bg-alt); color: var(--color-text); text-decoration: none; transform: translateX(3px); }
+    .side-nav-group-children a:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none; transform: translateX(3px); }
     .side-nav-group-children a.active { background: var(--color-primary); color: #fff; }
     .side-nav-group-children a.active .icon-badge { background: rgba(255,255,255,.22); color: #fff; box-shadow: none; }
     @media (prefers-reduced-motion: reduce) {
@@ -307,8 +307,13 @@ function canvasSilhouetteUrl(hex: string): string {
        (pola sama dipakai tema per-tier .cms-content ::ng-deep .card di bawah). */
     .topbar ::ng-deep .prayer-btn { border-radius: var(--radius-xs); }
     .org-switcher { position: relative; }
-    .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: var(--color-bg-warm); color: var(--color-text); font-weight: 600; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
-    .org-switcher-btn:hover { background: var(--color-primary-soft); border-color: var(--color-primary); }
+    /* Sengaja diberi warna tier (tint bg + border + teks) di kondisi diam,
+       bukan cuma netral — tombol ini cuma tampil untuk tier LDK/Puskomda,
+       jadi warnanya otomatis ikut var(--color-primary-*) tier yang lagi
+       aktif (lihat .cms.tier-*), tidak perlu di-hardcode di sini. Hover
+       naik jadi solid fill supaya kontras "sedang ditekan" makin jelas. */
+    .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-full); border: 1.5px solid var(--color-primary-soft); background: var(--color-primary-tint); color: var(--color-primary-dark); font-weight: 700; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .org-switcher-btn:hover { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent); transform: translateY(-1px); }
     .org-switcher-btn span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .org-dropdown-panel { left: 0; right: auto; min-width: 280px; max-height: 360px; overflow-y: auto; gap: 4px; }
     .org-dropdown-panel input { margin-bottom: 6px; }
@@ -331,10 +336,10 @@ function canvasSilhouetteUrl(hex: string): string {
        latar abu, lalu hijau — keduanya ditolak), hover cukup highlight
        netral tipis seperti item dropdown lain di app ini. */
     .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); background: none; border: none; color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
-    .nav-website-link:hover { background: var(--color-bg-warm); color: var(--color-primary-dark); text-decoration: none; }
+    .nav-website-link:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none; }
     .user-dropdown { position: relative; }
     .user-chip { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease; }
-    .user-chip:hover { background: var(--color-bg-warm); }
+    .user-chip:hover { background: var(--color-primary-soft); }
     .avatar { width: 40px; height: 40px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; }
     img.avatar { object-fit: cover; }
     .user-meta { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
@@ -377,7 +382,13 @@ function canvasSilhouetteUrl(hex: string): string {
        LANGSUNG lewat [style.background]/[style.color] di template, bukan
        custom property var() — custom property sempat dicoba lebih dulu
        untuk versi outline, background-nya gagal ke-resolve dengan CSS var(). */
-    .portal-item:not(.active):hover { background: var(--color-bg-warm); }
+    /* Hover ikut warna tier yang SEDANG dibuka (var(--color-primary-soft/-dark),
+       di-override per .cms.tier-* di bawah) — bukan warna tier target yang
+       di-hover. Jadi kalau lagi di Portal Puskomnas, hover ke item Portal
+       Admin manapun tetap keluar ungu (warna Puskomnas), konsisten dengan
+       hover sidebar/topbar lain di shell yang sama. */
+    .portal-item:not(.active):hover { background: var(--color-primary-soft); }
+    .portal-item:not(.active):hover .dropdown-item-title { color: var(--color-primary-dark); }
     /* Garis pemisah sebelum "Keluar" — dipisah dari aksi navigasi portal/
        profil di atasnya karena ini aksi destruktif (keluar akun). */
     .dropdown-panel .dropdown-divider-top { border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 14px; }
@@ -473,6 +484,10 @@ export class CmsLayoutComponent implements OnInit {
   brandLabel = computed(() => CMS_SHELL_LABEL[this.tier()]);
   showOrgSwitcher = computed(() => this.tier() === 'LDK' || this.tier() === 'PUSKOMDA');
   switcherIcon = computed(() => CMS_SHELL_ICON[this.tier()]);
+  // Switcher cuma muncul untuk tier LDK/PUSKOMDA (lihat showOrgSwitcher), jadi
+  // istilahnya bisa spesifik per tier ("Cari LDK"/"Cari Puskomda") alih-alih
+  // istilah generik "organisasi" yang kurang jelas maksudnya bagi pengguna.
+  orgNoun = computed(() => (this.tier() === 'LDK' ? 'LDK' : 'Puskomda'));
   canvasBackgroundImage = computed(() => canvasSilhouetteUrl(TIER_COLOR[this.tier()]));
 
   shellBaseOf(t: CmsTier): string { return CMS_SHELL_BASE[t]; }
