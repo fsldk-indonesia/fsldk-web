@@ -22,4 +22,5 @@ export class NewsApiService {
   publish(id: number, isPublished: boolean): Observable<unknown> { return this.api.patch(`/news/${id}/publish`, { isPublished }); }
   featuredToggle(id: number, isFeatured: boolean): Observable<unknown> { return this.api.patch(`/news/${id}/featured`, { isFeatured }); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/news/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/news/bulk-delete', { ids }); }
 }

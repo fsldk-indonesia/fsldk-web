@@ -5,13 +5,24 @@ import { NewsRepository } from '../../repositories/news.repository';
 import { News } from '../../entities/news';
 import { NewsIndexView } from './news.index.view';
 
+/** Query params yang dikirim ke GET /news — lihat news_dto.CMSFilter di backend. */
+export interface NewsListParams {
+  search: string;
+  reporter: string;
+  category: string;
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  sort: string;
+}
+
 @Injectable()
 export class NewsIndexPresenter extends BasePresenter<NewsIndexView> {
   private newsRepo = inject(NewsRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, status: string): void {
-    this.newsRepo.cmsList({ page, limit, status }).subscribe({ next: (p) => this.view.setNews(p.data, p.count), error: () => {} });
+  load(page: number, limit: number, filters: NewsListParams): void {
+    this.newsRepo.cmsList({ page, limit, ...filters }).subscribe({ next: (p) => this.view.setNews(p.data, p.count), error: () => {} });
   }
 
   togglePublish(n: News): void {
@@ -25,6 +36,13 @@ export class NewsIndexPresenter extends BasePresenter<NewsIndexView> {
     this.newsRepo.remove(n.newsID).subscribe({
       next: () => { this.toast.success('Berita dihapus'); this.view.onRemoveSuccess(); this.view.onActionSettled(n.newsID); },
       error: () => this.view.onActionSettled(n.newsID),
+    });
+  }
+
+  bulkDelete(ids: number[]): void {
+    this.newsRepo.bulkDelete(ids).subscribe({
+      next: () => { this.toast.success(`${ids.length} berita terpilih dihapus`); this.view.onBulkDeleteSuccess(); },
+      error: () => {},
     });
   }
 }
