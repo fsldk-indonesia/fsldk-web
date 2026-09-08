@@ -7,6 +7,7 @@ export const settingRoutes: () => Routes = () => [
     path: 'settings',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'setting.view' },
+    title: 'App Settings',
     loadComponent: () => import('./pages/index/setting.index.page').then((m) => m.SettingIndexPage),
   },
 ];

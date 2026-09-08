@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -120,7 +119,6 @@ import { ToastService } from '../../../../core/services/toast.service';
 })
 export class StructureIndexPage implements OnInit {
   repo = inject(StructureRepository);
-  private title = inject(Title);
   private alert = inject(AlertService);
   private toast = inject(ToastService);
 
@@ -131,7 +129,6 @@ export class StructureIndexPage implements OnInit {
   private searchSubject = new Subject<string>();
 
   ngOnInit(): void {
-    this.title.setTitle('Struktur Organisasi - CMS FSLDK');
     this.loadData();
 
     this.searchSubject.pipe(

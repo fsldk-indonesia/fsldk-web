@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -229,7 +228,6 @@ import { environment } from '../../../../../environments/environment';
 })
 export class GalleryIndexPage implements OnInit {
   repo = inject(GalleryRepository);
-  private title = inject(Title);
   private toast = inject(ToastService);
   private alert = inject(AlertService);
 
@@ -240,7 +238,6 @@ export class GalleryIndexPage implements OnInit {
   private search$ = new Subject<string>();
 
   ngOnInit(): void {
-    this.title.setTitle('Manajemen Galeri - CMS FSLDK');
     this.loadData();
 
     this.search$

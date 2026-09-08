@@ -228,7 +228,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
        sejajar dengan lebar konten. gap eksplisit menjaga jarak minimum
        antar 3 grup (brand/menu/aksi) tetap ada meski justify-between
        kehabisan sisa ruang di viewport laptop yang lebih sempit. */
-    .pub-header .container { max-width: 1600px; gap: 32px; }
+    .pub-header .container { max-width: 1600px; gap: 32px; padding: 0 50px; }
     .pub-header.scrolled {
       position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
       width: min(1600px, calc(100% - 32px));
@@ -397,6 +397,7 @@ const KADER_PENDING_STATUSES = ['SUBMITTED', 'LDK_REVIEW', 'REVISION_REQUESTED_L
       .pub-nav-group, .pub-actions { display: none; }
       .mobile-toggle { display: flex; }
       .pub-header { padding: 12px 0; }
+      .pub-header .container { padding: 0 30px; }
       .pub-header.scrolled { top: 10px; width: calc(100% - 24px); padding: 8px 14px; }
       .nav-placeholder.active { height: 64px; }
     }

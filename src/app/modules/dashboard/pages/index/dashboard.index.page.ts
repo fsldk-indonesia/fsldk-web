@@ -56,8 +56,14 @@ function formatRupiah(value: number): string {
   providers: [DashboardIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    .stat { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
+    .stat { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 26px 24px; box-shadow: var(--shadow-sm); }
     .stat-with-icon { display: flex; align-items: flex-start; gap: 14px; }
+    /* Grid statistik jaringan (LDK/Puskomda/dst) terasa mepet dengan gap
+       default .grid (24px) karena kartunya lebar & padat teks — dinaikkan
+       KHUSUS di halaman ini (scoped via Angular style encapsulation, tidak
+       bocor ke .grid di halaman lain). Dinaikkan lagi ke 36px (28px masih
+       terasa kurang kentara bedanya). */
+    .grid { gap: 36px; }
     .stat-label { color: var(--color-text-secondary); font-size: .9rem; } .stat-num { display: block; font-family: var(--font-heading); font-weight: 800; font-size: 2.6rem; margin-top: 8px; }
     .card-section { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); margin-top: 20px; }
     .card-section h3 { margin-bottom: 16px; display: flex; align-items: center; gap: 9px; }
@@ -65,6 +71,23 @@ function formatRupiah(value: number): string {
     .note-item { padding-bottom: 12px; border-bottom: 1px solid var(--color-border); }
     .note-item:last-child { border-bottom: none; padding-bottom: 0; }
     .note-item .note-date { color: var(--color-muted); font-size: .8rem; }
+
+    /* ---------- Shell kartu pembungkus seluruh dashboard ----------
+       Putih polos (bukan tint abu-abu var(--color-bg-warm) — dicoba lebih
+       dulu, diminta diputihkan lagi). .stat/.card-section di dalamnya tetap
+       kebaca sebagai kartu tersendiri lewat border+shadow-nya sendiri, bukan
+       lewat kontras warna latar. Motif jaringan simpul (bukan batik, sesuai
+       revisi) mengisi latar paling belakang di dalam shell ini, sangat pupus
+       (opacity rendah) supaya tetap jadi tekstur, bukan elemen yang bersaing
+       dengan konten. */
+    /* Card putih + max-width/center sekarang datang dari .page-shell global
+       (cms-layout.component.ts, dipasang untuk SEMUA halaman CMS) — kalau
+       diulang lagi di sini, dashboard tampil card-di-dalam-card (border+
+       shadow dobel). .dashboard-shell tinggal jadi konteks posisi untuk
+       overlay siluet (position:relative + overflow:hidden), bukan card. */
+    .dashboard-shell { position: relative; overflow: hidden; }
+    .dashboard-illustration { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .05; pointer-events: none; z-index: 0; }
+    .dashboard-shell > *:not(.dashboard-illustration) { position: relative; z-index: 1; }
 
     /* ---------- Kartu sapaan + kutipan motivasi ---------- */
     .greeting-card {

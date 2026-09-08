@@ -12,18 +12,21 @@ export const financeformatCmsRoutes: () => Routes = () => [
     path: 'finance-formats',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'financeformat.view' },
+    title: 'Format Keuangan',
     loadComponent: () => import('./pages/index/financeformat.index.page').then((m) => m.FinanceFormatIndexPage),
   },
   {
     path: 'finance-formats/form',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'financeformat.create' },
+    title: 'Tambah Format Keuangan',
     loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
   },
   {
     path: 'finance-formats/form/:id',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'financeformat.update' },
+    title: 'Edit Format Keuangan',
     loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
   },
 ];

@@ -10,12 +10,14 @@ export const reportRoutes: () => Routes = () => [
     path: 'reports/wilayah',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'report.region.view', title: 'Laporan Wilayah', exportPermission: 'report.region.export' },
+    title: 'Laporan Wilayah',
     loadComponent: () => import('./pages/report-list/report.list.page').then((m) => m.ReportListPage),
   },
   {
     path: 'reports/nasional',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'report.national.view', title: 'Laporan Nasional', exportPermission: 'report.national.export' },
+    title: 'Laporan Nasional',
     loadComponent: () => import('./pages/report-list/report.list.page').then((m) => m.ReportListPage),
   },
 ];

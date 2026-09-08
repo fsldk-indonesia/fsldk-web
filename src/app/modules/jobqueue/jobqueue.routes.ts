@@ -7,6 +7,7 @@ export const jobqueueRoutes: () => Routes = () => [
     path: 'job-queue',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'jobqueue.view' },
+    title: 'Job Queue',
     loadComponent: () => import('./pages/index/jobqueue.index.page').then((m) => m.JobQueueIndexPage),
   },
 ];

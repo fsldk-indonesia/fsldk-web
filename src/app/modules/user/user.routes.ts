@@ -7,6 +7,7 @@ export const userRoutes: () => Routes = () => [
     path: 'users',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'user.view' },
+    title: 'Pengguna',
     loadComponent: () => import('./pages/index/user.index.page').then((m) => m.UserIndexPage),
   },
 ];

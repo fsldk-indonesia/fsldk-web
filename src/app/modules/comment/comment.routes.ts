@@ -7,12 +7,14 @@ export const commentCmsRoutes: () => Routes = () => [
     path: 'comments',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'comment.view' },
+    title: 'Komentar',
     loadComponent: () => import('./pages/index/comment.index.page').then((m) => m.CommentIndexPage),
   },
   {
     path: 'comments/:id',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'comment.view' },
+    title: 'Detail Komentar',
     loadComponent: () => import('./pages/detail/comment.detail.page').then((m) => m.CommentDetailPage),
   },
 ];

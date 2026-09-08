@@ -53,7 +53,7 @@ modules/news/
 └── news.routes.ts                  # factory `() => Routes`, lazy via loadComponent
 ```
 
-**Modul yang ada saat ini** (satu-satu berpasangan dengan modul backend `fsldk-api`, ditambah `home` untuk Beranda):
+**Modul yang ada saat ini** (umumnya satu-satu berpasangan dengan modul backend `fsldk-api`, ditambah `home` untuk Beranda) — daftar ini bertambah seiring fitur baru; anggap sebagai peta, bukan satu-satunya sumber kebenaran (jalankan `ls src/app/modules/` untuk daftar aktual):
 
 | Modul | Isi |
 |---|---|
@@ -64,17 +64,30 @@ modules/news/
 | `news` | Berita — publik (list/detail) & CMS (manajemen/form) |
 | `article` | Artikel — publik (list/detail) & CMS (manajemen/form) |
 | `event` | Event — publik (list/detail, countdown, tab dokumentasi) & CMS (manajemen/form) |
+| `catalogbook` | Perpustakaan/katalog buku — publik (list/detail, like) & CMS (manajemen/form) |
+| `financeformat` | Format Keuangan (unduhan dokumen) — publik & CMS |
+| `goods` | FSLDK Goods — katalog produk (bukan e-commerce; "Beli Sekarang" murni redirect ke `purchaseUrl`) & kategori, publik & CMS |
+| `schedule` | Jadwal kegiatan (kajian/rapat/daurah/dst.) — publik & CMS |
+| `structure` | Struktur Organisasi — arsip kepengurusan per periode/batch (bukan section "Tentang" Beranda), CMS-only |
+| `gallery` | Galeri foto per album — publik & CMS |
+| `contact` | Kotak masuk pesan form "Hubungi Kami" (bukan section "Kontak" Beranda) — CMS-only |
+| `subscription` | Newsletter/subscriber — form berlangganan publik & CMS |
+| `statistic` | Statistik jaringan nasional (sebaran LDK/Puskomda) — publik-only, tanpa CMS |
+| `zakat` | Kalkulator zakat (7 jenis) — publik-only, kalkulasi di browser, satu panggilan API (harga emas) |
+| `dynamicform` | Formulir Dinamis — form builder ad-hoc generik (beda dari `submission-form`, lihat di bawah), draft-per-sesi, opsional sinkron Google Sheets |
 | `comment` | Komentar — widget publik (`comment-section`/`comment-item`, dipakai lintas modul `article`/`news`/`event`) & CMS moderasi (lihat §9) |
 | `shortlink` | Manajemen shortlink CMS (buat/lihat/ubah/hapus, salin tautan pendek) + halaman publik pengajuan (`shortlink/ajukan`, tanpa login) + antrian moderasi CMS (`shortlink-requests`, approve/reject) |
+| `kantong-amal` | Crowdfunding donasi — **satu** modul frontend memetakan **empat** modul backend (`campaign`/`donation`/`wallet`/`withdrawal`, lihat ARCHITECTURE.md `fsldk-api` §2), plus laporan keuangan. Halaman publik (donasi, status pembayaran, resi) & CMS (kelola campaign, monitoring donasi, penarikan dana, laporan/audit) |
 | `setting` | App Settings CMS (`/cms/settings`) — konfigurasi runtime key-value generik, Superadmin-only |
-| `dashboard` | Ringkasan **tier-aware** (LDK/Puskomda/Puskomnas) — bentuk widget berbeda sesuai `organizationTypeCode` pengguna |
-| `organization` | Hierarki LDK/Puskomda/Puskomnas — profil, daftar wilayah/nasional, `OrganizationRepository` sekaligus pemilik state dashboard switcher (§7) |
-| `submission-form` | Form builder (Super Admin) — form/version/section/field/option pendataan Levelisasi & Sensus Kader |
+| `jobqueue` | Dashboard monitoring antrian pengiriman WhatsApp/email asinkron, Superadmin-only |
+| `dashboard` | Ringkasan **tier-aware** (Utama/LDK/Puskomda/Puskomnas) — bentuk widget berbeda sesuai tier shell CMS aktif (lihat §7) |
+| `organization` | Hierarki LDK/Puskomda/Puskomnas — profil, daftar wilayah/nasional, `OrganizationRepository` sekaligus pemilik state organization switcher (§7, **bukan** yang menentukan tier — lihat catatan penting di §7) |
+| `submission-form` | Form builder (Super Admin) — form/version/section/field/option pendataan Levelisasi & Sensus Kader. **Beda** dari `dynamicform` (di atas): ini khusus dua form baku (Levelisasi LDK, Sensus Kader), bukan form ad-hoc bebas |
 | `submission` | Pengisian, status, & review pendataan — satu modul dipakai LDK (isi form, lihat status), Puskomda/Puskomnas (verifikasi/persetujuan/penetapan level/publikasi), dan LDK lagi (persetujuan kader) sekaligus, dibedakan lewat permission dari `/me/menus`, bukan role hardcode di komponen |
 | `report` | Laporan Wilayah/Nasional — tabel submission + ekspor Excel/CSV |
 | `home` | Beranda — hero, berita terbaru, serta section Tentang & Kontak (teks tetap/hardcoded, bukan dari API) |
 
-> Konten Landing Page (visi/misi/struktur organisasi/kontak) sengaja **tidak** dikelola via CMS/database — sesuai keputusan produk, teksnya statis langsung di `modules/home/pages/index/home.index.page.ts`. Tidak ada lagi modul `content`, `about`, atau `contact` terpisah.
+> Konten Landing Page (visi/misi/section "Kontak" — alamat/media sosial) sengaja **tidak** dikelola via CMS/database — sesuai keputusan produk, teksnya statis langsung di `modules/home/pages/index/home.index.page.ts`. Tidak ada lagi modul `content`/`about` terpisah untuk INI. Jangan bingung dengan modul `structure` dan `contact` di atas — keduanya adalah fitur CMS asli (arsip kepengurusan & kotak masuk pesan) yang namanya kebetulan mirip, ditambahkan belakangan, bukan reinkarnasi modul `content` yang lama.
 
 ### Aturan lintas modul
 
@@ -203,7 +216,9 @@ Modul `modules/auth/` sendiri **hanya berisi halaman** (login/register/verify-em
 
 Setiap modul mengekspor factory `() => Routes` di `<modul>.routes.ts`, memakai `loadComponent` (bukan `component` langsung) agar tiap halaman menjadi *lazy chunk* terpisah — diverifikasi lewat `ng build` (lihat daftar "Lazy chunk files" pada output build).
 
-[`app.routes.ts`](../src/app/app.routes.ts) mengagregasi seluruh route modul di bawah dua *layout shell*. Halaman autentikasi (login/daftar/lupa-password/dst.) sengaja **bersarang di dalam** `PublicLayoutComponent`, bukan shell terpisah — persis pola ldksyahid-app, karena halaman ini untuk masyarakat umum (bukan hanya pengguna dengan akses CMS) sehingga memakai navbar & footer landing page yang sama. `AuthLayoutComponent` kini hanya membingkai kartu form + panel visual (ayat & poin komunitas), bukan shell penuh:
+[`app.routes.ts`](../src/app/app.routes.ts) mengagregasi seluruh route modul di bawah **empat** layout shell component: `PublicLayoutComponent` (landing page, dengan `AuthLayoutComponent` bersarang di dalamnya untuk halaman login/daftar/dst.), `CmsLayoutComponent` (dipakai ulang untuk **empat** route tree CMS bertier berbeda — lihat di bawah), dan `KaderLayoutComponent` (portal self-service ringkas untuk role Kader — sidebar minimal Pendataan/Status/Persetujuan Kader/Profil LDK, tanpa dashboard statistik karena Kader tidak bertier organisasi, lihat `modules/dashboard` §2 dan API §14 `fsldk-api`).
+
+Halaman autentikasi (login/daftar/lupa-password/dst.) sengaja **bersarang di dalam** `PublicLayoutComponent`, bukan shell terpisah — persis pola ldksyahid-app, karena halaman ini untuk masyarakat umum (bukan hanya pengguna dengan akses CMS) sehingga memakai navbar & footer landing page yang sama. `AuthLayoutComponent` kini hanya membingkai kartu form + panel visual (ayat & poin komunitas), bukan shell penuh:
 
 ```ts
 export const routes: Routes = [
@@ -214,9 +229,18 @@ export const routes: Routes = [
       { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
     ],
   },
-  { path: 'cms', component: CmsLayoutComponent, canActivate: [authGuard], children: [...dashboardRoutes(), ...userRoutes(), ...] },
+  // 4 shell CMS TERPISAH memakai component YANG SAMA (CmsLayoutComponent) — tier
+  // datang dari route `data`, bukan dari toggle runtime (lihat §7 untuk detail
+  // & kenapa ini beda dari "organization switcher").
+  { path: 'cms', component: CmsLayoutComponent, canActivate: [authGuard], data: { tier: 'FSLDK' }, children: [...dashboardRoutes(), ...userRoutes(), ...] },
+  { path: 'cms-ldk', component: CmsLayoutComponent, canActivate: [authGuard], data: { tier: 'LDK' }, children: [...dashboardRoutes(), ...organizationRoutes(), ...submissionRoutes()] },
+  { path: 'cms-puskomda', component: CmsLayoutComponent, canActivate: [authGuard], data: { tier: 'PUSKOMDA' }, children: [...] },
+  { path: 'cms-puskomnas', component: CmsLayoutComponent, canActivate: [authGuard], data: { tier: 'PUSKOMNAS' }, children: [...] },
+  { path: 'kader', component: KaderLayoutComponent, canActivate: [authGuard], children: [...kaderRoutes()] },
 ];
 ```
+
+Setiap dari keempat shell CMS memfilter menu sidebar-nya sendiri dari `GET /me/menus` berdasarkan **prefix route** (`lk_permission.menuRoute` sudah di-set per shell lewat migration backend `0010`) — anggota `children` yang sama (mis. `dashboardRoutes()`, `submissionRoutes()`) boleh dipasang di lebih dari satu shell karena akses tetap dijaga `permissionGuard` per halaman, bukan oleh shell mana yang memuatnya.
 
 Menambah halaman baru **tidak pernah mengedit `app.routes.ts` untuk isi rute** — cukup tambahkan entri di `<modul>.routes.ts` milik modul terkait; `app.routes.ts` hanya merangkai.
 
@@ -239,13 +263,29 @@ Guard dipasang berlapis, berurutan (`canActivate: [verifiedGuard, permissionGuar
 
 ---
 
-## 7. Menu Sidebar CMS Dinamis & Organization Switcher
+## 7. Shell CMS Ber-Tier, Menu Sidebar Dinamis & Organization Switcher
 
-Sesuai desain backend, sidebar CMS **tidak hardcode** (kecuali item Dashboard). [`layouts/cms-layout.component.ts`](../src/app/layouts/cms-layout.component.ts) memanggil `PermissionRepository.getMenus()` (`GET /me/menus`) saat `ngOnInit`, lalu merender `MenuItem[]` (`menuLabel`/`menuIcon`/`menuRoute`) hasil query permission×role pengguna yang login dari backend.
+**PENTING — dua mekanisme "switch" yang berbeda dan sering tertukar, dipisahkan tegas di sini:**
+
+### 7.1 Tier shell (FSLDK/LDK/Puskomda/Puskomnas) — ditentukan route, BUKAN runtime toggle
+
+Seperti dijelaskan di §6, ada **empat** route tree terpisah (`/cms`, `/cms-ldk`, `/cms-puskomda`, `/cms-puskomnas`) yang semuanya memakai `CmsLayoutComponent`, dibedakan lewat `data: { tier: 'FSLDK'|'LDK'|'PUSKOMDA'|'PUSKOMNAS' }` pada definisi route di `app.routes.ts`. `CmsLayoutComponent` membaca ini sekali lewat `ActivatedRoute.data` ke signal `tier()` — **tidak ada UI yang mengubah tier ini saat komponen sudah aktif**; berpindah tier berarti navigasi ke base path lain (mis. dari `/cms-ldk/dashboard` ke `/cms-puskomda/dashboard`), yang membuat Angular menghancurkan & membuat ulang instance `CmsLayoutComponent` (route berbeda, bukan sekadar parameter berbeda).
+
+Satu sumber kebenaran untuk keempat shell ini: [`shared/cms-tier.ts`](../src/app/shared/cms-tier.ts) — `CmsTier` (union type), `CMS_SHELL_BASE` (tier→prefix path), `CMS_SHELL_LABEL` (tier→label tampilan, mis. FSLDK disebut "Portal Admin", bukan "CMS"), `CMS_SHELL_ICON`, dan `CMS_TIER_ACCENT` (hex `--color-primary`/`-bright`/`-dark`/`-soft` per tier, LDK/Puskomda/Puskomnas saja — FSLDK sengaja tidak ada, jatuh ke default `:root`). File ini dipakai bersama oleh `site-header.component.ts` (dropdown "Portal Admin ▾" desktop & mobile di navbar publik — akun dengan akses ke lebih dari satu tier bisa pindah portal dari sini) dan `cms-layout.component.ts` (dropdown akun di topbar CMS, item yang sama).
+
+`CMS_TIER_ACCENT` **khusus** dipakai oleh komponen yang node-nya dipindah keluar dari pohon DOM `.cms` (mis. `shared/prayer-time.component.ts` — modal jadwal sholat dipindah ke `document.body` lewat `ngAfterViewInit` supaya `position:fixed`-nya tidak terkurung containing block leluhur manapun, lihat komentar di file tsb.) — begitu keluar dari `.cms.tier-ldk` dkk., custom property CSS ancestor (§8) tidak lagi terjangkau, jadi komponen semacam ini menerima tier lewat `@Input() tier: CmsTier` dan menyuntik hex `CMS_TIER_ACCENT` langsung sebagai inline `[style.--color-primary]` pada elemen yang dipindahkan, bukan mengandalkan `var()` inheritance.
+
+### 7.2 Organization switcher — memilih organisasi DALAM tier yang sama, TIDAK mengubah tier/tema
+
+Berbeda dari 7.1: **Organization switcher** (topbar, hanya tampil di shell `cms-ldk`/`cms-puskomda` — TIDAK di `cms`/`cms-puskomnas`, lihat `showOrgSwitcher()`) muncul bila `OrganizationRepository.hasMultiple()` — akun dengan lebih dari satu organisasi terjangkau pada tier yang **sama** (`GET /me/organizations`, hasil cascade §11 `fsldk-api`/ARCHITECTURE.md), mis. akun Puskomda yang mengelola data atas nama salah satu LDK di wilayahnya. Memilih organisasi lain di switcher **tidak** mengubah token/sesi maupun tier/tema (`OrganizationRepository.setActive()` murni state UI lokal, dikonsumsi presenter halaman lewat `OrgContextService`) — warna/tema tetap mengikuti tier route yang sedang aktif (7.1), switcher ini murni menentukan organisasi mana yang datanya ditampilkan/diedit.
+
+### 7.3 Menu sidebar dinamis
+
+Sesuai desain backend, sidebar CMS **tidak hardcode** (kecuali item Dashboard). `CmsLayoutComponent` memanggil `PermissionRepository.getMenus()` (`GET /me/menus`) saat `ngOnInit`, lalu merender `MenuItem[]` (`menuLabel`/`menuIcon`/`menuRoute`) hasil query permission×role pengguna yang login dari backend, difilter ke item yang `menuRoute`-nya diawali prefix shell aktif (`CMS_SHELL_BASE[tier()]`).
 
 **Grup dropdown collapsible**: beberapa modul dengan lebih dari satu menu (mis. Kantong Amal, Shortlink) dikelompokkan jadi satu trigger yang bisa dibuka/tutup, bukan berdiri sendiri-sendiri di sidebar. Ini murni logika frontend — `SIDEBAR_GROUPS` (array `{label, icon, routePrefix}` di `cms-layout.component.ts`) mempartisi `MenuItem[]` flat yang sama dari backend: item yang `menuRoute`-nya diawali salah satu `routePrefix` dikumpulkan jadi satu entri grup (posisinya di sidebar mengikuti `sortOrder` anak pertamanya, bukan dipindah ke awal/akhir), sisanya tetap tampil sebagai item flat biasa. Menambah modul baru ke grup yang sudah ada (atau grup baru) cukup memastikan `menuRoute` seluruh item terkait berbagi prefix yang sama — tidak perlu field/tabel baru di backend.
 
-**Organization switcher** (topbar) hanya muncul bila `OrganizationRepository.hasMultiple()` — akun dengan lebih dari satu organisasi terjangkau (`GET /me/organizations`, hasil cascade §11 `fsldk-api`/ARCHITECTURE.md). LDK murni (selalu tepat satu organisasi) tidak pernah melihatnya. Memilih organisasi lain di switcher **tidak** mengubah token/sesi (`OrganizationRepository.setActive()` murni state UI lokal) — hanya mengganti kelas tier pada root `.cms` (`tier-ldk`/`tier-puskomda`/`tier-puskomnas`), yang meng-override custom property CSS (`--color-primary` dkk., lihat §8) sehingga seluruh child (tombol, badge, item sidebar aktif) otomatis ikut berubah warna tanpa disentuh satu per satu — custom property CSS mengalir mengikuti pohon DOM, bukan batas komponen Angular. Kader sengaja tidak diberi kelas tier apa pun (tetap warna hijau dasar `:root`) — bukan tier CMS resmi.
+Kader (portal terpisah, `KaderLayoutComponent`, §6) sengaja tidak diberi kelas tier apa pun (tetap warna hijau dasar `:root`) — bukan tier CMS resmi, dan tidak memakai mekanisme menu dinamis `/me/menus` yang sama (sidebar-nya ringkas & tetap, lihat §6).
 
 ---
 
@@ -253,7 +293,9 @@ Sesuai desain backend, sidebar CMS **tidak hardcode** (kecuali item Dashboard). 
 
 [`src/styles.scss`](../src/styles.scss) berisi token desain global (warna hijau FSLDK `#00933b`, tipografi Poppins + Manrope, komponen `.card`/`.btn`/`.badge`/`.chip`/`.table`, dsb.) yang dipakai lintas seluruh Page — komponen individual hanya menambah style spesifik-halaman di blok `styles: []`-nya sendiri (co-located dengan `*.page.ts`, bukan file `.scss` terpisah, mengikuti bentuk file pada gambar referensi struktur modul).
 
-**Tema per-tier organisasi**: 3 warna resmi (LDK `#063c84`, Puskomda `#186541`, Puskomnas `#55408f`) didefinisikan sebagai override `--color-primary`/`-dark`/`-darker`/`-bright`/`-soft`/`-tint` lewat kelas `tier-ldk`/`tier-puskomda`/`tier-puskomnas` pada root `.cms` (lihat §7) — komponen individual (termasuk `shared/stat-bar.component.ts` untuk widget dashboard) tidak pernah hardcode salah satu dari 3 warna ini, selalu lewat `var(--color-primary)` supaya otomatis mengikuti tier organisasi yang sedang aktif.
+**Tema per-tier organisasi**: 3 dari 4 tier CMS (LDK `#063c84`, Puskomda `#186541`, Puskomnas `#55408f`) didefinisikan sebagai override `--color-primary`/`-dark`/`-darker`/`-bright`/`-soft`/`-tint` lewat kelas `tier-ldk`/`tier-puskomda`/`tier-puskomnas` pada root `.cms` (lihat §7.1) — FSLDK (tier ke-4) sengaja tidak punya kelas/override sendiri, memakai default `:root` (hijau brand `#00933b`) apa adanya. Komponen individual (termasuk `shared/stat-bar.component.ts` untuk widget dashboard) tidak pernah hardcode salah satu warna tier, selalu lewat `var(--color-primary)` supaya otomatis mengikuti tier yang sedang aktif — pengecualian satu-satunya adalah komponen yang node-nya dipindah keluar pohon DOM `.cms` (§7.1), yang menyuntik hex `CMS_TIER_ACCENT` langsung, bukan `var()`.
+
+**Card putih seragam (`.page-shell`)**: seluruh halaman index/form CMS (keempat tier) dibungkus SATU kali di `cms-layout.component.ts` (`<main class="cms-content"><div class="page-shell"><router-outlet /></div></main>`) — bukan per-halaman — dengan card putih (border/radius/shadow) + max-width yang disamakan dengan topbar/footer. Karena banyak halaman index/form sudah punya `.page-head` diikuti satu `.card`/`.card-pad` pembungkus tabel/form-nya sendiri, pola `.page-head + .card` diratakan (border/shadow-nya dihapus) di dalam `.page-shell` supaya tidak tampil sebagai card-di-dalam-card — card lain yang memang berdiri sendiri (bukan langsung setelah `.page-head`) tidak terpengaruh.
 
 ---
 
