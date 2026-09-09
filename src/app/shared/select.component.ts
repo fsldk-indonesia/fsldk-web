@@ -23,19 +23,17 @@ export interface SelectOption {
         <span [class.placeholder]="!selectedOption()">{{ selectedOption()?.label ?? placeholder }}</span>
         <i class="fas fa-chevron-down"></i>
       </button>
-      @if (open()) {
-        <ul class="app-select-menu" role="listbox"
-            [style.top.px]="pos().top" [style.left.px]="pos().left"
-            [style.width.px]="pos().width" [style.maxHeight.px]="pos().maxH">
-          @for (opt of options; track opt.value; let i = $index) {
-            <li role="option" [attr.aria-selected]="opt.value === value"
-                [class.selected]="opt.value === value" [class.active]="i === activeIndex()"
-                (mouseenter)="activeIndex.set(i)" (click)="choose(opt)">{{ opt.label }}</li>
-          } @empty {
-            <li class="empty">Tidak ada pilihan</li>
-          }
-        </ul>
-      }
+      <ul class="app-select-menu" role="listbox" [class.open]="open()"
+          [style.top.px]="pos().top" [style.left.px]="pos().left"
+          [style.width.px]="pos().width" [style.maxHeight.px]="pos().maxH">
+        @for (opt of options; track opt.value; let i = $index) {
+          <li role="option" [attr.aria-selected]="opt.value === value"
+              [class.selected]="opt.value === value" [class.active]="i === activeIndex()"
+              (mouseenter)="activeIndex.set(i)" (click)="choose(opt)">{{ opt.label }}</li>
+        } @empty {
+          <li class="empty">Tidak ada pilihan</li>
+        }
+      </ul>
     </div>
   `,
   styles: [`
@@ -52,13 +50,23 @@ export interface SelectOption {
     .app-select.open .app-select-control { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
     .app-select.open .app-select-control i { transform: rotate(180deg); }
     .app-select.disabled .app-select-control { background: var(--color-bg-alt); color: var(--color-muted); cursor: not-allowed; }
+    /* Selalu di-render (bukan @if) supaya transisi TUTUP juga kelihatan —
+       @if mencabut elemen dari DOM sesaat menu ditutup, jadi cuma transisi
+       buka yang sempat kelihatan. Posisi (top/left/width) tetap dihitung JS
+       lewat reposition() persis seperti sebelumnya, cuma dipanggilnya tetap
+       hanya saat open() true (lihat onViewportChange) — nilai pos() saat
+       tertutup boleh basi karena elemen toh tidak terlihat/tidak bisa diklik. */
     .app-select-menu {
       position: fixed; z-index: 1000;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs);
       box-shadow: var(--shadow-lg); list-style: none; margin: 0; padding: 6px;
       overflow-y: auto; overscroll-behavior: contain;
       display: flex; flex-direction: column; gap: 3px;
+      opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-4px) scale(.98);
+      transition: opacity .12s ease, transform .12s ease, visibility 0s linear .12s;
     }
+    .app-select-menu.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); transition: opacity .12s ease, transform .12s ease, visibility 0s linear 0s; }
+    @media (prefers-reduced-motion: reduce) { .app-select-menu { transition: none; } }
     .app-select-menu li { padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
     .app-select-menu li:hover { background: var(--color-bg-alt); }
     .app-select-menu li.active { background: var(--color-bg-alt); }

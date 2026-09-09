@@ -30,4 +30,15 @@ export const newsCmsRoutes: () => Routes = () => [
     title: 'Edit Berita',
     loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
   },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // NewsIndexPage), bukan cuma dari ikon Edit.
+    path: 'news/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'news.view', viewOnly: true },
+    title: 'Detail Berita',
+    loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
+  },
 ];

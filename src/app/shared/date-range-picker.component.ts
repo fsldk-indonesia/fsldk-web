@@ -36,8 +36,7 @@ export interface DateRange { from: string; to: string; }
         <span class="drp-text" [class.placeholder]="!from && !to">{{ displayValue() }}</span>
       </button>
 
-      @if (open()) {
-        <div class="drp-panel" [class.dropup]="dropup()" [class.align-right]="alignRight()" role="dialog">
+        <div class="drp-panel" [class.open]="open()" [class.dropup]="dropup()" [class.align-right]="alignRight()" role="dialog">
           <div class="drp-months">
             @for (m of [0, 1]; track m) {
               <div class="drp-month">
@@ -78,28 +77,35 @@ export interface DateRange { from: string; to: string; }
             <span class="drp-hint">{{ pendingFrom && !pendingTo ? 'Pilih tanggal akhir…' : 'Pilih tanggal mulai' }}</span>
           </div>
         </div>
-      }
     </div>
   `,
   styles: [`
-    .drp-wrap { position: relative; }
+    :host { display: block; }
+    .drp-wrap { position: relative; width: 100%; }
     .drp-trigger {
-      display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-xs);
-      border: 1px solid var(--color-border); background: #fff; font-family: var(--font-body); font-size: .88rem;
+      width: 100%;
+      display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius-xs);
+      border: 1px solid var(--color-border); background: #fff; font-family: var(--font-body); font-size: .95rem;
       color: var(--color-text); cursor: pointer; white-space: nowrap; transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
     }
     .drp-wrap.open .drp-trigger { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
     .drp-icon { color: var(--color-muted); font-size: .85rem; }
     .drp-text.placeholder { color: var(--color-muted); }
 
+    /* Selalu di-render (bukan @if) supaya transisi tutup juga kelihatan,
+       bukan cuma transisi buka — @if langsung mencabut elemen dari DOM
+       begitu ditutup jadi tidak sempat ada transisi sama sekali. */
     .drp-panel {
       position: absolute; top: calc(100% + 6px); left: 0; z-index: 300;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs); box-shadow: var(--shadow-lg);
-      padding: 10px; animation: drpSlideDown .15s ease;
+      padding: 10px;
+      opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-6px) scale(.97);
+      transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
     }
-    .drp-panel.dropup { top: auto; bottom: calc(100% + 6px); }
+    .drp-panel.dropup { top: auto; bottom: calc(100% + 6px); transform: translateY(6px) scale(.97); }
     .drp-panel.align-right { left: auto; right: 0; }
-    @keyframes drpSlideDown { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    .drp-panel.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); transition: opacity .15s ease, transform .15s ease, visibility 0s linear 0s; }
+    @media (prefers-reduced-motion: reduce) { .drp-panel { transition: none; } }
 
     .drp-months { display: flex; gap: 14px; }
     .drp-month { width: 220px; }

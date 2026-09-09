@@ -38,6 +38,10 @@ export class NewsFormPage implements OnInit, NewsFormView {
   categories = signal<NewsCategory[]>([]);
   saving = signal(false);
   editId: number | null = null;
+  // Halaman detail (read-only) memakai komponen yang sama dengan form edit —
+  // dibedakan lewat route data `viewOnly` (lihat news.routes.ts), bukan URL
+  // atau state terpisah, supaya layout field tidak dobel-maintain di 2 file.
+  isReadonly = false;
   canPublish = this.auth.hasPermission('news.publish');
   form: NewsFormValue = { ...emptyNewsForm };
   statusOptions = STATUS_OPTIONS;
@@ -47,6 +51,7 @@ export class NewsFormPage implements OnInit, NewsFormView {
     this.presenter.attachView(this);
     this.presenter.loadCategories();
 
+    this.isReadonly = this.route.snapshot.data['viewOnly'] === true;
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editId = +id;

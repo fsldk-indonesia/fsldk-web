@@ -35,12 +35,29 @@
       <app-select [options]="searchTargetOptions" [ngModel]="searchTarget" (ngModelChange)="onSearchTargetChange($event)" />
       <span class="search-combo-divider"></span>
       <input class="search-input" type="text" [placeholder]="searchPlaceholder" [(ngModel)]="searchQuery" (keyup.enter)="applySearch()">
+      <button type="button" class="search-combo-btn" title="Cari" (click)="applySearch()"><app-icon name="search" [size]="13" /></button>
     </div>
 
     <app-date-range-picker [from]="dateFrom" [to]="dateTo" placeholder="Pilih rentang tanggal" (rangeChange)="onDateRangeChange($event)" />
   </div>
 
-  <!-- Baris 2: refresh, adjust column, clear filter — bulk action -->
+  <!-- Pill filter aktif — tiap kolom yang sudah di-Apply muncul di sini,
+       bisa digabung lebih dari satu (Judul + Reporter + Kategori dst.
+       sekaligus), masing-masing bisa dihapus satu-satu atau semua lewat
+       Hapus Filter. -->
+  @if (activeFilterPills.length > 0) {
+    <div class="card-pad filter-pills">
+      @for (pill of activeFilterPills; track pill.key) {
+        <span class="filter-pill">
+          {{ pill.label }}
+          <button type="button" (click)="removeFilter(pill.key)" [attr.aria-label]="'Hapus filter ' + pill.label"><app-icon name="x" [size]="10" /></button>
+        </span>
+      }
+      <button type="button" class="filter-pills-reset" (click)="clearFilters()">Hapus Filter</button>
+    </div>
+  }
+
+  <!-- Baris 2: refresh, adjust column — bulk action -->
   <div class="card-pad table-toolbar">
     <button type="button" class="icon-btn" title="Refresh" (click)="refresh()"><app-icon name="refresh" [size]="14" /></button>
 
@@ -48,19 +65,15 @@
       <button type="button" class="dropdown-toggle" [class.open]="adjustColumnOpen()" (click)="adjustColumnOpen.set(!adjustColumnOpen()); bulkActionOpen.set(false)">
         Atur Kolom <app-icon class="chevron" name="chevron-down" [size]="10" />
       </button>
-      @if (adjustColumnOpen()) {
-        <div class="dropdown-menu">
-          @for (col of columnDefs; track col.key) {
-            <label [class.locked]="col.locked">
-              <input type="checkbox" [checked]="isColumnVisible(col.key)" [disabled]="col.locked" (change)="toggleColumn(col)">
-              {{ col.label }}
-            </label>
-          }
-        </div>
-      }
+      <div class="dropdown-menu" [class.open]="adjustColumnOpen()">
+        @for (col of columnDefs; track col.key) {
+          <label [class.locked]="col.locked">
+            <input type="checkbox" [checked]="isColumnVisible(col.key)" [disabled]="col.locked" (change)="toggleColumn(col)">
+            {{ col.label }}
+          </label>
+        }
+      </div>
     </div>
-
-    <button type="button" class="icon-btn" title="Clear Filter" [disabled]="!hasActiveFilters" (click)="clearFilters()"><app-icon name="x" [size]="14" /></button>
 
     <span style="flex:1"></span>
 
@@ -68,13 +81,11 @@
       <button type="button" class="dropdown-toggle" [class.open]="bulkActionOpen()" (click)="bulkActionOpen.set(!bulkActionOpen()); adjustColumnOpen.set(false)">
         Aksi Massal @if (selected.size > 0) { <span class="badge badge-info" style="margin-left:2px">{{ selected.size }}</span> } <app-icon class="chevron" name="chevron-down" [size]="10" />
       </button>
-      @if (bulkActionOpen()) {
-        <div class="dropdown-menu right">
-          <button type="button" class="menu-item" [disabled]="!canDelete || selected.size === 0" (click)="bulkDelete($event)">
-            <app-icon name="trash" [size]="13" /> Hapus {{ selected.size }} Terpilih
-          </button>
-        </div>
-      }
+      <div class="dropdown-menu right" [class.open]="bulkActionOpen()">
+        <button type="button" class="menu-item" [disabled]="!canDelete || selected.size === 0" (click)="bulkDelete($event)">
+          <app-icon name="trash" [size]="13" /> Hapus {{ selected.size }} Terpilih
+        </button>
+      </div>
     </div>
   </div>
 
@@ -123,9 +134,9 @@
           }
         } @else {
           @for (n of news(); track n.newsID) {
-            <tr>
+            <tr class="row-clickable" (click)="viewNews(n)" title="Klik untuk lihat detail">
               @if (canDelete) {
-                <td><input type="checkbox" [checked]="isSelected(n.newsID)" (change)="toggleSelect(n.newsID, $any($event.target).checked)"></td>
+                <td (click)="$event.stopPropagation()"><input type="checkbox" [checked]="isSelected(n.newsID)" (change)="toggleSelect(n.newsID, $any($event.target).checked)"></td>
               }
               <td><strong>{{ n.newsTitle }}</strong></td>
               @if (isColumnVisible('newsReporter')) { <td class="text-muted">{{ n.newsReporter || '–' }}</td> }
@@ -134,7 +145,7 @@
                 <td><span class="badge" [class.badge-published]="n.isPublished" [class.badge-draft]="!n.isPublished">{{ n.isPublished ? 'Published' : 'Draft' }}</span></td>
               }
               @if (isColumnVisible('createdDate')) { <td class="text-muted">{{ n.createdDate | date:'d MMM yyyy' }}</td> }
-              <td>
+              <td (click)="$event.stopPropagation()">
                 <div class="table-actions">
                   @if (canUpdate) {
                     <a class="icon-action" [routerLink]="['/cms/news/form', n.newsID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
@@ -159,7 +170,7 @@
                 <h4>Belum ada berita</h4>
                 <p>{{ hasActiveFilters ? 'Tidak ada berita yang cocok dengan filter saat ini.' : 'Berita yang Anda publikasikan akan muncul di sini.' }}</p>
                 @if (canCreate && !hasActiveFilters) { <a routerLink="/cms/news/form" class="btn btn-primary btn-sm">+ Tambah Berita</a> }
-                @if (hasActiveFilters) { <button type="button" class="btn btn-outline btn-sm" (click)="clearFilters()">Clear Filter</button> }
+                @if (hasActiveFilters) { <button type="button" class="btn btn-outline btn-sm" (click)="clearFilters()">Hapus Filter</button> }
               </div>
             </td></tr>
           }

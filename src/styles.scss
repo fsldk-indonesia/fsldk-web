@@ -486,12 +486,21 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 .skel-avatar { width: 40px; height: 40px; border-radius: var(--radius-full); }
 .skel-thumb { width: 100%; aspect-ratio: 16/10; border-radius: var(--radius-md); }
 
-/* ---------- Empty & error states ---------- */
-.empty-state { text-align: center; padding: 48px 20px; color: var(--color-muted); }
+/* ---------- Empty & error states ----------
+   Statis (tanpa animasi) — icon-badge diberi glow radial lembut di
+   belakangnya lewat pseudo-element supaya tidak terasa polos, dan tipografi
+   diberi sedikit jarak lebih untuk kesan lebih lega/rapi. */
+.empty-state { text-align: center; padding: 56px 20px; color: var(--color-muted); }
 .empty-state .empty-icon { width: 48px; height: 48px; margin: 0 auto 14px; color: var(--color-border-strong); }
-.empty-state h4 { color: var(--color-text); margin: 0 0 6px; font-size: 1rem; }
-.empty-state p { margin: 0 0 16px; font-size: .88rem; }
+.empty-state h4 { color: var(--color-text); margin: 0 0 8px; font-size: 1.05rem; }
+.empty-state p { margin: 0 auto 18px; font-size: .88rem; max-width: 360px; }
 .empty-state.is-error .empty-icon { color: var(--color-danger); }
+.empty-state .icon-badge { position: relative; z-index: 0; }
+.empty-state .icon-badge::before {
+  content: ''; position: absolute; inset: -14px; z-index: -1; border-radius: 50%;
+  background: radial-gradient(circle, var(--color-primary-tint) 0%, transparent 72%);
+}
+.empty-state.is-error .icon-badge::before { background: radial-gradient(circle, var(--color-danger-soft) 0%, transparent 72%); }
 
 /* ---------- Motif batik Kawung (tekstur, bukan bingkai) ----------
    Empat elips membentuk kelopak yang mengelilingi titik pusat — motif batik

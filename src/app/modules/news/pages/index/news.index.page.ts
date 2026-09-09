@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
@@ -65,6 +65,9 @@ const DEFAULT_SORT_DIR: SortDir = 'desc';
     /* Baris 1: filter (status, target kolom + pencarian, rentang tanggal). */
     .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); }
     .filter-row > app-select { min-width: 200px; }
+    /* Field tanggal mengisi sisa ruang baris (bukan cuma selebar teksnya)
+       supaya tidak ada jarak kosong menganggur di ujung kanan baris filter. */
+    .filter-row > app-date-range-picker { flex: 1; min-width: 220px; }
     /* Satu kotak menyatu (select target kolom + input) — bukan dua field
        terpisah, supaya cincin fokus juga membungkus keduanya sekaligus
        (:focus-within pada wrapper), bukan cuma di sekitar input saja. */
@@ -77,7 +80,7 @@ const DEFAULT_SORT_DIR: SortDir = 'desc';
     .search-combo app-select { flex-shrink: 0; min-width: 170px; }
     .search-combo app-select ::ng-deep .app-select-control { border: none !important; box-shadow: none !important; background: transparent; }
     .search-combo-divider { width: 1px; margin: 7px 0; background: var(--color-border); flex-shrink: 0; }
-    .search-combo .search-input { flex: 1; min-width: 160px; width: 320px; max-width: 100%; padding: 9px 12px; font-size: .88rem; border: none; background: transparent; font-family: var(--font-body); }
+    .search-combo .search-input { flex: 1; min-width: 160px; width: 320px; max-width: 100%; padding: 12px 14px; font-size: .95rem; border: none; background: transparent; font-family: var(--font-body); }
     .search-combo .search-input:focus { outline: none; }
 
     /* Baris 2: refresh, adjust column, clear filter (kiri) — bulk action (kanan). */
@@ -85,13 +88,40 @@ const DEFAULT_SORT_DIR: SortDir = 'desc';
     .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: #fff; color: var(--color-text-secondary); cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
     .icon-btn:hover { background: var(--color-bg-alt); border-color: var(--color-border-strong); }
 
+    /* Ikon kaca pembesar jadi bagian DALAM kotak search-combo (bukan tombol
+       terpisah di luar) — tetap ikut cincin fokus bersama lewat :focus-within
+       di wrapper, dan klik di sini men-trigger applySearch() sama seperti Enter. */
+    .search-combo-btn { display: flex; align-items: center; justify-content: center; width: 36px; flex-shrink: 0; border: none; background: transparent; color: var(--color-muted); cursor: pointer; transition: color var(--motion-fast) ease; }
+    .search-combo-btn:hover { color: var(--color-primary-dark); }
+    .search-combo:focus-within .search-combo-btn { color: var(--color-primary); }
+
+    /* Pill filter aktif — satu pill per kolom yang sudah di-Apply, bisa lebih
+       dari satu sekaligus (beda dari kotak pencarian yang cuma satu kolom
+       aktif dalam satu waktu). */
+    .filter-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-top: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--color-border); }
+    .filter-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px 5px 12px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); font-size: .8rem; font-weight: 600; }
+    .filter-pill button { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: none; border-radius: 50%; background: rgba(255,255,255,.6); color: inherit; cursor: pointer; }
+    .filter-pill button:hover { background: #fff; }
+    .filter-pills-reset { border: none; background: none; color: var(--color-danger); font-size: .8rem; font-weight: 700; cursor: pointer; padding: 5px 4px; }
+    .filter-pills-reset:hover { text-decoration: underline; }
+
     .dropdown-wrap { position: relative; }
     .dropdown-toggle { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: #fff; font-size: .85rem; font-weight: 600; color: var(--color-text); cursor: pointer; }
     .dropdown-toggle:hover { background: var(--color-bg-alt); }
     .dropdown-toggle .chevron { font-size: .65rem; color: var(--color-muted); transition: transform .15s ease; }
     .dropdown-toggle.open .chevron { transform: rotate(180deg); }
-    .dropdown-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 200; min-width: 200px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs); box-shadow: var(--shadow-lg); padding: 6px; }
+    /* Selalu di-render (bukan @if) supaya transisi tutup juga kelihatan —
+       @if langsung mencabut elemen dari DOM begitu ditutup, jadi cuma
+       transisi buka yang bisa kelihatan tanpa ini. */
+    .dropdown-menu {
+      position: absolute; top: calc(100% + 6px); left: 0; z-index: 200; min-width: 200px;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs); box-shadow: var(--shadow-lg); padding: 6px;
+      opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-6px) scale(.97);
+      transition: opacity .15s ease, transform .15s ease, visibility 0s linear .15s;
+    }
     .dropdown-menu.right { left: auto; right: 0; }
+    .dropdown-menu.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); transition: opacity .15s ease, transform .15s ease, visibility 0s linear 0s; }
+    @media (prefers-reduced-motion: reduce) { .dropdown-menu { transition: none; } }
     .dropdown-menu label { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: .85rem; cursor: pointer; }
     .dropdown-menu label:hover { background: var(--color-bg-alt); }
     .dropdown-menu label.locked { color: var(--color-muted); cursor: not-allowed; }
@@ -104,6 +134,11 @@ const DEFAULT_SORT_DIR: SortDir = 'desc';
     th.sortable .sort-icon { font-size: .68rem; color: var(--color-muted); }
     th.sortable.active .sort-icon { color: var(--color-primary); }
     th.sortable:hover { color: var(--color-primary-dark); }
+    /* Baris tabel bisa diklik untuk buka Detail Berita (read-only) — kolom
+       checkbox & Aksi menghentikan propagasi klik-nya sendiri (lihat
+       template) supaya tidak ikut membuka detail saat sekadar centang/edit/
+       publish/hapus. */
+    tr.row-clickable { cursor: pointer; }
   `],
 })
 export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
@@ -111,6 +146,7 @@ export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
   private auth = inject(AuthRepository);
   private alert = inject(AlertService);
   private el = inject(ElementRef<HTMLElement>);
+  private router = inject(Router);
 
   readonly statusOptions = STATUS_OPTIONS;
   readonly searchTargetOptions = SEARCH_TARGET_OPTIONS;
@@ -209,18 +245,44 @@ export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
 
   applyFilters(): void { this.page.set(1); this.load(); }
 
+  /* Menambahkan filter kolom yang sedang dipilih di dropdown target — TIDAK
+     menghapus filter kolom lain yang sudah di-Apply sebelumnya, supaya bisa
+     gabung lebih dari satu (mis. Judul + Reporter sekaligus), ditampilkan
+     sebagai pill terpisah di bawah baris filter. */
   applySearch(): void {
-    this.titleSearch = this.searchTarget === 'title' ? this.searchQuery : '';
-    this.reporter = this.searchTarget === 'reporter' ? this.searchQuery : '';
-    this.category = this.searchTarget === 'category' ? this.searchQuery : '';
+    const value = this.searchQuery.trim();
+    if (this.searchTarget === 'title') this.titleSearch = value;
+    else if (this.searchTarget === 'reporter') this.reporter = value;
+    else this.category = value;
     this.applyFilters();
   }
 
   onSearchTargetChange(v: unknown): void {
     this.searchTarget = (v as SearchTarget) ?? 'title';
-    this.searchQuery = '';
-    this.titleSearch = ''; this.reporter = ''; this.category = '';
+    // Isi ulang kotak pencarian dengan nilai yang sudah di-Apply untuk kolom
+    // itu (kalau ada) — supaya pindah target tidak terasa seperti kehilangan
+    // filter yang sudah dipasang.
+    this.searchQuery = this.searchTarget === 'title' ? this.titleSearch : this.searchTarget === 'reporter' ? this.reporter : this.category;
+  }
+
+  removeFilter(key: 'title' | 'reporter' | 'category' | 'status' | 'date'): void {
+    if (key === 'title') this.titleSearch = '';
+    else if (key === 'reporter') this.reporter = '';
+    else if (key === 'category') this.category = '';
+    else if (key === 'status') this.status = '';
+    else { this.dateFrom = ''; this.dateTo = ''; }
+    if (this.searchTarget === key) this.searchQuery = '';
     this.applyFilters();
+  }
+
+  get activeFilterPills(): { key: 'title' | 'reporter' | 'category' | 'status' | 'date'; label: string }[] {
+    const pills: { key: 'title' | 'reporter' | 'category' | 'status' | 'date'; label: string }[] = [];
+    if (this.titleSearch) pills.push({ key: 'title', label: `Judul: ${this.titleSearch}` });
+    if (this.reporter) pills.push({ key: 'reporter', label: `Reporter: ${this.reporter}` });
+    if (this.category) pills.push({ key: 'category', label: `Kategori: ${this.category}` });
+    if (this.status) pills.push({ key: 'status', label: `Status: ${this.statusOptions.find((o) => o.value === this.status)?.label ?? this.status}` });
+    if (this.dateFrom || this.dateTo) pills.push({ key: 'date', label: `Tanggal: ${this.dateFrom || '…'} → ${this.dateTo || '…'}` });
+    return pills;
   }
 
   filterStatus(v: unknown): void { this.status = (v as string) ?? ''; this.applyFilters(); }
@@ -254,6 +316,8 @@ export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
     if (checked) this.news().forEach((n) => this.selected.add(n.newsID));
     else this.news().forEach((n) => this.selected.delete(n.newsID));
   }
+
+  viewNews(n: News): void { this.router.navigate(['/cms/news/view', n.newsID]); }
 
   togglePublish(n: News): void { this.setBusy(n.newsID); this.presenter.togglePublish(n); }
 

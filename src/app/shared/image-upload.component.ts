@@ -19,12 +19,16 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     @if (value) {
       <div class="preview">
         <img [src]="value" alt="Pratinjau gambar">
-        <div class="preview-actions">
-          <button type="button" class="btn btn-outline btn-sm" (click)="fileInput.click()" [disabled]="uploading()">Ganti Gambar</button>
-          <button type="button" class="btn btn-ghost btn-sm" (click)="remove()" [disabled]="uploading()">Hapus</button>
-        </div>
+        @if (!disabled) {
+          <div class="preview-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="fileInput.click()" [disabled]="uploading()">Ganti Gambar</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="remove()" [disabled]="uploading()">Hapus</button>
+          </div>
+        }
         @if (uploading()) { <div class="preview-overlay"><span class="spinner spinner-dark"></span></div> }
       </div>
+    } @else if (disabled) {
+      <div class="dropzone dropzone-empty"><span>Tidak ada gambar</span></div>
     } @else {
       <button type="button" class="dropzone" (click)="fileInput.click()" [disabled]="uploading()">
         @if (uploading()) {
@@ -42,6 +46,8 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     .dropzone { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 28px 16px; border: 1.5px dashed var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-warm); color: var(--color-text-secondary); font-family: var(--font-body); font-size: .92rem; font-weight: 600; cursor: pointer; }
     .dropzone:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
     .dropzone-icon { font-size: 1.3rem; line-height: 1; }
+    .dropzone-empty { cursor: default; color: var(--color-muted); background: var(--color-bg-alt); }
+    .dropzone-empty:hover { border-color: var(--color-border); color: var(--color-muted); }
     .dropzone small { font-weight: 400; color: var(--color-muted); }
     .preview { position: relative; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
     .preview img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
@@ -51,6 +57,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 })
 export class ImageUploadComponent {
   @Input() value: string | null = null;
+  @Input() disabled = false;
   readonly valueChange = output<string>();
 
   private uploadService = inject(UploadService);
