@@ -73,6 +73,7 @@ export interface UtamaSummary extends StatusCounts {
   totalDonationCollected: number;
   totalComments: number;
   totalShortlinks: number;
+  totalQrcodes: number;
   totalSubscribers: number;
   unreadContactMessages: number;
   pendingJobs: number;

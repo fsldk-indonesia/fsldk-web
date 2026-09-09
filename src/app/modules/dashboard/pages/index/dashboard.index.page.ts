@@ -191,6 +191,7 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
       { icon: 'hand-coins', label: 'Donasi Terkumpul', value: formatRupiah(u.totalDonationCollected), link: '/cms/kantong-amal/donasi', variant: 'ember' },
       { icon: 'message-circle', label: 'Komentar', value: u.totalComments, link: '/cms/comments', variant: 'info' },
       { icon: 'link', label: 'Shortlink', value: u.totalShortlinks, link: '/cms/shortlink/list', variant: 'solid' },
+      { icon: 'qr-code', label: 'QR Code', value: u.totalQrcodes, link: '/cms/qrcode/list', variant: 'gold' },
       { icon: 'mail-open', label: 'Subscriber Aktif', value: u.totalSubscribers, link: '/cms/subscribers', variant: 'soft' },
       { icon: 'envelope', label: 'Pesan Kontak Belum Dibaca', value: u.unreadContactMessages, link: '/cms/contact-messages', variant: u.unreadContactMessages > 0 ? 'danger' : 'gold' },
       { icon: 'history', label: 'Antrean Job Tertunda', value: u.pendingJobs, link: '/cms/job-queue', variant: u.pendingJobs > 0 ? 'danger' : 'ember' },
