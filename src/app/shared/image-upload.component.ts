@@ -47,9 +47,12 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     <!-- Lightbox: klik gambar untuk memperbesar — backdrop TIDAK menutup
          secara default di app ini (lihat ModalBackdropDirective), tapi untuk
          preview gambar (tanpa risiko kehilangan data) klik-luar-untuk-tutup
-         masuk akal, jadi dijadikan exception eksplisit lewat [dismissible]. -->
-    @if (value && lightboxOpen()) {
-      <div class="lightbox-backdrop" appModalBackdrop [dismissible]="true" (backdropClose)="lightboxOpen.set(false)">
+         masuk akal, jadi dijadikan exception eksplisit lewat [dismissible].
+         Selalu di-render saat ada value (bukan @if lightboxOpen()) supaya
+         transisi TUTUP juga kelihatan, bukan cuma transisi buka — @if
+         langsung mencabut elemen dari DOM begitu ditutup. -->
+    @if (value) {
+      <div class="lightbox-backdrop" [class.open]="lightboxOpen()" appModalBackdrop [dismissible]="true" (backdropClose)="lightboxOpen.set(false)">
         <button type="button" class="lightbox-close" (click)="lightboxOpen.set(false)" aria-label="Tutup"><app-icon name="x" [size]="18" /></button>
         <img [src]="value" alt="Pratinjau gambar diperbesar" class="lightbox-img" (click)="$event.stopPropagation()">
       </div>
@@ -68,14 +71,20 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     .preview-actions { display: flex; gap: 8px; padding: 10px; background: #fff; }
     .preview-overlay { position: absolute; inset: 0; background: rgba(255,255,255,.75); display: flex; align-items: center; justify-content: center; }
 
-    /* Lightbox — klik gambar utama untuk memperbesar penuh layar. */
+    /* Lightbox — klik gambar utama untuk memperbesar penuh layar. Selalu
+       ter-mount saat ada value (lihat template); buka/tutup dianimasikan
+       lewat opacity+scale, bukan mount/unmount, supaya transisi tutup juga
+       kelihatan (bukan cuma transisi buka). */
     .lightbox-backdrop {
       position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.85);
       display: flex; align-items: center; justify-content: center; padding: 40px;
-      animation: lightboxFadeIn .15s ease;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity .15s ease, visibility 0s linear .15s;
     }
-    @keyframes lightboxFadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @media (prefers-reduced-motion: reduce) { .lightbox-backdrop { animation: none; } }
+    .lightbox-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .15s ease, visibility 0s linear 0s; }
+    .lightbox-backdrop .lightbox-img { transform: scale(.96); transition: transform .15s ease; }
+    .lightbox-backdrop.open .lightbox-img { transform: scale(1); }
+    @media (prefers-reduced-motion: reduce) { .lightbox-backdrop, .lightbox-backdrop .lightbox-img { transition: none; } }
     .lightbox-img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: var(--radius-xs); cursor: default; }
     .lightbox-close {
       position: absolute; top: 20px; right: 24px; width: 40px; height: 40px; border-radius: 50%;
