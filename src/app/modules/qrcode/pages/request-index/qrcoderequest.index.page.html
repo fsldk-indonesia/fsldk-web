@@ -45,8 +45,8 @@
                     </button>
                     <button type="button" class="icon-action danger" (click)="openReject(r)" title="Tolak"><app-icon name="x" [size]="14" /></button>
                   }
-                  @if (r.status === 'approved' && r.imageURL) {
-                    <a class="icon-action" [href]="r.imageURL + '?size=1024'" target="_blank" rel="noopener" title="Lihat gambar QR"><app-icon name="qr-code" [size]="14" /></a>
+                  @if (r.status === 'approved' && r.qrCodeID) {
+                    <a class="icon-action" [href]="qrcodePath.detail(r.qrCodeID)" target="_blank" rel="noopener" title="Lihat halaman detail QR"><app-icon name="qr-code" [size]="14" /></a>
                   }
                   @if (r.status === 'rejected' && r.rejectionReason) {
                     <span class="icon-action" [title]="r.rejectionReason"><app-icon name="info-circle" [size]="14" /></span>

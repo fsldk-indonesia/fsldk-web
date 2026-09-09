@@ -6,6 +6,7 @@ import { AlertService } from '../../../../core/services/alert.service';
 import { QRCodeRequest } from '../../entities/qrcode-request';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
+import { qrcodePath } from '../../qrcode.path';
 import { QRCodeRequestIndexPresenter } from './qrcoderequest.index.presenter';
 import { QRCodeRequestIndexView } from './qrcoderequest.index.view';
 
@@ -42,6 +43,7 @@ export class QRCodeRequestIndexPage implements OnInit, QRCodeRequestIndexView {
   rejectReason = '';
 
   canApprove = this.auth.hasPermission('qrcode.approve');
+  readonly qrcodePath = qrcodePath;
 
   ngOnInit(): void { this.presenter.attachView(this); this.load(); }
 

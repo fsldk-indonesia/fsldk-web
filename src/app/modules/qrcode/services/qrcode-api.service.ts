@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import { QRCode } from '../entities/qrcode';
+import { QRCodePublic } from '../entities/qrcode-public';
 
 /** Field kustomisasi gambar QR yang dikirim saat create/update. */
 export interface QrcodeStyleBody {
@@ -26,7 +27,10 @@ export class QrcodeApiService {
   update(id: number, body: QrcodeStyleBody): Observable<QRCode> { return this.api.put(`/qrcodes/${id}`, body); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/qrcodes/${id}`); }
 
-  /** Unduh gambar PNG QR sebagai blob (tombol "Unduh PNG" di CMS). */
+  /** Metadata ringkas QR (tanpa auth) untuk halaman detail/unduh publik. */
+  publicDetail(id: number): Observable<QRCodePublic> { return this.api.get(`/public/qrcodes/${id}`); }
+
+  /** Unduh gambar PNG QR sebagai blob (tombol "Unduh PNG" di CMS & halaman publik). */
   downloadImage(id: number, size = 1024): Observable<{ blob: Blob; filename: string }> {
     return this.api.getBlob(`/public/qrcodes/${id}/image`, { size });
   }

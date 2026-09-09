@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { QrcodeApiService, QrcodeStyleBody } from '../services/qrcode-api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import { QRCode } from '../entities/qrcode';
+import { QRCodePublic } from '../entities/qrcode-public';
 
 @Injectable({ providedIn: 'root' })
 export class QrcodeRepository {
@@ -13,5 +14,6 @@ export class QrcodeRepository {
   create(body: QrcodeStyleBody): Observable<QRCode> { return this.api.create(body); }
   update(id: number, body: QrcodeStyleBody): Observable<QRCode> { return this.api.update(id, body); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  publicDetail(id: number): Observable<QRCodePublic> { return this.api.publicDetail(id); }
   downloadImage(id: number, size?: number): Observable<{ blob: Blob; filename: string }> { return this.api.downloadImage(id, size); }
 }
