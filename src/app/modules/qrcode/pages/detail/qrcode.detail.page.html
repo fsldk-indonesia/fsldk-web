@@ -1,0 +1,63 @@
+<section class="section">
+  <div class="container">
+    @if (loading()) {
+      <div class="center-screen"><app-page-loader label="Memuat QR Code…" /></div>
+    } @else if (notFound()) {
+      <div class="center-screen text-center">
+        <div class="empty-state">
+          <span class="icon-badge lg icon-badge-danger" style="margin:0 auto 14px"><app-icon name="error" [size]="28" /></span>
+          <h4>QR Code Tidak Ditemukan</h4>
+          <p>Tautan ini tidak valid atau QR Code-nya sudah dihapus.</p>
+          <a routerLink="/" class="btn btn-primary btn-sm">Kembali ke Beranda</a>
+        </div>
+      </div>
+    } @else {
+      @if (qr(); as q) {
+      <div class="wrap">
+        <div class="card qr-card">
+          <h1>{{ q.label || 'QR Code FSLDK' }}</h1>
+          <p class="created">Dibuat {{ q.createdDate | date:'d MMMM yyyy' }}</p>
+
+          <div class="qr-frame">
+            <img [src]="q.imageURL + '?size=512'" [alt]="'QR Code ' + (q.label || q.qrCodeID)">
+          </div>
+          @if (q.captionText) { <p class="caption">{{ q.captionText }}</p> }
+
+          <p class="dest">
+            Kode QR ini mengarah ke:<br>
+            <a [href]="q.destinationURL" target="_blank" rel="noopener">{{ q.destinationURL }}</a>
+          </p>
+
+          <div class="size-picker">
+            <label class="form-label">Ukuran unduhan</label>
+            <div class="size-row">
+              @for (s of presetSizes; track s) {
+                <button type="button" class="size-opt" [class.active]="size() === s" (click)="setSize(s)">{{ s }} px</button>
+              }
+              <input type="number" class="form-control size-input" [ngModel]="size()" (ngModelChange)="setSize($event)"
+                     [min]="minSize" [max]="maxSize" step="64" aria-label="Ukuran kustom (piksel)">
+            </div>
+            <p class="size-hint">Sisi persegi gambar, {{ minSize }}–{{ maxSize }} px.</p>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary btn-block" (click)="download()" [disabled]="downloading()">
+              @if (downloading()) { <span class="spinner"></span> } @else { <app-icon name="download" [size]="15" />&nbsp; Unduh Gambar QR (PNG {{ size() }} px) }
+            </button>
+            <button class="btn btn-ghost btn-block" (click)="copyImageLink()">Salin Tautan Gambar</button>
+          </div>
+
+          <p class="hint">
+            Simpan gambar ini untuk dicetak pada poster, banner, atau materi cetak lain. Pindai dengan
+            kamera ponsel untuk membuka tautan tujuannya. Ukuran unduhan mengikuti pilihan di atas.
+          </p>
+        </div>
+
+        <p class="text-center" style="margin-top:16px">
+          <a routerLink="/" class="text-muted">&larr; Kembali ke Beranda FSLDK Indonesia</a>
+        </p>
+      </div>
+      }
+    }
+  </div>
+</section>

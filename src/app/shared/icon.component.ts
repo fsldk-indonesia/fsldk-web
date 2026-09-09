@@ -17,6 +17,7 @@ const ICONS: Record<string, string> = {
   'user-group': 'fas fa-users',
   'shield-check': 'fas fa-user-shield',
   link: 'fas fa-link',
+  'qr-code': 'fas fa-qrcode',
   'calendar-days': 'fas fa-calendar-alt',
   calendar: 'fas fa-calendar-alt',
   home: 'fas fa-home',

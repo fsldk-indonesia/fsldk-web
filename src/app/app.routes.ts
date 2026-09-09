@@ -23,6 +23,7 @@ import { submissionRoutes } from './modules/submission/submission.routes';
 import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
+import { qrcodeRoutes, qrcodePublicRoutes } from './modules/qrcode/qrcode.routes';
 import { kantongAmalPublicRoutes, kantongAmalAdminRoutes } from './modules/kantong-amal/kantong-amal.routes';
 import { zakatPublicRoutes } from './modules/zakat/zakat.routes';
 import { kaderRoutes } from './modules/submission/kader.routes';
@@ -73,6 +74,7 @@ export const routes: Routes = [
       ...eventPublicRoutes(),
       ...kantongAmalPublicRoutes(),
       ...shortlinkPublicRoutes(),
+      ...qrcodePublicRoutes(),
       ...zakatPublicRoutes(),
       ...dynamicFormPublicRoutes(),
       ...structurePublicRoutes(),
@@ -125,6 +127,7 @@ export const routes: Routes = [
       ...financeformatCmsRoutes(),
       ...eventCmsRoutes(),
       ...shortlinkRoutes(),
+      ...qrcodeRoutes(),
       ...commentCmsRoutes(),
       ...settingRoutes(),
       ...jobqueueRoutes(),
