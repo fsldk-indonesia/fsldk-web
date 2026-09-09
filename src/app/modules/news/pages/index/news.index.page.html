@@ -31,11 +31,31 @@
   <div class="card-pad filter-row">
     <app-select [options]="statusOptions" [ngModel]="status" (ngModelChange)="filterStatus($event)" />
 
-    <div class="search-combo">
+    <div class="search-combo" #categoryPopupWrap>
       <app-select [options]="searchTargetOptions" [ngModel]="searchTarget" (ngModelChange)="onSearchTargetChange($event)" />
       <span class="search-combo-divider"></span>
-      <input class="search-input" type="text" [placeholder]="searchPlaceholder" [(ngModel)]="searchQuery" (keyup.enter)="applySearch()">
+
+      <!-- Satu <input> yang sama untuk semua target (Judul/Reporter/Kategori)
+           — untuk Kategori, fokus/klik memunculkan popup daftar kategori di
+           bawahnya yang ikut ter-filter sambil mengetik (kombinasi cari +
+           pilih, bukan cuma salah satu). -->
+      <input class="search-input" type="text"
+             [placeholder]="searchTarget === 'category' ? 'Cari atau pilih kategori…' : searchPlaceholder"
+             [(ngModel)]="searchQuery"
+             (focus)="onSearchFocus()" (click)="onSearchFocus()"
+             (keyup.enter)="applySearch()">
+
       <button type="button" class="search-combo-btn" title="Cari" (click)="applySearch()"><app-icon name="search" [size]="13" /></button>
+
+      @if (searchTarget === 'category') {
+        <div class="dropdown-menu category-popup" [class.open]="categoryPopupOpen()">
+          @for (c of filteredCategories(); track c.categoryID) {
+            <button type="button" class="category-option" [class.active]="searchQuery === c.categoryName" (click)="pickCategory(c.categoryName)">{{ c.categoryName }}</button>
+          } @empty {
+            <p class="dropdown-empty">Kategori tidak ditemukan.</p>
+          }
+        </div>
+      }
     </div>
 
     <app-date-range-picker [from]="dateFrom" [to]="dateTo" placeholder="Pilih rentang tanggal" (rangeChange)="onDateRangeChange($event)" />

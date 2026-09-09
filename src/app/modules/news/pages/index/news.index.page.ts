@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
 import { News } from '../../entities/news';
+import { NewsCategory } from '../../entities/news-category';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
@@ -63,16 +64,23 @@ const DEFAULT_SORT_DIR: SortDir = 'desc';
     @media (max-width: 980px) { .guide-grid { grid-template-columns: 1fr; } }
 
     /* Baris 1: filter (status, target kolom + pencarian, rentang tanggal). */
-    .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); }
-    .filter-row > app-select { min-width: 200px; }
-    /* Field tanggal mengisi sisa ruang baris (bukan cuma selebar teksnya)
-       supaya tidak ada jarak kosong menganggur di ujung kanan baris filter. */
-    .filter-row > app-date-range-picker { flex: 1; min-width: 220px; }
+    /* nowrap (bukan wrap) — Status/target-kolom+pencarian/rentang tanggal
+       harus selalu sebaris, tidak boleh rentang tanggalnya turun ke baris
+       baru walau ruang agak sempit (elemen menyusut lebih dulu lewat
+       flex-shrink/min-width, bukan pindah baris). */
+    .filter-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); }
+    .filter-row > app-select { flex-shrink: 0; min-width: 200px; }
+    /* Rentang tanggal & search-combo BERBAGI sisa ruang secara proporsional
+       (sama-sama flex:1) — sebelumnya search-combo tidak diberi flex-grow
+       sama sekali, jadi lebarnya cuma dari ukuran alami isinya (yang lumayan
+       lebar karena .search-input punya width:320px sebagai basis), sisanya
+       baru punya tanggal → tanggal jadi kelihatan mepet/kecil sebelah. */
+    .filter-row > app-date-range-picker { flex: 1; min-width: 260px; }
     /* Satu kotak menyatu (select target kolom + input) — bukan dua field
        terpisah, supaya cincin fokus juga membungkus keduanya sekaligus
        (:focus-within pada wrapper), bukan cuma di sekitar input saja. */
     .search-combo {
-      display: flex; align-items: stretch; overflow: hidden;
+      position: relative; display: flex; align-items: stretch; flex: 1.4; min-width: 380px;
       border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff;
       transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
     }
@@ -80,8 +88,17 @@ const DEFAULT_SORT_DIR: SortDir = 'desc';
     .search-combo app-select { flex-shrink: 0; min-width: 170px; }
     .search-combo app-select ::ng-deep .app-select-control { border: none !important; box-shadow: none !important; background: transparent; }
     .search-combo-divider { width: 1px; margin: 7px 0; background: var(--color-border); flex-shrink: 0; }
-    .search-combo .search-input { flex: 1; min-width: 160px; width: 320px; max-width: 100%; padding: 12px 14px; font-size: .95rem; border: none; background: transparent; font-family: var(--font-body); }
+    .search-combo .search-input { flex: 1; min-width: 140px; padding: 12px 14px; font-size: .95rem; border: none; background: transparent; font-family: var(--font-body); }
     .search-combo .search-input:focus { outline: none; }
+
+    /* Popup kategori (cari + pilih dari daftar) — melebar penuh di bawah
+       seluruh search-combo (select target + input + tombol), bukan cuma di
+       bawah input saja, meniru pola combobox pada referensi. */
+    .category-popup { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 200; max-height: 260px; overflow-y: auto; }
+    .category-popup button.category-option { display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px; border: none; background: none; font-size: .85rem; font-weight: 500; color: var(--color-text); cursor: pointer; }
+    .category-popup button.category-option:hover { background: var(--color-bg-alt); }
+    .category-popup button.category-option.active { background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 700; }
+    .category-popup .dropdown-empty { padding: 8px 10px; font-size: .82rem; color: var(--color-muted); margin: 0; }
 
     /* Baris 2: refresh, adjust column, clear filter (kiri) — bulk action (kanan). */
     .table-toolbar { display: flex; align-items: center; gap: 8px; }
@@ -177,6 +194,13 @@ export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
   @ViewChild('adjustColumnWrap') adjustColumnWrap?: ElementRef<HTMLElement>;
   @ViewChild('bulkActionWrap') bulkActionWrap?: ElementRef<HTMLElement>;
 
+  // Target kolom "Kategori": bukan free-text seperti Judul/Reporter — daftar
+  // kategori itu sendiri sudah tetap (dari master data), jadi dipilih lewat
+  // popup daftar, bukan diketik. @ViewChild sama pola dengan dropdown lain.
+  categories = signal<NewsCategory[]>([]);
+  categoryPopupOpen = signal(false);
+  @ViewChild('categoryPopupWrap') categoryPopupWrap?: ElementRef<HTMLElement>;
+
   // Sorting per kolom.
   sortBy: SortColumn = DEFAULT_SORT_BY;
   sortDir: SortDir = DEFAULT_SORT_DIR;
@@ -199,10 +223,14 @@ export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
     if (this.bulkActionOpen() && this.bulkActionWrap && !this.bulkActionWrap.nativeElement.contains(target)) {
       this.bulkActionOpen.set(false);
     }
+    if (this.categoryPopupOpen() && this.categoryPopupWrap && !this.categoryPopupWrap.nativeElement.contains(target)) {
+      this.categoryPopupOpen.set(false);
+    }
   };
 
   ngOnInit(): void {
     this.presenter.attachView(this);
+    this.presenter.loadCategories();
     this.load();
     document.addEventListener('click', this.onDocumentClick, true);
   }
@@ -263,6 +291,22 @@ export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
     // itu (kalau ada) — supaya pindah target tidak terasa seperti kehilangan
     // filter yang sudah dipasang.
     this.searchQuery = this.searchTarget === 'title' ? this.titleSearch : this.searchTarget === 'reporter' ? this.reporter : this.category;
+    this.categoryPopupOpen.set(false);
+  }
+
+  onSearchFocus(): void { if (this.searchTarget === 'category') this.categoryPopupOpen.set(true); }
+  // Beda dari mengetik bebas (baru di-apply lewat Enter/klik kaca pembesar) —
+  // memilih item dari popup daftar itu aksi yang sudah pasti/final, jadi
+  // langsung men-trigger pencarian juga, tidak perlu klik terpisah lagi.
+  pickCategory(name: string): void {
+    this.searchQuery = name;
+    this.categoryPopupOpen.set(false);
+    this.applySearch();
+  }
+  filteredCategories(): NewsCategory[] {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (!q) return this.categories();
+    return this.categories().filter((c) => c.categoryName.toLowerCase().includes(q));
   }
 
   removeFilter(key: 'title' | 'reporter' | 'category' | 'status' | 'date'): void {
@@ -341,6 +385,7 @@ export class NewsIndexPage implements OnInit, OnDestroy, NewsIndexView {
   }
 
   setNews(news: News[], count: number): void { this.news.set(news); this.count.set(count); this.loading.set(false); this.selected.clear(); }
+  setCategories(categories: NewsCategory[]): void { this.categories.set(categories); }
   onPublishToggleSuccess(_wasPublished: boolean): void { this.load(); }
   onRemoveSuccess(): void { this.load(); }
   onBulkDeleteSuccess(): void { this.load(); }

@@ -25,6 +25,10 @@ export class NewsIndexPresenter extends BasePresenter<NewsIndexView> {
     this.newsRepo.cmsList({ page, limit, ...filters }).subscribe({ next: (p) => this.view.setNews(p.data, p.count), error: () => {} });
   }
 
+  loadCategories(): void {
+    this.newsRepo.categories().subscribe({ next: (categories) => this.view.setCategories(categories), error: () => {} });
+  }
+
   togglePublish(n: News): void {
     this.newsRepo.publish(n.newsID, !n.isPublished).subscribe({
       next: () => { this.toast.success(n.isPublished ? 'Publikasi ditarik' : 'Berita dipublikasikan'); this.view.onPublishToggleSuccess(n.isPublished); this.view.onActionSettled(n.newsID); },

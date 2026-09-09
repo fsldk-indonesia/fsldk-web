@@ -1,38 +1,56 @@
-<div class="page-head"><a routerLink="/cms/news" class="back">← Kembali</a><h1>{{ isReadonly ? 'Detail Berita' : (editId ? 'Ubah Berita' : 'Tambah Berita') }}</h1></div>
+<div class="page-head">
+  <h1>{{ isReadonly ? 'Detail Berita' : (editId ? 'Ubah Berita' : 'Tambah Berita') }}</h1>
+  <p class="text-muted">{{ pageSubtitle }}</p>
+</div>
 
-<div class="card card-pad form-card">
-  <div class="form-group"><label class="form-label">Judul Berita</label>
-    <input class="form-control" [(ngModel)]="form.newsTitle" [disabled]="isReadonly" placeholder="Tulis judul berita…"></div>
+<div class="form-card">
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span>Informasi Utama</p>
+    <div class="form-group"><label class="form-label">Judul Berita</label>
+      <input class="form-control form-control-lg" [(ngModel)]="form.newsTitle" [disabled]="isReadonly" placeholder="Tulis judul berita…"></div>
+  </section>
 
-  <div class="grid grid-2">
-    <div class="form-group"><label class="form-label">Kategori</label>
-      <app-select [(ngModel)]="form.categoryID" [options]="categoryOptions()" [disabled]="isReadonly" placeholder="Pilih kategori" />
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="tags" [size]="14" /></span>Kategori & Status</p>
+    <div class="grid grid-2">
+      <div class="form-group"><label class="form-label">Kategori</label>
+        <app-select [(ngModel)]="form.categoryID" [options]="categoryOptions()" [disabled]="isReadonly" placeholder="Pilih kategori" />
+      </div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <app-select [(ngModel)]="form.status" [options]="statusOptions" [disabled]="isReadonly || !canPublish" />
+        @if (!isReadonly && !canPublish) { <p class="form-hint">Hanya Editor/Super Admin yang dapat mempublikasikan.</p> }
+      </div>
     </div>
-    <div class="form-group"><label class="form-label">Status</label>
-      <app-select [(ngModel)]="form.status" [options]="statusOptions" [disabled]="isReadonly || !canPublish" />
-      @if (!isReadonly && !canPublish) { <p class="form-hint">Hanya Editor/Super Admin yang dapat mempublikasikan.</p> }
+  </section>
+
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="users" [size]="14" /></span>Kontributor</p>
+    <div class="grid grid-3">
+      <div class="form-group"><label class="form-label">Publisher</label>
+        <input class="form-control" [(ngModel)]="form.newsPublisher" [disabled]="isReadonly" placeholder="Nama penerbit (opsional)…"></div>
+      <div class="form-group"><label class="form-label">Reporter</label>
+        <input class="form-control" [(ngModel)]="form.newsReporter" [disabled]="isReadonly" placeholder="Nama reporter…"></div>
+      <div class="form-group"><label class="form-label">Editor</label>
+        <input class="form-control" [(ngModel)]="form.newsEditor" [disabled]="isReadonly" placeholder="Nama editor (opsional)…"></div>
     </div>
-  </div>
+  </section>
 
-  <div class="grid grid-3">
-    <div class="form-group"><label class="form-label">Publisher</label>
-      <input class="form-control" [(ngModel)]="form.newsPublisher" [disabled]="isReadonly" placeholder="Nama penerbit (opsional)…"></div>
-    <div class="form-group"><label class="form-label">Reporter</label>
-      <input class="form-control" [(ngModel)]="form.newsReporter" [disabled]="isReadonly" placeholder="Nama reporter…"></div>
-    <div class="form-group"><label class="form-label">Editor</label>
-      <input class="form-control" [(ngModel)]="form.newsEditor" [disabled]="isReadonly" placeholder="Nama editor (opsional)…"></div>
-  </div>
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="image" [size]="14" /></span>Gambar Utama</p>
+    <div class="form-group"><app-image-upload [(value)]="form.newsImage" [disabled]="isReadonly" /></div>
+  </section>
 
-  <div class="form-group"><label class="form-label">Gambar Utama</label>
-    <app-image-upload [(value)]="form.newsImage" [disabled]="isReadonly" /></div>
-  <div class="form-group"><label class="form-label">Ringkasan</label>
-    <input class="form-control" [(ngModel)]="form.newsExcerpt" [disabled]="isReadonly" placeholder="Ringkasan singkat…"></div>
-  <div class="form-group"><label class="form-label">Konten</label>
-    <app-rich-text-editor [(value)]="form.newsContent" [disabled]="isReadonly" /></div>
-  <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isFeatured" [disabled]="isReadonly"> Jadikan berita unggulan</label></div>
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="book-open" [size]="14" /></span>Konten</p>
+    <div class="form-group"><label class="form-label">Ringkasan</label>
+      <input class="form-control" [(ngModel)]="form.newsExcerpt" [disabled]="isReadonly" placeholder="Ringkasan singkat…"></div>
+    <div class="form-group"><label class="form-label">Konten Lengkap</label>
+      <app-rich-text-editor [(value)]="form.newsContent" [disabled]="isReadonly" /></div>
+    <div class="form-group form-group-tight"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isFeatured" [disabled]="isReadonly"> Jadikan berita unggulan</label></div>
+  </section>
 
-  <div class="flex gap justify-between">
-    <a routerLink="/cms/news" class="btn btn-ghost">{{ isReadonly ? '← Kembali ke Daftar' : 'Batal' }}</a>
+  <div class="form-actions">
+    <a routerLink="/cms/news" class="btn btn-ghost">Batal</a>
     @if (!isReadonly) {
       <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
         @if (saving()) { <span class="spinner"></span> } @else { Simpan Berita }
