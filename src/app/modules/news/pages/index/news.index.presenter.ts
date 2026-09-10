@@ -1,32 +1,35 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { NewsRepository } from '../../repositories/news.repository';
 import { News } from '../../entities/news';
+import { map } from 'rxjs/operators';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsComboboxOption, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { NewsIndexView } from './news.index.view';
-
-/** Query params yang dikirim ke GET /news — lihat news_dto.CMSFilter di backend. */
-export interface NewsListParams {
-  search: string;
-  reporter: string;
-  category: string;
-  status: string;
-  dateFrom: string;
-  dateTo: string;
-  sort: string;
-}
 
 @Injectable()
 export class NewsIndexPresenter extends BasePresenter<NewsIndexView> {
   private newsRepo = inject(NewsRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, filters: NewsListParams): void {
-    this.newsRepo.cmsList({ page, limit, ...filters }).subscribe({ next: (p) => this.view.setNews(p.data, p.count), error: () => {} });
+  /** dataSource untuk <app-cms-index> — memetakan CmsListParams generik ke
+   *  query param news_dto.CMSFilter (filters['title']/['reporter']/['category']
+   *  dipetakan ke search/reporter/category, lihat news.index.page.ts). */
+  list(params: CmsListParams): Observable<Pagination<News>> {
+    return this.newsRepo.cmsList({
+      page: params.page, limit: params.limit, sort: params.sort, status: params.status,
+      dateFrom: params.dateFrom, dateTo: params.dateTo,
+      search: params.filters['title'] ?? '', reporter: params.filters['reporter'] ?? '', category: params.filters['category'] ?? '',
+    });
   }
 
-  loadCategories(): void {
-    this.newsRepo.categories().subscribe({ next: (categories) => this.view.setCategories(categories), error: () => {} });
+  /** loadOptions untuk target-pencarian "Kategori" (mode combobox) di config
+   *  CmsIndexConfig — dipanggil sekali oleh CmsIndexComponent saat kotak
+   *  pencarian kategori difokus pertama kali (hasilnya di-cache di sana). */
+  categoryOptions(): Observable<CmsComboboxOption[]> {
+    return this.newsRepo.categories().pipe(map((cats) => cats.map((c) => ({ id: c.categoryID, label: c.categoryName }))));
   }
 
   togglePublish(n: News): void {

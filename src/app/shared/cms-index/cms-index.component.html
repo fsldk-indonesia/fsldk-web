@@ -1,0 +1,154 @@
+@if (config.guideCards?.length) {
+  <div class="guide-grid">
+    @for (card of config.guideCards; track card.title) {
+      <div class="card guide-card">
+        <span class="icon-badge icon-badge-soft"><app-icon [name]="card.icon" [size]="16" /></span>
+        <div><h4>{{ card.title }}</h4><p [innerHTML]="card.description"></p></div>
+      </div>
+    }
+  </div>
+}
+
+<div class="card">
+  @if (config.statusOptions || config.searchTargets?.length || config.showDateRange) {
+    <div class="card-pad filter-row">
+      @if (config.statusOptions) {
+        <app-select [options]="config.statusOptions" [ngModel]="status" (ngModelChange)="filterStatus($event)" />
+      }
+
+      @if (config.searchTargets?.length) {
+        <div class="search-combo" #searchComboWrap>
+          @if (config.searchTargets!.length > 1) {
+            <app-select [options]="config.searchTargets!" [ngModel]="searchTarget" (ngModelChange)="onSearchTargetChange($event)" />
+            <span class="search-combo-divider"></span>
+          }
+
+          <input class="search-input" type="text"
+                 [placeholder]="isComboboxTarget ? 'Cari atau pilih ' + (currentSearchTarget?.label ?? '') + '…' : searchPlaceholder"
+                 [(ngModel)]="searchQuery"
+                 (focus)="onSearchFocus()" (click)="onSearchFocus()"
+                 (keyup.enter)="applySearch()">
+
+          <button type="button" class="search-combo-btn" title="Cari" (click)="applySearch()"><app-icon name="search" [size]="13" /></button>
+
+          @if (isComboboxTarget) {
+            <div class="dropdown-menu search-combo-popup" [class.open]="searchComboOpen()">
+              @for (opt of filteredComboOptions(); track opt.id) {
+                <button type="button" class="combo-option" [class.active]="searchQuery === opt.label" (click)="pickComboOption(opt)">{{ opt.label }}</button>
+              } @empty {
+                <p class="dropdown-empty">Tidak ditemukan.</p>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (config.showDateRange) {
+        <app-date-range-picker [from]="dateFrom" [to]="dateTo" placeholder="Pilih rentang tanggal" (rangeChange)="onDateRangeChange($event)" />
+      }
+    </div>
+  }
+
+  @if (activeFilterPills.length > 0) {
+    <div class="card-pad filter-pills">
+      @for (pill of activeFilterPills; track pill.key) {
+        <span class="filter-pill">
+          {{ pill.label }}
+          <button type="button" (click)="removeFilter(pill.key)" [attr.aria-label]="'Hapus filter ' + pill.label"><app-icon name="x" [size]="10" /></button>
+        </span>
+      }
+      <button type="button" class="filter-pills-reset" (click)="clearFilters()">Hapus Filter</button>
+    </div>
+  }
+
+  <div class="card-pad table-toolbar">
+    <button type="button" class="icon-btn" title="Refresh" (click)="refresh()"><app-icon name="refresh" [size]="14" /></button>
+
+    <div class="dropdown-wrap" #adjustColumnWrap>
+      <button type="button" class="dropdown-toggle" [class.open]="adjustColumnOpen()" (click)="adjustColumnOpen.set(!adjustColumnOpen()); bulkActionOpen.set(false)">
+        Atur Kolom <app-icon class="chevron" name="chevron-down" [size]="10" />
+      </button>
+      <div class="dropdown-menu" [class.open]="adjustColumnOpen()">
+        @for (col of config.columns; track col.key) {
+          <label [class.locked]="col.locked">
+            <input type="checkbox" [checked]="isColumnVisible(col.key)" [disabled]="col.locked" (change)="toggleColumn(col)">
+            {{ col.label }}
+          </label>
+        }
+      </div>
+    </div>
+
+    <span style="flex:1"></span>
+
+    @if (bulkDeleteEnabled) {
+      <div class="dropdown-wrap" #bulkActionWrap>
+        <button type="button" class="dropdown-toggle" [class.open]="bulkActionOpen()" (click)="bulkActionOpen.set(!bulkActionOpen()); adjustColumnOpen.set(false)">
+          Aksi Massal @if (selected.size > 0) { <span class="badge badge-info" style="margin-left:2px">{{ selected.size }}</span> } <app-icon class="chevron" name="chevron-down" [size]="10" />
+        </button>
+        <div class="dropdown-menu right" [class.open]="bulkActionOpen()">
+          <button type="button" class="menu-item" [disabled]="selected.size === 0" (click)="onBulkDeleteClick($event)">
+            <app-icon name="trash" [size]="13" /> Hapus {{ selected.size }} Terpilih
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          @if (bulkDeleteEnabled) {
+            <th style="width:36px"><input type="checkbox" [checked]="allSelected" (change)="toggleSelectAll($any($event.target).checked)"></th>
+          }
+          @for (col of config.columns; track col.key) {
+            @if (isColumnVisible(col.key)) {
+              @if (col.sortable !== false) {
+                <th class="sortable" [class.active]="sortBy === col.key" (click)="toggleSort(col.key)">
+                  <span class="col-sort">{{ col.label }} <app-icon class="sort-icon" [name]="sortBy === col.key ? (sortDir === 'asc' ? 'arrow-up' : 'arrow-down') : 'chevrons-up-down'" [size]="11" /></span>
+                </th>
+              } @else {
+                <th>{{ col.label }}</th>
+              }
+            }
+          }
+          @if (showActionsColumn) { <th>Aksi</th> }
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr>
+              @if (bulkDeleteEnabled) { <td></td> }
+              @for (c of skeletonCols(); track c) {
+                <td><span class="skel skel-line" style="width:70%"></span></td>
+              }
+            </tr>
+          }
+        } @else {
+          @for (row of rows(); track rowId(row); let i = $index) {
+            <tr [class.row-clickable]="rowClick.observed" (click)="onRowClick(row)">
+              @if (bulkDeleteEnabled) {
+                <td (click)="$event.stopPropagation()"><input type="checkbox" [checked]="isSelected(rowId(row))" (change)="toggleSelect(rowId(row), $any($event.target).checked)"></td>
+              }
+              <ng-container *ngTemplateOutlet="rowTemplateRef; context: { $implicit: row, index: i, isColumnVisible: isColumnVisible }"></ng-container>
+            </tr>
+          } @empty {
+            <tr><td [attr.colspan]="visibleColumnCount + (bulkDeleteEnabled ? 1 : 0)">
+              <div class="empty-state">
+                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon [name]="config.emptyIcon ?? 'inbox'" [size]="26" /></span>
+                <h4>{{ config.emptyTitle ?? 'Belum ada data' }}</h4>
+                <p>{{ hasActiveFilters ? 'Tidak ada data yang cocok dengan filter saat ini.' : (config.emptyDescription ?? 'Data yang Anda tambahkan akan muncul di sini.') }}</p>
+                @if (canCreate && config.createRoute && !hasActiveFilters) { <a [routerLink]="config.createRoute" class="btn btn-primary btn-sm">+ {{ config.createLabel ?? 'Tambah' }}</a> }
+                @if (hasActiveFilters) { <button type="button" class="btn btn-outline btn-sm" (click)="clearFilters()">Hapus Filter</button> }
+              </div>
+            </td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (!loading()) {
+    <app-pagination [page]="page()" [limit]="config.limit ?? 10" [count]="count()" (pageChange)="goPage($event)" />
+  }
+</div>

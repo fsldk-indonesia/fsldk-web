@@ -3,202 +3,37 @@
   @if (canCreate) { <a routerLink="/cms/news/form" class="btn btn-primary">+ Tambah Berita</a> }
 </div>
 
-<div class="guide-grid">
-  <div class="card guide-card">
-    <span class="icon-badge icon-badge-soft"><app-icon name="plus" [size]="16" /></span>
-    <div><h4>Tambah Berita</h4><p>Klik <strong>"+ Tambah Berita"</strong> untuk membuat berita baru — isi judul, konten, reporter, kategori, dan gambar utama.</p></div>
-  </div>
-  <div class="card guide-card">
-    <span class="icon-badge icon-badge-soft"><app-icon name="search" [size]="16" /></span>
-    <div><h4>Filter & Pencarian</h4><p>Pilih status, pilih kolom yang ingin dicari (Judul/Reporter/Kategori), atau atur rentang tanggal — bisa digabung sekaligus.</p></div>
-  </div>
-  <div class="card guide-card">
-    <span class="icon-badge icon-badge-soft"><app-icon name="chevrons-up-down" [size]="16" /></span>
-    <div><h4>Urutkan & Atur Kolom</h4><p>Klik judul kolom untuk mengurutkan data, atau pakai <strong>Atur Kolom</strong> untuk menampilkan/menyembunyikan kolom.</p></div>
-  </div>
-  <div class="card guide-card">
-    <span class="icon-badge icon-badge-soft"><app-icon name="eye" [size]="16" /></span>
-    <div><h4>Edit & Publish</h4><p>Klik <app-icon name="edit" [size]="12" /> untuk mengedit, atau ikon mata untuk publish/tarik publikasi berita.</p></div>
-  </div>
-  <div class="card guide-card">
-    <span class="icon-badge icon-badge-soft"><app-icon name="trash" [size]="16" /></span>
-    <div><h4>Hapus & Aksi Massal</h4><p>Hapus satu berita lewat ikon tempat sampah, atau centang beberapa baris lalu pakai <strong>Aksi Massal</strong> untuk hapus massal.</p></div>
-  </div>
-</div>
-
-<div class="card">
-  <!-- Baris 1: filter -->
-  <div class="card-pad filter-row">
-    <app-select [options]="statusOptions" [ngModel]="status" (ngModelChange)="filterStatus($event)" />
-
-    <div class="search-combo" #categoryPopupWrap>
-      <app-select [options]="searchTargetOptions" [ngModel]="searchTarget" (ngModelChange)="onSearchTargetChange($event)" />
-      <span class="search-combo-divider"></span>
-
-      <!-- Satu <input> yang sama untuk semua target (Judul/Reporter/Kategori)
-           — untuk Kategori, fokus/klik memunculkan popup daftar kategori di
-           bawahnya yang ikut ter-filter sambil mengetik (kombinasi cari +
-           pilih, bukan cuma salah satu). -->
-      <input class="search-input" type="text"
-             [placeholder]="searchTarget === 'category' ? 'Cari atau pilih kategori…' : searchPlaceholder"
-             [(ngModel)]="searchQuery"
-             (focus)="onSearchFocus()" (click)="onSearchFocus()"
-             (keyup.enter)="applySearch()">
-
-      <button type="button" class="search-combo-btn" title="Cari" (click)="applySearch()"><app-icon name="search" [size]="13" /></button>
-
-      @if (searchTarget === 'category') {
-        <div class="dropdown-menu category-popup" [class.open]="categoryPopupOpen()">
-          @for (c of filteredCategories(); track c.categoryID) {
-            <button type="button" class="category-option" [class.active]="searchQuery === c.categoryName" (click)="pickCategory(c.categoryName)">{{ c.categoryName }}</button>
-          } @empty {
-            <p class="dropdown-empty">Kategori tidak ditemukan.</p>
-          }
-        </div>
-      }
-    </div>
-
-    <app-date-range-picker [from]="dateFrom" [to]="dateTo" placeholder="Pilih rentang tanggal" (rangeChange)="onDateRangeChange($event)" />
-  </div>
-
-  <!-- Pill filter aktif — tiap kolom yang sudah di-Apply muncul di sini,
-       bisa digabung lebih dari satu (Judul + Reporter + Kategori dst.
-       sekaligus), masing-masing bisa dihapus satu-satu atau semua lewat
-       Hapus Filter. -->
-  @if (activeFilterPills.length > 0) {
-    <div class="card-pad filter-pills">
-      @for (pill of activeFilterPills; track pill.key) {
-        <span class="filter-pill">
-          {{ pill.label }}
-          <button type="button" (click)="removeFilter(pill.key)" [attr.aria-label]="'Hapus filter ' + pill.label"><app-icon name="x" [size]="10" /></button>
-        </span>
-      }
-      <button type="button" class="filter-pills-reset" (click)="clearFilters()">Hapus Filter</button>
-    </div>
-  }
-
-  <!-- Baris 2: refresh, adjust column — bulk action -->
-  <div class="card-pad table-toolbar">
-    <button type="button" class="icon-btn" title="Refresh" (click)="refresh()"><app-icon name="refresh" [size]="14" /></button>
-
-    <div class="dropdown-wrap" #adjustColumnWrap>
-      <button type="button" class="dropdown-toggle" [class.open]="adjustColumnOpen()" (click)="adjustColumnOpen.set(!adjustColumnOpen()); bulkActionOpen.set(false)">
-        Atur Kolom <app-icon class="chevron" name="chevron-down" [size]="10" />
-      </button>
-      <div class="dropdown-menu" [class.open]="adjustColumnOpen()">
-        @for (col of columnDefs; track col.key) {
-          <label [class.locked]="col.locked">
-            <input type="checkbox" [checked]="isColumnVisible(col.key)" [disabled]="col.locked" (change)="toggleColumn(col)">
-            {{ col.label }}
-          </label>
+<app-cms-index
+  [config]="config"
+  [dataSource]="dataSource"
+  [bulkDeleteEnabled]="canDelete"
+  [canCreate]="canCreate"
+  (rowClick)="viewNews($event)"
+  (bulkDelete)="onBulkDelete($event)">
+  <ng-template #rowTemplate let-n let-isColumnVisible="isColumnVisible">
+    <td><strong>{{ n.newsTitle }}</strong></td>
+    @if (isColumnVisible('newsReporter')) { <td class="text-muted">{{ n.newsReporter || '–' }}</td> }
+    @if (isColumnVisible('categoryName')) { <td class="text-muted">{{ n.categoryName }}</td> }
+    @if (isColumnVisible('isPublished')) {
+      <td><span class="badge" [class.badge-published]="n.isPublished" [class.badge-draft]="!n.isPublished">{{ n.isPublished ? 'Published' : 'Draft' }}</span></td>
+    }
+    @if (isColumnVisible('createdDate')) { <td class="text-muted">{{ n.createdDate | date:'d MMM yyyy' }}</td> }
+    <td (click)="$event.stopPropagation()">
+      <div class="table-actions">
+        @if (canUpdate) {
+          <a class="icon-action" [routerLink]="['/cms/news/form', n.newsID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+        }
+        @if (canPublish) {
+          <button type="button" class="icon-action" [disabled]="isBusy(n.newsID)" (click)="togglePublish(n)" [title]="n.isPublished ? 'Tarik publikasi' : 'Publish'">
+            @if (isBusy(n.newsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="n.isPublished ? 'eye-off' : 'eye'" [size]="14" /> }
+          </button>
+        }
+        @if (canDelete) {
+          <button type="button" class="icon-action danger" [disabled]="isBusy(n.newsID)" (click)="remove(n, $event)" title="Hapus">
+            @if (isBusy(n.newsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+          </button>
         }
       </div>
-    </div>
-
-    <span style="flex:1"></span>
-
-    <div class="dropdown-wrap" #bulkActionWrap>
-      <button type="button" class="dropdown-toggle" [class.open]="bulkActionOpen()" (click)="bulkActionOpen.set(!bulkActionOpen()); adjustColumnOpen.set(false)">
-        Aksi Massal @if (selected.size > 0) { <span class="badge badge-info" style="margin-left:2px">{{ selected.size }}</span> } <app-icon class="chevron" name="chevron-down" [size]="10" />
-      </button>
-      <div class="dropdown-menu right" [class.open]="bulkActionOpen()">
-        <button type="button" class="menu-item" [disabled]="!canDelete || selected.size === 0" (click)="bulkDelete($event)">
-          <app-icon name="trash" [size]="13" /> Hapus {{ selected.size }} Terpilih
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr>
-          @if (canDelete) {
-            <th style="width:36px"><input type="checkbox" [checked]="allSelected" (change)="toggleSelectAll($any($event.target).checked)"></th>
-          }
-          <th class="sortable" [class.active]="sortBy === 'newsTitle'" (click)="toggleSort('newsTitle')">
-            <span class="col-sort">Judul <app-icon class="sort-icon" [name]="sortBy === 'newsTitle' ? (sortDir === 'asc' ? 'arrow-up' : 'arrow-down') : 'chevrons-up-down'" [size]="11" /></span>
-          </th>
-          @if (isColumnVisible('newsReporter')) {
-            <th class="sortable" [class.active]="sortBy === 'newsReporter'" (click)="toggleSort('newsReporter')">
-              <span class="col-sort">Reporter <app-icon class="sort-icon" [name]="sortBy === 'newsReporter' ? (sortDir === 'asc' ? 'arrow-up' : 'arrow-down') : 'chevrons-up-down'" [size]="11" /></span>
-            </th>
-          }
-          @if (isColumnVisible('categoryName')) {
-            <th class="sortable" [class.active]="sortBy === 'categoryName'" (click)="toggleSort('categoryName')">
-              <span class="col-sort">Kategori <app-icon class="sort-icon" [name]="sortBy === 'categoryName' ? (sortDir === 'asc' ? 'arrow-up' : 'arrow-down') : 'chevrons-up-down'" [size]="11" /></span>
-            </th>
-          }
-          @if (isColumnVisible('isPublished')) {
-            <th class="sortable" [class.active]="sortBy === 'isPublished'" (click)="toggleSort('isPublished')">
-              <span class="col-sort">Status <app-icon class="sort-icon" [name]="sortBy === 'isPublished' ? (sortDir === 'asc' ? 'arrow-up' : 'arrow-down') : 'chevrons-up-down'" [size]="11" /></span>
-            </th>
-          }
-          @if (isColumnVisible('createdDate')) {
-            <th class="sortable" [class.active]="sortBy === 'createdDate'" (click)="toggleSort('createdDate')">
-              <span class="col-sort">Tanggal <app-icon class="sort-icon" [name]="sortBy === 'createdDate' ? (sortDir === 'asc' ? 'arrow-up' : 'arrow-down') : 'chevrons-up-down'" [size]="11" /></span>
-            </th>
-          }
-          <th>Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          @for (i of [1,2,3,4,5]; track i) {
-            <tr>
-              @if (canDelete) { <td></td> }
-              @for (c of skeletonCols(); track c) {
-                <td><span class="skel skel-line" style="width:70%"></span></td>
-              }
-            </tr>
-          }
-        } @else {
-          @for (n of news(); track n.newsID) {
-            <tr class="row-clickable" (click)="viewNews(n)" title="Klik untuk lihat detail">
-              @if (canDelete) {
-                <td (click)="$event.stopPropagation()"><input type="checkbox" [checked]="isSelected(n.newsID)" (change)="toggleSelect(n.newsID, $any($event.target).checked)"></td>
-              }
-              <td><strong>{{ n.newsTitle }}</strong></td>
-              @if (isColumnVisible('newsReporter')) { <td class="text-muted">{{ n.newsReporter || '–' }}</td> }
-              @if (isColumnVisible('categoryName')) { <td class="text-muted">{{ n.categoryName }}</td> }
-              @if (isColumnVisible('isPublished')) {
-                <td><span class="badge" [class.badge-published]="n.isPublished" [class.badge-draft]="!n.isPublished">{{ n.isPublished ? 'Published' : 'Draft' }}</span></td>
-              }
-              @if (isColumnVisible('createdDate')) { <td class="text-muted">{{ n.createdDate | date:'d MMM yyyy' }}</td> }
-              <td (click)="$event.stopPropagation()">
-                <div class="table-actions">
-                  @if (canUpdate) {
-                    <a class="icon-action" [routerLink]="['/cms/news/form', n.newsID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
-                  }
-                  @if (canPublish) {
-                    <button type="button" class="icon-action" [disabled]="isBusy(n.newsID)" (click)="togglePublish(n)" [title]="n.isPublished ? 'Tarik publikasi' : 'Publish'">
-                      @if (isBusy(n.newsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="n.isPublished ? 'eye-off' : 'eye'" [size]="14" /> }
-                    </button>
-                  }
-                  @if (canDelete) {
-                    <button type="button" class="icon-action danger" [disabled]="isBusy(n.newsID)" (click)="remove(n, $event)" title="Hapus">
-                      @if (isBusy(n.newsID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
-                    </button>
-                  }
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr><td [attr.colspan]="visibleColumnCount + (canDelete ? 1 : 0)">
-              <div class="empty-state">
-                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="newspaper" [size]="26" /></span>
-                <h4>Belum ada berita</h4>
-                <p>{{ hasActiveFilters ? 'Tidak ada berita yang cocok dengan filter saat ini.' : 'Berita yang Anda publikasikan akan muncul di sini.' }}</p>
-                @if (canCreate && !hasActiveFilters) { <a routerLink="/cms/news/form" class="btn btn-primary btn-sm">+ Tambah Berita</a> }
-                @if (hasActiveFilters) { <button type="button" class="btn btn-outline btn-sm" (click)="clearFilters()">Hapus Filter</button> }
-              </div>
-            </td></tr>
-          }
-        }
-      </tbody>
-    </table>
-  </div>
-  @if (!loading()) {
-    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
-  }
-</div>
+    </td>
+  </ng-template>
+</app-cms-index>
