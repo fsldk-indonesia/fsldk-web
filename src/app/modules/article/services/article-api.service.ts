@@ -20,4 +20,5 @@ export class ArticleApiService {
   update(id: number, body: unknown): Observable<Article> { return this.api.put(`/articles/${id}`, body); }
   publish(id: number, isPublished: boolean): Observable<unknown> { return this.api.patch(`/articles/${id}/publish`, { isPublished }); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/articles/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/articles/bulk-delete', { ids }); }
 }

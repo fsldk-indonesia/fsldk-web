@@ -113,15 +113,9 @@ import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsList
     th.sortable.active .sort-icon { color: var(--color-primary); }
     th.sortable:hover { color: var(--color-primary-dark); }
     tr.row-clickable { cursor: pointer; }
-
-    .empty-state { position: relative; text-align: center; padding: 48px 20px; }
-    .empty-state::before {
-      content: ''; position: absolute; inset: 0; margin: auto; width: 220px; height: 220px;
-      background: radial-gradient(circle, var(--color-primary-soft) 0%, transparent 70%); z-index: 0;
-    }
-    .empty-state > * { position: relative; z-index: 1; }
-    .empty-state h4 { margin: 0 0 4px; }
-    .empty-state p { margin: 0 0 14px; color: var(--color-muted); font-size: .88rem; }
+    /* Empty-state pakai class global .empty-state (styles.scss) apa adanya —
+       sudah termasuk glow radial yang pas di sekitar ikon (.icon-badge::before),
+       tidak perlu override di sini. */
   `],
 })
 export class CmsIndexComponent<T> implements OnInit, OnDestroy {

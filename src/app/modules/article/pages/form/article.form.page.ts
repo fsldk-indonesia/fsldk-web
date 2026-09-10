@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
@@ -20,15 +21,22 @@ const STATUS_OPTIONS = [
   selector: 'app-article-form-page',
   standalone: true,
   templateUrl: './article.form.page.html',
-  imports: [FormsModule, RouterLink, DatePipe, ImageUploadComponent, PdfUploadComponent, RichTextEditorComponent, SelectComponent],
+  imports: [FormsModule, RouterLink, DatePipe, IconComponent, ImageUploadComponent, PdfUploadComponent, RichTextEditorComponent, SelectComponent],
   providers: [ArticleFormPresenter],
   styles: [`
-    /* Header dan kartu form memakai lebar maksimum yang sama supaya sejajar
-       sebagai satu kolom — sebelumnya kartu formnya sendiri yang dibatasi
-       820px sementara header di atasnya full-width, jadi terlihat "nabrak
-       kiri" dengan sisa ruang kosong di kanan yang tidak presisi. */
-    .page-head { max-width: 820px; margin: 0 auto 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }
-    .form-card { max-width: 820px; margin: 0 auto; }
+    /* Lebar kolom form dibiarkan mengisi penuh .page-shell (bukan dikunci ke
+       angka tetap) — sama seperti form Berita, lihat catatan riwayat di
+       news.form.page.ts untuk alasan (page-shell CMS sudah dibatasi 1100px
+       dengan padding sendiri). */
+    .page-head { margin: 0 0 24px; }
+    .form-card { display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .form-control-lg { font-weight: 700; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 22px; margin-top: 4px; border-top: 1px solid var(--color-border); }
   `],
 })
 export class ArticleFormPage implements OnInit, ArticleFormView {
@@ -40,16 +48,26 @@ export class ArticleFormPage implements OnInit, ArticleFormView {
   categories = signal<ArticleCategory[]>([]);
   saving = signal(false);
   editId: number | null = null;
+  // Halaman detail (read-only) memakai komponen yang sama dengan form edit —
+  // dibedakan lewat route data `viewOnly` (lihat article.routes.ts), bukan
+  // URL atau state terpisah, supaya layout field tidak dobel-maintain di 2 file.
+  isReadonly = false;
   canPublish = this.auth.hasPermission('article.publish');
   form: ArticleFormValue = { ...emptyArticleForm };
   publishedDate = signal<string | null>(null);
   statusOptions = STATUS_OPTIONS;
   categoryOptions = computed(() => this.categories().map((c) => ({ value: c.categoryID, label: c.categoryName })));
 
+  get pageSubtitle(): string {
+    if (this.isReadonly) return 'Lihat detail lengkap artikel ini.';
+    return this.editId ? 'Perbarui informasi artikel yang sudah ada.' : 'Isi informasi artikel yang akan dipublikasikan ke pengguna.';
+  }
+
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadCategories();
 
+    this.isReadonly = this.route.snapshot.data['viewOnly'] === true;
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editId = +id;

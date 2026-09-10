@@ -30,4 +30,15 @@ export const articleCmsRoutes: () => Routes = () => [
     title: 'Edit Artikel',
     loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
   },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // ArticleIndexPage), bukan cuma dari ikon Edit.
+    path: 'articles/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'article.view', viewOnly: true },
+    title: 'Detail Artikel',
+    loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
+  },
 ];

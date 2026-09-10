@@ -18,14 +18,16 @@ import { ToastService } from '../core/services/toast.service';
       <div class="pdf-chip">
         <span class="pdf-icon">📄</span>
         <a [href]="value" target="_blank" rel="noopener" class="pdf-name">Lihat berkas saat ini</a>
-        <div class="pdf-actions">
-          <button type="button" class="btn btn-outline btn-sm" (click)="fileInput.click()" [disabled]="uploading()">Ganti Berkas</button>
-          <button type="button" class="btn btn-ghost btn-sm" (click)="remove()" [disabled]="uploading()">Hapus</button>
-        </div>
+        @if (!disabled) {
+          <div class="pdf-actions">
+            <button type="button" class="btn btn-outline btn-sm" (click)="fileInput.click()" [disabled]="uploading()">Ganti Berkas</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="remove()" [disabled]="uploading()">Hapus</button>
+          </div>
+        }
         @if (uploading()) { <div class="pdf-overlay"><span class="spinner spinner-dark"></span></div> }
       </div>
     } @else {
-      <button type="button" class="dropzone" (click)="fileInput.click()" [disabled]="uploading()">
+      <button type="button" class="dropzone" (click)="fileInput.click()" [disabled]="uploading() || disabled">
         @if (uploading()) {
           <span class="spinner spinner-dark"></span><span>Mengunggah…</span>
         } @else {
@@ -57,6 +59,7 @@ export class PdfUploadComponent {
   @Input() allowedExtensions: string[] = ['.pdf'];
   @Input() maxSizeMB = 20;
   @Input() label = 'PDF';
+  @Input() disabled = false;
   readonly valueChange = output<string>();
 
   private uploadService = inject(UploadService);

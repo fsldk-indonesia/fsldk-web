@@ -3,68 +3,37 @@
   @if (canCreate) { <a routerLink="/cms/articles/form" class="btn btn-primary">+ Tambah Artikel</a> }
 </div>
 
-<div class="card">
-  <div class="card-pad flex gap">
-    <span class="chip" [class.active]="status === ''" (click)="filter('')">Semua</span>
-    <span class="chip" [class.active]="status === 'published'" (click)="filter('published')">Published</span>
-    <span class="chip" [class.active]="status === 'draft'" (click)="filter('draft')">Draft</span>
-  </div>
-  <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>Judul</th><th>Penulis</th><th>Kategori</th><th>Status</th><th>Tgl Publikasi</th><th></th></tr></thead>
-      <tbody>
-        @if (loading()) {
-          @for (i of [1,2,3,4,5]; track i) {
-            <tr>
-              <td><span class="skel skel-line" style="width:70%"></span></td>
-              <td><span class="skel skel-line" style="width:60px"></span></td>
-              <td><span class="skel skel-line" style="width:80px"></span></td>
-              <td><span class="skel skel-line" style="width:80px;border-radius:999px"></span></td>
-              <td><span class="skel skel-line" style="width:70px"></span></td>
-              <td><span class="skel skel-line" style="width:90px"></span></td>
-            </tr>
-          }
-        } @else {
-          @for (a of articles(); track a.articleID) {
-            <tr>
-              <td><strong>{{ a.articleTitle }}</strong></td>
-              <td class="text-muted">{{ a.articleWriter || '–' }}</td>
-              <td class="text-muted">{{ a.categoryName }}</td>
-              <td><span class="badge" [class.badge-published]="a.isPublished" [class.badge-draft]="!a.isPublished">{{ a.isPublished ? 'Published' : 'Draft' }}</span></td>
-              <td class="text-muted">{{ a.publishedDate ? (a.publishedDate | date:'d MMM yyyy') : '–' }}</td>
-              <td>
-                <div class="table-actions">
-                  @if (canUpdate) {
-                    <a class="icon-action" [routerLink]="['/cms/articles/form', a.articleID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
-                  }
-                  @if (canPublish) {
-                    <button type="button" class="icon-action" [disabled]="isBusy(a.articleID)" (click)="togglePublish(a)" [title]="a.isPublished ? 'Tarik publikasi' : 'Publish'">
-                      @if (isBusy(a.articleID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="a.isPublished ? 'eye-off' : 'eye'" [size]="14" /> }
-                    </button>
-                  }
-                  @if (canDelete) {
-                    <button type="button" class="icon-action danger" [disabled]="isBusy(a.articleID)" (click)="remove(a, $event)" title="Hapus">
-                      @if (isBusy(a.articleID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
-                    </button>
-                  }
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr><td colspan="6">
-              <div class="empty-state">
-                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="file-text" [size]="26" /></span>
-                <h4>Belum ada artikel</h4>
-                <p>Artikel dan kajian yang Anda publikasikan akan muncul di sini.</p>
-                @if (canCreate) { <a routerLink="/cms/articles/form" class="btn btn-primary btn-sm">+ Tambah Artikel</a> }
-              </div>
-            </td></tr>
-          }
+<app-cms-index
+  [config]="config"
+  [dataSource]="dataSource"
+  [bulkDeleteEnabled]="canDelete"
+  [canCreate]="canCreate"
+  (rowClick)="viewArticle($event)"
+  (bulkDelete)="onBulkDelete($event)">
+  <ng-template #rowTemplate let-a let-isColumnVisible="isColumnVisible">
+    <td><strong>{{ a.articleTitle }}</strong></td>
+    @if (isColumnVisible('articleWriter')) { <td class="text-muted">{{ a.articleWriter || '–' }}</td> }
+    @if (isColumnVisible('categoryName')) { <td class="text-muted">{{ a.categoryName }}</td> }
+    @if (isColumnVisible('isPublished')) {
+      <td><span class="badge" [class.badge-published]="a.isPublished" [class.badge-draft]="!a.isPublished">{{ a.isPublished ? 'Published' : 'Draft' }}</span></td>
+    }
+    @if (isColumnVisible('createdDate')) { <td class="text-muted">{{ a.createdDate | date:'d MMM yyyy' }}</td> }
+    <td (click)="$event.stopPropagation()">
+      <div class="table-actions">
+        @if (canUpdate) {
+          <a class="icon-action" [routerLink]="['/cms/articles/form', a.articleID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
         }
-      </tbody>
-    </table>
-  </div>
-  @if (!loading()) {
-    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
-  }
-</div>
+        @if (canPublish) {
+          <button type="button" class="icon-action" [disabled]="isBusy(a.articleID)" (click)="togglePublish(a)" [title]="a.isPublished ? 'Tarik publikasi' : 'Publish'">
+            @if (isBusy(a.articleID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon [name]="a.isPublished ? 'eye-off' : 'eye'" [size]="14" /> }
+          </button>
+        }
+        @if (canDelete) {
+          <button type="button" class="icon-action danger" [disabled]="isBusy(a.articleID)" (click)="remove(a, $event)" title="Hapus">
+            @if (isBusy(a.articleID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+          </button>
+        }
+      </div>
+    </td>
+  </ng-template>
+</app-cms-index>
