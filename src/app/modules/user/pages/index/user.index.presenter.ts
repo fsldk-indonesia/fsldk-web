@@ -1,9 +1,14 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UserRepository } from '../../repositories/user.repository';
 import { RoleRepository } from '../../../role/repositories/role.repository';
 import { OrganizationRepository } from '../../../organization/repositories/organization.repository';
+import { UserRow } from '../../entities/user';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsComboboxOption, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { UserIndexView } from './user.index.view';
 
 export interface UserFormValue {
@@ -23,11 +28,21 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
   private orgRepo = inject(OrganizationRepository);
   private toast = inject(ToastService);
 
-  loadUsers(page: number, limit: number, search: string): void {
-    this.userRepo.list({ page, limit, search }).subscribe({
-      next: (p) => this.view.setUsers(p.data, p.count),
-      error: () => {},
+  /** dataSource untuk <app-cms-index> — memetakan CmsListParams generik ke
+   *  query param user_dto.CMSFilter (filters['name']/['email']/['role']
+   *  dipetakan ke search/email/role, lihat user.index.page.ts). */
+  list(params: CmsListParams): Observable<Pagination<UserRow>> {
+    return this.userRepo.list({
+      page: params.page, limit: params.limit, sort: params.sort, status: params.status,
+      search: params.filters['name'] ?? '', email: params.filters['email'] ?? '', role: params.filters['role'] ?? '',
     });
+  }
+
+  /** loadOptions untuk target-pencarian "Role" (mode combobox) di config
+   *  CmsIndexConfig — dipanggil sekali oleh CmsIndexComponent saat kotak
+   *  pencarian role difokus pertama kali (hasilnya di-cache di sana). */
+  roleOptions(): Observable<CmsComboboxOption[]> {
+    return this.roleRepo.list().pipe(map((roles) => roles.map((r) => ({ id: r.roleID, label: r.roleName }))));
   }
 
   loadRoles(): void {
@@ -77,6 +92,13 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
     this.userRepo.remove(id).subscribe({
       next: () => { this.toast.success('Pengguna dihapus'); this.view.onRemoveSuccess(); this.view.onActionSettled(id); },
       error: () => this.view.onActionSettled(id),
+    });
+  }
+
+  bulkDelete(ids: number[]): void {
+    this.userRepo.bulkDelete(ids).subscribe({
+      next: () => { this.toast.success(`${ids.length} pengguna terpilih dihapus`); this.view.onBulkDeleteSuccess(); },
+      error: () => {},
     });
   }
 }

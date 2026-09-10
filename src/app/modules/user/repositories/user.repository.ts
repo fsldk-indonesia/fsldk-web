@@ -17,4 +17,5 @@ export class UserRepository {
   update(id: number, body: unknown): Observable<UserRow> { return this.api.update(id, body); }
   setStatus(id: number, isActive: boolean): Observable<unknown> { return this.api.setStatus(id, isActive); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
 }

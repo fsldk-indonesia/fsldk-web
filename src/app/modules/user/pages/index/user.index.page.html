@@ -3,80 +3,58 @@
   @if (canCreate) { <button class="btn btn-primary" (click)="openCreate($event)">+ Tambah Pengguna</button> }
 </div>
 
-<div class="card">
-  <div class="card-pad flex gap">
-    <input class="form-control" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari pengguna…">
-  </div>
-  <div class="table-wrap">
-    <table class="table">
-      <thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
-      <tbody>
-        @if (loading()) {
-          @for (i of [1,2,3,4,5]; track i) {
-            <tr>
-              <td><span class="skel skel-line" style="width:70%"></span></td>
-              <td><span class="skel skel-line" style="width:80%"></span></td>
-              <td><span class="skel skel-line" style="width:70px;border-radius:999px"></span></td>
-              <td><span class="skel skel-line" style="width:70px;border-radius:999px"></span></td>
-              <td><span class="skel skel-line" style="width:60px"></span></td>
-            </tr>
-          }
-        } @else {
-          @for (u of users(); track u.userID) {
-            <tr>
-              <td><strong>{{ u.fullName }}</strong></td>
-              <td class="text-muted">{{ u.email }}</td>
-              <td><span class="chip chip-green">{{ u.role }}</span></td>
-              <td><span class="badge" [class.badge-active]="u.isActive" [class.badge-inactive]="!u.isActive">{{ u.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
-              <td>
-                <div class="table-actions">
-                  @if (canUpdate) {
-                    <button type="button" class="icon-action" (click)="openEdit(u, $event)" title="Edit"><app-icon name="edit" [size]="14" /></button>
-                  }
-                  @if (canDelete) {
-                    <button type="button" class="icon-action danger" [disabled]="isBusy(u.userID)" (click)="remove(u, $event)" title="Hapus">
-                      @if (isBusy(u.userID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
-                    </button>
-                  }
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr><td colspan="5">
-              <div class="empty-state">
-                <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="user-group" [size]="26" /></span>
-                <h4>Belum ada pengguna</h4>
-                <p>Tambahkan akun pengguna untuk mengakses CMS.</p>
-                @if (canCreate) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Tambah Pengguna</button> }
-              </div>
-            </td></tr>
-          }
+<app-cms-index
+  [config]="config"
+  [dataSource]="dataSource"
+  [bulkDeleteEnabled]="canDelete"
+  (rowClick)="openView($event)">
+  <ng-template #rowTemplate let-u let-isColumnVisible="isColumnVisible">
+    <td><strong>{{ u.fullName }}</strong></td>
+    @if (isColumnVisible('email')) { <td class="text-muted">{{ u.email }}</td> }
+    @if (isColumnVisible('roleName')) { <td><span class="chip chip-green">{{ u.role }}</span></td> }
+    @if (isColumnVisible('isActive')) {
+      <td><span class="badge" [class.badge-active]="u.isActive" [class.badge-inactive]="!u.isActive">{{ u.isActive ? 'Aktif' : 'Nonaktif' }}</span></td>
+    }
+    <td (click)="$event.stopPropagation()">
+      <div class="table-actions">
+        @if (canUpdate) {
+          <button type="button" class="icon-action" (click)="openEdit(u, $event)" title="Edit"><app-icon name="edit" [size]="14" /></button>
         }
-      </tbody>
-    </table>
-  </div>
-  @if (!loading()) {
-    <app-pagination [page]="page()" [limit]="limit" [count]="count()" (pageChange)="goPage($event)" />
-  }
-</div>
+        @if (canDelete) {
+          <button type="button" class="icon-action danger" [disabled]="isBusy(u.userID)" (click)="remove(u, $event)" title="Hapus">
+            @if (isBusy(u.userID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+          </button>
+        }
+      </div>
+    </td>
+  </ng-template>
+</app-cms-index>
 
-@if (showForm()) {
-  <div class="modal-backdrop" appModalBackdrop (backdropClose)="close()">
-    <div class="modal modal-pop" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
-      <h3>{{ editId ? 'Ubah Pengguna' : 'Tambah Pengguna' }}</h3>
-      <div class="modal-body">
-        <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName"></div>
-        <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email"></div>
-        <div class="form-group">
-          <label class="form-label">Kata Sandi</label>
-          <input class="form-control" type="password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
-        </div>
+<div class="modal-backdrop" [class.open]="showForm()" appModalBackdrop (backdropClose)="close()">
+  <div class="modal modal-pop" [class.open]="showForm()" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
+    <h3>{{ modalTitle }}</h3>
+    <p class="text-muted">{{ modalSubtitle }}</p>
+    <div class="modal-body">
+      <div class="form-section-group">
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="13" /></span>Informasi Akun</p>
+        <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName" [disabled]="isReadonly"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email" [disabled]="isReadonly"></div>
+        @if (!isReadonly) {
+          <div class="form-group">
+            <label class="form-label">Kata Sandi</label>
+            <input class="form-control" type="password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
+          </div>
+        }
+      </div>
+
+      <div class="form-section-group">
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="shield-check" [size]="13" /></span>Peran & Akses</p>
         <div class="form-group"><label class="form-label">Role</label>
-          <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" placeholder="Pilih role" />
+          <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" [disabled]="isReadonly" placeholder="Pilih role" />
         </div>
         @if (showOrganizationPicker()) {
           <div class="form-group"><label class="form-label">LDK</label>
-            <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" placeholder="Pilih LDK" />
+            <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" placeholder="Pilih LDK" />
             <p class="form-hint">Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.</p>
           </div>
         }
@@ -86,18 +64,24 @@
             <div class="wildcard-tiers">
               @for (tier of wildcardTiers; track tier) {
                 <label class="form-check">
-                  <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" (change)="toggleWildcardTier(tier)"> {{ tier }}
+                  <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" [disabled]="isReadonly" (change)="toggleWildcardTier(tier)"> {{ tier }}
                 </label>
               }
             </div>
           </div>
         }
-        <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive"> Aktif</label></div>
       </div>
-      <div class="flex gap justify-between modal-footer">
-        <button class="btn btn-ghost" (click)="close()">Batal</button>
-        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
+
+      <div class="form-section-group">
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="check-circle" [size]="13" /></span>Status</p>
+        <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive" [disabled]="isReadonly"> Aktif</label></div>
       </div>
     </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="close()">Batal</button>
+      @if (!isReadonly) {
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
+      }
+    </div>
   </div>
-}
+</div>

@@ -18,4 +18,5 @@ export class UserApiService {
   update(id: number, body: unknown): Observable<UserRow> { return this.api.put(`/users/${id}`, body); }
   setStatus(id: number, isActive: boolean): Observable<unknown> { return this.api.patch(`/users/${id}/status`, { isActive }); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/users/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/users/bulk-delete', { ids }); }
 }
