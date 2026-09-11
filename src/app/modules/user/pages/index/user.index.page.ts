@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
@@ -89,13 +89,26 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
       opacity: 1; visibility: visible; pointer-events: auto;
       transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear 0s;
     }
+    /* Buka/tutup modal ini DIGERAKKAN LEWAT JS (Web Animations API, lihat
+       animateModal()) — bukan CSS transition/animation. CSS di sini cuma
+       merepresentasikan dua state STATIS (tertutup di keadaan diam, terbuka
+       di keadaan diam) yang dipakai SEBELUM animasi pertama & SESUDAH
+       animasi selesai (animation.cancel() melepas animasinya, baliknya ke
+       aturan CSS biasa ini). Alasan pindah dari transition ke WAAPI: dengan
+       transition, transisi BUKA memakai transform elemen ter-paint
+       TERAKHIR sebagai titik awal — kalau origin (--dx/--dy) baru saja
+       diganti sambil modal masih tertutup, titik awal itu masih posisi
+       origin LAMA (percobaan 2x sebelumnya sama-sama gagal karena akar
+       masalah ini: rAF & flag transition:none tidak cukup, transisi CSS
+       tetap "mengingat" state ter-paint sebelumnya). WAAPI tidak punya
+       masalah ini — dx/dy dioper LANGSUNG sebagai nilai JS ke .animate(),
+       tidak lewat custom property yang bisa "nyangkut" transisi lain. */
     .modal.modal-pop {
       background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column;
       animation: none; opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25);
-      transition: opacity var(--motion-slow) var(--ease-out), transform var(--motion-slow) var(--ease-out);
     }
     .modal.modal-pop.open { opacity: 1; transform: none; }
-    @media (prefers-reduced-motion: reduce) { .modal-backdrop, .modal.modal-pop { transition: none; } }
+    @media (prefers-reduced-motion: reduce) { .modal-backdrop { transition: none; } }
 
     .modal > h3 { flex-shrink: 0; margin-bottom: 2px; }
     .modal > p.text-muted { flex-shrink: 0; margin: 0 0 18px; font-size: .85rem; }
@@ -145,6 +158,8 @@ export class UserIndexPage implements OnInit, UserIndexView {
   saving = signal(false);
   busy = signal<ReadonlySet<number>>(new Set());
   popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
+  @ViewChild('modalEl') private modalEl?: ElementRef<HTMLElement>;
+  private modalAnimation: Animation | null = null;
   editId: number | null = null;
   // Klik baris (lihat CmsIndexComponent rowClick) membuka popup yang sama
   // dalam mode baca-saja — dibedakan lewat flag ini, bukan komponen/route
@@ -212,6 +227,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.editId = null;
     this.form = emptyForm(this.roles()[0]?.roleID ?? 0);
     this.showForm.set(true);
+    this.animateModal(true);
   }
   openEdit(u: UserRow, event?: Event): void {
     this.popupOrigin.set(popupOriginFromEvent(event));
@@ -222,6 +238,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
       organizationID: u.organizationID ?? null, wildcardTierAccess: [...(u.wildcardTierAccess ?? [])],
     };
     this.showForm.set(true);
+    this.animateModal(true);
   }
   // Dipicu klik baris (CmsIndexComponent rowClick emit row, bukan event DOM
   // — makanya popupOrigin tidak dihitung dari titik klik seperti openCreate/
@@ -235,8 +252,49 @@ export class UserIndexPage implements OnInit, UserIndexView {
       organizationID: u.organizationID ?? null, wildcardTierAccess: [...(u.wildcardTierAccess ?? [])],
     };
     this.showForm.set(true);
+    this.animateModal(true);
   }
-  close(): void { this.showForm.set(false); }
+  close(): void {
+    this.animateModal(false);
+    this.showForm.set(false);
+  }
+
+  /** Buka/tutup modal digerakkan lewat Web Animations API, BUKAN CSS
+   *  transition — dua percobaan sebelumnya pakai transition (rAF ganda,
+   *  lalu flag transition:none + reflow) sama-sama gagal, karena CSS
+   *  transition pada `transform` selalu memakai nilai ter-paint TERAKHIR
+   *  elemen sebagai titik awal, bukan --dx/--dy yang baru saja di-set —
+   *  kalau origin popup berganti (mis. dari tombol Edit ke klik baris)
+   *  sambil modal masih tertutup, titik awal itu tetap "nyangkut" di
+   *  origin lama. `.animate()` tidak punya masalah ini: dx/dy dioper
+   *  LANGSUNG sebagai nilai JS di keyframe, bukan lewat custom property.
+   *
+   *  `fill:'forwards'` dilepas lagi via `animation.cancel()` begitu selesai
+   *  (bukan dibiarkan menggantung) — elemen yang terus-menerus "dianggap"
+   *  sedang animasi transform jadi containing block baru untuk turunan
+   *  position:fixed (dropdown Role/LDK di dalam modal ini), persis bug yang
+   *  sudah pernah diperbaiki di .modal-pop global (lihat catatan panjang di
+   *  styles.scss) — begitu animasi selesai & di-cancel, state akhirnya
+   *  balik direpresentasikan CSS statis biasa (.modal-pop / .modal-pop.open). */
+  private animateModal(opening: boolean): void {
+    const el = this.modalEl?.nativeElement;
+    if (!el) return;
+    this.modalAnimation?.cancel();
+    const { dx, dy } = this.popupOrigin();
+    const closed: Keyframe = { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0.25)` };
+    const open: Keyframe = { opacity: 1, transform: 'none' };
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const anim = el.animate(opening ? [closed, open] : [open, closed], {
+      duration: reduceMotion ? 1 : 250, // samakan dengan --motion-slow
+      easing: 'cubic-bezier(.16, 1, .3, 1)', // samakan dengan --ease-out
+      fill: 'forwards',
+    });
+    this.modalAnimation = anim;
+    anim.onfinish = () => {
+      anim.cancel();
+      if (this.modalAnimation === anim) this.modalAnimation = null;
+    };
+  }
 
   toggleWildcardTier(tier: string): void {
     const set = new Set(this.form.wildcardTierAccess);
