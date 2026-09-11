@@ -8,6 +8,7 @@ import { Pagination } from '../../core/entities/pagination';
 import { IconComponent } from '../icon.component';
 import { PaginationComponent } from '../pagination.component';
 import { SelectComponent } from '../select.component';
+import { MultiSelectComponent, MultiSelectOption } from '../multi-select.component';
 import { DateRangePickerComponent, DateRange } from '../date-range-picker.component';
 import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsListParams, CmsSearchTargetDef } from './cms-index.types';
 
@@ -28,7 +29,7 @@ import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsList
 @Component({
   selector: 'app-cms-index',
   standalone: true,
-  imports: [NgTemplateOutlet, FormsModule, RouterLink, IconComponent, PaginationComponent, SelectComponent, DateRangePickerComponent],
+  imports: [NgTemplateOutlet, FormsModule, RouterLink, IconComponent, PaginationComponent, SelectComponent, MultiSelectComponent, DateRangePickerComponent],
   templateUrl: './cms-index.component.html',
   styles: [`
     /* 5 kartu panduan — kolom TETAP (bukan auto-fit/minmax) supaya selalu
@@ -44,28 +45,31 @@ import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsList
        nowrap — elemen menyusut lebih dulu lewat flex-shrink/min-width,
        tidak pernah pindah baris walau ruang agak sempit. */
     .filter-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); }
-    .filter-row > app-select { flex-shrink: 0; min-width: 200px; }
-    .filter-row > app-date-range-picker { flex: 1; min-width: 260px; }
+    .filter-row > app-select, .filter-row > app-multi-select { flex-shrink: 0; min-width: 200px; }
+    /* TIDAK ikut flex-grow (beda dari search-combo) — isinya cuma teks
+       tanggal pendek + ikon kalender, kalau dikasih flex-grow malah melebar
+       kosong tak proporsional saat ruang sisa banyak. Lebar tetap (bukan
+       ikut menyusut/melebar mengikuti sisa ruang), search-combo yang
+       menyerap sisa ruang (satu-satunya yang flex-grow di baris ini). */
+    .filter-row > app-date-range-picker { flex: 0 0 230px; }
+    /* Combo-box (mode 'combobox', mis. Kategori/Role) SEKARANG memakai
+       <app-multi-select> yang punya popup+trigger sendiri (lihat
+       multi-select.component.ts) — bukan lagi text input + popup lokal di
+       sini. Lebar popup-nya otomatis dibatasi ke trigger app-multi-select
+       sendiri (bukan seluruh .search-combo), beda dari versi lama. */
     .search-combo {
       position: relative; display: flex; align-items: stretch; flex: 1.4; min-width: 380px;
       border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff;
       transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
     }
     .search-combo:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
-    .search-combo app-select { flex-shrink: 0; min-width: 170px; }
-    .search-combo app-select ::ng-deep .app-select-control { border: none !important; box-shadow: none !important; background: transparent; }
+    .search-combo > app-select { flex-shrink: 0; min-width: 170px; }
+    .search-combo > app-select ::ng-deep .app-select-control { border: none !important; box-shadow: none !important; background: transparent; }
     .search-combo-divider { width: 1px; margin: 7px 0; background: var(--color-border); flex-shrink: 0; }
     .search-combo .search-input { flex: 1; min-width: 140px; padding: 12px 14px; font-size: .95rem; border: none; background: transparent; font-family: var(--font-body); }
     .search-combo .search-input:focus { outline: none; }
-
-    /* Popup combobox (mode 'combobox') — melebar penuh di bawah seluruh
-       search-combo (select target + input + tombol), bukan cuma di bawah
-       input saja. */
-    .search-combo-popup { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 200; max-height: 260px; overflow-y: auto; }
-    .search-combo-popup button.combo-option { display: block; width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px; border: none; background: none; font-size: .85rem; font-weight: 500; color: var(--color-text); cursor: pointer; }
-    .search-combo-popup button.combo-option:hover { background: var(--color-bg-alt); }
-    .search-combo-popup button.combo-option.active { background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 700; }
-    .search-combo-popup .dropdown-empty { padding: 8px 10px; font-size: .82rem; color: var(--color-muted); margin: 0; }
+    .search-combo > app-multi-select { flex: 1; }
+    .search-combo > app-multi-select ::ng-deep .ms-trigger { border: none; box-shadow: none !important; min-height: 44px; }
 
     /* Baris 2: refresh, adjust column (kiri) — bulk action (kanan). */
     .table-toolbar { display: flex; align-items: center; gap: 8px; }
@@ -150,10 +154,14 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
   count = signal(0);
   selected = new Set<string | number>();
 
-  status = '';
+  /** Multi-select — array kosong = "Semua Status" (tidak ada yang dicentang),
+   *  bukan lagi string tunggal. */
+  status: string[] = [];
   searchTarget = '';
   searchQuery = '';
-  private appliedFilters: Record<string, string> = {};
+  /** Nilai tiap target SELALU array (multi-select untuk mode combobox, array
+   *  1 elemen untuk mode text) — lihat CmsListParams.filters. */
+  private appliedFilters: Record<string, string[]> = {};
   dateFrom = '';
   dateTo = '';
 
@@ -162,7 +170,6 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
 
   adjustColumnOpen = signal(false);
   bulkActionOpen = signal(false);
-  searchComboOpen = signal(false);
   visibleColumns = signal<Set<string>>(new Set());
 
   private comboOptionsCache = new Map<string, CmsComboboxOption[]>();
@@ -170,12 +177,14 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
 
   @ViewChild('adjustColumnWrap') private adjustColumnWrap?: ElementRef<HTMLElement>;
   @ViewChild('bulkActionWrap') private bulkActionWrap?: ElementRef<HTMLElement>;
-  @ViewChild('searchComboWrap') private searchComboWrap?: ElementRef<HTMLElement>;
 
   /** Referensi stabil (bukan dibuat ulang tiap render) supaya dioper sebagai
    *  context ke ng-template proyeksi baris tanpa membuat binding baru tiap siklus CD. */
   isColumnVisible = (key: string): boolean => this.visibleColumns().has(key);
 
+  // Popup Status & combobox (Kategori/Role dst.) sekarang MultiSelectComponent
+  // sendiri yang urus buka/tutup + klik-di-luar (lihat multi-select.component.ts)
+  // — tidak perlu lagi dicek di sini seperti versi single-select lama.
   private onDocumentClick = (event: MouseEvent): void => {
     const target = event.target as Node;
     if (this.adjustColumnOpen() && this.adjustColumnWrap && !this.adjustColumnWrap.nativeElement.contains(target)) {
@@ -183,9 +192,6 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
     }
     if (this.bulkActionOpen() && this.bulkActionWrap && !this.bulkActionWrap.nativeElement.contains(target)) {
       this.bulkActionOpen.set(false);
-    }
-    if (this.searchComboOpen() && this.searchComboWrap && !this.searchComboWrap.nativeElement.contains(target)) {
-      this.searchComboOpen.set(false);
     }
   };
 
@@ -200,7 +206,7 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
   ngOnDestroy(): void { document.removeEventListener('click', this.onDocumentClick, true); }
 
   get hasActiveFilters(): boolean {
-    return Object.keys(this.appliedFilters).length > 0 || !!(this.status || this.dateFrom || this.dateTo)
+    return Object.keys(this.appliedFilters).length > 0 || this.status.length > 0 || !!(this.dateFrom || this.dateTo)
       || this.sortBy !== this.config.defaultSort.sortBy || this.sortDir !== this.config.defaultSort.sortDir;
   }
 
@@ -228,7 +234,7 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
     const params: CmsListParams = {
       page: this.page(), limit: this.config.limit ?? 10,
       sort: this.sortDir === 'desc' ? `-${this.sortBy}` : this.sortBy,
-      status: this.status, dateFrom: this.dateFrom, dateTo: this.dateTo,
+      status: [...this.status], dateFrom: this.dateFrom, dateTo: this.dateTo,
       filters: { ...this.appliedFilters },
     };
     this.dataSource(params).subscribe({
@@ -246,22 +252,28 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
   applySearch(): void {
     const value = this.searchQuery.trim();
     if (!this.searchTarget) return;
-    if (value) this.appliedFilters[this.searchTarget] = value;
+    if (value) this.appliedFilters[this.searchTarget] = [value];
     else delete this.appliedFilters[this.searchTarget];
-    this.searchComboOpen.set(false);
     this.applyFilters();
   }
 
+  /** Nilai yang sudah diterapkan untuk satu target (dipakai binding
+   *  [selected] <app-multi-select> di template — appliedFilters sendiri
+   *  private, tidak bisa diakses langsung dari template). */
+  appliedFilterValues(key: string): string[] { return this.appliedFilters[key] ?? []; }
+
   onSearchTargetChange(v: unknown): void {
     this.searchTarget = (v as string) ?? '';
-    this.searchQuery = this.appliedFilters[this.searchTarget] ?? '';
-    this.searchComboOpen.set(false);
+    this.searchQuery = (this.appliedFilters[this.searchTarget] ?? [])[0] ?? '';
   }
 
-  onSearchFocus(): void {
+  /** Dipanggil lewat (openedChange) <app-multi-select> — lazy-load opsi
+   *  combobox (Kategori/Role dst.) hanya saat popup-nya pertama kali dibuka,
+   *  di-cache per target sesudahnya (sama seperti pola onSearchFocus lama). */
+  onComboOpened(isOpen: boolean): void {
+    if (!isOpen) return;
     const t = this.currentSearchTarget;
     if (!t || t.mode !== 'combobox') return;
-    this.searchComboOpen.set(true);
     if (this.comboOptionsCache.has(t.value)) {
       this.comboOptions.set(this.comboOptionsCache.get(t.value) ?? []);
       return;
@@ -272,44 +284,57 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
     });
   }
 
-  filteredComboOptions(): CmsComboboxOption[] {
-    const q = this.searchQuery.trim().toLowerCase();
-    const opts = this.comboOptions();
-    if (!q) return opts;
-    return opts.filter((o) => o.label.toLowerCase().includes(q));
+  /** Opsi combobox saat ini, dipetakan ke bentuk MultiSelectOption (value =
+   *  id di-stringify — appliedFilters/CmsListParams selalu string, konsisten
+   *  dengan query param backend). */
+  comboOptionsForSelect(): MultiSelectOption[] {
+    return this.comboOptions().map((o) => ({ value: String(o.id), label: o.label }));
   }
 
-  // Beda dari mengetik bebas (baru di-apply lewat Enter/klik kaca pembesar) —
-  // memilih item dari popup daftar itu aksi yang sudah pasti/final, jadi
-  // langsung men-trigger pencarian juga, tidak perlu klik terpisah lagi.
-  pickComboOption(opt: CmsComboboxOption): void {
-    this.searchQuery = opt.label;
-    this.searchComboOpen.set(false);
-    this.applySearch();
+  onComboSelectionChange(values: (string | number)[]): void {
+    if (!this.searchTarget) return;
+    const ids = values.map(String);
+    if (ids.length) this.appliedFilters[this.searchTarget] = ids;
+    else delete this.appliedFilters[this.searchTarget];
+    this.applyFilters();
+  }
+
+  onStatusChange(values: (string | number)[]): void {
+    this.status = values.map(String);
+    this.applyFilters();
+  }
+
+  /** Label tampilan untuk satu nilai (id, distringify) target combobox —
+   *  dicari dari cache opsi target itu (dipetakan saat popup-nya dibuka),
+   *  dipakai activeFilterPills & pill di trigger. */
+  private comboOptionLabel(targetKey: string, idStr: string): string {
+    const cached = this.comboOptionsCache.get(targetKey) ?? [];
+    return cached.find((o) => String(o.id) === idStr)?.label ?? idStr;
   }
 
   get activeFilterPills(): CmsFilterPill[] {
     const pills: CmsFilterPill[] = [];
     for (const t of this.config.searchTargets ?? []) {
-      const v = this.appliedFilters[t.value];
-      if (v) pills.push({ key: t.value, label: `${t.label}: ${v}` });
+      const vals = this.appliedFilters[t.value];
+      if (!vals?.length) continue;
+      const display = t.mode === 'combobox' ? vals.map((id) => this.comboOptionLabel(t.value, id)).join(', ') : vals.join(', ');
+      pills.push({ key: t.value, label: `${t.label}: ${display}` });
     }
-    if (this.status) {
-      const label = this.config.statusOptions?.find((o) => o.value === this.status)?.label ?? this.status;
-      pills.push({ key: '__status', label: `Status: ${label}` });
+    if (this.status.length > 0) {
+      const labels = this.status.map((v) => this.config.statusOptions?.find((o) => String(o.value) === v)?.label ?? v);
+      pills.push({ key: '__status', label: `Status: ${labels.join(', ')}` });
     }
     if (this.dateFrom || this.dateTo) pills.push({ key: '__date', label: `Tanggal: ${this.dateFrom || '…'} → ${this.dateTo || '…'}` });
     return pills;
   }
 
   removeFilter(key: string): void {
-    if (key === '__status') this.status = '';
+    if (key === '__status') this.status = [];
     else if (key === '__date') { this.dateFrom = ''; this.dateTo = ''; }
     else { delete this.appliedFilters[key]; if (this.searchTarget === key) this.searchQuery = ''; }
     this.applyFilters();
   }
 
-  filterStatus(v: unknown): void { this.status = (v as string) ?? ''; this.applyFilters(); }
   onDateRangeChange(r: DateRange): void { this.dateFrom = r.from; this.dateTo = r.to; this.applyFilters(); }
 
   toggleSort(key: string): void {
@@ -319,7 +344,7 @@ export class CmsIndexComponent<T> implements OnInit, OnDestroy {
   }
 
   clearFilters(): void {
-    this.status = ''; this.searchTarget = this.config.searchTargets?.[0]?.value ?? ''; this.searchQuery = '';
+    this.status = []; this.searchTarget = this.config.searchTargets?.[0]?.value ?? ''; this.searchQuery = '';
     this.appliedFilters = {};
     this.dateFrom = ''; this.dateTo = '';
     this.sortBy = this.config.defaultSort.sortBy; this.sortDir = this.config.defaultSort.sortDir;

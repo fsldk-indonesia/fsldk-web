@@ -124,7 +124,7 @@ export interface DateRange { from: string; to: string; }
       font-size: .78rem; font-weight: 500; cursor: pointer; color: var(--color-text); user-select: none;
       transition: background .1s, color .1s;
     }
-    .drp-cell:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    .drp-cell:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); border-radius: 6px; }
     .drp-cell.other-month { color: var(--color-muted); opacity: .4; }
     .drp-cell.today { font-weight: 800; text-decoration: underline; }
     .drp-cell.in-range { background: var(--color-primary-soft); border-radius: 0; }

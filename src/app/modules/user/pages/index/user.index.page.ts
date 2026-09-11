@@ -35,8 +35,9 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
       { icon: 'edit', title: 'Ubah Akun', description: 'Klik ikon pensil untuk mengubah nama, email, role, atau status akun.' },
       { icon: 'trash', title: 'Nonaktifkan & Aksi Massal', description: 'Nonaktifkan satu akun lewat ikon tempat sampah, atau centang beberapa baris lalu pakai <strong>Aksi Massal</strong>.' },
     ],
+    // Tanpa opsi sentinel "Semua Status" — MultiSelectComponent menampilkan
+    // placeholder itu otomatis saat tidak ada yang dicentang.
     statusOptions: [
-      { value: '', label: 'Semua Status' },
       { value: 'active', label: 'Aktif' },
       { value: 'inactive', label: 'Nonaktif' },
     ],

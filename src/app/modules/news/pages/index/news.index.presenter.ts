@@ -16,12 +16,16 @@ export class NewsIndexPresenter extends BasePresenter<NewsIndexView> {
 
   /** dataSource untuk <app-cms-index> — memetakan CmsListParams generik ke
    *  query param news_dto.CMSFilter (filters['title']/['reporter']/['category']
-   *  dipetakan ke search/reporter/category, lihat news.index.page.ts). */
+   *  dipetakan ke search/reporter/category, lihat news.index.page.ts). Status
+   *  & Kategori multi-select (array) digabung comma-separated — backend
+   *  parse lewat dto.ParseCSV/ParseInt64CSV (lihat news_handler_impl.go). */
   list(params: CmsListParams): Observable<Pagination<News>> {
     return this.newsRepo.cmsList({
-      page: params.page, limit: params.limit, sort: params.sort, status: params.status,
+      page: params.page, limit: params.limit, sort: params.sort, status: params.status.join(','),
       dateFrom: params.dateFrom, dateTo: params.dateTo,
-      search: params.filters['title'] ?? '', reporter: params.filters['reporter'] ?? '', category: params.filters['category'] ?? '',
+      search: (params.filters['title'] ?? [])[0] ?? '',
+      reporter: (params.filters['reporter'] ?? [])[0] ?? '',
+      category: (params.filters['category'] ?? []).join(','),
     });
   }
 

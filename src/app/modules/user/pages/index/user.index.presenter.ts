@@ -30,11 +30,15 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
 
   /** dataSource untuk <app-cms-index> — memetakan CmsListParams generik ke
    *  query param user_dto.CMSFilter (filters['name']/['email']/['role']
-   *  dipetakan ke search/email/role, lihat user.index.page.ts). */
+   *  dipetakan ke search/email/role, lihat user.index.page.ts). Status &
+   *  Role multi-select (array) digabung comma-separated — backend parse
+   *  lewat dto.ParseCSV/ParseInt64CSV (lihat user_handler_impl.go). */
   list(params: CmsListParams): Observable<Pagination<UserRow>> {
     return this.userRepo.list({
-      page: params.page, limit: params.limit, sort: params.sort, status: params.status,
-      search: params.filters['name'] ?? '', email: params.filters['email'] ?? '', role: params.filters['role'] ?? '',
+      page: params.page, limit: params.limit, sort: params.sort, status: params.status.join(','),
+      search: (params.filters['name'] ?? [])[0] ?? '',
+      email: (params.filters['email'] ?? [])[0] ?? '',
+      role: (params.filters['role'] ?? []).join(','),
     });
   }
 

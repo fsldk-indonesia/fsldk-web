@@ -23,8 +23,9 @@ function buildArticleIndexConfig(presenter: ArticleIndexPresenter): CmsIndexConf
       { icon: 'eye', title: 'Edit & Publish', description: 'Klik ikon pensil untuk mengedit, atau ikon mata untuk publish/tarik publikasi artikel.' },
       { icon: 'trash', title: 'Hapus & Aksi Massal', description: 'Hapus satu artikel lewat ikon tempat sampah, atau centang beberapa baris lalu pakai <strong>Aksi Massal</strong> untuk hapus massal.' },
     ],
+    // Tanpa opsi sentinel "Semua Status" — MultiSelectComponent menampilkan
+    // placeholder itu otomatis saat tidak ada yang dicentang.
     statusOptions: [
-      { value: '', label: 'Semua Status' },
       { value: 'published', label: 'Published' },
       { value: 'draft', label: 'Draft' },
     ],

@@ -16,12 +16,16 @@ export class ArticleIndexPresenter extends BasePresenter<ArticleIndexView> {
 
   /** dataSource untuk <app-cms-index> — memetakan CmsListParams generik ke
    *  query param article_dto.CMSFilter (filters['title']/['writer']/['category']
-   *  dipetakan ke search/writer/category, lihat article.index.page.ts). */
+   *  dipetakan ke search/writer/category, lihat article.index.page.ts). Status
+   *  & Kategori multi-select (array) digabung comma-separated — backend
+   *  parse lewat dto.ParseCSV/ParseInt64CSV (lihat article_handler_impl.go). */
   list(params: CmsListParams): Observable<Pagination<Article>> {
     return this.articleRepo.cmsList({
-      page: params.page, limit: params.limit, sort: params.sort, status: params.status,
+      page: params.page, limit: params.limit, sort: params.sort, status: params.status.join(','),
       dateFrom: params.dateFrom, dateTo: params.dateTo,
-      search: params.filters['title'] ?? '', writer: params.filters['writer'] ?? '', category: params.filters['category'] ?? '',
+      search: (params.filters['title'] ?? [])[0] ?? '',
+      writer: (params.filters['writer'] ?? [])[0] ?? '',
+      category: (params.filters['category'] ?? []).join(','),
     });
   }
 

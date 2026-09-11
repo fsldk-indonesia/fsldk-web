@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { SelectOption } from '../select.component';
+import { MultiSelectOption } from '../multi-select.component';
 
 /** Satu kartu panduan di atas tabel — lihat guide-grid di CmsIndexComponent. */
 export interface CmsGuideCard {
@@ -36,10 +36,11 @@ export interface CmsSearchTargetDef {
   /** Dikirim sebagai kunci di CmsListParams.filters. */
   value: string;
   label: string;
-  /** 'text' (default) = kotak isian bebas, trigger via Enter/klik kaca pembesar.
-   *  'combobox' = popup daftar pilihan (loadOptions) yang ikut ter-filter sambil
-   *  mengetik, klik satu opsi langsung menerapkan filter (lihat modul Berita —
-   *  kolom Kategori memakai mode ini karena kategori itu master data tetap). */
+  /** 'text' (default) = kotak isian bebas, trigger via Enter/klik kaca pembesar,
+   *  SATU nilai. 'combobox' = MultiSelectComponent (checkbox + Terapkan) berisi
+   *  daftar pilihan (loadOptions), BISA PILIH LEBIH DARI SATU (lihat modul
+   *  Berita — kolom Kategori memakai mode ini karena kategori itu master data
+   *  tetap, cocok dicocokkan by ID, bukan LIKE-nama). */
   mode?: CmsSearchTargetMode;
   loadOptions?: () => Observable<CmsComboboxOption[]>;
 }
@@ -52,16 +53,19 @@ export interface CmsSortState {
 /** Parameter yang dikirim ke `dataSource` tiap kali filter/sort/halaman berubah.
  *  `filters` cuma berisi entry untuk target yang SEDANG di-Apply (key = salah
  *  satu CmsSearchTargetDef.value) — konsumen memetakan ini ke query param
- *  repository-nya sendiri (lihat NewsIndexPage.toListParams sebagai contoh). */
+ *  repository-nya sendiri (lihat NewsIndexPage.toListParams sebagai contoh).
+ *  `status` dan tiap entry `filters` berupa ARRAY (multi-select) — target
+ *  mode 'text' selalu berisi array 1 elemen saat diterapkan; konsumen tinggal
+ *  `.join(',')` untuk query param comma-separated (lihat backend CMSFilter). */
 export interface CmsListParams {
   page: number;
   limit: number;
   /** Format sama seperti konvensi backend yang sudah ada: `-key` utk desc, `key` utk asc. */
   sort: string;
-  status: string;
+  status: string[];
   dateFrom: string;
   dateTo: string;
-  filters: Record<string, string>;
+  filters: Record<string, string[]>;
 }
 
 /** Konfigurasi satu halaman index CMS — dioper sebagai satu object ke
@@ -72,8 +76,12 @@ export interface CmsIndexConfig<T> {
   /** Dipakai di teks konfirmasi hapus/bulk-delete bawaan komponen, mis. "berita". */
   entityLabel: string;
   guideCards?: CmsGuideCard[];
-  /** Kosongkan (undefined) untuk menyembunyikan filter Status sepenuhnya. */
-  statusOptions?: SelectOption[];
+  /** Kosongkan (undefined) untuk menyembunyikan filter Status sepenuhnya. Ini
+   *  daftar checkbox MultiSelectComponent — JANGAN sertakan opsi sentinel
+   *  seperti {value:'', label:'Semua Status'}, "semua" direpresentasikan
+   *  sebagai TIDAK ADA yang dicentang (placeholder "Semua Status" otomatis
+   *  tampil di trigger saat kosong, lihat CmsIndexComponent). */
+  statusOptions?: MultiSelectOption[];
   /** Kosongkan untuk menyembunyikan search-combo (target kolom + input) sepenuhnya. */
   searchTargets?: CmsSearchTargetDef[];
   showDateRange?: boolean;
