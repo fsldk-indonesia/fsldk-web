@@ -50,23 +50,31 @@
       <div class="form-section-group">
         <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="shield-check" [size]="13" /></span>Peran & Akses</p>
         <div class="form-group"><label class="form-label">Role</label>
-          <app-select [(ngModel)]="form.roleID" [options]="roleOptions()" [disabled]="isReadonly" placeholder="Pilih role" />
+          <app-select [ngModel]="form.roleID" (ngModelChange)="onRoleChange($event)" [options]="roleOptions()" [disabled]="isReadonly" placeholder="Pilih role" />
         </div>
         @if (showOrganizationPicker()) {
-          <div class="form-group"><label class="form-label">LDK</label>
-            <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" placeholder="Pilih LDK" />
-            <p class="form-hint">Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.</p>
+          <div class="collapse" [class.open]="!isPengunjungRole">
+            <div class="collapse-inner">
+              <div class="form-group"><label class="form-label">LDK</label>
+                <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" placeholder="Pilih LDK" />
+                <p class="form-hint">Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.</p>
+              </div>
+            </div>
           </div>
         }
         @if (isFreeTierCaller()) {
-          <div class="form-group">
-            <label class="form-label">Akses Lintas Tier (opsional)</label>
-            <div class="wildcard-tiers">
-              @for (tier of wildcardTiers; track tier) {
-                <label class="form-check">
-                  <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" [disabled]="isReadonly" (change)="toggleWildcardTier(tier)"> {{ tier }}
-                </label>
-              }
+          <div class="collapse" [class.open]="!isPengunjungRole">
+            <div class="collapse-inner">
+              <div class="form-group">
+                <label class="form-label">Akses Lintas Tier (opsional)</label>
+                <div class="wildcard-tiers">
+                  @for (tier of wildcardTiers; track tier) {
+                    <label class="form-check">
+                      <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" [disabled]="isReadonly" (change)="toggleWildcardTier(tier)"> {{ tier }}
+                    </label>
+                  }
+                </div>
+              </div>
             </div>
           </div>
         }

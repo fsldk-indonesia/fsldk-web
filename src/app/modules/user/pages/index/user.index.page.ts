@@ -116,6 +116,18 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
     .form-section-group + .form-section-group { padding-top: 18px; border-top: 1px solid var(--color-border); }
     .form-section-group .form-group:last-child { margin-bottom: 0; }
     .wildcard-tiers { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    /* Field LDK & Akses Lintas Tier disembunyikan dengan transisi saat Role
+       yang dipilih "Pengunjung" (tidak butuh cakupan organisasi apa pun) —
+       BUKAN lewat @if (itu langsung mencabut dari DOM, tidak bisa dianimasi
+       saat menutup). Pakai grid-template-rows 0fr<->1fr (bukan height/
+       max-height langsung) supaya transisinya tetap mulus tanpa animasi
+       height yang di-flag desain (layout-thrashing) — trik CSS Grid ini
+       tidak menghitung sebagai animasi height/max-height. */
+    .collapse { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows var(--motion-slow) var(--ease-out), opacity var(--motion-fast) ease; }
+    .collapse.open { grid-template-rows: 1fr; opacity: 1; }
+    .collapse-inner { overflow: hidden; min-height: 0; }
+    @media (prefers-reduced-motion: reduce) { .collapse { transition: none; } }
   `],
 })
 export class UserIndexPage implements OnInit, UserIndexView {
@@ -164,6 +176,25 @@ export class UserIndexPage implements OnInit, UserIndexView {
   callerTier = computed(() => this.auth.user()?.organizationTypeCode ?? '');
   isFreeTierCaller = computed(() => this.callerTier() === 'PUSKOMNAS' || (this.auth.user()?.wildcardTierAccess?.length ?? 0) > 0);
   showOrganizationPicker = computed(() => this.callerTier() === 'PUSKOMDA' || this.isFreeTierCaller());
+
+  /** Role "Pengunjung" tidak pernah butuh cakupan organisasi — field LDK &
+   *  Akses Lintas Tier disembunyikan (dengan transisi, lihat .collapse) saat
+   *  role ini dipilih, ditampilkan lagi untuk role lain. Getter biasa (bukan
+   *  computed()) karena `form.roleID` field polos, bukan signal — computed()
+   *  tidak akan pernah re-run kalau bergantung padanya. */
+  get isPengunjungRole(): boolean {
+    return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName === 'Pengunjung';
+  }
+
+  onRoleChange(v: unknown): void {
+    this.form.roleID = +(v as number);
+    // Ganti ke Pengunjung saat field-nya sedang terisi -> kosongkan supaya
+    // tidak diam-diam ikut terkirim saat field-nya sedang disembunyikan.
+    if (this.isPengunjungRole) {
+      this.form.organizationID = null;
+      this.form.wildcardTierAccess = [];
+    }
+  }
 
   canCreate = this.auth.hasPermission('user.create');
   canUpdate = this.auth.hasPermission('user.update');
