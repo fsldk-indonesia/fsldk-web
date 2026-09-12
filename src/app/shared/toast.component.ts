@@ -32,6 +32,15 @@ const BORDER_BY_TYPE: Record<Toast['type'], string> = {
   info: 'toast-border-info',
   warning: 'toast-border-warning',
 };
+/** Siluet ikon besar & pudar di ruang kosong kanan kartu — mengisi area yang
+ *  sebelumnya kosong sekaligus menegaskan jenis toast tanpa mengulang warna
+ *  baru (dipetakan ke token warna yang sama seperti border/progress-nya). */
+const SILHOUETTE_BY_TYPE: Record<Toast['type'], string> = {
+  success: 'toast-silhouette-success',
+  error: 'toast-silhouette-danger',
+  info: 'toast-silhouette-info',
+  warning: 'toast-silhouette-warning',
+};
 /** Judul singkat per jenis — ToastService.success()/dst. cuma menerima satu
  *  string pesan (dipakai ~40+ tempat di seluruh app), jadi judul tebal tidak
  *  diminta per-panggilan; diturunkan otomatis dari jenisnya, pesan yang
@@ -68,6 +77,7 @@ const TITLE_BY_TYPE: Record<Toast['type'], string> = {
         <div class="toast-item" [class.closing]="toast.closingIds().has(t.id)">
           <div class="toast-item-inner">
             <div class="toast" [class]="'toast ' + borderFor(t.type)" (click)="toast.dismiss(t.id)">
+              <app-icon [name]="iconFor(t.type)" [size]="88" [class]="'toast-silhouette ' + silhouetteFor(t.type)" />
               <span class="icon-badge md" [class]="'icon-badge md ' + badgeFor(t.type)"><app-icon [name]="iconFor(t.type)" [size]="18" /></span>
               <div class="toast-text">
                 <p class="toast-title">{{ titleFor(t.type) }}</p>
@@ -114,7 +124,18 @@ const TITLE_BY_TYPE: Record<Toast['type'], string> = {
     .toast-border-info { border-color: var(--color-info); }
     .toast-border-warning { border-color: var(--color-gold-dark); }
 
-    .toast-text { flex: 1; min-width: 0; }
+    /* Siluet ikon besar & pudar mengisi ruang kosong di kanan kartu, sebagian
+       "bleed" keluar tepi (di-crop oleh overflow:hidden .toast) — murni
+       dekoratif (pointer-events:none), diletakkan DI BELAKANG badge/teks/
+       tombol tutup (z-index 0 vs 1) supaya tidak pernah menutupi konten. */
+    .toast-silhouette { position: absolute; top: 50%; right: -14px; transform: translateY(-50%); z-index: 0; opacity: .07; pointer-events: none; }
+    .toast-silhouette-success { color: var(--color-primary); }
+    .toast-silhouette-danger { color: var(--color-danger); }
+    .toast-silhouette-info { color: var(--color-info); }
+    .toast-silhouette-warning { color: var(--color-gold-dark); }
+
+    .icon-badge.md { position: relative; z-index: 1; }
+    .toast-text { position: relative; z-index: 1; flex: 1; min-width: 0; }
     .toast-title { margin: 0 0 2px; font-family: var(--font-heading, inherit); font-weight: 700; font-size: .95rem; color: var(--color-text); }
     .toast-desc { margin: 0; font-family: var(--font-body, inherit); font-weight: 500; font-size: .86rem; line-height: 1.5; color: var(--color-text-secondary); }
 
@@ -181,6 +202,7 @@ export class ToastComponent implements OnInit, OnDestroy {
   badgeFor(type: Toast['type']): string { return BADGE_BY_TYPE[type]; }
   progressFor(type: Toast['type']): string { return PROGRESS_BY_TYPE[type]; }
   borderFor(type: Toast['type']): string { return BORDER_BY_TYPE[type]; }
+  silhouetteFor(type: Toast['type']): string { return SILHOUETTE_BY_TYPE[type]; }
   titleFor(type: Toast['type']): string { return TITLE_BY_TYPE[type]; }
 
   onCloseClick(event: Event, id: number): void {
