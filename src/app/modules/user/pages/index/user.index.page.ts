@@ -112,15 +112,16 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
 
     .modal > h3 { flex-shrink: 0; margin-bottom: 2px; }
     .modal > p.text-muted { flex-shrink: 0; margin: 0 0 18px; font-size: .85rem; }
-    /* Inset shadow tipis atas-bawah — penanda area ini scroll tersendiri,
-       supaya konten yang terpotong scroll di tepi modal tidak terasa
-       "nabrak" langsung ke judul/footer (pola sama seperti .perm-list di
-       popup Role Pengguna, di sini tanpa tint background karena field
-       form-nya sudah putih polos, cukup shadow-nya saja). */
+    /* Container scroll modal ini SEKALIGUS panel abu-abu (background tint +
+       inset shadow atas-bawah) — pola sama persis seperti .perm-list di
+       popup Role Pengguna: tint & shadow menandai "area ini scroll
+       tersendiri", field tiap section (dibungkus .field-card putih)
+       kontras di atasnya, sama seperti kartu modul (.perm-mod) di atas
+       .perm-list. */
     .modal-body {
-      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 18px;
-      border-radius: var(--radius-xs);
-      box-shadow: inset 0 8px 10px -8px rgba(20,23,26,.1), inset 0 -8px 10px -8px rgba(20,23,26,.1);
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 18px;
+      border-radius: var(--radius-xs); background: var(--color-bg-alt);
+      box-shadow: inset 0 8px 10px -8px rgba(20,23,26,.14), inset 0 -8px 10px -8px rgba(20,23,26,.14);
     }
     /* Batal & Simpan berdampingan di kanan (bukan justify-between kiri-kanan)
        — sama seperti .form-actions Berita/Artikel. */
@@ -135,9 +136,14 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
       font-family: var(--font-heading); font-weight: 700; font-size: .72rem;
       letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary-dark);
     }
-    .form-section-group + .form-section-group { padding-top: 18px; border-top: 1px solid var(--color-border); }
-    .form-section-group .form-group:last-child { margin-bottom: 0; }
     .wildcard-tiers { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    /* SATU card putih per section (judul + semua field-nya jadi satu) —
+       gaya sama seperti .perm-mod (kartu modul) di popup Role Pengguna,
+       kontras di atas .modal-body yang abu-abu. */
+    .field-card { display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card .form-group { margin-bottom: 0; }
+    .field-card .form-section-label { margin: 0; }
 
     /* Field LDK & Akses Lintas Tier disembunyikan dengan transisi saat Role
        yang dipilih "Pengunjung" (tidak butuh cakupan organisasi apa pun) —

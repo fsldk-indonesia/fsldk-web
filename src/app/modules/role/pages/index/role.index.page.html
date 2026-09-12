@@ -69,18 +69,22 @@
     <div class="modal-columns">
       <div class="modal-col-left">
         <div class="form-section-group">
-          <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="shield-check" [size]="13" /></span>Informasi Role</p>
-          <div class="form-group">
-            <label class="form-label">Nama Role</label>
-            <input class="form-control" [(ngModel)]="form.roleName" [disabled]="isReadonly || editingSystemRole">
-            @if (!isReadonly && editingSystemRole) { <small class="text-muted">Nama role bawaan sistem tidak dapat diubah.</small> }
+          <div class="field-card">
+            <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="shield-check" [size]="13" /></span>Informasi Role</p>
+            <div class="form-group">
+              <label class="form-label">Nama Role</label>
+              <input class="form-control" [(ngModel)]="form.roleName" [disabled]="isReadonly || editingSystemRole">
+              @if (!isReadonly && editingSystemRole) { <small class="text-muted">Nama role bawaan sistem tidak dapat diubah.</small> }
+            </div>
+            <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="4" [(ngModel)]="form.roleDescription" [disabled]="isReadonly"></textarea></div>
           </div>
-          <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="4" [(ngModel)]="form.roleDescription" [disabled]="isReadonly"></textarea></div>
         </div>
         @if (editId) {
           <div class="form-section-group">
-            <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="check-circle" [size]="13" /></span>Status</p>
-            <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive" [disabled]="isReadonly"> Aktif</label></div>
+            <div class="field-card">
+              <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="check-circle" [size]="13" /></span>Status</p>
+              <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive" [disabled]="isReadonly"> Aktif</label></div>
+            </div>
           </div>
         }
       </div>

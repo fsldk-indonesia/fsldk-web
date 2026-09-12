@@ -87,21 +87,31 @@ import { RoleIndexView } from './role.index.view';
     .modal-close:hover { background: var(--color-bg-alt); color: var(--color-text); }
 
     .modal-columns { display: flex; gap: 28px; flex: 1 1 auto; min-height: 0; margin-top: 18px; }
-    /* overflow-y sendiri (bukan cuma flex-column tanpa batas) — tanpa ini,
-       kalau section Informasi Role + Status lebih tinggi dari ruang yang
-       ada, isinya meluber lewat batas modal alih-alih di-scroll di dalam
-       kolomnya sendiri (kelihatan "nabrak" ke footer). Kolom kanan sudah
-       aman lewat overflow-y:auto di .perm-list, kolom kiri sekarang sama. */
-    .modal-col-left { width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; min-height: 0; padding-right: 4px; }
+    /* Kolom kiri SEKALIGUS panel abu-abu (background tint + inset shadow
+       atas-bawah) — pola sama persis seperti .perm-list di kolom kanan:
+       tint & shadow menandai "area ini scroll tersendiri" (overflow-y:auto),
+       field & judul section (dibungkus .field-card putih masing-masing)
+       kontras di atasnya, sama seperti kartu modul (.perm-mod) di atas
+       .perm-list. */
+    .modal-col-left {
+      width: 260px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; min-height: 0;
+      padding: 12px; border-radius: var(--radius-xs); background: var(--color-bg-alt);
+      box-shadow: inset 0 8px 10px -8px rgba(20,23,26,.14), inset 0 -8px 10px -8px rgba(20,23,26,.14);
+    }
     .modal-col-right { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; border-left: 1px solid var(--color-border); padding-left: 28px; }
     /* Header per-kelompok field — sama pola form-section-label Pengguna/
-       Berita (icon-badge + label uppercase), tanpa dibungkus .card lagi. */
+       Berita (icon-badge + label uppercase), sekarang masuk ke dalam card
+       putihnya sendiri (lihat .field-card di bawah), bukan teks lepas di
+       atas .modal-col-left yang abu-abu. */
     .form-section-label {
-      display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+      display: flex; align-items: center; gap: 8px; margin: 0;
       font-family: var(--font-heading); font-weight: 700; font-size: .72rem;
       letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary-dark);
     }
-    .form-section-group + .form-section-group { padding-top: 18px; border-top: 1px solid var(--color-border); }
+    /* SATU card putih per section (judul + semua field-nya jadi satu) —
+       gaya sama seperti .perm-mod (kartu modul) di kolom kanan. */
+    .field-card { display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card .form-group { margin-bottom: 0; }
     /* Panel "sumur" (background tint + inset shadow atas-bawah) — dulu
        .perm-list cuma daftar polos tanpa batas, jadi kartu modul yang
        terpotong scroll di tepi atas/bawah terasa "nabrak" langsung ke

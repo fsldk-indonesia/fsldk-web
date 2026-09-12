@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ShortlinkRepository } from '../../repositories/shortlink.repository';
+import { ShortLink } from '../../entities/shortlink';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { ShortlinkIndexView } from './shortlink.index.view';
 
 export interface ShortlinkFormValue {
@@ -14,10 +18,16 @@ export class ShortlinkIndexPresenter extends BasePresenter<ShortlinkIndexView> {
   private shortlinkRepo = inject(ShortlinkRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, search: string): void {
-    this.shortlinkRepo.list({ page, limit, search }).subscribe({
-      next: (p) => this.view.setShortlinks(p.data, p.count),
-      error: () => {},
+  /** dataSource untuk <app-cms-index> — shortlink_dto.ListFilter cuma
+   *  punya satu kolom pencarian gabungan (shortKey ATAU destinationURL,
+   *  lihat shortlink_repository_impl.go), jadi searchTargets di config
+   *  cuma satu target "search" yang dipetakan langsung ke situ. Tidak ada
+   *  konsep Status di modul ini (bukan approval queue). */
+  list(params: CmsListParams): Observable<Pagination<ShortLink>> {
+    return this.shortlinkRepo.list({
+      page: params.page, limit: params.limit, sort: params.sort,
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      dateFrom: params.dateFrom, dateTo: params.dateTo,
     });
   }
 
@@ -42,6 +52,13 @@ export class ShortlinkIndexPresenter extends BasePresenter<ShortlinkIndexView> {
     this.shortlinkRepo.remove(id).subscribe({
       next: () => { this.toast.success('Shortlink dihapus'); this.view.onRemoveSuccess(); this.view.onActionSettled(id); },
       error: () => this.view.onActionSettled(id),
+    });
+  }
+
+  bulkDelete(ids: number[]): void {
+    this.shortlinkRepo.bulkDelete(ids).subscribe({
+      next: () => { this.toast.success(`${ids.length} shortlink terpilih dihapus`); this.view.onBulkDeleteSuccess(); },
+      error: () => {},
     });
   }
 }

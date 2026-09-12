@@ -14,6 +14,7 @@ export class ShortlinkApiService {
   create(body: { destinationURL: string; shortKey?: string }): Observable<ShortLink> { return this.api.post('/shortlinks', body); }
   update(id: number, body: { destinationURL: string; shortKey: string }): Observable<ShortLink> { return this.api.put(`/shortlinks/${id}`, body); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/shortlinks/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/shortlinks/bulk-delete', { ids }); }
 
   /** Resolusi publik (tanpa auth) — dipakai halaman redirect catch-all /:key. */
   resolve(key: string): Observable<{ destinationURL: string }> { return this.api.get(`/public/shortlinks/${key}`); }
