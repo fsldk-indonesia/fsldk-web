@@ -20,4 +20,5 @@ export class ScheduleApiService {
   update(id: number, body: unknown): Observable<Schedule> { return this.api.put(`/schedules/${id}`, body); }
   publish(id: number, isActive: boolean): Observable<unknown> { return this.api.patch(`/schedules/${id}/publish`, { isActive }); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/schedules/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/schedules/bulk-delete', { ids }); }
 }

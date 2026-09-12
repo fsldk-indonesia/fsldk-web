@@ -29,4 +29,15 @@ export const scheduleCmsRoutes: () => Routes = () => [
     title: 'Edit Jadwal',
     loadComponent: () => import('./pages/form/schedule.form.page').then((m) => m.ScheduleFormPage),
   },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // ScheduleIndexPage) — pola sama seperti Berita/Event/Perpustakaan.
+    path: 'schedules/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'schedule.view', viewOnly: true },
+    title: 'Detail Jadwal',
+    loadComponent: () => import('./pages/form/schedule.form.page').then((m) => m.ScheduleFormPage),
+  },
 ];
