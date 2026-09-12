@@ -1,7 +1,8 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { environment } from '../../../../../environments/environment';
 import { StructureRepository } from '../../repositories/structure.repository';
+import { Structure } from '../../entities/structure';
 import { IconComponent } from '../../../../shared/icon.component';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -20,19 +21,19 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           </p>
         </div>
 
-        @if (repo.loading()) {
+        @if (loading()) {
           <div class="empty-state">
             <div class="spinner"></div>
             <p>Memuat data struktur...</p>
           </div>
-        } @else if (repo.error()) {
+        } @else if (error()) {
           <div class="empty-state">
             <div class="empty-icon text-danger"><app-icon name="alert-triangle" [size]="48" /></div>
             <h3>Terjadi Kesalahan</h3>
-            <p>{{ repo.error() }}</p>
+            <p>{{ error() }}</p>
             <button class="btn btn-outline mt-md" (click)="loadData()">Coba Lagi</button>
           </div>
-        } @else if (repo.publicStructures().length === 0) {
+        } @else if (items().length === 0) {
           <div class="empty-state">
             <div class="empty-icon"><app-icon name="sitemap" [size]="48" /></div>
             <h3>Belum ada data struktur</h3>
@@ -40,7 +41,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
           </div>
         } @else {
           <div class="structure-list">
-            @for (s of repo.publicStructures(); track s.structureID; let first = $first) {
+            @for (s of items(); track s.structureID; let first = $first) {
               <div class="structure-card">
                 <div class="structure-card-body">
                   <div class="structure-card-logo">
@@ -155,9 +156,13 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   `]
 })
 export class StructurePublicIndexPage implements OnInit {
-  repo = inject(StructureRepository);
+  private repo = inject(StructureRepository);
   private title = inject(Title);
   private sanitizer = inject(DomSanitizer);
+
+  items = signal<Structure[]>([]);
+  loading = signal(true);
+  error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.title.setTitle('Struktur Organisasi - FSLDK Indonesia');
@@ -165,7 +170,12 @@ export class StructurePublicIndexPage implements OnInit {
   }
 
   loadData(): void {
-    this.repo.loadPublic();
+    this.loading.set(true);
+    this.error.set(null);
+    this.repo.listPublic().subscribe({
+      next: (data) => { this.items.set(data); this.loading.set(false); },
+      error: (err) => { this.error.set(err.error?.message || 'Gagal memuat data struktur'); this.loading.set(false); },
+    });
   }
 
   imgUrl(path: string): string {

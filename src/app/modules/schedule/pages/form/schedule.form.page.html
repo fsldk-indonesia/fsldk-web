@@ -18,16 +18,16 @@
     <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="calendar-days" [size]="14" /></span>Waktu Pelaksanaan</p>
     <div class="grid grid-2">
       <div class="form-group"><label class="form-label">Tanggal Mulai</label>
-        <input class="form-control" type="date" [(ngModel)]="form.startDate" [disabled]="isReadonly"></div>
+        <app-datetime-picker [showTime]="false" [(ngModel)]="form.startDate" [disabled]="isReadonly" placeholder="Pilih tanggal mulai…" /></div>
       <div class="form-group"><label class="form-label">Tanggal Selesai <span class="text-muted" style="font-weight:400">(opsional)</span></label>
-        <input class="form-control" type="date" [(ngModel)]="form.endDate" [min]="form.startDate" [disabled]="isReadonly"></div>
+        <app-datetime-picker [showTime]="false" [(ngModel)]="form.endDate" [disabled]="isReadonly" placeholder="Pilih tanggal selesai…" /></div>
     </div>
     <label class="allday-row"><input type="checkbox" [(ngModel)]="form.isAllDay" [disabled]="isReadonly" (ngModelChange)="onAllDayChange()"> <span>Sepanjang hari</span></label>
     <div class="grid grid-2">
       <div class="form-group"><label class="form-label">Jam Mulai</label>
-        <input class="form-control" type="time" step="300" [(ngModel)]="form.startTime" [disabled]="isReadonly || form.isAllDay"></div>
+        <app-datetime-picker [timeOnly]="true" [(ngModel)]="form.startTime" [disabled]="isReadonly || form.isAllDay" placeholder="Pilih jam mulai…" /></div>
       <div class="form-group"><label class="form-label">Jam Selesai <span class="text-muted" style="font-weight:400">(opsional)</span></label>
-        <input class="form-control" type="time" step="300" [(ngModel)]="form.endTime" [disabled]="isReadonly || form.isAllDay"></div>
+        <app-datetime-picker [timeOnly]="true" [(ngModel)]="form.endTime" [disabled]="isReadonly || form.isAllDay" placeholder="Pilih jam selesai…" /></div>
     </div>
   </section>
 

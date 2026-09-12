@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/icon.component';
+import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { SelectComponent } from '../../../../shared/select.component';
 import { SCHEDULE_CATEGORIES, toISODate } from '../../schedule.constants';
 import { ScheduleFormPresenter, ScheduleFormValue, emptyScheduleForm } from './schedule.form.presenter';
@@ -11,7 +12,7 @@ import { ScheduleFormView } from './schedule.form.view';
   selector: 'app-schedule-form-page',
   standalone: true,
   templateUrl: './schedule.form.page.html',
-  imports: [FormsModule, RouterLink, IconComponent, SelectComponent],
+  imports: [FormsModule, RouterLink, IconComponent, DateTimePickerComponent, SelectComponent],
   providers: [ScheduleFormPresenter],
   styles: [`
     .page-head { margin: 0 0 24px; }

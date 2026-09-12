@@ -1,0 +1,48 @@
+<div class="page-head">
+  <h1>{{ isReadonly ? 'Detail Struktur' : (editId ? 'Ubah Struktur' : 'Tambah Struktur') }}</h1>
+  <p class="text-muted">{{ pageSubtitle }}</p>
+</div>
+
+<div class="form-card">
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span>Informasi Kepengurusan</p>
+    <div class="form-group"><label class="form-label">Nama Kepengurusan</label>
+      <input class="form-control form-control-lg" [(ngModel)]="form.structureName" [disabled]="isReadonly" placeholder="Contoh: Kabinet Al-Fatih"></div>
+    <div class="grid grid-2">
+      <div class="form-group"><label class="form-label">Angkatan</label>
+        <input class="form-control" [(ngModel)]="form.batch" [disabled]="isReadonly" placeholder="Contoh: Ke-32 atau XXXII"></div>
+      <div class="form-group"><label class="form-label">Periode</label>
+        <input class="form-control" [(ngModel)]="form.period" [disabled]="isReadonly" placeholder="Contoh: 2025/2026"></div>
+    </div>
+  </section>
+
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="sitemap" [size]="14" /></span>Logo &amp; Bagan Organisasi</p>
+    <div class="grid grid-2">
+      <div class="form-group">
+        <label class="form-label">Logo Kepengurusan</label>
+        <app-image-upload [(value)]="form.logoImage" [disabled]="isReadonly" />
+        <p class="form-hint">Format JPG/PNG/WebP, rasio 1:1 direkomendasikan. Maks 2MB.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bagan Struktur</label>
+        <app-image-upload [(value)]="form.structureImage" [disabled]="isReadonly" />
+        <p class="form-hint">Gambar hierarki struktur organisasi. Maks 5MB.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card card-pad form-section-card">
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="book-open" [size]="14" /></span>Deskripsi &amp; Profil</p>
+    <div class="form-group"><app-rich-text-editor [(value)]="form.structureDescription" [disabled]="isReadonly" /></div>
+  </section>
+
+  <div class="form-actions">
+    <a routerLink="/cms/structures" class="btn btn-ghost">Batal</a>
+    @if (!isReadonly) {
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+        @if (saving()) { <span class="spinner"></span> } @else { {{ editId ? 'Simpan Perubahan' : 'Simpan Struktur' }} }
+      </button>
+    }
+  </div>
+</div>
