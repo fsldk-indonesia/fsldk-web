@@ -27,4 +27,5 @@ export class CatalogBookApiService {
   update(id: number, body: unknown): Observable<CatalogBook> { return this.api.put(`/catalog-books/${id}`, body); }
   publish(id: number, isActive: boolean): Observable<unknown> { return this.api.patch(`/catalog-books/${id}/publish`, { isActive }); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/catalog-books/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/catalog-books/bulk-delete', { ids }); }
 }
