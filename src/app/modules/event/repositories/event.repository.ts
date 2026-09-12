@@ -16,4 +16,5 @@ export class EventRepository {
   create(body: unknown): Observable<Event> { return this.api.create(body); }
   update(id: number, body: unknown): Observable<Event> { return this.api.update(id, body); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
 }

@@ -17,4 +17,5 @@ export class EventApiService {
   create(body: unknown): Observable<Event> { return this.api.post('/events', body); }
   update(id: number, body: unknown): Observable<Event> { return this.api.put(`/events/${id}`, body); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/events/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/events/bulk-delete', { ids }); }
 }

@@ -30,4 +30,15 @@ export const eventCmsRoutes: () => Routes = () => [
     title: 'Edit Event',
     loadComponent: () => import('./pages/form/event.form.page').then((m) => m.EventFormPage),
   },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // EventIndexPage), bukan cuma dari ikon Edit — pola sama seperti Berita.
+    path: 'events/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'event.view', viewOnly: true },
+    title: 'Detail Event',
+    loadComponent: () => import('./pages/form/event.form.page').then((m) => m.EventFormPage),
+  },
 ];
