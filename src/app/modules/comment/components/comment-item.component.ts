@@ -11,6 +11,7 @@ import { REACTIONS } from '../comment.constants';
 import { MentionHighlightPipe } from '../mention-highlight.pipe';
 import { GifPickerComponent } from './gif-picker.component';
 import { MentionTextareaComponent } from './mention-textarea.component';
+import { IconComponent } from '../../../shared/icon.component';
 
 /**
  * Satu komentar + rekursi balasannya (maks 1 level — tidak bisa membalas
@@ -27,7 +28,7 @@ import { MentionTextareaComponent } from './mention-textarea.component';
 @Component({
   selector: 'app-comment-item',
   standalone: true,
-  imports: [FormsModule, DatePipe, GifPickerComponent, CommentItemComponent, MentionTextareaComponent, MentionHighlightPipe],
+  imports: [FormsModule, DatePipe, GifPickerComponent, CommentItemComponent, MentionTextareaComponent, MentionHighlightPipe, IconComponent],
   template: `
     <div class="cmt" [class.cmt-nested]="level > 0">
       <div class="cmt-avatar">
@@ -47,9 +48,9 @@ import { MentionTextareaComponent } from './mention-textarea.component';
           @if (comment.commentText) { <p class="cmt-text" [innerHTML]="comment.commentText | mentionHighlight:comment.mentions"></p> }
           @if (comment.mediaURL) { <img class="cmt-media" [src]="comment.mediaURL" [alt]="comment.mediaType"> }
 
-          <div class="cmt-actions">
-            <span class="cmt-react-trigger" #reactWrap (click)="toggleReactionPicker()">
-              React
+          <div class="cmt-actions" [class.cmt-actions-icon]="iconActions">
+            <span class="cmt-react-trigger" [class.icon-action]="iconActions" #reactWrap (click)="toggleReactionPicker()" [title]="iconActions ? 'React' : null">
+              @if (iconActions) { <app-icon name="smile" [size]="14" /> } @else { React }
               @if (reactionPickerOpen()) {
                 <div class="cmt-reaction-picker" (click)="$event.stopPropagation()">
                   @for (r of reactions; track r.type) {
@@ -58,9 +59,21 @@ import { MentionTextareaComponent } from './mention-textarea.component';
                 </div>
               }
             </span>
-            @if (canReply) { <span class="link-action" (click)="openReply()">Balas</span> }
-            @if (canEdit) { <span class="link-action" (click)="openEdit()">Edit</span> }
-            @if (canDelete) { <span class="link-danger" (click)="remove($event)">Hapus</span> }
+            @if (canReply) {
+              <span [class]="iconActions ? 'icon-action' : 'link-action'" (click)="openReply()" [title]="iconActions ? 'Balas' : null">
+                @if (iconActions) { <app-icon name="reply" [size]="14" /> } @else { Balas }
+              </span>
+            }
+            @if (canEdit) {
+              <span [class]="iconActions ? 'icon-action' : 'link-action'" (click)="openEdit()" [title]="iconActions ? 'Edit' : null">
+                @if (iconActions) { <app-icon name="edit" [size]="14" /> } @else { Edit }
+              </span>
+            }
+            @if (canDelete) {
+              <span [class]="iconActions ? 'icon-action danger' : 'link-danger'" (click)="remove($event)" [title]="iconActions ? 'Hapus' : null">
+                @if (iconActions) { <app-icon name="trash" [size]="14" /> } @else { Hapus }
+              </span>
+            }
           </div>
 
           @if (activeReactionTypes().length) {
@@ -119,7 +132,7 @@ import { MentionTextareaComponent } from './mention-textarea.component';
         @if (comment.replies.length) {
           <div class="cmt-replies">
             @for (r of comment.replies; track r.commentID) {
-              <app-comment-item [comment]="r" [level]="level + 1" (removed)="onReplyRemoved($event)" />
+              <app-comment-item [comment]="r" [level]="level + 1" [iconActions]="iconActions" (removed)="onReplyRemoved($event)" />
             }
           </div>
         }
@@ -137,7 +150,9 @@ import { MentionTextareaComponent } from './mention-textarea.component';
     .cmt-text ::ng-deep .mention-pill { display: inline-flex; align-items: center; background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; line-height: 1.5; padding: 3px 10px; border-radius: var(--radius-full); vertical-align: middle; }
     .cmt-media { max-width: 260px; max-height: 260px; border-radius: var(--radius-md); display: block; margin-bottom: 8px; }
     .cmt-actions { display: flex; align-items: center; gap: 14px; font-size: .85rem; margin-bottom: 6px; }
+    .cmt-actions-icon { gap: 10px; margin-bottom: 10px; }
     .cmt-react-trigger { position: relative; cursor: pointer; font-weight: 600; color: var(--color-primary-dark); }
+    .cmt-react-trigger.icon-action { font-weight: normal; }
     .cmt-reaction-picker { position: absolute; top: calc(100% + 8px); left: 0; z-index: 30; display: flex; gap: 4px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 6px 8px; box-shadow: var(--shadow-lg); white-space: nowrap; }
     .cmt-reaction-option { cursor: pointer; font-size: 1.1rem; transition: transform var(--motion-fast) ease; display: inline-block; }
     .cmt-reaction-option:hover { transform: scale(1.25); }
@@ -162,6 +177,12 @@ export class CommentItemComponent implements OnDestroy {
 
   @Input({ required: true }) comment!: Comment;
   @Input() level = 0;
+  /** true di Comment Control Center (CMS) — tombol React/Balas/Edit/Hapus jadi
+   *  ikon bulat (`.icon-action`, konvensi yang sama seperti aksi tabel CMS
+   *  lain) alih-alih tautan teks. Default false supaya thread komentar publik
+   *  (comment-section.component.ts di halaman Artikel/Berita/Event) tidak
+   *  ikut berubah — itu bukan bagian dari redesign CMS ini. */
+  @Input() iconActions = false;
   /** Memancarkan commentID komentar yang baru dihapus — hanya untuk delete,
    *  karena instance ini tidak memegang array yang berisi dirinya sendiri;
    *  induk (comment-item induk atau comment-section) yang menghapusnya dari

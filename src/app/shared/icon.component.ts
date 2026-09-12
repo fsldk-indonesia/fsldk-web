@@ -131,6 +131,9 @@ const ICONS: Record<string, string> = {
   'quote-left': 'fas fa-quote-left',
   'chart-bar': 'fas fa-chart-column',
   'chart-pie': 'fas fa-chart-pie',
+  // Aksi ikon komentar (Komentar Control Center — CommentItemComponent iconActions).
+  smile: 'fas fa-face-smile',
+  reply: 'fas fa-reply',
 };
 
 /**

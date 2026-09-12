@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Comment } from '../../entities/comment';
 import { CommentItemComponent } from '../../components/comment-item.component';
+import { IconComponent } from '../../../../shared/icon.component';
 import { CommentDetailPresenter } from './comment.detail.presenter';
 import { CommentDetailView } from './comment.detail.view';
 
@@ -9,9 +10,19 @@ import { CommentDetailView } from './comment.detail.view';
   selector: 'app-comment-detail-page',
   standalone: true,
   templateUrl: './comment.detail.page.html',
-  imports: [RouterLink, CommentItemComponent],
+  imports: [RouterLink, CommentItemComponent, IconComponent],
   providers: [CommentDetailPresenter],
-  styles: [`.page-head { margin-bottom: 24px; }`],
+  styles: [`
+    .page-head { margin: 0 0 24px; }
+    .page-head h1 { margin: 4px 0 2px; }
+    .form-card { display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  `],
 })
 export class CommentDetailPage implements OnInit, CommentDetailView {
   private presenter = inject(CommentDetailPresenter);
