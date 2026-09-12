@@ -112,7 +112,16 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
 
     .modal > h3 { flex-shrink: 0; margin-bottom: 2px; }
     .modal > p.text-muted { flex-shrink: 0; margin: 0 0 18px; font-size: .85rem; }
-    .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 18px; }
+    /* Inset shadow tipis atas-bawah — penanda area ini scroll tersendiri,
+       supaya konten yang terpotong scroll di tepi modal tidak terasa
+       "nabrak" langsung ke judul/footer (pola sama seperti .perm-list di
+       popup Role Pengguna, di sini tanpa tint background karena field
+       form-nya sudah putih polos, cukup shadow-nya saja). */
+    .modal-body {
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 18px;
+      border-radius: var(--radius-xs);
+      box-shadow: inset 0 8px 10px -8px rgba(20,23,26,.1), inset 0 -8px 10px -8px rgba(20,23,26,.1);
+    }
     /* Batal & Simpan berdampingan di kanan (bukan justify-between kiri-kanan)
        — sama seperti .form-actions Berita/Artikel. */
     .modal-footer { display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--color-border); }
