@@ -1,23 +1,86 @@
 <div class="page-head">
   <h1>Detail Komentar</h1>
-  <p class="text-muted">Tinjau isi komentar beserta seluruh balasannya.</p>
+  @if (item(); as c) { <p class="text-muted">Komentar #{{ c.commentID }} oleh {{ c.author.name }}</p> }
 </div>
 
-<div class="form-card">
-  <section class="card card-pad form-section-card">
-    <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="comments" [size]="14" /></span>Komentar & Balasan</p>
-    @if (loading()) {
-      <span class="skel skel-line" style="width:60%"></span>
-    } @else {
-      @if (item(); as c) {
-        <app-comment-item [comment]="c" [level]="0" [iconActions]="true" (removed)="onRootRemoved()" />
-      } @else {
-        <div class="empty-state"><h4>Komentar tidak ditemukan</h4></div>
-      }
-    }
-  </section>
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%"></span></div>
+} @else { @if (item(); as c) {
+  <div class="view-grid">
+    <section class="card card-pad">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="info-circle" [size]="14" /></span>Informasi Komentar</p>
 
-  <div class="form-actions">
-    <a routerLink="/cms/comments" class="btn btn-ghost">Batal</a>
+      <div class="view-cols">
+        <div class="view-row">
+          <div class="view-label">Ditulis Oleh</div>
+          <div class="view-author">
+            @if (c.author.photo) {
+              <img class="avatar" [src]="c.author.photo" [alt]="c.author.name">
+            } @else {
+              <span class="avatar">{{ c.author.name.charAt(0) }}</span>
+            }
+            <div>
+              <div class="view-value">{{ c.author.name }}</div>
+              @if (c.authorEmail) { <div class="text-muted view-sub">{{ c.authorEmail }}</div> }
+            </div>
+          </div>
+        </div>
+        <div class="view-row">
+          <div class="view-label">Tipe Konten</div>
+          <span class="badge badge-info">{{ c.contentType }}</span>
+        </div>
+      </div>
+
+      <div class="view-cols three">
+        <div class="view-row">
+          <div class="view-label">Konten</div>
+          <div class="view-value">{{ c.contentTitle || '—' }}</div>
+          <div class="text-muted view-sub">#{{ c.contentID }}</div>
+        </div>
+        <div class="view-row">
+          <div class="view-label">Diposting Pada</div>
+          <div class="view-value">{{ c.createdDate | date:'d MMM yyyy' }} <span class="view-sub text-muted">({{ c.createdDate | date:'HH:mm' }})</span></div>
+        </div>
+        <div class="view-row">
+          <div class="view-label">Total Balasan</div>
+          <div class="view-value">{{ c.replies.length }} balasan</div>
+        </div>
+      </div>
+
+      <div class="view-row">
+        <div class="view-label">Isi Komentar</div>
+        @if (c.commentText) { <p class="view-value">{{ c.commentText }}</p> } @else { <p class="text-muted">[media]</p> }
+      </div>
+
+      <div class="view-row">
+        <div class="view-label">Reaksi <span class="badge">{{ totalReactions(c) }}</span></div>
+        <div class="view-reactions">
+          @for (type of activeReactionTypes(c); track type) {
+            <span class="reaction-pill">{{ reactionEmoji(type) }} {{ c.reactions.counts[type] }}</span>
+          } @empty {
+            <span class="text-muted">Belum ada reaksi.</span>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-pad">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="paperclip" [size]="14" /></span>Media Terlampir</p>
+      @if (c.mediaURL) {
+        <img class="view-media" [src]="c.mediaURL" [alt]="c.mediaType">
+      } @else {
+        <div class="empty-state">
+          <span class="icon-badge lg icon-badge-soft"><app-icon name="image" [size]="26" /></span>
+          <h4>Tidak ada media terlampir</h4>
+        </div>
+      }
+    </section>
   </div>
+} @else {
+  <div class="card card-pad"><div class="empty-state"><h4>Komentar tidak ditemukan</h4></div></div>
+}
+}
+
+<div class="form-actions">
+  <a routerLink="/cms/comments" class="btn btn-ghost">Batal</a>
 </div>

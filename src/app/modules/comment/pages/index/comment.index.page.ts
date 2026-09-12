@@ -28,8 +28,8 @@ function buildCommentIndexConfig(): CmsIndexConfig<Comment> {
       { icon: 'search', title: 'Filter & Pencarian', description: 'Cari isi komentar atau nama penulis secara terpisah, pilih Tipe Konten, atau atur rentang tanggal — bisa digabung sekaligus.' },
       { icon: 'chevrons-up-down', title: 'Urutkan & Atur Kolom', description: 'Klik judul kolom untuk mengurutkan data, atau pakai <strong>Atur Kolom</strong> untuk menampilkan/menyembunyikan kolom.' },
       { icon: 'globe', title: 'Lintas Konten', description: 'Komentar dari Artikel, Berita, Event, dan konten lain yang mendukung komentar semuanya masuk ke satu pusat moderasi ini.' },
-      { icon: 'eye', title: 'Detail & Balasan', description: 'Klik baris mana pun untuk membuka komentar beserta seluruh balasannya — bisa langsung membalas, mengedit, atau menghapus dari sana.' },
-      { icon: 'trash', title: 'Hapus & Aksi Massal', description: 'Hapus satu komentar dari halaman detail, atau centang beberapa baris lalu pakai <strong>Aksi Massal</strong> untuk hapus sekaligus.' },
+      { icon: 'eye', title: 'Lihat Detail', description: 'Klik baris mana pun untuk melihat detail lengkap komentar — penulis, konten yang dikomentari, dan reaksinya.' },
+      { icon: 'trash', title: 'Hapus & Aksi Massal', description: 'Hapus satu komentar lewat ikon tempat sampah, atau centang beberapa baris lalu pakai <strong>Aksi Massal</strong> untuk hapus sekaligus.' },
     ],
     searchTargets: [
       { value: 'search', label: 'Komentar' },
