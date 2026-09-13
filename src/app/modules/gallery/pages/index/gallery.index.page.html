@@ -1,0 +1,37 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Manajemen Galeri</h1><p class="text-muted">Kelola koleksi foto, video dokumentasi, dan kegiatan FSLDK Indonesia.</p></div>
+  @if (canCreate) { <a routerLink="/cms/galleries/form" class="btn btn-primary">+ Tambah Galeri</a> }
+</div>
+
+<app-cms-index
+  [config]="config"
+  [dataSource]="dataSource"
+  [bulkDeleteEnabled]="canDelete"
+  [canCreate]="canCreate"
+  (rowClick)="viewGallery($event)"
+  (bulkDelete)="onBulkDelete($event)">
+  <ng-template #rowTemplate let-g let-isColumnVisible="isColumnVisible">
+    @if (isColumnVisible('coverThumb')) {
+      <td><img class="cover-thumb" [src]="g.coverImage" [alt]="g.eventName" loading="lazy"></td>
+    }
+    <td>
+      <strong>{{ g.eventName }}</strong>
+    </td>
+    @if (isColumnVisible('eventTheme')) { <td class="text-muted">{{ g.eventTheme }}</td> }
+    @if (isColumnVisible('totalPhotos')) { <td class="text-muted">{{ g.totalPhotos }}</td> }
+    @if (isColumnVisible('eventDate')) { <td class="text-muted">{{ g.eventDate ? (g.eventDate | date:'d MMM yyyy') : '–' }}</td> }
+    @if (isColumnVisible('createdDate')) { <td class="text-muted">{{ g.createdDate | date:'d MMM yyyy' }}</td> }
+    <td (click)="$event.stopPropagation()">
+      <div class="table-actions">
+        @if (canUpdate) {
+          <a class="icon-action" [routerLink]="['/cms/galleries/form', g.galleryID]" title="Edit"><app-icon name="edit" [size]="14" /></a>
+        }
+        @if (canDelete) {
+          <button type="button" class="icon-action danger" [disabled]="isBusy(g.galleryID)" (click)="remove(g, $event)" title="Hapus">
+            @if (isBusy(g.galleryID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+          </button>
+        }
+      </div>
+    </td>
+  </ng-template>
+</app-cms-index>

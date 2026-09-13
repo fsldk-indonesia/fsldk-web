@@ -68,7 +68,7 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
       error: () => this.view.setCampaigns([]),
     });
     this.galleryApi.listPublic(1, 1, 'newest').subscribe({
-      next: (res) => this.view.setLatestGallery(res.result.data[0] ?? null),
+      next: (res) => this.view.setLatestGallery(res.data[0] ?? null),
       error: () => this.view.setLatestGallery(null),
     });
     // Angka jaringan nasional (Puskomnas/Puskomda/LDK/Kader) + distribusi

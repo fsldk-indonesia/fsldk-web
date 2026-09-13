@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { permissionGuard } from '../../core/guards/guards';
+import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /**
  * Public routes for the Gallery module.
@@ -39,25 +39,37 @@ export function galleryCmsRoutes(): Routes {
   return [
     {
       path: 'galleries',
-      canActivate: [permissionGuard],
+      canActivate: [verifiedGuard, permissionGuard],
       data: { permission: 'gallery.view' },
       title: 'Galeri',
       loadComponent: () =>
         import('./pages/index/gallery.index.page').then((m) => m.GalleryIndexPage),
     },
     {
-      path: 'galleries/create',
-      canActivate: [permissionGuard],
+      path: 'galleries/form',
+      canActivate: [verifiedGuard, permissionGuard],
       data: { permission: 'gallery.create' },
       title: 'Tambah Galeri',
       loadComponent: () =>
         import('./pages/form/gallery.form.page').then((m) => m.GalleryFormPage),
     },
     {
-      path: 'galleries/:id/edit',
-      canActivate: [permissionGuard],
+      path: 'galleries/form/:id',
+      canActivate: [verifiedGuard, permissionGuard],
       data: { permission: 'gallery.update' },
       title: 'Edit Galeri',
+      loadComponent: () =>
+        import('./pages/form/gallery.form.page').then((m) => m.GalleryFormPage),
+    },
+    {
+      // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+      // lewat route data `viewOnly` yang membuat semua field disabled dan
+      // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+      // GalleryIndexPage) — pola sama seperti Berita/Event/Perpustakaan.
+      path: 'galleries/view/:id',
+      canActivate: [verifiedGuard, permissionGuard],
+      data: { permission: 'gallery.view', viewOnly: true },
+      title: 'Detail Galeri',
       loadComponent: () =>
         import('./pages/form/gallery.form.page').then((m) => m.GalleryFormPage),
     },

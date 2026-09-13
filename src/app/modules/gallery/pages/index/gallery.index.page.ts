@@ -1,306 +1,101 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { GalleryRepository } from '../../repositories/gallery.repository';
-import { IconComponent } from '../../../../shared/icon.component';
-import { PaginationComponent } from '../../../../shared/pagination.component';
-import { ToastService } from '../../../../core/services/toast.service';
+import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
-import { environment } from '../../../../../environments/environment';
+import { GalleryListItem } from '../../entities/gallery';
+import { IconComponent } from '../../../../shared/icon.component';
+import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
+import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
+import { GalleryIndexPresenter } from './gallery.index.presenter';
+import { GalleryIndexView } from './gallery.index.view';
 
-/**
- * CMS index page for listing, filtering, and managing gallery entries.
- */
+/** Config CmsIndexConfig<GalleryListItem> — lihat CmsIndexComponent untuk
+ *  kontrak lengkapnya, pola sama seperti Berita. Tanpa statusOptions —
+ *  modul galeri tidak punya konsep publish/draft. Kolom 'coverThumb'
+ *  murni visual (sortable:false, tidak ada di gallery_dto.GalleryListItem
+ *  sebagai field sort), sel-nya di-render row template host. */
+function buildGalleryIndexConfig(): CmsIndexConfig<GalleryListItem> {
+  return {
+    entityLabel: 'galeri',
+    guideCards: [
+      { icon: 'plus', title: 'Tambah Galeri', description: 'Klik <strong>"+ Tambah Galeri"</strong> untuk mendokumentasikan kegiatan baru — isi nama, tema, sampul, hingga foto tambahan.' },
+      { icon: 'search', title: 'Filter & Pencarian', description: 'Cari nama kegiatan atau tema secara terpisah, atau atur rentang tanggal dibuat — bisa digabung sekaligus.' },
+      { icon: 'chevrons-up-down', title: 'Urutkan & Atur Kolom', description: 'Klik judul kolom untuk mengurutkan data, atau pakai <strong>Atur Kolom</strong> untuk menampilkan/menyembunyikan kolom.' },
+      { icon: 'eye', title: 'Lihat Detail', description: 'Klik baris mana pun untuk melihat detail lengkap galeri beserta daftar fotonya.' },
+      { icon: 'trash', title: 'Hapus & Aksi Massal', description: 'Hapus satu galeri lewat ikon tempat sampah, atau centang beberapa baris lalu pakai <strong>Aksi Massal</strong> untuk hapus massal.' },
+    ],
+    searchTargets: [
+      { value: 'eventName', label: 'Nama Kegiatan' },
+      { value: 'eventTheme', label: 'Tema' },
+    ],
+    showDateRange: true,
+    columns: [
+      { key: 'coverThumb', label: 'Sampul', sortable: false },
+      { key: 'eventName', label: 'Nama Kegiatan', locked: true },
+      { key: 'eventTheme', label: 'Tema' },
+      { key: 'totalPhotos', label: 'Total Foto' },
+      { key: 'eventDate', label: 'Tanggal Kegiatan' },
+      { key: 'createdDate', label: 'Dibuat Pada' },
+    ],
+    defaultSort: { sortBy: 'createdDate', sortDir: 'desc' },
+    rowIdKey: 'galleryID',
+    emptyIcon: 'images',
+    emptyTitle: 'Belum ada data galeri',
+    emptyDescription: 'Dokumentasi galeri kegiatan yang Anda buat akan muncul di sini.',
+    createRoute: '/cms/galleries/form',
+    createLabel: 'Tambah Galeri',
+  };
+}
+
 @Component({
-  selector: 'app-gallery-index',
+  selector: 'app-gallery-index-page',
   standalone: true,
-  imports: [DatePipe, RouterLink, FormsModule, IconComponent, PaginationComponent],
-  template: `
-    <div class="flex justify-between items-center page-head">
-      <div>
-        <h1>Manajemen Galeri</h1>
-        <p class="text-muted">Kelola koleksi foto, video dokumentasi, dan kegiatan FSLDK Indonesia.</p>
-      </div>
-      <a routerLink="/cms/galleries/create" class="btn btn-primary">+ Tambah Galeri</a>
-    </div>
-
-    <!-- Data Table Card with Integrated Search Filter -->
-    <div class="card">
-      <div class="card-pad flex gap items-center" style="flex-wrap: wrap">
-        <input
-          type="text"
-          class="form-control"
-          style="max-width: 320px"
-          placeholder="Cari kegiatan atau tema…"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearch($event)"
-        />
-      </div>
-
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width: 50px"></th>
-              <th>Nama Kegiatan &amp; Tema</th>
-              <th>Total Foto</th>
-              <th>Video</th>
-              <th>Tanggal Kegiatan</th>
-              <th>Dibuat Pada</th>
-              <th style="width: 120px"></th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (repo.loading()) {
-              @for (i of [1, 2, 3, 4, 5]; track i) {
-                <tr>
-                  <td><span class="skel" style="width: 44px; height: 44px; border-radius: 6px; display: block"></span></td>
-                  <td><span class="skel skel-line" style="width: 70%"></span></td>
-                  <td><span class="skel skel-line" style="width: 70px; border-radius: 999px"></span></td>
-                  <td><span class="skel skel-line" style="width: 50px; border-radius: 999px"></span></td>
-                  <td><span class="skel skel-line" style="width: 90px"></span></td>
-                  <td><span class="skel skel-line" style="width: 90px"></span></td>
-                  <td><span class="skel skel-line" style="width: 80px"></span></td>
-                </tr>
-              }
-            } @else if (repo.error()) {
-              <tr>
-                <td colspan="7" class="text-center py-xl text-danger">
-                  <app-icon name="alert-triangle" [size]="24" class="mb-sm" />
-                  <div>{{ repo.error() }}</div>
-                  <button class="btn btn-sm btn-outline mt-sm" (click)="loadData()">Coba Lagi</button>
-                </td>
-              </tr>
-            } @else {
-              @for (item of repo.cmsGalleries()?.data || []; track item.galleryID) {
-                <tr>
-                  <td>
-                    <img
-                      [src]="imgUrl(item.coverImage)"
-                      [alt]="item.eventName"
-                      class="thumb"
-                      style="width: 44px; height: 44px; border-radius: var(--radius-xs); object-fit: cover"
-                    />
-                  </td>
-                  <td>
-                    <strong>{{ item.eventTheme }}</strong>
-                    <div class="text-muted" style="font-size: .82rem">{{ item.eventName }}</div>
-                  </td>
-                  <td>
-                    <span class="badge badge-published">
-                      <app-icon name="images" [size]="11" /> {{ item.totalPhotos }} foto
-                    </span>
-                  </td>
-                  <td>
-                    @if (item.youtubeVideoID) {
-                      <span class="badge" style="background: rgba(220, 38, 38, 0.1); color: #dc2626">
-                        <app-icon name="play-circle" [size]="11" /> Ada
-                      </span>
-                    } @else {
-                      <span class="text-muted">–</span>
-                    }
-                  </td>
-                  <td class="text-muted">
-                    {{ item.eventDate ? (item.eventDate | date: 'd MMM yyyy') : '–' }}
-                  </td>
-                  <td class="text-muted">{{ item.createdDate | date: 'd MMM yyyy' }}</td>
-                  <td>
-                    <div class="table-actions">
-                      <a
-                        [routerLink]="['/tentang/galeri', item.galleryID]"
-                        target="_blank"
-                        class="icon-action"
-                        title="Lihat Halaman Publik"
-                      >
-                        <app-icon name="eye" [size]="14" />
-                      </a>
-                      <a
-                        [routerLink]="['/cms/galleries', item.galleryID, 'edit']"
-                        class="icon-action"
-                        title="Edit Galeri"
-                      >
-                        <app-icon name="edit" [size]="14" />
-                      </a>
-                      <button
-                        type="button"
-                        class="icon-action danger"
-                        title="Hapus Galeri"
-                        (click)="confirmDelete(item.galleryID, item.eventTheme, $event)"
-                      >
-                        <app-icon name="trash" [size]="14" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              } @empty {
-                <tr>
-                  <td colspan="7">
-                    <div class="empty-state">
-                      <span class="icon-badge lg icon-badge-soft" style="margin: 0 auto 14px">
-                        <app-icon name="photo" [size]="26" />
-                      </span>
-                      <h4>Belum ada data galeri</h4>
-                      <p>Dokumentasi galeri kegiatan yang Anda buat akan muncul di sini.</p>
-                      <a routerLink="/cms/galleries/create" class="btn btn-primary btn-sm">+ Tambah Galeri</a>
-                    </div>
-                  </td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
-      </div>
-
-      <!-- Pagination -->
-      @if (!repo.loading() && (repo.cmsGalleries()?.count || 0) > limit()) {
-        <app-pagination
-          [page]="page()"
-          [count]="repo.cmsGalleries()!.count"
-          [limit]="limit()"
-          (pageChange)="onPageChange($event)"
-        />
-      }
-    </div>
-  `,
+  templateUrl: './gallery.index.page.html',
+  imports: [RouterLink, DatePipe, IconComponent, CmsIndexComponent],
+  providers: [GalleryIndexPresenter],
   styles: [`
-    .search-input-wrapper {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      width: 100%;
-      max-width: 360px;
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      color: var(--color-text-muted);
-      pointer-events: none;
-    }
-
-    .table-cover-thumb {
-      width: 60px;
-      height: 40px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid var(--color-border);
-      background: var(--color-bg-alt);
-    }
-
-    .chip-blue {
-      background: rgba(37, 99, 235, 0.1);
-      color: #2563eb;
-      font-weight: 700;
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .chip-red {
-      background: rgba(220, 38, 38, 0.1);
-      color: #dc2626;
-      font-weight: 700;
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .chip-green {
-      background: rgba(13, 92, 59, 0.1);
-      color: #0d5c3b;
-      font-weight: 700;
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 4px;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
+    .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
+    .cover-thumb { width: 44px; height: 44px; border-radius: 6px; border: 1px solid var(--color-border); object-fit: cover; display: block; background: var(--color-bg-alt); }
   `],
 })
-export class GalleryIndexPage implements OnInit {
-  repo = inject(GalleryRepository);
-  private toast = inject(ToastService);
+export class GalleryIndexPage implements OnInit, GalleryIndexView {
+  private presenter = inject(GalleryIndexPresenter);
+  private auth = inject(AuthRepository);
   private alert = inject(AlertService);
+  private router = inject(Router);
 
-  page = signal(1);
-  limit = signal(15);
-  searchQuery = signal('');
+  @ViewChild(CmsIndexComponent) private table!: CmsIndexComponent<GalleryListItem>;
 
-  private search$ = new Subject<string>();
+  busy = signal<ReadonlySet<number>>(new Set());
 
-  ngOnInit(): void {
-    this.loadData();
+  canCreate = this.auth.hasPermission('gallery.create');
+  canUpdate = this.auth.hasPermission('gallery.update');
+  canDelete = this.auth.hasPermission('gallery.delete');
 
-    this.search$
-      .pipe(debounceTime(350), distinctUntilChanged())
-      .subscribe((query) => {
-        this.searchQuery.set(query);
-        this.page.set(1);
-        this.loadData();
-      });
-  }
+  readonly config = buildGalleryIndexConfig();
+  dataSource = (params: CmsListParams) => this.presenter.list(params);
 
-  loadData(): void {
-    this.repo.loadCMS({
-      page: this.page(),
-      limit: this.limit(),
-      search: this.searchQuery(),
-      sort_by: 'createdDate',
-      sort_order: 'desc',
-    });
-  }
+  ngOnInit(): void { this.presenter.attachView(this); }
 
-  onSearch(val: string): void {
-    this.search$.next(val);
-  }
+  isBusy(id: number): boolean { return this.busy().has(id); }
+  private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }
+  private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
 
-  onPageChange(newPage: number): void {
-    this.page.set(newPage);
-    this.loadData();
-  }
+  viewGallery(g: GalleryListItem): void { this.router.navigate(['/cms/galleries/view', g.galleryID]); }
 
-  async confirmDelete(id: number, title: string, event?: MouseEvent): Promise<void> {
-    const ok = await this.alert.confirm(
-      `Hapus galeri "${title}"? Semua foto terkait akan ikut terhapus secara permanen.`,
-      {
-        title: 'Hapus Galeri',
-        confirmLabel: 'Ya, Hapus',
-        cancelLabel: 'Batal',
-        variant: 'danger',
-      },
-      event,
-    );
+  async remove(g: GalleryListItem, event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(`Hapus galeri "${g.eventTheme}"? Semua foto terkait akan ikut terhapus secara permanen.`, {
+      title: 'Hapus Galeri', confirmLabel: 'Ya, Hapus', variant: 'danger',
+    }, event);
     if (!ok) return;
-
-    this.repo.delete(id).subscribe({
-      next: () => {
-        this.toast.success('Galeri berhasil dihapus');
-        this.loadData();
-      },
-      error: (err) => {
-        this.toast.error(err.error?.message || 'Gagal menghapus galeri');
-      },
-    });
+    this.setBusy(g.galleryID);
+    this.presenter.remove(g.galleryID);
   }
 
-  imgUrl(path: string): string {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
-      return path;
-    }
-    const base = environment.apiBaseUrl.replace('/api/v1', '');
-    if (path.startsWith('/')) {
-      return `${base}${path}`;
-    }
-    return `${base}/uploads/${path}`;
-  }
+  onBulkDelete(ids: (string | number)[]): void { this.presenter.bulkDelete(ids as number[]); }
+
+  onRemoveSuccess(): void { this.table.refresh(); }
+  onBulkDeleteSuccess(): void { this.table.refresh(); }
+  onActionSettled(id: number): void { this.clearBusy(id); }
 }
