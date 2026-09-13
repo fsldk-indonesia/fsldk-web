@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { MultiImageUploadComponent } from '../../../../shared/multi-image-upload.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
@@ -19,11 +20,18 @@ const AVAILABILITY_OPTIONS = [
   selector: 'app-goods-form-page',
   standalone: true,
   templateUrl: './goods.form.page.html',
-  imports: [FormsModule, RouterLink, ImageUploadComponent, MultiImageUploadComponent, RichTextEditorComponent, SelectComponent],
+  imports: [FormsModule, RouterLink, IconComponent, ImageUploadComponent, MultiImageUploadComponent, RichTextEditorComponent, SelectComponent],
   providers: [GoodsFormPresenter],
   styles: [`
-    .page-head { max-width: 820px; margin: 0 auto 24px; } .back { display: inline-block; margin-bottom: 8px; color: var(--color-text-secondary); }
-    .form-card { max-width: 820px; margin: 0 auto; }
+    .page-head { margin: 0 0 24px; }
+    .form-card { display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .form-control-lg { font-weight: 700; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 22px; margin-top: 4px; border-top: 1px solid var(--color-border); }
   `],
 })
 export class GoodsFormPage implements OnInit, GoodsFormView {
@@ -34,14 +42,24 @@ export class GoodsFormPage implements OnInit, GoodsFormView {
   categories = signal<GoodsCategory[]>([]);
   saving = signal(false);
   editId: number | null = null;
+  // Halaman detail (read-only) memakai komponen yang sama dengan form edit —
+  // dibedakan lewat route data `viewOnly` (lihat goods.routes.ts), pola sama
+  // seperti Perpustakaan/Event/Berita.
+  isReadonly = false;
   form: GoodsFormValue = { ...emptyGoodsForm };
   availabilityOptions = AVAILABILITY_OPTIONS;
   categoryOptions = computed(() => this.categories().map((c) => ({ value: c.goodsCategoryID, label: c.categoryName })));
+
+  get pageSubtitle(): string {
+    if (this.isReadonly) return 'Lihat detail lengkap produk ini.';
+    return this.editId ? 'Perbarui informasi produk yang sudah ada.' : 'Isi informasi produk yang akan dipublikasikan ke katalog.';
+  }
 
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadCategories();
 
+    this.isReadonly = this.route.snapshot.data['viewOnly'] === true;
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.editId = +id;

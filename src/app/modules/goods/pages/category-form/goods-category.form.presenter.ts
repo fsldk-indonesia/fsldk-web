@@ -18,12 +18,8 @@ export class GoodsCategoryFormPresenter extends BasePresenter<GoodsCategoryFormV
   private toast = inject(ToastService);
 
   loadForEdit(id: number): void {
-    this.categoryRepo.cmsList().subscribe({
-      next: (list) => {
-        const cat = list.find((c) => c.goodsCategoryID === id);
-        if (!cat) return;
-        this.view.setForm({ categoryName: cat.categoryName, isActive: cat.isActive, sortOrder: cat.sortOrder });
-      },
+    this.categoryRepo.cmsGet(id).subscribe({
+      next: (cat) => this.view.setForm({ categoryName: cat.categoryName, isActive: cat.isActive, sortOrder: cat.sortOrder }),
       error: () => {},
     });
   }

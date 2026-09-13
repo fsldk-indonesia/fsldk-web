@@ -35,6 +35,17 @@ export const goodsCmsRoutes: () => Routes = () => [
     title: 'Edit Produk Goods',
     loadComponent: () => import('./pages/form/goods.form.page').then((m) => m.GoodsFormPage),
   },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // GoodsIndexPage) — pola sama seperti Berita/Perpustakaan.
+    path: 'goods/products/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'goods.view', viewOnly: true },
+    title: 'Detail Produk Goods',
+    loadComponent: () => import('./pages/form/goods.form.page').then((m) => m.GoodsFormPage),
+  },
 ];
 
 export const goodsCategoryCmsRoutes: () => Routes = () => [
@@ -57,6 +68,15 @@ export const goodsCategoryCmsRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'goodscategory.update' },
     title: 'Edit Kategori Goods',
+    loadComponent: () => import('./pages/category-form/goods-category.form.page').then((m) => m.GoodsCategoryFormPage),
+  },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly`, pola sama seperti Berita/Perpustakaan.
+    path: 'goods/categories/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'goodscategory.view', viewOnly: true },
+    title: 'Detail Kategori Goods',
     loadComponent: () => import('./pages/category-form/goods-category.form.page').then((m) => m.GoodsCategoryFormPage),
   },
 ];

@@ -21,4 +21,5 @@ export class GoodsApiService {
   publish(id: number, isPublished: boolean): Observable<unknown> { return this.api.patch(`/goods/${id}/publish`, { isPublished }); }
   featuredToggle(id: number, isFeatured: boolean): Observable<unknown> { return this.api.patch(`/goods/${id}/featured`, { isFeatured }); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/goods/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/goods/bulk-delete', { ids }); }
 }
