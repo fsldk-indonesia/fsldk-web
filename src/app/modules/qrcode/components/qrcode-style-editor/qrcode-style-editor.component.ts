@@ -5,6 +5,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { ColorPickerComponent } from '../../../../shared/color-picker.component';
 import {
   FSLDK_LOGO_URL, QR_BG_SWATCHES, QR_DEFAULT_BG, QR_DEFAULT_FG, QR_FG_SWATCHES,
   QR_ICON_PRESETS, QrIconPreset, composePresetIconDataUrl, renderQrPreview,
@@ -39,7 +40,7 @@ type IconMode = 'none' | 'preset' | 'custom';
 @Component({
   selector: 'app-qrcode-style-editor',
   standalone: true,
-  imports: [FormsModule, IconComponent, ImageUploadComponent],
+  imports: [FormsModule, IconComponent, ImageUploadComponent, ColorPickerComponent],
   template: `
     <div class="editor-grid">
       <div class="fields">
@@ -50,9 +51,7 @@ type IconMode = 'none' | 'preset' | 'custom';
               <button type="button" class="swatch" [class.active]="eq(value.foregroundColor, s.value)"
                       [style.background]="s.value" [title]="s.label" (click)="patch({ foregroundColor: s.value })"></button>
             }
-            <label class="swatch custom" [style.background]="value.foregroundColor" title="Warna lain">
-              <input type="color" [ngModel]="value.foregroundColor" (ngModelChange)="patch({ foregroundColor: $event })">
-            </label>
+            <app-color-picker [ngModel]="value.foregroundColor" (ngModelChange)="patch({ foregroundColor: $event })" title="Warna QR lain" />
           </div>
         </div>
 
@@ -63,9 +62,7 @@ type IconMode = 'none' | 'preset' | 'custom';
               <button type="button" class="swatch" [class.active]="eq(value.backgroundColor, s.value)"
                       [style.background]="s.value" [title]="s.label" (click)="patch({ backgroundColor: s.value })"></button>
             }
-            <label class="swatch custom" [style.background]="value.backgroundColor" title="Warna lain">
-              <input type="color" [ngModel]="value.backgroundColor" (ngModelChange)="patch({ backgroundColor: $event })">
-            </label>
+            <app-color-picker [ngModel]="value.backgroundColor" (ngModelChange)="patch({ backgroundColor: $event })" title="Warna latar lain" />
           </div>
         </div>
 
@@ -127,9 +124,6 @@ type IconMode = 'none' | 'preset' | 'custom';
     .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
     .swatch { width: 30px; height: 30px; border-radius: 8px; border: 2px solid var(--color-border); cursor: pointer; padding: 0; position: relative; overflow: hidden; }
     .swatch.active { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-soft); }
-    .swatch.custom { display: flex; align-items: center; justify-content: center; }
-    .swatch.custom::after { content: '+'; font-size: 15px; font-weight: 700; color: #fff; mix-blend-mode: difference; }
-    .swatch.custom input[type=color] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
     .icon-picker { display: flex; flex-wrap: wrap; gap: 8px; }
     .icon-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; padding: 8px 4px; border: 1.5px solid var(--color-border); border-radius: 10px; background: var(--color-bg-warm); cursor: pointer; }
     .icon-opt:hover { border-color: var(--color-primary); }

@@ -26,6 +26,7 @@ export class QrcodeApiService {
   create(body: QrcodeStyleBody): Observable<QRCode> { return this.api.post('/qrcodes', body); }
   update(id: number, body: QrcodeStyleBody): Observable<QRCode> { return this.api.put(`/qrcodes/${id}`, body); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/qrcodes/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/qrcodes/bulk-delete', { ids }); }
 
   /** Metadata ringkas QR (tanpa auth) untuk halaman detail/unduh publik. */
   publicDetail(id: number): Observable<QRCodePublic> { return this.api.get(`/public/qrcodes/${id}`); }

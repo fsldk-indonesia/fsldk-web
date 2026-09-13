@@ -1,8 +1,12 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { QrcodeRepository } from '../../repositories/qrcode.repository';
 import { QrcodeStyleBody } from '../../services/qrcode-api.service';
+import { QRCode } from '../../entities/qrcode';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { QrcodeIndexView } from './qrcode.index.view';
 
 @Injectable()
@@ -10,10 +14,16 @@ export class QrcodeIndexPresenter extends BasePresenter<QrcodeIndexView> {
   private qrcodeRepo = inject(QrcodeRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, search: string): void {
-    this.qrcodeRepo.list({ page, limit, search }).subscribe({
-      next: (p) => this.view.setQrcodes(p.data, p.count),
-      error: () => {},
+  /** dataSource untuk <app-cms-index> — qrcode_dto.ListFilter cuma punya satu
+   *  kolom pencarian gabungan (label/destinationURL/captionText, lihat
+   *  qrcode_repository_impl.go), jadi searchTargets di config cuma satu
+   *  target "search" yang dipetakan langsung ke situ. Tidak ada konsep
+   *  Status di modul ini (bukan approval queue). */
+  list(params: CmsListParams): Observable<Pagination<QRCode>> {
+    return this.qrcodeRepo.list({
+      page: params.page, limit: params.limit, sort: params.sort,
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      dateFrom: params.dateFrom, dateTo: params.dateTo,
     });
   }
 
@@ -43,9 +53,16 @@ export class QrcodeIndexPresenter extends BasePresenter<QrcodeIndexView> {
     });
   }
 
-  download(id: number): void {
-    this.qrcodeRepo.downloadImage(id, 1024).subscribe({
-      next: ({ blob }) => this.view.saveBlob(blob, `qr-${id}.png`),
+  bulkDelete(ids: number[]): void {
+    this.qrcodeRepo.bulkDelete(ids).subscribe({
+      next: () => { this.toast.success(`${ids.length} QR Code terpilih dihapus`); this.view.onBulkDeleteSuccess(); },
+      error: () => {},
+    });
+  }
+
+  download(id: number, size: number): void {
+    this.qrcodeRepo.downloadImage(id, size).subscribe({
+      next: ({ blob }) => this.view.saveBlob(blob, `qr-${id}-${size}.png`),
       error: () => this.toast.error('Gagal mengunduh gambar QR'),
     });
   }

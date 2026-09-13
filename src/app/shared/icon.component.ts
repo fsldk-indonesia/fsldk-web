@@ -133,6 +133,8 @@ const ICONS: Record<string, string> = {
   'chart-pie': 'fas fa-chart-pie',
   // Panel "Attached Media" (Comment Control Center — View Comment).
   paperclip: 'fas fa-paperclip',
+  // Pemetik warna kustom (ColorPickerComponent) — tombol "ambil warna dari layar".
+  'eye-dropper': 'fas fa-eye-dropper',
 };
 
 /**
