@@ -20,4 +20,5 @@ export class FinanceFormatRepository {
   update(id: number, body: unknown): Observable<FinanceFormat> { return this.api.update(id, body); }
   publish(id: number, isActive: boolean): Observable<unknown> { return this.api.publish(id, isActive); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
 }

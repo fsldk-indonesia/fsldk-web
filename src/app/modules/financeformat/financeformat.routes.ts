@@ -29,4 +29,15 @@ export const financeformatCmsRoutes: () => Routes = () => [
     title: 'Edit Format Keuangan',
     loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
   },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // FinanceFormatIndexPage) — pola sama seperti Berita/Perpustakaan.
+    path: 'finance-formats/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'financeformat.view', viewOnly: true },
+    title: 'Detail Format Keuangan',
+    loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
+  },
 ];

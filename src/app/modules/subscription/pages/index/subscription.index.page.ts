@@ -125,6 +125,7 @@ export class SubscriptionIndexPage implements OnInit, SubscriptionIndexView {
   editingSubscriber: Subscriber | null = null;
   editEmail = '';
   editIsActive = true;
+  isReadonly = false;
 
   canCreate = this.auth.hasPermission('subscription.create');
   canDelete = this.auth.hasPermission('subscription.delete');
@@ -133,10 +134,12 @@ export class SubscriptionIndexPage implements OnInit, SubscriptionIndexView {
   dataSource = (params: CmsListParams) => this.presenter.list(params);
 
   get modalTitle(): string {
-    return this.viewMode === 'edit' ? 'Lihat & Ubah Subscriber' : 'Tambah Subscriber';
+    if (this.viewMode !== 'edit') return 'Tambah Subscriber';
+    return this.isReadonly ? 'Detail Subscriber' : 'Ubah Subscriber';
   }
   get modalSubtitle(): string {
-    return this.viewMode === 'edit' ? 'Perbarui email atau status berlangganan subscriber ini.' : 'Masukkan satu atau lebih email sekaligus.';
+    if (this.viewMode !== 'edit') return 'Masukkan satu atau lebih email sekaligus.';
+    return this.isReadonly ? 'Lihat detail subscriber ini.' : 'Perbarui email atau status berlangganan subscriber ini.';
   }
 
   ngOnInit(): void { this.presenter.attachView(this); }
@@ -148,14 +151,32 @@ export class SubscriptionIndexPage implements OnInit, SubscriptionIndexView {
   openAdd(event?: Event): void {
     this.popupOrigin.set(popupOriginFromEvent(event));
     this.viewMode = 'add';
+    this.isReadonly = false;
     this.addEmails = '';
     this.showForm.set(true);
     this.animateModal(true);
   }
 
-  openEdit(sub: Subscriber): void {
+  /** Dipicu klik baris (CmsIndexComponent rowClick) — buka popup yang sama
+   *  dalam mode BACA-SAJA, dibedakan lewat isReadonly, bukan komponen/route
+   *  terpisah, sama seperti pola viewOnly di form Berita/Pengguna. */
+  openView(sub: Subscriber): void {
     this.popupOrigin.set(popupOriginFromEvent());
     this.viewMode = 'edit';
+    this.isReadonly = true;
+    this.editingSubscriber = sub;
+    this.editEmail = sub.email;
+    this.editIsActive = sub.isActive;
+    this.showForm.set(true);
+    this.animateModal(true);
+  }
+
+  /** Dipicu tombol pensil di kolom Aksi — sama seperti openView tapi field
+   *  bisa diubah (isReadonly = false). */
+  openEdit(sub: Subscriber, event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
+    this.viewMode = 'edit';
+    this.isReadonly = false;
     this.editingSubscriber = sub;
     this.editEmail = sub.email;
     this.editIsActive = sub.isActive;
