@@ -9,7 +9,7 @@
   [bulkDeleteEnabled]="canDelete"
   (rowClick)="openView($event)">
   <ng-template #rowTemplate let-q let-isColumnVisible="isColumnVisible">
-    @if (isColumnVisible('qrThumb')) { <td><img class="qr-thumb" [src]="q.imageURL" [alt]="'QR ' + (q.label || q.qrCodeID)" loading="lazy"></td> }
+    @if (isColumnVisible('qrThumb')) { <td><img class="qr-thumb" [src]="imgSrc(q.imageURL)" [alt]="'QR ' + (q.label || q.qrCodeID)" loading="lazy"></td> }
     <td>{{ q.label || '—' }}</td>
     @if (isColumnVisible('destinationURL')) {
       <td class="text-muted destination" [title]="q.destinationURL">{{ q.destinationURL }}</td>
@@ -62,7 +62,7 @@
           <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="qr-code" [size]="13" /></span>Tampilan QR</p>
           @if (isReadonly && selected) {
             <div class="qr-preview">
-              <img [src]="selected.imageURL" [alt]="'QR ' + (selected.label || selected.qrCodeID)">
+              <img [src]="imgSrc(selected.imageURL)" [alt]="'QR ' + (selected.label || selected.qrCodeID)">
             </div>
             <div class="size-picker">
               <label class="form-label">Ukuran unduhan</label>

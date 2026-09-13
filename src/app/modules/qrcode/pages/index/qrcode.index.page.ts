@@ -165,6 +165,15 @@ export class QrcodeIndexPage implements OnInit, QrcodeIndexView {
   readonly presetSizes = [256, 512, 1024];
   size = signal(1024);
 
+  /** Cache-bust untuk `<img [src]>` gambar QR — `imageURL` adalah URL TETAP
+   *  per baris (`/public/qrcodes/:id/image`, lihat qrcode_service_impl.go),
+   *  jadi kalau string-nya sama persis dengan render sebelumnya, browser
+   *  tidak pernah minta ulang gambarnya walau isinya (warna/ikon) baru saja
+   *  diubah lewat Simpan — versi ini disisipkan sebagai query param supaya
+   *  URL berubah tepat setelah save, memaksa fetch ulang. */
+  imgVersion = signal(Date.now());
+  imgSrc(url: string): string { return `${url}?v=${this.imgVersion()}`; }
+
   readonly config = buildQrcodeIndexConfig();
   dataSource = (params: CmsListParams) => this.presenter.list(params);
 
@@ -217,6 +226,10 @@ export class QrcodeIndexPage implements OnInit, QrcodeIndexView {
     this.selected = q;
     this.form = { destinationURL: q.destinationURL, label: q.label };
     this.size.set(this.maxSize);
+    // Cache-bust juga saat dibuka — menutupi staleness lintas-sesi (mis.
+    // gambar sempat di-cache browser dari kunjungan sebelumnya), bukan cuma
+    // langsung setelah Simpan di sesi yang sama (lihat onSaveSuccess).
+    this.imgVersion.set(Date.now());
     this.showForm.set(true);
     this.animateModal(true);
   }
@@ -281,7 +294,7 @@ export class QrcodeIndexPage implements OnInit, QrcodeIndexView {
   downloadSelected(): void { if (this.selected) this.presenter.download(this.selected.qrCodeID, this.size()); }
 
   setSaving(saving: boolean): void { this.saving.set(saving); }
-  onSaveSuccess(): void { this.close(); this.table.refresh(); }
+  onSaveSuccess(): void { this.imgVersion.set(Date.now()); this.close(); this.table.refresh(); }
   onRemoveSuccess(): void { this.table.refresh(); }
   onBulkDeleteSuccess(): void { this.table.refresh(); }
   onActionSettled(id: number): void { this.clearBusy(id); }
