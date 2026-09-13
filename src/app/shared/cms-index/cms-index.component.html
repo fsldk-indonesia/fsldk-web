@@ -1,5 +1,5 @@
 @if (config.guideCards?.length) {
-  <div class="guide-grid">
+  <div class="guide-grid" [style.grid-template-columns]="'repeat(' + config.guideCards!.length + ', 1fr)'">
     @for (card of config.guideCards; track card.title) {
       <div class="card guide-card">
         <span class="icon-badge icon-badge-soft"><app-icon [name]="card.icon" [size]="16" /></span>

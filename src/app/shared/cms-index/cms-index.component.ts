@@ -32,9 +32,14 @@ import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsList
   imports: [NgTemplateOutlet, FormsModule, RouterLink, IconComponent, PaginationComponent, SelectComponent, MultiSelectComponent, DateRangePickerComponent],
   templateUrl: './cms-index.component.html',
   styles: [`
-    /* 5 kartu panduan — kolom TETAP (bukan auto-fit/minmax) supaya selalu
-       genap 1 baris penuh tanpa sisa slot kosong di baris kedua. Di layar
-       sempit diturunkan ke 1 kolom (bertumpuk penuh). */
+    /* Kartu panduan — kolom TETAP (bukan auto-fit/minmax) supaya selalu
+       genap 1 baris penuh tanpa sisa slot kosong di baris kedua ATAU celah
+       kosong di ujung kanan. Jumlah kolom mengikuti JUMLAH KARTU sebenarnya
+       (di-set inline lewat [style.grid-template-columns] di template,
+       config.guideCards.length) — beberapa modul (mis. Pesan Kontak, tanpa
+       kartu "Tambah") punya 4 kartu, bukan 5 seperti kebanyakan modul CRUD
+       penuh; nilai repeat(5, 1fr) di sini murni fallback sebelum binding
+       dievaluasi. Di layar sempit diturunkan ke 1 kolom (bertumpuk penuh). */
     .guide-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
     .guide-card { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; }
     .guide-card h4 { margin: 0 0 3px; font-size: .84rem; }

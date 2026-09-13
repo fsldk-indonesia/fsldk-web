@@ -29,28 +29,6 @@ export interface SendContactPayload {
 }
 
 /**
- * Query parameters for filtering and paginating CMS contact messages.
- */
-export interface ContactListQuery {
-  page?: number;
-  limit?: number;
-  search?: string;
-  isRead?: boolean | string;
-  sort_by?: string;
-  sort_order?: 'asc' | 'desc';
-}
-
-/**
- * Standard paginated response envelope for contact messages list.
- */
-export interface ContactListResponse {
-  data: ContactListItem[];
-  page: number;
-  limit: number;
-  total: number;
-}
-
-/**
  * Payload sent by CMS admin to reply to a contact message via official email.
  */
 export interface ReplyContactPayload {
