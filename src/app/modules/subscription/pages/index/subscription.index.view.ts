@@ -1,12 +1,11 @@
-import { Subscriber, BulkAddResult } from '../../entities/subscriber';
+import { BulkAddResult } from '../../entities/subscriber';
 
 export interface SubscriptionIndexView {
-  setSubscribers(subs: Subscriber[], count: number): void;
+  setAdding(adding: boolean): void;
+  setSaving(saving: boolean): void;
   onBulkAddResult(result: BulkAddResult): void;
-  onUpdateSuccess(sub: Subscriber): void;
-  onRemoveSuccess(id: number): void;
-  onBulkRemoveSuccess(ids: number[]): void;
+  onUpdateSuccess(): void;
+  onRemoveSuccess(): void;
+  onBulkDeleteSuccess(): void;
   onActionSettled(id: number): void;
-  onAddSettled(): void;
-  onEditSettled(): void;
 }
