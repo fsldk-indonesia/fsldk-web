@@ -6,34 +6,39 @@
 @if (loading()) {
   <div class="card"><div class="card-pad"><span class="skel skel-line" style="width:60%"></span></div></div>
 } @else {
-  @for (group of groups(); track group.name) {
-    <div class="card group-card">
-      <div class="card-pad">
-        <h3 class="group-title">{{ group.name }}</h3>
-        @for (s of group.items; track s.settingID) {
-          <div class="setting-row">
-            <label class="form-label">{{ s.settingLabel }}</label>
-            <div class="field-input-row">
-              @if (canUpdate) {
-                @if (isBoolean(s)) {
-                  <app-select [options]="yesNoOptions" [(ngModel)]="s.settingValue" />
+  <div class="settings-list">
+    @for (group of groups(); track group.name) {
+      <section class="card group-card">
+        <div class="card-pad">
+          <p class="form-section-label">
+            <span class="icon-badge sm icon-badge-{{ groupVariant(group.name) }}"><app-icon [name]="groupIcon(group.name)" [size]="14" /></span>
+            {{ groupLabel(group.name) }}
+          </p>
+          @for (s of group.items; track s.settingID) {
+            <div class="setting-row">
+              <label class="form-label">{{ s.settingLabel }}</label>
+              <div class="field-input-row">
+                @if (canUpdate) {
+                  @if (isBoolean(s)) {
+                    <app-select [options]="yesNoOptions" [(ngModel)]="s.settingValue" />
+                  } @else {
+                    <input class="form-control" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID">
+                  }
                 } @else {
-                  <input class="form-control" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID">
+                  <p class="text-muted" style="margin:0">{{ isBoolean(s) ? (s.settingValue === 'true' ? 'Ya' : 'Tidak') : (s.settingValue || '–') }}</p>
                 }
-              } @else {
-                <p class="text-muted" style="margin:0">{{ isBoolean(s) ? (s.settingValue === 'true' ? 'Ya' : 'Tidak') : (s.settingValue || '–') }}</p>
-              }
-              @if (canUpdate) {
-                <button class="btn btn-primary btn-sm" [disabled]="isBusy(s.settingID)" (click)="save(s)">
-                  @if (isBusy(s.settingID)) { <span class="spinner spinner-xs"></span> } @else { Simpan }
-                </button>
-              }
+                @if (canUpdate) {
+                  <button class="btn btn-primary btn-sm" [disabled]="isBusy(s.settingID)" (click)="save(s)">
+                    @if (isBusy(s.settingID)) { <span class="spinner spinner-xs"></span> } @else { <app-icon name="check" [size]="13" /> Simpan }
+                  </button>
+                }
+              </div>
             </div>
-          </div>
-        }
-      </div>
-    </div>
-  } @empty {
-    <div class="card"><div class="card-pad"><p class="text-muted">Belum ada setting.</p></div></div>
-  }
+          }
+        </div>
+      </section>
+    } @empty {
+      <div class="card"><div class="card-pad"><p class="text-muted">Belum ada setting.</p></div></div>
+    }
+  </div>
 }
