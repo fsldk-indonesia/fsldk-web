@@ -1,76 +1,95 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
 import { IconComponent } from '../../../../shared/icon.component';
-import { SelectComponent } from '../../../../shared/select.component';
-import { PaginationComponent } from '../../../../shared/pagination.component';
+import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
+import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { DynamicForm } from '../../entities/dynamic-form';
 import { STATUS_META, StatusMeta, nextStatusMeta, statusMeta } from '../../dynamicform.constants';
 import { dynamicFormPath } from '../../dynamicform.path';
 import { DynamicFormIndexPresenter } from './dynamicform.index.presenter';
 import { DynamicFormIndexView } from './dynamicform.index.view';
 
+/** Config CmsIndexConfig<DynamicForm> — lihat CmsIndexComponent untuk
+ *  kontrak lengkapnya, pola sama seperti Berita. Status (draft/published/
+ *  closed) genuinely multi-select bermakna — sama pola dengan Job Queue. */
+function buildDynamicFormIndexConfig(): CmsIndexConfig<DynamicForm> {
+  return {
+    entityLabel: 'formulir',
+    guideCards: [
+      { icon: 'plus', title: 'Buat Formulir', description: 'Klik <strong>"Buat Formulir"</strong> untuk mengisi judul & pengaturan dasar, lalu lanjut ke Builder untuk menyusun field-nya.' },
+      { icon: 'search', title: 'Filter & Pencarian', description: 'Cari judul formulir, pilih status, atau atur rentang tanggal dibuat — bisa digabung sekaligus.' },
+      { icon: 'chevrons-up-down', title: 'Urutkan & Atur Kolom', description: 'Klik judul kolom untuk mengurutkan data, atau pakai <strong>Atur Kolom</strong> untuk menampilkan/menyembunyikan kolom.' },
+      { icon: 'eye', title: 'Lihat Detail', description: 'Klik baris mana pun untuk melihat detail pengaturan formulir, atau ikon pensil untuk mengubahnya.' },
+      { icon: 'trash', title: 'Hapus & Aksi Massal', description: 'Hapus satu formulir lewat ikon tempat sampah, atau centang beberapa baris lalu pakai <strong>Aksi Massal</strong> untuk hapus massal.' },
+    ],
+    statusOptions: STATUS_META.map((s) => ({ value: s.value, label: s.label })),
+    searchTargets: [
+      { value: 'search', label: 'Judul Formulir' },
+    ],
+    showDateRange: true,
+    columns: [
+      { key: 'title', label: 'Judul Formulir', locked: true },
+      { key: 'status', label: 'Status' },
+      { key: 'totalSubmission', label: 'Tanggapan' },
+      { key: 'creatorName', label: 'Dibuat Oleh', sortable: false },
+      { key: 'createdDate', label: 'Tanggal Dibuat' },
+    ],
+    defaultSort: { sortBy: 'createdDate', sortDir: 'desc' },
+    rowIdKey: 'formID',
+    emptyIcon: 'clipboard-list',
+    emptyTitle: 'Belum ada formulir',
+    emptyDescription: 'Formulir yang Anda buat akan muncul di sini.',
+    createRoute: dynamicFormPath.create,
+    createLabel: 'Buat Formulir',
+  };
+}
+
 @Component({
   selector: 'app-dynamicform-index-page',
   standalone: true,
   templateUrl: './dynamicform.index.page.html',
-  imports: [DatePipe, RouterLink, FormsModule, IconComponent, SelectComponent, PaginationComponent],
+  imports: [DatePipe, RouterLink, IconComponent, CmsIndexComponent],
   providers: [DynamicFormIndexPresenter],
-  styles: [`
-    .page-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 16px; flex-wrap: wrap; }
-    .page-head h1 { margin-bottom: 2px; }
-    .toolbar .form-control { max-width: 280px; }
-    .table-actions { flex-wrap: nowrap; }
-  `],
+  styles: [`.page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; } .table-actions { flex-wrap: nowrap; }`],
 })
 export class DynamicFormIndexPage implements OnInit, DynamicFormIndexView {
   private presenter = inject(DynamicFormIndexPresenter);
   private auth = inject(AuthRepository);
   private alert = inject(AlertService);
+  private router = inject(Router);
+
+  @ViewChild(CmsIndexComponent) private table!: CmsIndexComponent<DynamicForm>;
 
   readonly path = dynamicFormPath;
-  forms = signal<DynamicForm[]>([]);
-  loading = signal(true);
-  search = '';
-  status = '';
-  sort = '-createdDate';
-  page = signal(1);
-  count = signal(0);
-  readonly limit = 10;
   busy = signal<ReadonlySet<number>>(new Set());
+  readonly statusMeta = statusMeta;
 
   canCreate = this.auth.hasPermission('dynamicform.create');
   canUpdate = this.auth.hasPermission('dynamicform.update');
   canPublish = this.auth.hasPermission('dynamicform.publish');
   canDelete = this.auth.hasPermission('dynamicform.delete');
 
-  statusOptions = [{ value: '', label: 'Semua Status' }, ...STATUS_META.map((s) => ({ value: s.value, label: s.label }))];
-  statusMeta = statusMeta;
+  readonly config = buildDynamicFormIndexConfig();
+  dataSource = (params: CmsListParams) => this.presenter.list(params);
 
-  ngOnInit(): void {
-    this.presenter.attachView(this);
-    this.load();
-  }
-
-  load(): void {
-    this.loading.set(true);
-    this.presenter.load(this.page(), this.limit, this.search, this.status, this.sort);
-  }
-  apply(): void { this.page.set(1); this.load(); }
-  goPage(p: number): void { this.page.set(p); this.load(); }
+  ngOnInit(): void { this.presenter.attachView(this); }
 
   isBusy(id: number): boolean { return this.busy().has(id); }
   private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }
+  private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
 
   nextStatuses(f: DynamicForm): StatusMeta[] {
     const next = nextStatusMeta(f.status);
     return next ? [next] : [];
   }
 
-  changeStatus(f: DynamicForm, status: string): void {
+  viewForm(f: DynamicForm): void { this.router.navigate([this.path.view(f.formID)]); }
+
+  changeStatus(f: DynamicForm, status: string, event?: Event): void {
+    event?.stopPropagation();
     if (!status || status === f.status) return;
     this.setBusy(f.formID);
     this.presenter.setStatus(f, status);
@@ -86,7 +105,8 @@ export class DynamicFormIndexPage implements OnInit, DynamicFormIndexView {
     this.presenter.remove(f);
   }
 
-  setForms(forms: DynamicForm[], count: number): void { this.forms.set(forms); this.count.set(count); this.loading.set(false); }
-  onActionSettled(id: number): void { this.busy.update((s) => { const n = new Set(s); n.delete(id); return n; }); }
-  onMutated(): void { this.load(); }
+  onBulkDelete(ids: (string | number)[]): void { this.presenter.bulkDelete(ids as number[]); }
+
+  onActionSettled(id: number): void { this.clearBusy(id); }
+  onMutated(): void { this.table.refresh(); }
 }

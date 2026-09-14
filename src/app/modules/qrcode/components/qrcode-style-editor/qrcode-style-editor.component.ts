@@ -157,6 +157,14 @@ export class QrcodeStyleEditorComponent implements AfterViewInit, OnChanges {
   private fsldkImg: HTMLImageElement | null = null;
   private renderQueued = false;
   private viewReady = false;
+  /** True right after we emit our own patch — the parent's `[(value)]` echoes
+   *  it straight back down as a new `@Input() value`, which would otherwise
+   *  make the next ngOnChanges re-derive iconMode from data and stomp it back
+   *  to 'none' (a fresh 'custom' selection has empty centerIconKey/URL until
+   *  a file is actually uploaded, indistinguishable from "no icon" by value
+   *  alone) — this is what made "Unggah" look unclickable/unusable: the
+   *  dropzone mounted for a tick then got unmounted by the echoed value. */
+  private suppressNextSync = false;
 
   eq(a: string, b: string): boolean { return (a || '').toLowerCase() === b.toLowerCase(); }
 
@@ -171,8 +179,11 @@ export class QrcodeStyleEditorComponent implements AfterViewInit, OnChanges {
 
   ngOnChanges(ch: SimpleChanges): void {
     if (!this.viewReady) return;
-    if (ch['value'] && !ch['value'].firstChange) { this.syncModeFromValue(); this.scheduleRender(); }
-    else if (ch['previewContent'] && !ch['previewContent'].firstChange) this.scheduleRender();
+    if (ch['value'] && !ch['value'].firstChange) {
+      if (this.suppressNextSync) { this.suppressNextSync = false; }
+      else { this.syncModeFromValue(); }
+      this.scheduleRender();
+    } else if (ch['previewContent'] && !ch['previewContent'].firstChange) this.scheduleRender();
   }
 
   /** Menetapkan iconMode/iconPreset dari `value` (mis. saat form edit dibuka). */
@@ -198,6 +209,7 @@ export class QrcodeStyleEditorComponent implements AfterViewInit, OnChanges {
     if ('foregroundColor' in p && this.iconMode === 'preset' && this.iconPreset) {
       this.value.centerIconURL = composePresetIconDataUrl(this.iconPreset, this.value.foregroundColor, this.fsldkImg);
     }
+    this.suppressNextSync = true;
     this.valueChange.emit(this.value);
     this.scheduleRender();
   }

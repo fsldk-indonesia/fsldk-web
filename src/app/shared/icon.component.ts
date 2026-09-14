@@ -135,6 +135,16 @@ const ICONS: Record<string, string> = {
   paperclip: 'fas fa-paperclip',
   // Pemetik warna kustom (ColorPickerComponent) — tombol "ambil warna dari layar".
   'eye-dropper': 'fas fa-eye-dropper',
+  // Palet tipe field Formulir Dinamis (dynamicform.constants.ts FIELD_TYPES) —
+  // tiap tipe butuh ikon berbeda, sebelumnya banyak yang numpuk ke 'file-text'.
+  font: 'fas fa-font',
+  'align-left': 'fas fa-align-left',
+  hash: 'fas fa-hashtag',
+  upload: 'fas fa-upload',
+  paragraph: 'fas fa-paragraph',
+  'circle-dot': 'fas fa-circle-dot',
+  'square-check': 'fas fa-square-check',
+  sliders: 'fas fa-sliders',
 };
 
 /**

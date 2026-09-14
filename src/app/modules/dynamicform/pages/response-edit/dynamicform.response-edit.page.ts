@@ -18,8 +18,22 @@ import { DynamicFormResponseEditView } from './dynamicform.response-edit.view';
   styles: [`
     .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .88rem; margin-bottom: 8px; }
     .page-head { max-width: 760px; margin: 0 auto 20px; }
-    .form-card { max-width: 760px; margin: 0 auto; }
+    .page-head-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .page-head-top h1 { margin-bottom: 0; }
+    .form-card { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 20px; }
+    @media (max-width: 560px) { .meta-grid { grid-template-columns: 1fr; } }
+    .meta-item { display: flex; flex-direction: column; gap: 3px; }
+    .meta-item .l { font-size: .72rem; color: var(--color-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .meta-item .v { font-size: .92rem; color: var(--color-text); font-weight: 600; overflow-wrap: anywhere; }
     .opt-list { display: flex; flex-direction: column; gap: 4px; }
+    .file-current { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 8px 12px; background: var(--color-bg-alt); border-radius: var(--radius-xs); font-size: .86rem; }
+    .form-actions { display: flex; justify-content: space-between; gap: 10px; padding-top: 22px; margin-top: 4px; border-top: 1px solid var(--color-border); }
   `],
 })
 export class DynamicFormResponseEditPage implements OnInit, DynamicFormResponseEditView {

@@ -34,6 +34,17 @@ export const dynamicFormCmsRoutes: () => Routes = () => [
     loadComponent: () => import('./pages/form/dynamicform.form.page').then((m) => m.DynamicFormFormPage),
   },
   {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // DynamicFormIndexPage) — pola sama seperti Berita/Perpustakaan.
+    path: 'dynamic-forms/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'dynamicform.view', viewOnly: true },
+    title: 'Detail Formulir Dinamis',
+    loadComponent: () => import('./pages/form/dynamicform.form.page').then((m) => m.DynamicFormFormPage),
+  },
+  {
     path: 'dynamic-forms/:id/builder',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'dynamicform.update' },

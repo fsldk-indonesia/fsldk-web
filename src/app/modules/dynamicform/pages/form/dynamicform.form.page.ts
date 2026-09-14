@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/icon.component';
+import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { GSheetStatus } from '../../entities/dynamic-form';
 import { dynamicFormPath } from '../../dynamicform.path';
 import {
@@ -13,39 +14,30 @@ import { DynamicFormFormView } from './dynamicform.form.view';
   selector: 'app-dynamicform-form-page',
   standalone: true,
   templateUrl: './dynamicform.form.page.html',
-  imports: [FormsModule, RouterLink, IconComponent],
+  imports: [FormsModule, RouterLink, IconComponent, DateTimePickerComponent],
   providers: [DynamicFormFormPresenter],
   styles: [`
-    .page-head { max-width: 960px; margin: 0 auto 20px; }
-    .back { display: flex; width: fit-content; align-items: center; gap: 6px; margin-bottom: 10px; color: var(--color-text-secondary); font-size: .9rem; }
-    .page-head h1 { margin: 0; display: inline-block; padding-bottom: 6px; border-bottom: 3px solid var(--color-primary); }
-    .form-card { max-width: 960px; margin: 0 auto; padding: 28px; }
-    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
-    .col { min-width: 0; }
-    .section-title { display: flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: .07em; color: var(--color-muted);
-      margin: 26px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
-    .section-title:first-child { margin-top: 0; }
-    .section-title app-icon { color: var(--color-primary); }
-    .req { color: var(--color-danger); }
-    .muted-note { color: var(--color-muted); font-weight: 400; }
-    .info-box { display: flex; gap: 10px; align-items: flex-start; background: var(--color-primary-soft);
-      color: var(--color-primary-dark); border-radius: var(--radius-xs); padding: 12px 14px;
-      font-size: .84rem; line-height: 1.5; margin-bottom: 14px; }
+    .page-head { margin: 0 0 24px; }
+    .form-card { display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .form-control-lg { font-weight: 700; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 22px; margin-top: 4px; border-top: 1px solid var(--color-border); }
+
+    .switch { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+    .switch input[type="checkbox"] { margin-top: 3px; }
+    .switch-label { font-size: .92rem; }
+    .switch.is-disabled { cursor: not-allowed; opacity: .6; }
+
+    .info-box { display: flex; gap: 10px; align-items: flex-start; background: var(--color-primary-soft); color: var(--color-primary-dark); border-radius: var(--radius-xs); padding: 12px 14px; margin-bottom: 18px; font-size: .84rem; line-height: 1.5; }
     .info-box app-icon { flex-shrink: 0; margin-top: 1px; }
-    .advanced { margin-top: 4px; }
     .gsheet-status { background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius-xs); padding: 14px; margin-top: 4px; font-size: .88rem; }
     .gsheet-status p { margin: 0 0 6px; }
     .gsheet-status p:last-child { margin-bottom: 0; }
     .gsheet-error { color: var(--color-warning); }
-    .form-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--color-border); }
-    @media (max-width: 900px) {
-      .cols { grid-template-columns: 1fr; gap: 4px; }
-    }
-    @media (max-width: 560px) {
-      .form-footer { flex-direction: column-reverse; }
-      .form-footer .btn { width: 100%; justify-content: center; }
-    }
   `],
 })
 export class DynamicFormFormPage implements OnInit, DynamicFormFormView {
@@ -55,13 +47,24 @@ export class DynamicFormFormPage implements OnInit, DynamicFormFormView {
 
   readonly path = dynamicFormPath;
   editId: number | null = null;
+  // Halaman detail (read-only) memakai komponen yang sama dengan form edit —
+  // dibedakan lewat route data `viewOnly` (lihat dynamicform.routes.ts), pola
+  // sama seperti Perpustakaan/Event/Berita. Builder field tetap terpisah
+  // (bukan bagian dari "form" ini), jadi tidak ikut kena mode baca-saja.
+  isReadonly = false;
   saving = signal(false);
   form: DynamicFormFormValue = structuredClone(emptyDynamicFormForm);
   gsheet = signal<GSheetStatus | null>(null);
   gsheetAvailable = signal(true);
 
+  get pageSubtitle(): string {
+    if (this.isReadonly) return 'Lihat detail pengaturan formulir ini.';
+    return this.editId ? 'Perbarui pengaturan formulir yang sudah ada.' : 'Isi judul & pengaturan dasar, lalu lanjut ke Builder untuk menyusun field-nya.';
+  }
+
   ngOnInit(): void {
     this.presenter.attachView(this);
+    this.isReadonly = this.route.snapshot.data['viewOnly'] === true;
     const id = this.route.snapshot.paramMap.get('id');
     if (id) { this.editId = +id; this.presenter.loadForEdit(this.editId); }
   }

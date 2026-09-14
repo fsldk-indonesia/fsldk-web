@@ -1,65 +1,90 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { RouterLink, Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { AlertService } from '../../../../core/services/alert.service';
 import { IconComponent } from '../../../../shared/icon.component';
-import { PaginationComponent } from '../../../../shared/pagination.component';
+import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
+import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { DynamicForm } from '../../entities/dynamic-form';
 import { DynamicFormSubmissionRow } from '../../entities/dynamic-form-submission';
 import { dynamicFormPath } from '../../dynamicform.path';
 import { DynamicFormResponsesPresenter } from './dynamicform.responses.presenter';
 import { DynamicFormResponsesView } from './dynamicform.responses.view';
 
+/** Config CmsIndexConfig<DynamicFormSubmissionRow> — Status di sini bukan
+ *  enum string (lihat modul Formulir Dinamis sendiri), tapi valid/spam biner,
+ *  jadi hanya 2 opsi & dipetakan "1 dicentang = true/false" di presenter.
+ *  Backend rekap tidak punya sort dinamis (selalu submittedDate DESC), jadi
+ *  semua kolom sortable:false. */
+function buildResponsesIndexConfig(): CmsIndexConfig<DynamicFormSubmissionRow> {
+  return {
+    entityLabel: 'tanggapan',
+    statusOptions: [
+      { value: 'valid', label: 'Valid' },
+      { value: 'spam', label: 'Terindikasi Spam' },
+    ],
+    searchTargets: [
+      { value: 'search', label: 'Nama / Email' },
+    ],
+    showDateRange: true,
+    columns: [
+      { key: 'respondentName', label: 'Nama', sortable: false, locked: true },
+      { key: 'respondentEmail', label: 'Email', sortable: false },
+      { key: 'submittedDate', label: 'Tanggal', sortable: false },
+      { key: 'isValid', label: 'Status', sortable: false },
+    ],
+    defaultSort: { sortBy: 'submittedDate', sortDir: 'desc' },
+    rowIdKey: 'submissionID',
+    limit: 20,
+    emptyIcon: 'clipboard-list',
+    emptyTitle: 'Belum ada tanggapan',
+    emptyDescription: 'Tanggapan yang masuk lewat tautan publik akan muncul di sini.',
+  };
+}
+
 @Component({
   selector: 'app-dynamicform-responses-page',
   standalone: true,
   templateUrl: './dynamicform.responses.page.html',
-  imports: [DatePipe, RouterLink, FormsModule, IconComponent, PaginationComponent],
+  imports: [DatePipe, RouterLink, IconComponent, CmsIndexComponent],
   providers: [DynamicFormResponsesPresenter],
   styles: [`
-    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .88rem; margin-bottom: 8px; }
     .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
     .page-head h1 { margin-bottom: 2px; }
-    .toolbar { flex-wrap: wrap; }
-    .toolbar .form-control { max-width: 260px; }
-    .check-inline { display: inline-flex; align-items: center; gap: 8px; font-size: .88rem; color: var(--color-text); }
+    .table-actions { flex-wrap: nowrap; }
+    .page-footer { display: flex; justify-content: flex-end; margin-top: 22px; }
   `],
 })
 export class DynamicFormResponsesPage implements OnInit, DynamicFormResponsesView {
   private presenter = inject(DynamicFormResponsesPresenter);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private auth = inject(AuthRepository);
   private alert = inject(AlertService);
+
+  @ViewChild(CmsIndexComponent) private table!: CmsIndexComponent<DynamicFormSubmissionRow>;
 
   readonly path = dynamicFormPath;
   formId = Number(this.route.snapshot.paramMap.get('id'));
   form = signal<DynamicForm | null>(null);
-  rows = signal<DynamicFormSubmissionRow[]>([]);
-  loading = signal(true);
-  search = '';
-  validOnly = false;
-  page = signal(1);
-  count = signal(0);
-  readonly limit = 20;
 
   canUpdate = this.auth.hasPermission('dynamicform.update');
   canDelete = this.auth.hasPermission('dynamicform.delete');
 
+  readonly config = buildResponsesIndexConfig();
+  dataSource = (params: CmsListParams) => this.presenter.list(this.formId, params);
+
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadForm(this.formId);
-    this.load();
   }
 
-  load(): void {
-    this.loading.set(true);
-    this.presenter.load(this.formId, this.page(), this.limit, this.search, this.validOnly);
+  viewSubmission(r: DynamicFormSubmissionRow): void {
+    if (!this.canUpdate) return;
+    this.router.navigate([this.path.responseEdit(this.formId, r.submissionID)]);
   }
-  apply(): void { this.page.set(1); this.load(); }
-  goPage(p: number): void { this.page.set(p); this.load(); }
 
   exportCsv(): void { this.presenter.exportCsv(this.formId); }
 
@@ -71,6 +96,8 @@ export class DynamicFormResponsesPage implements OnInit, DynamicFormResponsesVie
     this.presenter.deleteSubmission(this.formId, r.submissionID);
   }
 
+  onBulkDelete(ids: (string | number)[]): void { this.presenter.bulkDelete(this.formId, ids as number[]); }
+
   async deleteAll(event?: Event): Promise<void> {
     const ok = await this.alert.confirm('Hapus SEMUA tanggapan formulir ini? Berkas terunggah ikut terhapus permanen.', {
       title: 'Hapus Semua Respons', confirmLabel: 'Ya, Hapus Semua', variant: 'danger',
@@ -80,6 +107,5 @@ export class DynamicFormResponsesPage implements OnInit, DynamicFormResponsesVie
   }
 
   setForm(form: DynamicForm): void { this.form.set(form); }
-  setSubmissions(rows: DynamicFormSubmissionRow[], count: number): void { this.rows.set(rows); this.count.set(count); this.loading.set(false); }
-  onMutated(): void { this.presenter.loadForm(this.formId); this.load(); }
+  onMutated(): void { this.presenter.loadForm(this.formId); this.table.refresh(); }
 }

@@ -1,18 +1,34 @@
-<a class="back-link" [routerLink]="path.index"><app-icon name="arrow-left" [size]="14" /> Kembali ke daftar formulir</a>
-<h1>Analitik</h1>
-@if (form()) { <p class="text-muted">{{ form()!.title }}</p> }
+<div class="page-head">
+  <h1>Analitik</h1>
+  @if (form()) { <p class="text-muted">{{ form()!.title }}</p> }
+</div>
 
 @if (data(); as d) {
   <div class="stat-row">
-    <div class="card card-pad stat"><div class="n">{{ d.validCount + d.invalidCount }}</div><div class="l">Total tanggapan</div></div>
-    <div class="card card-pad stat"><div class="n">{{ d.validCount }}</div><div class="l">Valid</div></div>
-    <div class="card card-pad stat"><div class="n">{{ d.uniqueRespondents }}</div><div class="l">Responden unik</div></div>
-    <div class="card card-pad stat"><div class="n">{{ d.invalidCount }}</div><div class="l">Terindikasi spam</div></div>
-    <div class="card card-pad stat"><div class="n">{{ d.totalFiles }}</div><div class="l">Berkas terunggah</div></div>
+    <div class="stat-card">
+      <span class="icon-badge md icon-badge-soft"><app-icon name="inbox" [size]="19" /></span>
+      <span class="stat-card-body"><span class="stat-card-value">{{ d.validCount + d.invalidCount }}</span><span class="stat-card-label">Total tanggapan</span></span>
+    </div>
+    <div class="stat-card">
+      <span class="icon-badge md icon-badge-solid"><app-icon name="check-circle" [size]="19" /></span>
+      <span class="stat-card-body"><span class="stat-card-value">{{ d.validCount }}</span><span class="stat-card-label">Valid</span></span>
+    </div>
+    <div class="stat-card">
+      <span class="icon-badge md icon-badge-info"><app-icon name="users" [size]="19" /></span>
+      <span class="stat-card-body"><span class="stat-card-value">{{ d.uniqueRespondents }}</span><span class="stat-card-label">Responden unik</span></span>
+    </div>
+    <div class="stat-card">
+      <span class="icon-badge md icon-badge-danger"><app-icon name="alert-triangle" [size]="19" /></span>
+      <span class="stat-card-body"><span class="stat-card-value">{{ d.invalidCount }}</span><span class="stat-card-label">Terindikasi spam</span></span>
+    </div>
+    <div class="stat-card">
+      <span class="icon-badge md icon-badge-gold"><app-icon name="paperclip" [size]="19" /></span>
+      <span class="stat-card-body"><span class="stat-card-value">{{ d.totalFiles }}</span><span class="stat-card-label">Berkas terunggah</span></span>
+    </div>
   </div>
 
   <div class="card card-pad chart-block">
-    <h4>Pengiriman per hari (30 hari terakhir)</h4>
+    <p class="section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="chart-bar" [size]="14" /></span>Pengiriman per Hari (30 Hari Terakhir)</p>
     <div class="spark">
       @for (day of d.submissionsPerDay; track day.date) {
         <div class="bar" [style.height.%]="pct(day.count, maxPerDay())" [title]="day.date + ': ' + day.count"></div>
@@ -20,27 +36,28 @@
     </div>
   </div>
 
-  @for (chart of d.fieldCharts ?? []; track chart.fieldID) {
+  @if ((d.fieldCharts ?? []).length > 0) {
     <div class="card card-pad chart-block">
-      <h4>{{ chart.label }}</h4>
-      @if (chart.buckets.length === 0) {
-        <p class="text-muted">Belum ada data.</p>
-      } @else {
-        @for (b of chart.buckets; track b.label) {
-          <div class="hbar">
-            <span class="name">{{ b.label || '(kosong)' }}</span>
-            <span class="track"><span class="fill" [style.width.%]="pct(b.count, maxBucket(chart))"></span></span>
-            <span class="val">{{ b.count }}</span>
-          </div>
-        }
+      <p class="section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="list-checks" [size]="14" /></span>Distribusi Jawaban per Field</p>
+      @for (chart of d.fieldCharts ?? []; track chart.fieldID) {
+        <div class="field-chart">
+          <p class="section-label" style="margin-bottom:10px; text-transform:none; letter-spacing:0; font-size:.86rem; color:var(--color-text)">{{ chart.label }}</p>
+          @if (chart.buckets.length === 0) {
+            <p class="chart-empty">Belum ada data.</p>
+          } @else {
+            @for (b of chart.buckets; track b.label) {
+              <app-stat-bar [label]="b.label || '(kosong)'" [value]="b.count" [max]="maxBucket(chart)" />
+            }
+          }
+        </div>
       }
     </div>
   }
 
   <div class="card card-pad chart-block">
-    <h4>10 tanggapan terbaru</h4>
+    <p class="section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="clipboard-list" [size]="14" /></span>10 Tanggapan Terbaru</p>
     @if ((d.recent ?? []).length === 0) {
-      <p class="text-muted">Belum ada tanggapan.</p>
+      <p class="chart-empty">Belum ada tanggapan.</p>
     } @else {
       <div class="table-wrap">
         <table class="table">
@@ -62,3 +79,7 @@
 } @else {
   <p class="text-muted">Memuat…</p>
 }
+
+<div class="page-footer">
+  <a class="btn btn-outline" [routerLink]="path.index"><app-icon name="arrow-left" [size]="14" /> Kembali</a>
+</div>
