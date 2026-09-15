@@ -18,6 +18,7 @@ export interface Withdrawal {
   approvedDate?: string;
   executedDate?: string;
   completedDate?: string;
+  receiptUrl?: string;
   createdDate: string;
 }
 

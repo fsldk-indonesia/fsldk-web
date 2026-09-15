@@ -2,7 +2,6 @@
   <div class="wizard-card"><span class="skel skel-title"></span></div>
 } @else {
   <div class="page-head">
-    <a class="back" [routerLink]="kantongAmalPath.adminWithdrawals">← Penarikan</a>
     <h1>Penarikan Saldo</h1>
   </div>
 
@@ -20,7 +19,7 @@
         @if (balance()) {
           <p class="text-muted mt-sm" style="font-size:.88rem">Saldo tersedia: <strong>{{ formatRupiah(balance()!.availableBalance) }}</strong></p>
           <label class="form-label mt-md">Nominal</label>
-          <input class="form-control" type="number" [(ngModel)]="amount" placeholder="0">
+          <app-money-input [(ngModel)]="amount" />
           @if (amount && amount > balance()!.availableBalance) {
             <p class="form-error">Nominal melebihi saldo tersedia.</p>
           }
@@ -29,7 +28,10 @@
           <span class="skel skel-line mt-sm"></span>
         }
       }
-      <button class="btn btn-primary mt-lg" style="width:100%" [disabled]="!canProceedFromAmount()" (click)="goToStep(2)">Lanjutkan</button>
+      <div class="flex gap justify-between mt-lg">
+        <a class="btn btn-outline" [routerLink]="kantongAmalPath.adminWithdrawals">Batal</a>
+        <button class="btn btn-primary" [disabled]="!canProceedFromAmount()" (click)="goToStep(2)">Lanjutkan</button>
+      </div>
     }
 
     @if (step() === 2) {

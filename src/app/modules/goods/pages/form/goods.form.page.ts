@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { MultiImageUploadComponent } from '../../../../shared/multi-image-upload.component';
+import { MoneyInputComponent } from '../../../../shared/money-input.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
 import { SelectComponent } from '../../../../shared/select.component';
 import { GoodsCategory } from '../../entities/goods-category';
@@ -20,7 +21,7 @@ const AVAILABILITY_OPTIONS = [
   selector: 'app-goods-form-page',
   standalone: true,
   templateUrl: './goods.form.page.html',
-  imports: [FormsModule, RouterLink, IconComponent, ImageUploadComponent, MultiImageUploadComponent, RichTextEditorComponent, SelectComponent],
+  imports: [FormsModule, RouterLink, IconComponent, ImageUploadComponent, MultiImageUploadComponent, MoneyInputComponent, RichTextEditorComponent, SelectComponent],
   providers: [GoodsFormPresenter],
   styles: [`
     .page-head { margin: 0 0 24px; }

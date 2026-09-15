@@ -26,6 +26,9 @@ export class ReportApiService {
 
   withdrawals(q: Record<string, unknown>): Observable<WithdrawalReportEnvelope> { return this.api.get('/reports/kantong-amal/withdrawals', q); }
   exportWithdrawals(q: Record<string, unknown>): Observable<{ blob: Blob; filename: string }> { return this.api.getBlob('/reports/kantong-amal/withdrawals/export', q); }
+  /** Funnel di-load lewat endpoint sendiri (bukan dari withdrawals() di atas)
+   *  — kontrak dataSource CmsIndexComponent cuma menerima Pagination murni. */
+  withdrawalFunnel(campaignID?: number): Observable<WithdrawalStatusFunnel[]> { return this.api.get('/reports/kantong-amal/withdrawals/funnel', campaignID ? { campaignID } : undefined); }
 
   reconciliation(): Observable<Reconciliation> { return this.api.get('/reports/kantong-amal/reconciliation'); }
 

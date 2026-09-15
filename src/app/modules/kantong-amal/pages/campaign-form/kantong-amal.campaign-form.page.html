@@ -3,94 +3,101 @@
 } @else {
   <div class="page-head">
     <a class="back" [routerLink]="kantongAmalPath.adminCampaigns">← Campaign</a>
-    <h1>{{ editId ? 'Ubah Campaign' : 'Buat Campaign Baru' }}</h1>
+    <h1>{{ pageTitle }}</h1>
   </div>
 
-  <div class="card card-pad form-card">
+  <div class="form-card">
     @if (isReadonly) {
-      <div class="readonly-note">Campaign ini sudah diarsipkan dan tidak dapat diubah dari sini.</div>
+      <div class="readonly-note"><app-icon name="info-circle" [size]="14" /><span>{{ readonlyNote }}</span></div>
     }
 
-    <label class="form-label">Judul Campaign</label>
-    <input class="form-control" [(ngModel)]="form.title" [disabled]="isReadonly" placeholder="Judul campaign">
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span>Informasi Dasar</p>
+      <div class="form-group"><label class="form-label">Judul Campaign</label>
+        <input class="form-control" [(ngModel)]="form.title" [disabled]="isReadonly" placeholder="Judul campaign"></div>
+      <div class="form-group"><label class="form-label">Kategori</label>
+        <app-select [options]="categoryOptions" [(ngModel)]="form.categoryID" [disabled]="isReadonly" placeholder="Pilih kategori" /></div>
+      <div class="grid grid-2">
+        <div class="form-group"><label class="form-label">Provinsi</label>
+          <input class="form-control" [(ngModel)]="form.provinceName" [disabled]="isReadonly" placeholder="mis. DKI Jakarta"></div>
+        <div class="form-group"><label class="form-label">Kota/Kabupaten</label>
+          <input class="form-control" [(ngModel)]="form.cityName" [disabled]="isReadonly" placeholder="mis. Jakarta Selatan"></div>
+      </div>
+      <div class="form-group mb-0"><label class="form-label">Tujuan Penggalangan Dana</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="form.goals" [disabled]="isReadonly" placeholder="Ringkasan tujuan penggunaan dana"></textarea></div>
+    </section>
 
-    <label class="form-label mt-md">Kategori</label>
-    <app-select [options]="categoryOptions" [(ngModel)]="form.categoryID" [disabled]="isReadonly" placeholder="Pilih kategori" />
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="image" [size]="14" /></span>Cerita &amp; Gambar</p>
+      <div class="form-group"><label class="form-label">Cerita (minimal 50 karakter)</label>
+        <app-rich-text-editor [(value)]="form.story" /></div>
+      <div class="form-group"><label class="form-label">Gambar Sampul</label>
+        <app-image-upload [value]="form.coverImageUrl" [disabled]="isReadonly" (valueChange)="form.coverImageUrl = $event" /></div>
+      <div class="form-group mb-0">
+        <label class="form-label">Gambar Pendukung (opsional)</label>
+        <div class="support-images">
+          @for (url of form.supportingImageUrls; track $index) {
+            <div class="support-image-item">
+              <app-image-upload [value]="url" [disabled]="isReadonly" (valueChange)="setSupportingImage($index, $event)" />
+              @if (!isReadonly) { <button type="button" class="remove-btn" (click)="removeSupportingImage($index)">×</button> }
+            </div>
+          }
+        </div>
+        @if (!isReadonly && form.supportingImageUrls.length < 10) {
+          <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addSupportingImage()">+ Tambah Gambar</button>
+        }
+      </div>
+    </section>
 
-    <div class="grid grid-2 mt-md">
-      <div><label class="form-label">Provinsi</label>
-        <input class="form-control" [(ngModel)]="form.provinceName" [disabled]="isReadonly" placeholder="mis. DKI Jakarta"></div>
-      <div><label class="form-label">Kota/Kabupaten</label>
-        <input class="form-control" [(ngModel)]="form.cityName" [disabled]="isReadonly" placeholder="mis. Jakarta Selatan"></div>
-    </div>
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="banknote" [size]="14" /></span>Target &amp; Jadwal</p>
+      <div class="form-group"><label class="form-label">Target Dana</label>
+        <app-money-input [(ngModel)]="form.targetAmount" [disabled]="isReadonly" /></div>
+      <div class="grid grid-2 mb-0">
+        <div class="form-group mb-0"><label class="form-label">Mulai (opsional)</label><app-datetime-picker [showTime]="true" [(ngModel)]="form.startDate" [disabled]="isReadonly" /></div>
+        <div class="form-group mb-0"><label class="form-label">Selesai (opsional)</label><app-datetime-picker [showTime]="true" [(ngModel)]="form.endDate" [disabled]="isReadonly" /></div>
+      </div>
+    </section>
 
-    <label class="form-label mt-md">Tujuan Penggalangan Dana</label>
-    <textarea class="form-control" rows="3" [(ngModel)]="form.goals" [disabled]="isReadonly" placeholder="Ringkasan tujuan penggunaan dana"></textarea>
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="user-circle" [size]="14" /></span>Penanggung Jawab</p>
+      <div class="grid grid-2">
+        <div class="form-group"><label class="form-label">Nama PIC</label>
+          <input class="form-control" [(ngModel)]="form.picName" [disabled]="isReadonly"></div>
+        <div class="form-group"><label class="form-label">No. WhatsApp PIC</label>
+          <app-phone-input [(ngModel)]="form.picPhone" [disabled]="isReadonly" /></div>
+      </div>
+      <div class="toggle-row mb-0">
+        <input type="checkbox" id="anon-allowed" [(ngModel)]="form.isAnonymousAllowed" [disabled]="isReadonly">
+        <label for="anon-allowed">Izinkan donatur berdonasi secara anonim</label>
+      </div>
+      @if (editId) {
+        <div class="form-group mt-md mb-0"><label class="form-label">Update Terbaru (opsional, tampil di halaman publik)</label>
+          <app-rich-text-editor [(value)]="form.latestUpdate" /></div>
+      }
+    </section>
 
-    <label class="form-label mt-md">Cerita (minimal 50 karakter)</label>
-    <app-rich-text-editor [(value)]="form.story" />
-
-    <label class="form-label mt-md">Gambar Sampul</label>
-    <app-image-upload [value]="form.coverImageUrl" (valueChange)="form.coverImageUrl = $event" />
-
-    <label class="form-label mt-md">Gambar Pendukung (opsional)</label>
-    <div class="support-images">
-      @for (url of form.supportingImageUrls; track $index) {
-        <div class="support-image-item">
-          <app-image-upload [value]="url" (valueChange)="setSupportingImage($index, $event)" />
-          <button type="button" class="remove-btn" (click)="removeSupportingImage($index)">×</button>
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-neutral"><app-icon name="building" [size]="14" /></span>Organisasi Penyelenggara</p>
+      <div class="toggle-row" [class.mb-0]="!organizationEnabled">
+        <input type="checkbox" id="org-enabled" [ngModel]="organizationEnabled" (ngModelChange)="onOrganizationToggleChange($event)" [disabled]="isReadonly">
+        <label for="org-enabled">Campaign ini diselenggarakan atas nama organisasi/yayasan di luar FSLDK</label>
+      </div>
+      @if (organizationEnabled) {
+        <div class="form-group mt-md"><label class="form-label">Nama Organisasi</label>
+          <input class="form-control" [(ngModel)]="form.organizationNameOverride" [disabled]="isReadonly"></div>
+        <div class="grid grid-2 mb-0">
+          <div class="form-group mb-0"><label class="form-label">Logo Organisasi (URL)</label>
+            <app-image-upload [value]="form.organizationLogoUrl" [disabled]="isReadonly" (valueChange)="form.organizationLogoUrl = $event" /></div>
+          <div class="form-group mb-0"><label class="form-label">Tautan Organisasi</label>
+            <input class="form-control" [(ngModel)]="form.organizationLinkUrl" [disabled]="isReadonly" placeholder="https://..."></div>
         </div>
       }
-    </div>
-    @if (!isReadonly && form.supportingImageUrls.length < 10) {
-      <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addSupportingImage()">+ Tambah Gambar</button>
-    }
-
-    <label class="form-label mt-md">Target Dana (Rp)</label>
-    <input class="form-control" type="number" [(ngModel)]="form.targetAmount" [disabled]="isReadonly" placeholder="0">
-
-    <div class="grid grid-2 mt-md">
-      <div><label class="form-label">Mulai (opsional)</label><app-datetime-picker [showTime]="true" [(ngModel)]="form.startDate" [disabled]="isReadonly" /></div>
-      <div><label class="form-label">Selesai (opsional)</label><app-datetime-picker [showTime]="true" [(ngModel)]="form.endDate" [disabled]="isReadonly" /></div>
-    </div>
-
-    <h3 class="mt-lg section-title">Penanggung Jawab</h3>
-    <div class="grid grid-2 mt-sm">
-      <div><label class="form-label">Nama PIC</label>
-        <input class="form-control" [(ngModel)]="form.picName" [disabled]="isReadonly"></div>
-      <div><label class="form-label">No. WhatsApp PIC</label>
-        <input class="form-control" [(ngModel)]="form.picPhone" [disabled]="isReadonly" placeholder="62812xxxxxxx"></div>
-    </div>
-
-    <div class="toggle-row mt-md">
-      <input type="checkbox" id="anon-allowed" [(ngModel)]="form.isAnonymousAllowed" [disabled]="isReadonly">
-      <label for="anon-allowed">Izinkan donatur berdonasi secara anonim</label>
-    </div>
-
-    @if (editId) {
-      <label class="form-label mt-md">Update Terbaru (opsional, tampil di halaman publik)</label>
-      <app-rich-text-editor [(value)]="form.latestUpdate" />
-    }
-
-    <h3 class="mt-lg section-title">Organisasi Penyelenggara</h3>
-    <div class="toggle-row mt-sm">
-      <input type="checkbox" id="org-enabled" [ngModel]="organizationEnabled" (ngModelChange)="onOrganizationToggleChange($event)" [disabled]="isReadonly">
-      <label for="org-enabled">Campaign ini diselenggarakan atas nama organisasi/yayasan di luar FSLDK</label>
-    </div>
-
-    @if (organizationEnabled) {
-      <label class="form-label mt-md">Nama Organisasi</label>
-      <input class="form-control" [(ngModel)]="form.organizationNameOverride" [disabled]="isReadonly">
-      <div class="grid grid-2 mt-md">
-        <div><label class="form-label">Logo Organisasi (URL)</label>
-          <app-image-upload [value]="form.organizationLogoUrl" (valueChange)="form.organizationLogoUrl = $event" /></div>
-        <div><label class="form-label">Tautan Organisasi</label>
-          <input class="form-control" [(ngModel)]="form.organizationLinkUrl" [disabled]="isReadonly" placeholder="https://..."></div>
-      </div>
-    }
+    </section>
 
     @if (!isReadonly) {
-      <div class="flex gap justify-between mt-lg">
+      <div class="form-actions">
+        <a class="btn btn-ghost" [routerLink]="kantongAmalPath.adminCampaigns">Batal</a>
         <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
           @if (saving()) { <span class="spinner"></span> } @else { Simpan }
         </button>

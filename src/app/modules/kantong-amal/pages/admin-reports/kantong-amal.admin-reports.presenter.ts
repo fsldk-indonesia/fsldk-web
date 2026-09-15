@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { CampaignRepository } from '../../repositories/campaign.repository';
 import { ReportRepository } from '../../repositories/report.repository';
+import { CampaignReportRow, DonationReportRow, GlobalLedgerRow, WithdrawalReportRow } from '../../entities/report';
 import { KantongAmalAdminReportsView } from './kantong-amal.admin-reports.view';
 
 @Injectable()
@@ -29,11 +33,13 @@ export class KantongAmalAdminReportsPresenter extends BasePresenter<KantongAmalA
     });
   }
 
-  loadCampaignRows(page: number, limit: number, status: string): void {
-    this.view.setLoading(true);
-    this.reportRepo.campaigns({ page, limit, status: status || undefined }).subscribe({
-      next: (p) => { this.view.setCampaignRows(p.data, p.count); this.view.setLoading(false); },
-      error: () => this.view.setLoading(false),
+  /** dataSource untuk <app-cms-index> tab Campaign — Status genuinely
+   *  multi-select bermakna, search mencocokkan judul campaign. */
+  campaignsList(params: CmsListParams): Observable<Pagination<CampaignReportRow>> {
+    return this.reportRepo.campaigns({
+      page: params.page, limit: params.limit,
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      status: params.status.join(','),
     });
   }
 
@@ -45,11 +51,12 @@ export class KantongAmalAdminReportsPresenter extends BasePresenter<KantongAmalA
     });
   }
 
-  loadDonations(page: number, limit: number, status: string): void {
-    this.view.setLoading(true);
-    this.reportRepo.donations({ page, limit, status: status || undefined }).subscribe({
-      next: (p) => { this.view.setDonationRows(p.data, p.count); this.view.setLoading(false); },
-      error: () => this.view.setLoading(false),
+  /** dataSource untuk <app-cms-index> tab Donasi. */
+  donationsList(params: CmsListParams): Observable<Pagination<DonationReportRow>> {
+    return this.reportRepo.donations({
+      page: params.page, limit: params.limit,
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      status: params.status.join(','),
     });
   }
 
@@ -61,11 +68,20 @@ export class KantongAmalAdminReportsPresenter extends BasePresenter<KantongAmalA
     });
   }
 
-  loadWithdrawals(page: number, limit: number, status: string): void {
-    this.view.setLoading(true);
-    this.reportRepo.withdrawals({ page, limit, status: status || undefined }).subscribe({
-      next: (r) => { this.view.setWithdrawalRows(r.items.data, r.items.count, r.statusFunnel); this.view.setLoading(false); },
-      error: () => this.view.setLoading(false),
+  /** dataSource untuk <app-cms-index> tab Withdrawal — funnel status di-load
+   *  terpisah lewat loadWithdrawalFunnel() (lihat catatan report-api.service.ts). */
+  withdrawalsList(params: CmsListParams): Observable<Pagination<WithdrawalReportRow>> {
+    return this.reportRepo.withdrawals({
+      page: params.page, limit: params.limit,
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      status: params.status.join(','),
+    }).pipe(map((r) => r.items));
+  }
+
+  loadWithdrawalFunnel(campaignID: number | null): void {
+    this.reportRepo.withdrawalFunnel(campaignID || undefined).subscribe({
+      next: (funnel) => this.view.setWithdrawalFunnel(funnel),
+      error: () => {},
     });
   }
 
@@ -77,11 +93,15 @@ export class KantongAmalAdminReportsPresenter extends BasePresenter<KantongAmalA
     });
   }
 
-  loadLedgerGlobal(page: number, limit: number, campaignID: number | null, direction: string): void {
-    this.view.setLoading(true);
-    this.reportRepo.ledgerGlobal({ page, limit, campaignID: campaignID || undefined, direction: direction || undefined }).subscribe({
-      next: (p) => { this.view.setLedgerGlobalRows(p.data, p.count); this.view.setLoading(false); },
-      error: () => this.view.setLoading(false),
+  /** dataSource untuk <app-cms-index> tab Debit Kredit Global — Arah genuinely
+   *  multi-select bermakna (2 nilai, CREDIT/DEBIT), search mencocokkan judul
+   *  campaign. campaignID tetap filter terpisah (dropdown di luar CmsIndexComponent). */
+  ledgerGlobalList(params: CmsListParams, campaignID: number | null): Observable<Pagination<GlobalLedgerRow>> {
+    return this.reportRepo.ledgerGlobal({
+      page: params.page, limit: params.limit,
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      direction: params.status.join(','),
+      campaignID: campaignID || undefined,
     });
   }
 

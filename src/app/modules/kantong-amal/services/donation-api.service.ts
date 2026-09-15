@@ -20,4 +20,5 @@ export class DonationApiService {
   adminCreate(body: AdminCreateDonationRequest): Observable<Donation> { return this.api.post('/donations', body); }
   adminUpdate(id: number, body: AdminUpdateDonationRequest): Observable<Donation> { return this.api.put(`/donations/${id}`, body); }
   adminDelete(id: number): Observable<void> { return this.api.delete(`/donations/${id}`); }
+  bulkDelete(ids: number[]): Observable<{ deleted: number[]; skipped: number[] }> { return this.api.post('/donations/bulk-delete', { ids }); }
 }

@@ -2,7 +2,10 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CampaignDetail } from '../../entities/campaign';
+import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { MoneyInputComponent } from '../../../../shared/money-input.component';
+import { PhoneInputComponent } from '../../../../shared/phone-input.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { RichTextEditorComponent } from '../../../../shared/rich-text-editor.component';
@@ -46,17 +49,23 @@ const EMPTY_FORM: CampaignFormValue = {
   selector: 'app-kantong-amal-campaign-form-page',
   standalone: true,
   templateUrl: './kantong-amal.campaign-form.page.html',
-  imports: [RouterLink, FormsModule, ImageUploadComponent, SelectComponent, DateTimePickerComponent, RichTextEditorComponent],
+  imports: [RouterLink, FormsModule, IconComponent, ImageUploadComponent, MoneyInputComponent, PhoneInputComponent, SelectComponent, DateTimePickerComponent, RichTextEditorComponent],
   providers: [KantongAmalCampaignFormPresenter],
   styles: [`
     .page-head { max-width: 820px; margin: 0 auto 24px; }
-    .form-card { max-width: 820px; margin: 0 auto; }
+    .form-card { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
     .support-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 10px; }
     .support-image-item { position: relative; }
     .support-image-item .remove-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,.55); color: #fff; border: none; border-radius: 999px; width: 22px; height: 22px; cursor: pointer; }
-    .readonly-note { background: var(--color-bg-alt); border-radius: var(--radius-sm); padding: 12px 16px; font-size: .88rem; color: var(--color-text-secondary); margin-bottom: 20px; }
-    .section-title { font-size: 1rem; padding-top: 20px; border-top: 1px solid var(--color-border); }
+    .readonly-note { display: flex; gap: 10px; align-items: flex-start; background: var(--color-bg-alt); border-radius: var(--radius-xs); padding: 12px 14px; font-size: .84rem; color: var(--color-text-secondary); line-height: 1.5; }
+    .readonly-note app-icon { flex-shrink: 0; margin-top: 1px; }
     .toggle-row { display: flex; align-items: center; gap: 10px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 22px; margin-top: 4px; border-top: 1px solid var(--color-border); }
   `],
 })
 export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignFormView {
@@ -81,15 +90,28 @@ export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignF
 
   readonly kantongAmalPath = kantongAmalPath;
 
+  // Halaman detail (read-only) memakai komponen yang sama dengan form edit —
+  // dibedakan lewat route data `viewOnly` (lihat kantong-amal.routes.ts),
+  // pola sama seperti Formulir Dinamis/Berita. Digabung dengan aturan lama
+  // "ARCHIVED selalu read-only" lewat OR, bukan menggantikannya.
+  private viewOnlyRoute = false;
+
   get categoryOptions(): SelectOption[] { return this.categories().map((c) => ({ value: c.campaignCategoryID, label: c.categoryName })); }
   get isReadonly(): boolean {
-    // Campaign murni CRUD — boleh diedit siapapun berhak di status apapun
-    // kecuali ARCHIVED, konsisten dengan backend Update().
-    return this.campaign()?.status === 'ARCHIVED';
+    return this.viewOnlyRoute || this.campaign()?.status === 'ARCHIVED';
+  }
+  get pageTitle(): string {
+    if (this.viewOnlyRoute) return 'Detail Campaign';
+    return this.editId ? 'Ubah Campaign' : 'Buat Campaign Baru';
+  }
+  get readonlyNote(): string {
+    if (this.campaign()?.status === 'ARCHIVED') return 'Campaign ini sudah diarsipkan dan tidak dapat diubah dari sini.';
+    return 'Anda melihat campaign ini dalam mode baca saja.';
   }
 
   ngOnInit(): void {
     this.presenter.attachView(this);
+    this.viewOnlyRoute = this.route.snapshot.data['viewOnly'] === true;
     this.campaignRepo.categories().subscribe({ next: (c) => this.categories.set(c), error: () => {} });
 
     const idParam = this.route.snapshot.paramMap.get('id');

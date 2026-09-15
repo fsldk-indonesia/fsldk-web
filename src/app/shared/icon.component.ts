@@ -145,6 +145,10 @@ const ICONS: Record<string, string> = {
   'circle-dot': 'fas fa-circle-dot',
   'square-check': 'fas fa-square-check',
   sliders: 'fas fa-sliders',
+  // Aksi baris index Campaign (Jeda/Arsipkan) — dikonversi dari button teks
+  // ke icon-action, lihat kantong-amal.admin-campaign.page.html.
+  pause: 'fas fa-pause',
+  archive: 'fas fa-box-archive',
 };
 
 /**

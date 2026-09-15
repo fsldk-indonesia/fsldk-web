@@ -3,61 +3,91 @@
 } @else {
   <div class="page-head">
     <a class="back" [routerLink]="kantongAmalPath.adminDonations">← Donasi</a>
-    <h1>{{ editId ? 'Ubah Donasi Manual' : 'Tambah Donasi Manual' }}</h1>
-    <p class="text-muted" style="font-size:.88rem">Untuk mencatat donasi yang tidak lewat Amdigipay/Bisatopup (tunai, transfer langsung, dsb).</p>
+    <h1>{{ pageTitle }}</h1>
+    @if (!isReadonly) { <p class="text-muted" style="font-size:.88rem">Untuk mencatat donasi yang tidak lewat Amdigipay/Bisatopup (tunai, transfer langsung, dsb).</p> }
   </div>
 
-  <div class="card card-pad form-card">
-    <label class="form-label">Campaign</label>
-    <app-select [options]="campaignOptions" [(ngModel)]="form.campaignID" placeholder="Pilih campaign" />
-
-    <label class="form-label mt-md">Nama Donatur</label>
-    <input class="form-control" [(ngModel)]="form.donorName" placeholder="Nama donatur">
-
-    <div class="grid grid-2 mt-md">
-      <div><label class="form-label">Email (opsional)</label>
-        <input class="form-control" type="email" [(ngModel)]="form.donorEmail"></div>
-      <div><label class="form-label">No. WhatsApp (opsional)</label>
-        <input class="form-control" [(ngModel)]="form.donorPhone"></div>
-    </div>
-
-    <div class="grid grid-3 mt-md">
-      <div><label class="form-label">Usia (opsional)</label>
-        <input class="form-control" [(ngModel)]="form.donorAge"></div>
-      <div><label class="form-label">Domisili (opsional)</label>
-        <input class="form-control" [(ngModel)]="form.donorDomicile"></div>
-      <div><label class="form-label">Pekerjaan (opsional)</label>
-        <input class="form-control" [(ngModel)]="form.donorOccupation"></div>
-    </div>
-
-    <label class="form-label mt-md">Nominal (Rp)</label>
-    <input class="form-control" type="number" [(ngModel)]="form.amount" placeholder="0">
-
-    <div class="grid grid-2 mt-md">
-      <div><label class="form-label">Metode Pembayaran</label>
-        <app-select [options]="paymentMethodOptions" [(ngModel)]="form.paymentMethod" /></div>
-      <div><label class="form-label">Status Pembayaran</label>
-        <app-select [options]="paymentStatusOptions" [(ngModel)]="form.paymentStatus" /></div>
-    </div>
-
-    <label class="form-label mt-md">Pesan (opsional)</label>
-    <textarea class="form-control" rows="3" [(ngModel)]="form.message"></textarea>
-
-    <div class="toggle-row mt-md">
-      <input type="checkbox" id="donation-anon" [(ngModel)]="form.isAnonymous">
-      <label for="donation-anon">Tampilkan sebagai donatur anonim</label>
-    </div>
-    @if (form.isAnonymous) {
-      <p class="anon-hint">
-        <app-icon name="info-circle" [size]="13" />
-        <span>Nama donatur tidak akan ditampilkan ke publik — daftar donatur akan menampilkan <strong>&ldquo;Hamba Allah&rdquo;</strong> sebagai gantinya.</span>
-      </p>
+  <div class="form-card">
+    @if (isReadonly) {
+      <div class="readonly-note">
+        <app-icon name="info-circle" [size]="14" />
+        <span>{{ isBisatopup ? 'Donasi ini masuk lewat gateway Bisatopup — catatan finansial, tidak dapat diubah atau dihapus dari sini.' : 'Anda melihat donasi ini dalam mode baca saja.' }}</span>
+      </div>
     }
 
-    <div class="flex gap justify-between mt-lg">
-      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
-        @if (saving()) { <span class="spinner"></span> } @else { Simpan }
-      </button>
-    </div>
+    @if (donation(); as d) {
+      <section class="card card-pad form-section-card">
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="hand-coins" [size]="14" /></span>Info Gateway</p>
+        <div class="meta-grid">
+          <div class="meta-item"><span class="l">Referensi Publik</span><span class="v">{{ d.publicRef }}</span></div>
+          <div class="meta-item"><span class="l">Gateway</span><span class="v">{{ d.gateway === 'manual' ? 'Manual (dicatat admin)' : 'Bisatopup' }}</span></div>
+          <div class="meta-item"><span class="l">Biaya Admin</span><span class="v">{{ formatRupiah(d.adminFee) }}</span></div>
+          <div class="meta-item"><span class="l">Total Diterima</span><span class="v">{{ formatRupiah(d.totalAmount) }}</span></div>
+        </div>
+      </section>
+    }
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="hand-heart" [size]="14" /></span>Campaign &amp; Donatur</p>
+      <div class="form-group"><label class="form-label">Campaign</label>
+        <app-select [options]="campaignOptions" [(ngModel)]="form.campaignID" [disabled]="isReadonly" placeholder="Pilih campaign" /></div>
+      <div class="form-group"><label class="form-label">Nama Donatur</label>
+        <input class="form-control" [(ngModel)]="form.donorName" [disabled]="isReadonly" placeholder="Nama donatur"></div>
+      <div class="grid grid-2 mb-0">
+        <div class="form-group mb-0"><label class="form-label">Email (opsional)</label>
+          <input class="form-control" type="email" [(ngModel)]="form.donorEmail" [disabled]="isReadonly"></div>
+        <div class="form-group mb-0"><label class="form-label">No. WhatsApp (opsional)</label>
+          <app-phone-input [(ngModel)]="form.donorPhone" [disabled]="isReadonly" /></div>
+      </div>
+    </section>
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="user-circle" [size]="14" /></span>Detail Donatur (opsional)</p>
+      <div class="grid grid-3 mb-0">
+        <div class="form-group mb-0"><label class="form-label">Usia</label>
+          <input class="form-control" [(ngModel)]="form.donorAge" [disabled]="isReadonly"></div>
+        <div class="form-group mb-0"><label class="form-label">Domisili</label>
+          <input class="form-control" [(ngModel)]="form.donorDomicile" [disabled]="isReadonly"></div>
+        <div class="form-group mb-0"><label class="form-label">Pekerjaan</label>
+          <input class="form-control" [(ngModel)]="form.donorOccupation" [disabled]="isReadonly"></div>
+      </div>
+    </section>
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="banknote" [size]="14" /></span>Nominal &amp; Pembayaran</p>
+      <div class="form-group"><label class="form-label">Nominal</label>
+        <app-money-input [(ngModel)]="form.amount" [disabled]="isReadonly" /></div>
+      <div class="grid grid-2 mb-0">
+        <div class="form-group mb-0"><label class="form-label">Metode Pembayaran</label>
+          <app-select [options]="paymentMethodOptions" [(ngModel)]="form.paymentMethod" [disabled]="isReadonly" placeholder="—" /></div>
+        <div class="form-group mb-0"><label class="form-label">Status Pembayaran</label>
+          <app-select [options]="paymentStatusOptions" [(ngModel)]="form.paymentStatus" [disabled]="isReadonly" placeholder="—" /></div>
+      </div>
+    </section>
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-neutral"><app-icon name="message-circle" [size]="14" /></span>Pesan &amp; Anonimitas</p>
+      <div class="form-group"><label class="form-label">Pesan (opsional)</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="form.message" [disabled]="isReadonly"></textarea></div>
+      <div class="toggle-row mb-0">
+        <input type="checkbox" id="donation-anon" [(ngModel)]="form.isAnonymous" [disabled]="isReadonly">
+        <label for="donation-anon">Tampilkan sebagai donatur anonim</label>
+      </div>
+      @if (form.isAnonymous) {
+        <p class="anon-hint">
+          <app-icon name="info-circle" [size]="13" />
+          <span>Nama donatur tidak akan ditampilkan ke publik — daftar donatur akan menampilkan <strong>&ldquo;Hamba Allah&rdquo;</strong> sebagai gantinya.</span>
+        </p>
+      }
+    </section>
+
+    @if (!isReadonly) {
+      <div class="form-actions">
+        <a class="btn btn-ghost" [routerLink]="kantongAmalPath.adminDonations">Batal</a>
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+          @if (saving()) { <span class="spinner"></span> } @else { Simpan }
+        </button>
+      </div>
+    }
   </div>
 }

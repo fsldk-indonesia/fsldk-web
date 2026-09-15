@@ -5,7 +5,10 @@ import { CampaignLite } from '../../entities/campaign';
 import { Donation, DonationAdminDetail, DonationPaymentMethod } from '../../entities/donation';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { IconComponent } from '../../../../shared/icon.component';
+import { MoneyInputComponent } from '../../../../shared/money-input.component';
+import { PhoneInputComponent } from '../../../../shared/phone-input.component';
 import { ToastService } from '../../../../core/services/toast.service';
+import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
 import { KantongAmalAdminDonationFormPresenter } from './kantong-amal.admin-donation-form.presenter';
 import { KantongAmalAdminDonationFormView } from './kantong-amal.admin-donation-form.view';
@@ -51,14 +54,27 @@ const EMPTY_FORM: DonationFormValue = {
   selector: 'app-kantong-amal-admin-donation-form-page',
   standalone: true,
   templateUrl: './kantong-amal.admin-donation-form.page.html',
-  imports: [RouterLink, FormsModule, SelectComponent, IconComponent],
+  imports: [RouterLink, FormsModule, SelectComponent, IconComponent, MoneyInputComponent, PhoneInputComponent],
   providers: [KantongAmalAdminDonationFormPresenter],
   styles: [`
     .page-head { max-width: 640px; margin: 0 auto 24px; }
-    .form-card { max-width: 640px; margin: 0 auto; }
+    .form-card { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
     .toggle-row { display: flex; align-items: center; gap: 10px; }
     .anon-hint { display: flex; align-items: flex-start; gap: 6px; margin: 10px 0 0; font-size: .82rem; color: var(--color-text-secondary); background: var(--color-primary-tint); border-radius: var(--radius-sm); padding: 10px 12px; }
     .anon-hint app-icon { color: var(--color-primary); flex-shrink: 0; margin-top: 1px; }
+    .readonly-note { display: flex; gap: 10px; align-items: flex-start; background: var(--color-bg-alt); border-radius: var(--radius-xs); padding: 12px 14px; font-size: .84rem; color: var(--color-text-secondary); line-height: 1.5; }
+    .readonly-note app-icon { flex-shrink: 0; margin-top: 1px; }
+    .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 20px; }
+    @media (max-width: 480px) { .meta-grid { grid-template-columns: 1fr; } }
+    .meta-item { display: flex; flex-direction: column; gap: 3px; }
+    .meta-item .l { font-size: .72rem; color: var(--color-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .meta-item .v { font-size: .92rem; color: var(--color-text); font-weight: 600; overflow-wrap: anywhere; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 10px; padding-top: 22px; margin-top: 4px; border-top: 1px solid var(--color-border); }
   `],
 })
 export class KantongAmalAdminDonationFormPage implements OnInit, KantongAmalAdminDonationFormView {
@@ -69,19 +85,35 @@ export class KantongAmalAdminDonationFormPage implements OnInit, KantongAmalAdmi
 
   editId: number | null = null;
   campaigns = signal<CampaignLite[]>([]);
+  donation = signal<DonationAdminDetail | null>(null);
   loading = signal(false);
   saving = signal(false);
 
   form: DonationFormValue = { ...EMPTY_FORM };
 
+  // Donasi gateway=bisatopup tidak bisa diubah/dihapus (catatan finansial
+  // gateway, lihat donation_service_impl.go) — halaman ini hanya bisa dibuka
+  // read-only untuknya lewat route data `viewOnly`, pola sama Berita/Formulir
+  // Dinamis. Beda dari Campaign, di sini TIDAK ada aturan "readonly implisit
+  // dari status" — murni ditentukan route.
+  private viewOnlyRoute = false;
+
   readonly kantongAmalPath = kantongAmalPath;
+  readonly formatRupiah = formatRupiah;
   readonly paymentMethodOptions = PAYMENT_METHOD_OPTIONS;
   readonly paymentStatusOptions = PAYMENT_STATUS_OPTIONS;
 
   get campaignOptions(): SelectOption[] { return this.campaigns().map((c) => ({ value: c.campaignID, label: c.title })); }
+  get isReadonly(): boolean { return this.viewOnlyRoute; }
+  get pageTitle(): string {
+    if (this.viewOnlyRoute) return 'Detail Donasi';
+    return this.editId ? 'Ubah Donasi Manual' : 'Tambah Donasi Manual';
+  }
+  get isBisatopup(): boolean { return this.donation()?.gateway === 'bisatopup'; }
 
   ngOnInit(): void {
     this.presenter.attachView(this);
+    this.viewOnlyRoute = this.route.snapshot.data['viewOnly'] === true;
     this.presenter.loadCampaigns();
 
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -128,12 +160,16 @@ export class KantongAmalAdminDonationFormPage implements OnInit, KantongAmalAdmi
   setCampaigns(campaigns: CampaignLite[]): void { this.campaigns.set(campaigns); }
 
   setDonation(donation: DonationAdminDetail | null): void {
+    this.donation.set(donation);
     if (!donation) return;
     this.form = {
       campaignID: donation.campaignID, donorName: donation.donorName, donorEmail: donation.donorEmail ?? '',
       donorPhone: donation.donorPhone ?? '', donorAge: donation.donorAge ?? '', donorDomicile: donation.donorDomicile ?? '',
       donorOccupation: donation.donorOccupation ?? '', isAnonymous: donation.isAnonymous, message: donation.message ?? '',
-      amount: donation.amount, paymentMethod: donation.paymentMethod ?? 'CASH', paymentStatus: donation.paymentStatus,
+      // Fallback ke 'CASH' HANYA masuk akal untuk EMPTY_FORM (entri baru) —
+      // untuk data yang sudah ada (khususnya donasi bisatopup yang dibuka
+      // read-only), null berarti "metode tidak tercatat", bukan "Tunai".
+      amount: donation.amount, paymentMethod: donation.paymentMethod ?? null, paymentStatus: donation.paymentStatus,
     };
   }
 

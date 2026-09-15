@@ -21,6 +21,7 @@ export class DonationRepository {
   adminCreate(body: AdminCreateDonationRequest): Observable<Donation> { return this.api.adminCreate(body); }
   adminUpdate(id: number, body: AdminUpdateDonationRequest): Observable<Donation> { return this.api.adminUpdate(id, body); }
   adminDelete(id: number): Observable<void> { return this.api.adminDelete(id); }
+  bulkDelete(ids: number[]): Observable<{ deleted: number[]; skipped: number[] }> { return this.api.bulkDelete(ids); }
 
   private triggerDownload(result: { blob: Blob; filename: string }): void {
     const url = URL.createObjectURL(result.blob);

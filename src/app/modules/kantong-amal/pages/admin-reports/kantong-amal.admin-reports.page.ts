@@ -1,13 +1,14 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
 import { CampaignLite } from '../../entities/campaign';
 import { AnalyticsResponse, BalanceReport, CampaignReportRow, DonationReportRow, GlobalLedgerRow, Reconciliation, WithdrawalReportRow, WithdrawalStatusFunnel } from '../../entities/report';
-import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
-import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
+import { DateRange, DateRangePickerComponent } from '../../../../shared/date-range-picker.component';
 import { IconComponent } from '../../../../shared/icon.component';
+import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
+import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { KantongAmalAdminReportsPresenter } from './kantong-amal.admin-reports.presenter';
 import { KantongAmalAdminReportsView } from './kantong-amal.admin-reports.view';
@@ -22,65 +23,174 @@ function isoDateDaysAgo(days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-const CAMPAIGN_STATUS_OPTIONS: SelectOption[] = [
-  { value: '', label: 'Semua Status' },
-  { value: 'PUBLISHED', label: 'Tayang' },
-  { value: 'COMPLETED', label: 'Selesai' },
-  { value: 'PAUSED', label: 'Dijeda' },
-  { value: 'ARCHIVED', label: 'Diarsipkan' },
-];
+/** Config CmsIndexConfig<CampaignReportRow> — laporan murni baca (tanpa
+ *  createRoute/bulkDelete/showActionsColumn), backend belum punya sort
+ *  dinamis untuk query laporan (selalu createdDate DESC), jadi semua kolom
+ *  sortable:false. */
+function buildCampaignsReportConfig(): CmsIndexConfig<CampaignReportRow> {
+  return {
+    entityLabel: 'campaign',
+    statusOptions: [
+      { value: 'PUBLISHED', label: 'Tayang' },
+      { value: 'COMPLETED', label: 'Selesai' },
+      { value: 'PAUSED', label: 'Dijeda' },
+      { value: 'ARCHIVED', label: 'Diarsipkan' },
+    ],
+    searchTargets: [{ value: 'search', label: 'Judul Campaign' }],
+    columns: [
+      { key: 'title', label: 'Campaign', locked: true, sortable: false },
+      { key: 'status', label: 'Status', sortable: false },
+      { key: 'targetAmount', label: 'Target', sortable: false },
+      { key: 'collectedAmount', label: 'Terkumpul', sortable: false },
+      { key: 'donorCount', label: 'Donor', sortable: false },
+      { key: 'transactionCount', label: 'Transaksi', sortable: false },
+    ],
+    defaultSort: { sortBy: 'createdDate', sortDir: 'desc' },
+    rowIdKey: 'campaignID',
+    limit: 15,
+    emptyIcon: 'hand-heart',
+    emptyTitle: 'Tidak ada data',
+    emptyDescription: 'Laporan campaign akan muncul di sini.',
+  };
+}
 
-const DONATION_STATUS_OPTIONS: SelectOption[] = [
-  { value: '', label: 'Semua Status' },
-  { value: 'PAID', label: 'Lunas' },
-  { value: 'PENDING', label: 'Menunggu' },
-  { value: 'EXPIRED', label: 'Kedaluwarsa' },
-  { value: 'FAILED', label: 'Gagal' },
-];
+function buildDonationsReportConfig(): CmsIndexConfig<DonationReportRow> {
+  return {
+    entityLabel: 'donasi',
+    statusOptions: [
+      { value: 'PAID', label: 'Lunas' },
+      { value: 'PENDING', label: 'Menunggu' },
+      { value: 'EXPIRED', label: 'Kedaluwarsa' },
+      { value: 'FAILED', label: 'Gagal' },
+    ],
+    searchTargets: [{ value: 'search', label: 'Donatur / Campaign' }],
+    columns: [
+      { key: 'campaignTitle', label: 'Campaign', locked: true, sortable: false },
+      { key: 'donorName', label: 'Donatur', sortable: false },
+      { key: 'amount', label: 'Nominal', sortable: false },
+      { key: 'adminFee', label: 'Fee', sortable: false },
+      { key: 'paymentStatus', label: 'Status', sortable: false },
+      { key: 'createdDate', label: 'Tanggal', sortable: false },
+    ],
+    defaultSort: { sortBy: 'createdDate', sortDir: 'desc' },
+    rowIdKey: 'donationID',
+    limit: 15,
+    emptyIcon: 'hand-coins',
+    emptyTitle: 'Tidak ada data',
+    emptyDescription: 'Laporan donasi akan muncul di sini.',
+  };
+}
 
-const WITHDRAWAL_STATUS_OPTIONS: SelectOption[] = [
-  { value: '', label: 'Semua Status' },
-  { value: 'SUCCESS', label: 'Berhasil' },
-  { value: 'APPROVED', label: 'Siap Diproses' },
-  { value: 'REJECTED', label: 'Ditolak' },
-  { value: 'FAILED', label: 'Gagal' },
-];
+function buildWithdrawalsReportConfig(): CmsIndexConfig<WithdrawalReportRow> {
+  return {
+    entityLabel: 'withdrawal',
+    statusOptions: [
+      { value: 'SUCCESS', label: 'Berhasil' },
+      { value: 'APPROVED', label: 'Siap Diproses' },
+      { value: 'REJECTED', label: 'Ditolak' },
+      { value: 'FAILED', label: 'Gagal' },
+    ],
+    searchTargets: [{ value: 'search', label: 'Ref / Campaign' }],
+    columns: [
+      { key: 'withdrawalRef', label: 'Ref', locked: true, sortable: false },
+      { key: 'campaignTitle', label: 'Campaign', sortable: false },
+      { key: 'amount', label: 'Nominal', sortable: false },
+      { key: 'netAmount', label: 'Net', sortable: false },
+      { key: 'status', label: 'Status', sortable: false },
+      { key: 'requestedDate', label: 'Diajukan', sortable: false },
+    ],
+    defaultSort: { sortBy: 'createdDate', sortDir: 'desc' },
+    rowIdKey: 'withdrawalID',
+    limit: 15,
+    emptyIcon: 'hand-coins',
+    emptyTitle: 'Tidak ada data',
+    emptyDescription: 'Laporan withdrawal akan muncul di sini.',
+  };
+}
 
-const LEDGER_DIRECTION_OPTIONS: SelectOption[] = [
-  { value: '', label: 'Semua Arah' },
-  { value: 'CREDIT', label: 'Kredit (Masuk)' },
-  { value: 'DEBIT', label: 'Debit (Keluar)' },
-];
+/** Arah (Kredit/Debit) genuinely multi-select bermakna lewat statusOptions
+ *  (2 nilai, klausa IN di backend) — campaignID tetap dropdown terpisah di
+ *  luar CmsIndexComponent karena juga dipakai tab Saldo/Analitik. */
+function buildLedgerGlobalReportConfig(): CmsIndexConfig<GlobalLedgerRow> {
+  return {
+    entityLabel: 'mutasi',
+    statusOptions: [
+      { value: 'CREDIT', label: 'Kredit (Masuk)' },
+      { value: 'DEBIT', label: 'Debit (Keluar)' },
+    ],
+    searchTargets: [{ value: 'search', label: 'Campaign' }],
+    columns: [
+      { key: 'createdDate', label: 'Tanggal', locked: true, sortable: false },
+      { key: 'campaignTitle', label: 'Campaign', sortable: false },
+      { key: 'entryType', label: 'Tipe', sortable: false },
+      { key: 'direction', label: 'Arah', sortable: false },
+      { key: 'amount', label: 'Nominal', sortable: false },
+      { key: 'balanceAfter', label: 'Saldo Setelah', sortable: false },
+    ],
+    defaultSort: { sortBy: 'createdDate', sortDir: 'desc' },
+    rowIdKey: 'ledgerID',
+    limit: 15,
+    emptyIcon: 'chart-bar',
+    emptyTitle: 'Tidak ada data',
+    emptyDescription: 'Khusus dana dari Amdigipay-Bisatopup — donasi manual tidak pernah masuk ledger ini.',
+  };
+}
 
 @Component({
   selector: 'app-kantong-amal-admin-reports-page',
   standalone: true,
   templateUrl: './kantong-amal.admin-reports.page.html',
-  imports: [DatePipe, FormsModule, PaginationComponent, SelectComponent, DateTimePickerComponent, IconComponent],
+  imports: [DatePipe, FormsModule, SelectComponent, DateRangePickerComponent, IconComponent, CmsIndexComponent],
   providers: [KantongAmalAdminReportsPresenter],
   styles: [`
     .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--color-border); margin-bottom: 20px; flex-wrap: wrap; }
-    .tabs button { padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--color-text-secondary); border-bottom: 2px solid transparent; }
+    .tabs button { padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--color-text-secondary); border-bottom: 2px solid transparent; transition: color var(--motion-fast) ease, border-color var(--motion-fast) ease; }
+    .tabs button:hover { color: var(--color-primary-dark); }
     .tabs button.active { color: var(--color-primary-dark); border-bottom-color: var(--color-primary); }
     .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 16px; }
     .filters > div { display: flex; flex-direction: column; gap: 4px; }
-    .balance-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-    .balance-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px; }
-    .balance-card .label { font-size: .78rem; color: var(--color-text-secondary); }
-    .balance-card .value { font-size: 1.2rem; font-weight: 800; margin-top: 4px; }
+
+    /* Setiap tab dibungkus .tab-panel — @if membuat ulang node ini tiap kali
+       tab berganti, jadi animasi CSS di bawah otomatis replay setiap switch
+       tanpa perlu Angular animations module. */
+    .tab-panel { animation: tab-fade-in .28s ease; }
+    @keyframes tab-fade-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+
+    /* Kartu statistik ber-icon-badge — pola sama seperti Analitik Formulir
+       Dinamis, dipakai di semua grid saldo/reconciliation di halaman ini. */
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .stat-row-3 { grid-template-columns: repeat(3, 1fr); }
+    .stat-row-6 { grid-template-columns: repeat(6, 1fr); margin-bottom: 16px; }
+    @media (max-width: 900px) { .stat-row, .stat-row-3 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) { .stat-row-6 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 560px) { .stat-row-6 { grid-template-columns: repeat(2, 1fr); } }
+    .stat-card {
+      display: flex; align-items: center; gap: 14px; padding: 16px 18px; min-height: 84px;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm); transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .stat-card-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .stat-card-value { font-family: var(--font-heading); font-weight: 800; font-size: 1.2rem; line-height: 1.25; color: var(--color-text); overflow-wrap: anywhere; }
+    .stat-card-label { font-size: .76rem; color: var(--color-text-secondary); font-weight: 600; line-height: 1.35; }
+    .stat-card-hint { font-size: .72rem; color: var(--color-muted); margin-top: 2px; }
     .balanced-ok { color: #166534; } .balanced-bad { color: #991b1b; }
-    .funnel-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-    .funnel-chip { background: var(--color-bg-alt); border-radius: 999px; padding: 6px 14px; font-size: .82rem; }
+
     .direction-badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .76rem; font-weight: 700; }
     .direction-CREDIT { background: #dcfce7; color: #166534; }
     .direction-DEBIT { background: #fee2e2; color: #991b1b; }
     .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-    .analytics-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px; }
-    .analytics-card h4 { margin: 0 0 12px; font-size: .92rem; }
+    @media (max-width: 900px) { .analytics-grid { grid-template-columns: 1fr; } }
     .analytics-card canvas { max-height: 260px; }
-    .anomaly-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
-    .anomaly-yes { background: #fee2e2; color: #991b1b; }
-    .anomaly-no { background: #dcfce7; color: #166534; }
 
     .settlement-banner { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; margin-bottom: 20px; background: var(--color-primary-tint); border: 1px solid var(--color-primary-soft); border-radius: var(--radius-md); }
     .settlement-banner app-icon { color: var(--color-primary-dark); flex-shrink: 0; margin-top: 2px; }
@@ -94,6 +204,12 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   private amountChart: Chart | null = null;
   private ageChart: Chart | null = null;
 
+  /** Satu-satunya <app-cms-index> yang bisa aktif dalam satu waktu (tiap tab
+   *  membungkus instance-nya sendiri dalam @if) — dipakai untuk refresh()
+   *  manual saat filter campaignID tab Debit Kredit Global berubah (filter
+   *  itu dropdown terpisah, di luar kontrak CmsListParams). */
+  @ViewChild(CmsIndexComponent) private activeTable?: CmsIndexComponent<unknown>;
+
   tab = signal<ReportTab>('balance-report');
   loading = signal(true);
   exporting = signal(false);
@@ -101,27 +217,24 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   from = isoDateDaysAgo(30);
   to = isoDateDaysAgo(0);
   campaignID: number | null = null;
-  statusFilter = '';
-  ledgerDirection = '';
 
   campaigns = signal<CampaignLite[]>([]);
   balance = signal<BalanceReport | null>(null);
-  campaignRows = signal<CampaignReportRow[]>([]);
-  donationRows = signal<DonationReportRow[]>([]);
-  withdrawalRows = signal<WithdrawalReportRow[]>([]);
   withdrawalFunnel = signal<WithdrawalStatusFunnel[]>([]);
-  ledgerGlobalRows = signal<GlobalLedgerRow[]>([]);
   analytics = signal<AnalyticsResponse | null>(null);
   reconciliation = signal<Reconciliation | null>(null);
-  page = signal(1);
-  count = signal(0);
-  limit = 15;
 
   readonly formatRupiah = formatRupiah;
-  readonly campaignStatusOptions = CAMPAIGN_STATUS_OPTIONS;
-  readonly donationStatusOptions = DONATION_STATUS_OPTIONS;
-  readonly withdrawalStatusOptions = WITHDRAWAL_STATUS_OPTIONS;
-  readonly ledgerDirectionOptions = LEDGER_DIRECTION_OPTIONS;
+
+  readonly campaignsConfig = buildCampaignsReportConfig();
+  readonly donationsConfig = buildDonationsReportConfig();
+  readonly withdrawalsConfig = buildWithdrawalsReportConfig();
+  readonly ledgerGlobalConfig = buildLedgerGlobalReportConfig();
+
+  campaignsDataSource = (params: CmsListParams) => this.presenter.campaignsList(params);
+  donationsDataSource = (params: CmsListParams) => this.presenter.donationsList(params);
+  withdrawalsDataSource = (params: CmsListParams) => this.presenter.withdrawalsList(params);
+  ledgerGlobalDataSource = (params: CmsListParams) => this.presenter.ledgerGlobalList(params, this.campaignID);
 
   get campaignOptions(): SelectOption[] {
     return [{ value: null, label: 'Semua Campaign' }, ...this.campaigns().map((c) => ({ value: c.campaignID, label: c.title }))];
@@ -137,18 +250,16 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
 
   switchTab(t: ReportTab): void {
     this.tab.set(t);
-    this.page.set(1);
-    this.statusFilter = '';
     this.load();
   }
 
+  /** Tab campaigns/donations/withdrawals/ledger-global sudah membawa
+   *  <app-cms-index> sendiri (self-loading lewat ngOnInit saat @if
+   *  me-remount-nya) — cuma tab non-list yang masih butuh imperative load. */
   load(): void {
     switch (this.tab()) {
       case 'balance': this.loadBalance(); break;
-      case 'campaigns': this.presenter.loadCampaignRows(this.page(), this.limit, this.statusFilter); break;
-      case 'donations': this.presenter.loadDonations(this.page(), this.limit, this.statusFilter); break;
-      case 'withdrawals': this.presenter.loadWithdrawals(this.page(), this.limit, this.statusFilter); break;
-      case 'ledger-global': this.presenter.loadLedgerGlobal(this.page(), this.limit, this.campaignID, this.ledgerDirection); break;
+      case 'withdrawals': this.presenter.loadWithdrawalFunnel(null); break;
       case 'analytics': this.presenter.loadAnalytics(this.campaignID); break;
       case 'balance-report': this.presenter.loadReconciliation(); break;
     }
@@ -156,17 +267,18 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
 
   loadBalance(): void { this.presenter.loadBalance(this.from, this.to, this.campaignID); }
   applyBalanceFilter(): void { this.loadBalance(); }
-  applyStatusFilter(): void { this.page.set(1); this.load(); }
-  applyLedgerFilter(): void { this.page.set(1); this.load(); }
+  onBalanceRangeChange(r: DateRange): void { this.from = r.from; this.to = r.to; this.applyBalanceFilter(); }
   applyAnalyticsFilter(): void { this.load(); }
-  goPage(p: number): void { this.page.set(p); this.load(); }
+  /** Tab Debit Kredit Global — campaignID adalah dropdown terpisah di luar
+   *  CmsListParams, jadi perubahan filternya harus memicu refresh manual. */
+  applyLedgerCampaignFilter(): void { this.activeTable?.refresh(); }
 
   exportCurrent(): void {
     switch (this.tab()) {
       case 'balance': this.presenter.exportBalance(this.from, this.to, this.campaignID); break;
-      case 'campaigns': this.presenter.exportCampaigns(this.statusFilter); break;
-      case 'donations': this.presenter.exportDonations(this.statusFilter); break;
-      case 'withdrawals': this.presenter.exportWithdrawals(this.statusFilter); break;
+      case 'campaigns': this.presenter.exportCampaigns(''); break;
+      case 'donations': this.presenter.exportDonations(''); break;
+      case 'withdrawals': this.presenter.exportWithdrawals(''); break;
     }
   }
 
@@ -180,12 +292,7 @@ export class KantongAmalAdminReportsPage implements OnInit, KantongAmalAdminRepo
   setExporting(exporting: boolean): void { this.exporting.set(exporting); }
   setCampaigns(campaigns: CampaignLite[]): void { this.campaigns.set(campaigns); }
   setBalance(balance: BalanceReport | null): void { this.balance.set(balance); }
-  setCampaignRows(rows: CampaignReportRow[], count: number): void { this.campaignRows.set(rows); this.count.set(count); }
-  setDonationRows(rows: DonationReportRow[], count: number): void { this.donationRows.set(rows); this.count.set(count); }
-  setWithdrawalRows(rows: WithdrawalReportRow[], count: number, funnel: WithdrawalStatusFunnel[]): void {
-    this.withdrawalRows.set(rows); this.count.set(count); this.withdrawalFunnel.set(funnel);
-  }
-  setLedgerGlobalRows(rows: GlobalLedgerRow[], count: number): void { this.ledgerGlobalRows.set(rows); this.count.set(count); }
+  setWithdrawalFunnel(funnel: WithdrawalStatusFunnel[]): void { this.withdrawalFunnel.set(funnel); }
   setReconciliation(r: Reconciliation | null): void { this.reconciliation.set(r); }
 
   setAnalytics(data: AnalyticsResponse | null): void {

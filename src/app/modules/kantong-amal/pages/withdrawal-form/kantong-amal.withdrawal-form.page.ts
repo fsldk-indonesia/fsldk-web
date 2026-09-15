@@ -6,6 +6,7 @@ import { CampaignLite } from '../../entities/campaign';
 import { WalletBalance } from '../../entities/wallet';
 import { BankListItem, InquiryResponse, Withdrawal } from '../../entities/withdrawal';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { MoneyInputComponent } from '../../../../shared/money-input.component';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
 import { KantongAmalWithdrawalFormPresenter } from './kantong-amal.withdrawal-form.presenter';
@@ -15,7 +16,7 @@ import { KantongAmalWithdrawalFormView } from './kantong-amal.withdrawal-form.vi
   selector: 'app-kantong-amal-withdrawal-form-page',
   standalone: true,
   templateUrl: './kantong-amal.withdrawal-form.page.html',
-  imports: [RouterLink, FormsModule, UpperCasePipe, SelectComponent],
+  imports: [RouterLink, FormsModule, UpperCasePipe, SelectComponent, MoneyInputComponent],
   providers: [KantongAmalWithdrawalFormPresenter],
   styles: [`
     .page-head { max-width: 640px; margin: 0 auto 24px; }
