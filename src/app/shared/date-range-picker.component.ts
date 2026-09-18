@@ -135,6 +135,22 @@ export interface DateRange { from: string; to: string; }
     .drp-btn-clear { color: var(--color-muted); }
     .drp-btn-clear:hover { background: rgba(0,0,0,.05); color: var(--color-text); }
     .drp-hint { font-size: .74rem; color: var(--color-muted); }
+
+    /* Mobile: 2 kalender berdampingan (220px x2 + gap = ~470px, lihat
+       komentar panelWidth di show()) mustahil muat di layar ponsel — apa pun
+       posisi left/right/alignRight-nya, lebar tetapnya sendiri sudah lebih
+       lebar dari viewport (persis bug "kepotong" yang dilaporkan). Ditumpuk
+       VERTIKAL (bukan disusutkan jadi kecil-kecil) supaya tiap kalender
+       tetap nyaman di-tap, lebar panel jadi cuma selebar .drp-wrap
+       (trigger-nya sendiri sudah full-width lewat fix filter-row/search-combo
+       sebelumnya) alih-alih lebar tetap 470px. max-height+overflow-y jadi
+       jaring pengaman kalau tetap lebih tinggi dari viewport (footer/tombol
+       Hapus tidak sampai ketutup di luar layar). */
+    @media (max-width: 560px) {
+      .drp-panel, .drp-panel.align-right { left: 0; right: 0; width: auto; max-height: calc(100vh - 140px); overflow-y: auto; }
+      .drp-months { flex-direction: column; gap: 10px; }
+      .drp-month { width: 100%; }
+    }
   `],
 })
 export class DateRangePickerComponent implements OnDestroy {

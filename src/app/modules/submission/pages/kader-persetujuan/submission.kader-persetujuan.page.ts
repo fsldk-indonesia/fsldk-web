@@ -29,7 +29,10 @@ const DECISION_OPTIONS: SelectOption[] = [
     .tabs button.active { color: var(--color-primary-dark); border-bottom-color: var(--color-primary); }
     .tab-panel { animation: tab-fade-in .28s ease; }
     @keyframes tab-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    /* min-width:0 — lihat catatan panjang di submission.penetapan-level.page.ts
+       (pola/bug identik, halaman ini share komponen scoring-panel yang sama). */
     .layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+    .layout > div { min-width: 0; }
     @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
     .queue-list { display: flex; flex-direction: column; gap: 8px; }
     .queue-row { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; cursor: pointer; text-align: left; }

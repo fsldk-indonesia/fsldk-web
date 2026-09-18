@@ -111,6 +111,9 @@ function canvasSilhouetteUrl(hex: string): string {
         <div class="side-brand">
           <span class="brand-icon"><img src="assets/logo-fsldk.svg" alt="Logo FSLDK"></span>
           <span>{{ brandLabel() }}</span>
+          <button type="button" class="sidebar-close" (click)="closeSidebar()" aria-label="Tutup sidebar">
+            <app-icon name="x" [size]="18" />
+          </button>
         </div>
         <nav class="side-nav">
           <a [routerLink]="shellBase() + '/dashboard'" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()" class="stagger-in" style="--stagger-i:0">
@@ -141,6 +144,8 @@ function canvasSilhouetteUrl(hex: string): string {
         </nav>
       </aside>
 
+      <div class="sidebar-backdrop" [class.open]="sidebarOpen()" (click)="closeSidebar()"></div>
+
       <div class="cms-main">
         <header class="topbar">
           <button class="hamburger" (click)="toggle()" aria-label="Buka/tutup sidebar">
@@ -151,9 +156,9 @@ function canvasSilhouetteUrl(hex: string): string {
               <button class="org-switcher-btn" type="button" (click)="toggleOrgDropdown($event)">
                 <app-icon [name]="switcherIcon()" [size]="14" />
                 @if (orgOptionsLoading() && !currentOrgName()) {
-                  <span class="skel skel-line org-switcher-skel"></span>
+                  <span class="skel skel-line org-switcher-skel org-switcher-text"></span>
                 } @else {
-                  <span>{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
+                  <span class="org-switcher-text">{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
                 }
                 <app-icon name="chevron-down" [size]="12" />
               </button>
@@ -173,9 +178,9 @@ function canvasSilhouetteUrl(hex: string): string {
           }
           <div class="spacer"></div>
           <app-prayer-time [tier]="tier()" />
-          <a routerLink="/" class="nav-website-link">
+          <a routerLink="/" class="nav-website-link" title="Website">
             <app-icon name="globe" [size]="15" />
-            Website
+            <span class="nav-website-text">Website</span>
           </a>
           <div class="user-dropdown" (mouseenter)="openDropdown()" (mouseleave)="closeDropdown()">
             <button class="user-chip" type="button" (click)="toggleDropdown($event)">
@@ -249,7 +254,7 @@ function canvasSilhouetteUrl(hex: string): string {
        .cms-main mengikuti lewat margin-left di .cms.sidebar-collapsed
        (lihat rule-nya di bawah). */
     .sidebar {
-      width: 260px; background: #fff; border-right: 1px solid var(--color-border); color: var(--color-text);
+      width: 260px; max-width: 85vw; background: #fff; border-right: 1px solid var(--color-border); color: var(--color-text);
       display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100dvh; z-index: 40;
       overflow: hidden; box-shadow: 2px 0 28px rgba(15,23,20,.05);
       transition: transform var(--motion-slow) var(--ease-out), box-shadow var(--motion-slow) ease;
@@ -262,6 +267,26 @@ function canvasSilhouetteUrl(hex: string): string {
     }
     .brand-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); overflow: hidden; flex-shrink: 0; box-shadow: var(--shadow-sm); }
     .brand-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Cuma tampil di mobile (lihat media query 900px) — di desktop hamburger
+       topbar sudah cukup, dan sidebar tidak menutupi apa pun untuk ditutup
+       lewat tombol khusus. Ditaruh di dalam sidebar sendiri (bukan cuma
+       andalkan backdrop) karena hamburger topbar TERTUTUP sidebar saat
+       overlay mobile terbuka (z-index sidebar 60 > topbar 20) — tanpa ini
+       satu-satunya cara tutup di mobile adalah tap backdrop kosong, yang
+       tidak cukup jelas/discoverable. */
+    .sidebar-close {
+      display: none; margin-left: auto; flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-full);
+      align-items: center; justify-content: center; border: none; background: var(--color-bg-alt); color: var(--color-text-secondary);
+      cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .sidebar-close:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    /* Scrim gelap di belakang sidebar overlay mobile — juga jadi target tap
+       untuk menutup sidebar (poin utama laporan "sidebar tidak bisa
+       ditutup"). z-index 50 sengaja di ANTARA topbar (20) & sidebar (60 saat
+       .open) supaya menggelapkan seluruh .cms-main tapi tidak menutupi
+       sidebar sendiri. Tidak pernah tampil di desktop (>900px, lihat media
+       query) karena sidebar di sana mendorong konten, bukan overlay. */
+    .sidebar-backdrop { display: none; }
     /* .side-nav adalah SATU-SATUNYA yang discroll — .side-brand di atas tetap
        diam (poin 6): min-height:0 wajib supaya flex child ini benar-benar
        bisa menciut & memicu overflow, bukan mendorong tinggi .sidebar. */
@@ -364,7 +389,7 @@ function canvasSilhouetteUrl(hex: string): string {
     /* Website & akun: tanpa latar sama sekali di kondisi diam (dicoba pakai
        latar abu, lalu hijau — keduanya ditolak), hover cukup highlight
        netral tipis seperti item dropdown lain di app ini. */
-    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); background: none; border: none; color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
+    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); background: none; border: none; color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; flex-shrink: 0; }
     .nav-website-link:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none; }
     .user-dropdown { position: relative; }
     .user-chip { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease; }
@@ -387,7 +412,9 @@ function canvasSilhouetteUrl(hex: string): string {
        ends at the trigger button, since the panel is absolutely positioned
        and out of flow) and the panel's box, so moving the pointer straight
        down from the trigger fires mouseleave on .user-dropdown before ever
-       reaching the panel, closing it before a click can land. */
+       reaching the panel, closing it before a click can land. Only matters
+       on real-hover devices (openDropdown/closeDropdown no-op elsewhere via
+       supportsHover()), but harmless to always render. */
     .dropdown-panel::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }
     @keyframes dropdown-panel-in { from { opacity: 0; transform: scale(.85) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
@@ -424,7 +451,7 @@ function canvasSilhouetteUrl(hex: string): string {
     /* Kotak "Cari organisasi..." tetap teks biasa (tanpa icon-badge), jadi
        pola opacity dim lama tidak lagi relevan — item lain sekarang pakai
        icon-badge berwarna (lihat markup), bukan ikon polos. */
-    .cms-content { padding: 32px 28px; flex: 1; }
+    .cms-content { padding: 32px 28px; flex: 1; min-width: 0; }
     /* Pembungkus card seragam untuk SEMUA halaman index & form CMS (4 portal),
        dipasang sekali di sini (bukan per-halaman) supaya konsisten & mudah
        diubah dari satu tempat — mengikuti lebar+center yang sama dengan
@@ -452,8 +479,12 @@ function canvasSilhouetteUrl(hex: string): string {
     .cms-footer-inner {
       background: var(--color-bg-alt); border-radius: var(--radius-md) var(--radius-md) 0 0;
       max-width: 1100px; margin: 0 auto; padding: 18px 24px;
+      padding-bottom: max(18px, env(safe-area-inset-bottom));
       display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
       font-size: .85rem; color: var(--color-text-secondary);
+    }
+    @media (max-width: 640px) {
+      .cms-footer-inner { flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px 18px; padding-bottom: max(16px, env(safe-area-inset-bottom)); text-align: left; }
     }
     @media (max-width: 900px) {
       /* Di bawah 900px sidebar jadi drawer mengambang (overlay), bukan
@@ -462,8 +493,45 @@ function canvasSilhouetteUrl(hex: string): string {
          .sidebar-collapsed (override base rule di atas yang berlaku untuk
          desktop), karena sidebar tidak lagi mendorong apa pun di mobile. */
       .sidebar.open { box-shadow: var(--shadow-lg); z-index: 60; }
+      .sidebar-close { display: flex; }
+      .sidebar-backdrop {
+        display: block; position: fixed; inset: 0; background: rgba(15,23,20,.5); z-index: 50;
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear var(--motion-slow);
+      }
+      .sidebar-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear 0s; }
       .cms-main, .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-      .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 0; padding: 8px 14px; gap: 10px; }
+      .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 0; padding: 8px 14px; gap: 8px; }
+      .cms-content { padding: 20px 14px; }
+      /* HANYA jarak kiri-kanan (bukan bikin "mengambang" penuh seperti
+         topbar) — footer TETAP nempel ke tepi bawah layar & radius TETAP
+         cuma di atas, sama seperti sebelumnya. Yang diperbaiki cuma:
+         footer-inner sebelumnya dibatasi max-width:1100px+margin:auto saja,
+         yang di bawah 1100px otomatis jadi 100% lebar .cms-main (= lebar
+         penuh viewport di mobile karena sidebar tidak lagi mendorong
+         konten), sehingga kelihatan nempel edge-to-edge kiri-kanan. */
+      .cms-footer { padding: 0 8px; }
+      .org-switcher-btn .org-switcher-text { max-width: 120px; }
+      .user-meta { display: none; }
+      .dropdown-panel, .org-dropdown-panel { min-width: 0; width: min(280px, calc(100vw - 32px)); }
+    }
+    /* Di bawah ini topbar makin sempit (ponsel kecil) — sembunyikan elemen
+       sekunder (label "Website", nama/role akun sudah disembunyikan sejak
+       900px) supaya hamburger + prayer-time + avatar tidak berdesakan/
+       terpotong. Ikon tetap tampil, cuma label teksnya yang hilang.
+       org-switcher-text (nama LDK/Puskomda) DIHAPUS TOTAL (bukan cuma
+       dipersempit ke 72px seperti sebelumnya) — di lebar ini kombinasi
+       hamburger+org-switcher+prayer-time+website+avatar tetap lebih lebar
+       dari layar walau teksnya sudah dipotong 72px, jadi avatar (elemen
+       TERAKHIR) kepentok/terpotong keluar dari topbar (dilaporkan
+       "kepotong"). Sisa ikon+chevron org-switcher masih cukup untuk buka
+       dropdown pencarian organisasi. */
+    @media (max-width: 560px) {
+      .nav-website-text { display: none; }
+      .nav-website-link { padding: 8px; }
+      .topbar { gap: 4px; padding: 8px; }
+      .org-switcher-btn { padding: 7px 9px; gap: 4px; }
+      .org-switcher-btn .org-switcher-text { display: none; }
     }
 
     /* Tema per tier (revisi — sebelumnya tint warna tier disebar ke SELURUH
@@ -626,8 +694,20 @@ export class CmsLayoutComponent implements OnInit {
     this.dropdownOpen.update((v) => !v);
   }
 
-  openDropdown(): void { this.dropdownOpen.set(true); }
-  closeDropdown(): void { this.dropdownOpen.set(false); }
+  // Hover-buka HANYA untuk perangkat yang beneran punya hover presisi (mouse
+  // desktop) — dicek lewat matchMedia, BUKAN diasumsikan dari lebar layar.
+  // Touchscreen tetap mengirim event mouseenter SINTETIS tepat sebelum click
+  // saat disentuh; kalau openDropdown() dibiarkan jalan di situ, urutannya
+  // jadi: tap pertama -> mouseenter buka -> click langsung toggle balik
+  // tertutup (net: tidak kelihatan berubah) -> baru tap KEDUA yang benar-benar
+  // membuka (mouseenter tidak terpicu lagi karena "hover" sintetisnya sudah
+  // dianggap aktif). (hover:hover) and (pointer:fine) adalah satu-satunya
+  // sinyal CSS yang cukup andal untuk membedakan mouse asli dari sentuhan.
+  private supportsHover(): boolean {
+    return window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+  }
+  openDropdown(): void { if (this.supportsHover()) this.dropdownOpen.set(true); }
+  closeDropdown(): void { if (this.supportsHover()) this.dropdownOpen.set(false); }
 
   toggleOrgDropdown(event: Event): void {
     event.stopPropagation();
@@ -654,6 +734,11 @@ export class CmsLayoutComponent implements OnInit {
   // desktop sidebar mendorong konten, jadi ikut tertutup tiap klik menu
   // justru mengganggu, bukan membantu.
   close(): void { if (window.innerWidth <= MOBILE_BREAKPOINT) this.sidebarOpen.set(false); }
+  // Dipicu tombol X di sidebar & tap backdrop — TIDAK bersyarat lebar layar
+  // (beda dari close()) karena keduanya cuma pernah kelihatan/aktif di
+  // mobile (lihat CSS .sidebar-close/.sidebar-backdrop, display:none di atas
+  // 900px), jadi tidak perlu dicek ulang di sini.
+  closeSidebar(): void { this.sidebarOpen.set(false); }
 
   logout(): void {
     this.auth.logout();

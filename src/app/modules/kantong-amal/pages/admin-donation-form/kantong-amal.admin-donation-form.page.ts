@@ -57,8 +57,12 @@ const EMPTY_FORM: DonationFormValue = {
   imports: [RouterLink, FormsModule, SelectComponent, IconComponent, MoneyInputComponent, PhoneInputComponent],
   providers: [KantongAmalAdminDonationFormPresenter],
   styles: [`
-    .page-head { max-width: 640px; margin: 0 auto 24px; }
-    .form-card { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    /* Lebar dibiarkan mengisi penuh .page-shell — lihat catatan di
+       kantong-amal.campaign-form.page.ts (disamakan, bug/permintaan yang
+       sama: max-width sempit ter-center di sini menyisakan ruang kosong
+       besar di kanan-kiri dibanding form Berita/Artikel/dst.). */
+    .page-head { margin: 0 0 24px; }
+    .form-card { display: flex; flex-direction: column; gap: 20px; }
     .form-section-label {
       display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
       font-family: var(--font-heading); font-weight: 700; font-size: .78rem;

@@ -51,18 +51,20 @@ Chart.register(...registerables);
     @if (perPuskomda.length) {
       <div class="card-section">
         <h3><app-icon name="building-2" [size]="18" /> Sebaran per Puskomda</h3>
-        <table class="breakdown-table">
-          <thead><tr><th>Puskomda</th><th>Total LDK</th><th>Kader Aktif</th></tr></thead>
-          <tbody>
-            @for (row of perPuskomda; track row.organizationID) {
-              <tr>
-                <td>{{ row.organizationName }}</td>
-                <td>{{ row.totalLDK }}</td>
-                <td>{{ row.kaderAktif }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="breakdown-table">
+            <thead><tr><th>Puskomda</th><th>Total LDK</th><th>Kader Aktif</th></tr></thead>
+            <tbody>
+              @for (row of perPuskomda; track row.organizationID) {
+                <tr>
+                  <td>{{ row.organizationName }}</td>
+                  <td>{{ row.totalLDK }}</td>
+                  <td>{{ row.kaderAktif }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="card-section">
         <h3><app-icon name="chart-bar" [size]="18" /> Grafik Sebaran per Puskomda</h3>
@@ -73,7 +75,7 @@ Chart.register(...registerables);
   styles: [`
     .card-section { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); margin-top: 20px; }
     .card-section h3 { margin: 0 0 16px; display: flex; align-items: center; gap: 9px; }
-    .breakdown-table { width: 100%; border-collapse: collapse; }
+    .breakdown-table { width: 100%; min-width: 420px; border-collapse: collapse; }
     .breakdown-table th, .breakdown-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--color-border); font-size: .9rem; }
     .breakdown-table th { color: var(--color-text-secondary); font-weight: 600; }
     .chart-box { position: relative; height: 280px; }

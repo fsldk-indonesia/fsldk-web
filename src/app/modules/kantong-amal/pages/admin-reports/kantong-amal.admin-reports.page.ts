@@ -172,7 +172,25 @@ function buildLedgerGlobalReportConfig(): CmsIndexConfig<GlobalLedgerRow> {
     .stat-row-6 { grid-template-columns: repeat(6, 1fr); margin-bottom: 16px; }
     @media (max-width: 900px) { .stat-row, .stat-row-3 { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 900px) { .stat-row-6 { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 560px) { .stat-row-6 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .stat-row-6 { grid-template-columns: repeat(2, 1fr); } }
+    /* Di layar ponsel, 2 kolom (apalagi 3 utk stat-row-6) sudah terlalu
+       sempit untuk value bold 1.2rem + label — overflow-wrap:anywhere di
+       .stat-card-value jadi kepakai beneran (bukan cuma jaring pengaman utk
+       string panjang tak terputus), memutus kata biasa di tengah ("Gateway"
+       -> "Gatew"/"ay", "Seimbang" -> "Seim"/"bang", bahkan angka "Rp 600.000"
+       -> "600."/"000") — dilaporkan "dempet dan kelihatan jelek". Breakpoint
+       dinaikkan dari 560 ke 640px (masih tetap "mepet" di beberapa ponsel di
+       560px). 1 kolom penuh + value dipaksa SATU BARIS (white-space:nowrap,
+       overflow-wrap dikembalikan ke normal) — nilai di halaman ini SELALU
+       pendek (format Rupiah atau status singkat), jadi 1 kartu selebar penuh
+       lebih dari cukup untuk menampungnya tanpa wrap sama sekali; font value
+       juga diperkecil supaya makin lega/enak dilihat sesuai permintaan. */
+    @media (max-width: 640px) {
+      .stat-row, .stat-row-3 { grid-template-columns: 1fr; }
+      .stat-card-value { font-size: .98rem; white-space: nowrap; overflow-wrap: normal; }
+      .stat-card { padding: 14px 16px; gap: 12px; min-height: 0; }
+    }
+    @media (max-width: 460px) { .stat-row-6 { grid-template-columns: 1fr; } }
     .stat-card {
       display: flex; align-items: center; gap: 14px; padding: 16px 18px; min-height: 84px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md);

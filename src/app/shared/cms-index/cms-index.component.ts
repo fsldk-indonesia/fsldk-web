@@ -40,15 +40,29 @@ import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsList
        kartu "Tambah") punya 4 kartu, bukan 5 seperti kebanyakan modul CRUD
        penuh; nilai repeat(5, 1fr) di sini murni fallback sebelum binding
        dievaluasi. Di layar sempit diturunkan ke 1 kolom (bertumpuk penuh). */
-    .guide-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 20px; }
+    /* Jumlah kolom di-set lewat custom property --guide-cols (diisi inline
+       dari config.guideCards.length di template) alih-alih langsung
+       [style.grid-template-columns] — inline STYLE attribute selalu menang
+       atas rule stylesheet manapun termasuk yang di dalam @media, jadi versi
+       lama itu bikin @media (max-width:980px) di bawah TIDAK PERNAH bisa
+       menciutkan ke 1 kolom (persis bug "kartu kepotong" di layar mobile).
+       Custom property tidak kena masalah itu karena grid-template-columns
+       aktualnya tetap murni datang dari stylesheet (var() di sini),
+       sehingga rule @media biasa bisa meng-override-nya seperti normal. */
+    .guide-grid { display: grid; grid-template-columns: repeat(var(--guide-cols, 5), 1fr); gap: 12px; margin-bottom: 20px; }
     .guide-card { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; }
     .guide-card h4 { margin: 0 0 3px; font-size: .84rem; }
     .guide-card p { margin: 0; font-size: .74rem; color: var(--color-muted); line-height: 1.4; }
-    @media (max-width: 980px) { .guide-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 980px) { .guide-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .guide-grid { grid-template-columns: 1fr; } }
 
     /* Baris 1: filter (status, target kolom + pencarian, rentang tanggal).
-       nowrap — elemen menyusut lebih dulu lewat flex-shrink/min-width,
-       tidak pernah pindah baris walau ruang agak sempit. */
+       nowrap di DESKTOP — elemen menyusut lebih dulu lewat flex-shrink/
+       min-width, tidak pernah pindah baris walau ruang agak sempit. Di
+       mobile (lihat @media di bawah) malah dipaksa WRAP penuh satu kolom —
+       min-width tiap field (200-380px) jauh lebih lebar dari layar ponsel,
+       jadi kalau tetap nowrap di sana field-nya pasti kepotong/nge-scroll
+       horizontal (bug "list dempet/kepotong" yang dilaporkan). */
     .filter-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 10px; border-bottom: 1px solid var(--color-border); }
     .filter-row > app-select, .filter-row > app-multi-select { flex-shrink: 0; min-width: 200px; }
     /* TIDAK ikut flex-grow (beda dari search-combo) — isinya cuma teks
@@ -78,6 +92,7 @@ import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsList
 
     /* Baris 2: refresh, adjust column (kiri) — bulk action (kanan). */
     .table-toolbar { display: flex; align-items: center; gap: 8px; }
+    .toolbar-spacer { flex: 1; }
     .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: var(--radius-xs); border: 1px solid var(--color-border); background: #fff; color: var(--color-text-secondary); cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
     .icon-btn:hover { background: var(--color-bg-alt); border-color: var(--color-border-strong); }
 
@@ -115,6 +130,46 @@ import { CmsColumnDef, CmsComboboxOption, CmsFilterPill, CmsIndexConfig, CmsList
     .dropdown-menu button.menu-item { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px; border: none; background: none; font-size: .85rem; font-weight: 600; color: var(--color-danger); cursor: pointer; }
     .dropdown-menu button.menu-item:hover:not(:disabled) { background: var(--color-danger-soft); }
     .dropdown-menu button.menu-item:disabled { color: var(--color-muted); cursor: not-allowed; }
+
+    /* Mobile: baris filter & toolbar tabel dipaksa bertumpuk (wrap) alih-alih
+       tetap satu baris nowrap yang cuma bisa dilihat lewat scroll horizontal
+       — field-field di dalamnya (app-select/app-multi-select/search-combo)
+       ikut dilebarkan penuh (100%) supaya susunan tumpuknya rapi, bukan
+       tetap terpaku ke min-width desktop-nya (200-380px) yang jauh lebih
+       lebar dari layar ponsel. */
+    @media (max-width: 700px) {
+      .filter-row { flex-wrap: wrap; }
+      .filter-row > app-select, .filter-row > app-multi-select, .filter-row > app-date-range-picker { flex: 1 1 100%; min-width: 0; width: 100%; }
+      /* flex-wrap (bukan flex-direction:column) SENGAJA dipilih — column akan
+         membuat search-input & tombol ikon (search-combo-btn) jadi 2 baris
+         terpisah (keduanya sibling flex item, masing-masing jadi blok penuh
+         lebar sendiri di mode column), padahal berdua tetap muat sebaris dan
+         memang harusnya tetap inline (dilaporkan "jadi baris baru" untuk
+         kasus tanpa app-select, mis. Puskomda/LDK yang cuma punya 1 search
+         target). Dengan wrap: app-select (kalau ada, searchTargets>1) turun
+         ke barisnya sendiri karena min-widthnya tak muat, TAPI
+         input+tombol tetap otomatis nempel sebaris karena berdua muat di
+         sisa lebar baris berikutnya. */
+      .search-combo { flex: 1 1 100%; min-width: 0; width: 100%; flex-wrap: wrap; row-gap: 8px; }
+      .search-combo > app-select, .search-combo > app-multi-select { flex: 1 1 100%; min-width: 0; width: 100%; }
+      .search-combo .search-input { min-width: 0; }
+      .search-combo-divider { display: none; }
+      /* .dropdown-menu (Atur Kolom & Aksi Massal) di-posisikan relatif ke
+         .table-toolbar (bukan .dropdown-wrap-nya sendiri lagi) — .dropdown-wrap
+         lebar aslinya cuma sebesar tombolnya (bisa MELEBAR lagi kalau
+         flex-grow menyerap slack row, tidak konsisten), jadi left:0/right:0
+         relatif ke situ gampang salah hitung & bikin menu kepotong/sempit
+         kayak yang dilaporkan ("Hapus 0 Terpilih" ke potong). Relatif ke
+         .table-toolbar (lebar penuh kartu, stabil) + width:auto (bukan 100%,
+         supaya tidak kena aturan over-constrained left+right+width) jauh
+         lebih predictable: menu selalu align rapi ke tepi toolbar, apa pun
+         tombol mana yang dibuka. */
+      .table-toolbar { flex-wrap: wrap; position: relative; }
+      .toolbar-spacer { display: none; }
+      .dropdown-wrap { flex: 1 1 auto; position: static; }
+      .dropdown-toggle { width: 100%; justify-content: space-between; }
+      .dropdown-menu, .dropdown-menu.right { left: 0; right: 0; width: auto; }
+    }
 
     th.sortable { cursor: pointer; user-select: none; }
     th.sortable .col-sort { display: inline-flex; align-items: center; gap: 5px; }

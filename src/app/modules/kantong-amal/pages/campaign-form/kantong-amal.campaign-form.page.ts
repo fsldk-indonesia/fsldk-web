@@ -52,8 +52,14 @@ const EMPTY_FORM: CampaignFormValue = {
   imports: [RouterLink, FormsModule, IconComponent, ImageUploadComponent, MoneyInputComponent, PhoneInputComponent, SelectComponent, DateTimePickerComponent, RichTextEditorComponent],
   providers: [KantongAmalCampaignFormPresenter],
   styles: [`
-    .page-head { max-width: 820px; margin: 0 auto 24px; }
-    .form-card { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+    /* Lebar dibiarkan mengisi penuh .page-shell (bukan dikunci ke 820px
+       center) — disamakan dengan pola form Berita/Artikel/dst. (lihat
+       article.form.page.ts): page-shell CMS sudah dibatasi 1100px dengan
+       padding sendiri, jadi mengunci form ke max-width sempit LAGI di
+       dalamnya cuma menyisakan ruang kosong besar di kanan-kiri tanpa guna
+       (dilaporkan "space besar"). */
+    .page-head { margin: 0 0 24px; }
+    .form-card { display: flex; flex-direction: column; gap: 20px; }
     .form-section-label {
       display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
       font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
@@ -103,6 +109,10 @@ export class KantongAmalCampaignFormPage implements OnInit, KantongAmalCampaignF
   get pageTitle(): string {
     if (this.viewOnlyRoute) return 'Detail Campaign';
     return this.editId ? 'Ubah Campaign' : 'Buat Campaign Baru';
+  }
+  get pageSubtitle(): string {
+    if (this.viewOnlyRoute) return 'Lihat detail lengkap campaign ini.';
+    return this.editId ? 'Perbarui informasi campaign yang sudah ada.' : 'Isi informasi campaign penggalangan dana yang akan dipublikasikan.';
   }
   get readonlyNote(): string {
     if (this.campaign()?.status === 'ARCHIVED') return 'Campaign ini sudah diarsipkan dan tidak dapat diubah dari sini.';

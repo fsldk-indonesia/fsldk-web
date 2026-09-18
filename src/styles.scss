@@ -147,6 +147,17 @@ img { max-width: 100%; }
 }
 @media (min-width: 601px) and (max-width: 900px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
 
+/* Hampir setiap halaman index CMS (4 portal) memakai kombo class yang sama
+   persis: `class="flex justify-between items-center page-head"` (judul+
+   subjudul di kiri, tombol "+ Tambah X" di kanan) — di-set satu kali di sini
+   secara global alih-alih diulang per halaman, supaya di mobile tombolnya
+   turun ke baris sendiri (full width, gampang di-tap) alih-alih berdesakan
+   sejajar dengan judul yang bisa cukup panjang. */
+@media (max-width: 640px) {
+  .page-head.flex { flex-wrap: wrap; row-gap: 12px; }
+  .page-head.flex > .btn { width: 100%; justify-content: center; }
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;

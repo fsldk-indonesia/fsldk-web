@@ -19,8 +19,12 @@ import { KantongAmalWithdrawalFormView } from './kantong-amal.withdrawal-form.vi
   imports: [RouterLink, FormsModule, UpperCasePipe, SelectComponent, MoneyInputComponent],
   providers: [KantongAmalWithdrawalFormPresenter],
   styles: [`
-    .page-head { max-width: 640px; margin: 0 auto 24px; }
-    .wizard-card { max-width: 640px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px; }
+    /* Lebar dibiarkan mengisi penuh .page-shell — lihat catatan di
+       kantong-amal.campaign-form.page.ts (disamakan, permintaan yang sama:
+       max-width sempit ter-center di sini menyisakan ruang kosong besar di
+       kanan-kiri dibanding form Berita/Artikel/dst.). */
+    .page-head { margin: 0 0 24px; }
+    .wizard-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px; }
     .steps { display: flex; gap: 6px; margin-bottom: 24px; }
     .steps span { flex: 1; height: 4px; border-radius: 999px; background: var(--color-bg-alt); }
     .steps span.done { background: var(--color-primary); }
