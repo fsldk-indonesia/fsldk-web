@@ -1,11 +1,13 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
 import { StatTileComponent } from '../../../../shared/stat-tile.component';
 import { HadithQuranWidgetComponent } from './hadith-quran-widget.component';
 import { NetworkBreakdownChartsComponent } from './network-breakdown-charts.component';
 import { CHART_COLORS } from './chart-colors';
+import { CmsTier, CMS_TIER_ACCENT } from '../../../../shared/cms-tier';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { SUBMISSION_STATUS_LABELS } from '../../../submission/entities/submission';
 import { DashboardSummary, LDKSummary } from '../../entities/dashboard-summary';
@@ -127,6 +129,18 @@ function formatRupiah(value: number): string {
 export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView {
   private presenter = inject(DashboardIndexPresenter);
   private auth = inject(AuthRepository);
+  private route = inject(ActivatedRoute);
+
+  /** Warna slice "Kader Aktif" mengikuti tier portal (route data `tier`,
+   *  diwariskan dari shell lewat paramsInheritanceStrategy:'always' — sama
+   *  pola dengan organization.ldk-list.page.ts isNational()) — Chart.js
+   *  butuh hex literal, bukan var() CSS, jadi dipetakan dari CMS_TIER_ACCENT
+   *  yang sama dipakai cms-layout.component.ts. FSLDK (tanpa entry di
+   *  CMS_TIER_ACCENT) tetap hijau default CHART_COLORS.primary. */
+  private get kaderActiveColor(): string {
+    const tier = this.route.snapshot.data['tier'] as CmsTier | undefined;
+    return (tier && CMS_TIER_ACCENT[tier]?.primary) ?? CHART_COLORS.primary;
+  }
 
   summary = signal<DashboardSummary | null>(null);
   loading = signal(true);
@@ -253,7 +267,7 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
       type: 'doughnut',
       data: {
         labels: ['Kader Aktif', 'Menunggu Persetujuan'],
-        datasets: [{ data: [ldk.kaderActive, ldk.kaderPending], backgroundColor: [CHART_COLORS.primary, CHART_COLORS.gold] }],
+        datasets: [{ data: [ldk.kaderActive, ldk.kaderPending], backgroundColor: [this.kaderActiveColor, CHART_COLORS.gold] }],
       },
       options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
     });

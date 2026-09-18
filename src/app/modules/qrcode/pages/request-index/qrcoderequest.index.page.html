@@ -35,7 +35,7 @@
           <button type="button" class="icon-action" (click)="download(r); $event.stopPropagation()" title="Unduh PNG"><app-icon name="download" [size]="14" /></button>
         }
         @if (r.status === 'rejected' && r.rejectionReason) {
-          <span class="icon-action" [title]="r.rejectionReason"><app-icon name="info-circle" [size]="14" /></span>
+          <button type="button" class="icon-action" (click)="openReasonPopup(r, $event)" title="Lihat alasan penolakan"><app-icon name="info-circle" [size]="14" /></button>
         }
       </div>
     </td>
@@ -68,6 +68,23 @@
       <button class="btn btn-primary" [disabled]="!rejectReason.trim() || rejectSaving()" (click)="submitReject()">
         @if (rejectSaving()) { <span class="spinner"></span> } @else { Tolak Permintaan }
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup Alasan Penolakan (klik ikon info di kolom Aksi baris Ditolak) -->
+<div class="modal-backdrop" [class.open]="showReason()" appModalBackdrop (backdropClose)="closeReasonPopup()">
+  <div #reasonModalEl class="modal modal-pop modal-sm" [class.open]="showReason()" [style.--dx.px]="reasonPopupOrigin().dx" [style.--dy.px]="reasonPopupOrigin().dy" (click)="$event.stopPropagation()">
+    <button type="button" class="modal-close" (click)="closeReasonPopup()" aria-label="Tutup"><app-icon name="x" [size]="14" /></button>
+    <h3>Alasan Penolakan</h3>
+    <p class="text-muted">Permintaan dari {{ reasonTarget?.requesterName }} ditolak dengan alasan berikut.</p>
+    <div class="modal-body">
+      <div class="field-card">
+        <p class="reason-text">{{ reasonTarget?.rejectionReason }}</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="closeReasonPopup()">Tutup</button>
     </div>
   </div>
 </div>

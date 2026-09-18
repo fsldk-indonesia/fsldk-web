@@ -36,11 +36,21 @@
     <div class="card card-pad profile-main">
       <div class="form-group"><label class="form-label">Kode Organisasi</label><input class="form-control" [value]="organization()?.organizationCode" disabled></div>
       <div class="form-group"><label class="form-label">Nama Organisasi</label><input class="form-control" [(ngModel)]="form.organizationName"></div>
+
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="map-pin" [size]="14" /></span>Kontak &amp; Lokasi</p>
       <div class="grid-cols-2">
-        <div class="form-group"><label class="form-label">Provinsi</label><input class="form-control" [(ngModel)]="form.provinceName"></div>
-        <div class="form-group"><label class="form-label">Kota/Kabupaten</label><input class="form-control" [(ngModel)]="form.cityName"></div>
+        <div class="form-group">
+          <label class="form-label">Provinsi</label>
+          <app-select [options]="provinceOptions()" [(ngModel)]="selectedProvinceID" (ngModelChange)="onProvinceChange()" [searchable]="true" placeholder="Pilih provinsi" />
+          @if (form.provinceName && !selectedProvinceID) { <p class="form-hint">Saat ini: {{ form.provinceName }}</p> }
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kota/Kabupaten</label>
+          <app-select [options]="cityOptions()" [(ngModel)]="selectedCityID" (ngModelChange)="onCityChange()" [disabled]="!selectedProvinceID" [searchable]="true" placeholder="Pilih kota/kabupaten" />
+          @if (form.cityName && !selectedCityID) { <p class="form-hint">Saat ini: {{ form.cityName }}</p> }
+        </div>
         <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" type="email" [(ngModel)]="form.contactEmail"></div>
-        <div class="form-group"><label class="form-label">Telepon Kontak</label><input class="form-control" [(ngModel)]="form.contactPhone"></div>
+        <div class="form-group"><label class="form-label">Telepon Kontak</label><app-phone-input [(ngModel)]="form.contactPhone" /></div>
       </div>
       <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan Perubahan</button>
     </div>

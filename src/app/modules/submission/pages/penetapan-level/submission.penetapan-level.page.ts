@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
 import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
@@ -12,7 +13,7 @@ import { SubmissionPenetapanLevelView } from './submission.penetapan-level.view'
   selector: 'app-submission-penetapan-level-page',
   standalone: true,
   templateUrl: './submission.penetapan-level.page.html',
-  imports: [FormsModule, SelectComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
+  imports: [FormsModule, SelectComponent, IconComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
   providers: [SubmissionPenetapanLevelPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -22,8 +23,14 @@ import { SubmissionPenetapanLevelView } from './submission.penetapan-level.view'
     .queue-row { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; cursor: pointer; text-align: left; }
     .queue-row:hover { border-color: var(--color-primary); }
     .queue-row.active { border-color: var(--color-primary); background: var(--color-primary-soft); }
-    .detail-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 20px; }
     .decision-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 14px; }
+    .detail-card-fade { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
+    .detail-card-fade.is-visible { opacity: 1; transform: translateY(0); }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
   `],
 })
 export class SubmissionPenetapanLevelPage implements OnInit, SubmissionPenetapanLevelView {
@@ -35,6 +42,7 @@ export class SubmissionPenetapanLevelPage implements OnInit, SubmissionPenetapan
   detail = signal<SubmissionDetail | null>(null);
   loading = signal(true);
   busy = signal(false);
+  detailTransitioning = signal(false);
 
   levelCode: string | null = null;
   justificationNote = '';
@@ -52,6 +60,7 @@ export class SubmissionPenetapanLevelPage implements OnInit, SubmissionPenetapan
   select(item: SubmissionResponse): void {
     this.levelCode = null;
     this.justificationNote = '';
+    this.detailTransitioning.set(true);
     this.presenter.openDetail(item.submissionID);
   }
 
@@ -72,7 +81,10 @@ export class SubmissionPenetapanLevelPage implements OnInit, SubmissionPenetapan
   setQueue(items: SubmissionResponse[]): void { this.queue.set(items); }
   setOrgNames(names: Record<number, string>): void { this.orgNames.set(names); }
   setVersion(version: FormVersionDetail): void { this.version.set(version); }
-  setDetail(detail: SubmissionDetail): void { this.detail.set(detail); }
+  setDetail(detail: SubmissionDetail): void {
+    this.detail.set(detail);
+    requestAnimationFrame(() => this.detailTransitioning.set(false));
+  }
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
   onDecisionSuccess(): void { this.detail.set(null); }

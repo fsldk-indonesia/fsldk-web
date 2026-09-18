@@ -4,29 +4,34 @@
 </div>
 
 <div class="tabs">
-  <button type="button" class="tab-btn" [class.active]="tab() === 'pending'" (click)="tab.set('pending')">Menunggu Persetujuan</button>
-  <button type="button" class="tab-btn" [class.active]="tab() === 'active'" (click)="tab.set('active')">Kader Aktif</button>
-  <button type="button" class="tab-btn" [class.active]="tab() === 'rejected'" (click)="tab.set('rejected')">Ditolak</button>
+  <button type="button" [class.active]="tab() === 'pending'" (click)="tab.set('pending')">Menunggu Persetujuan</button>
+  <button type="button" [class.active]="tab() === 'active'" (click)="tab.set('active')">Kader Aktif</button>
+  <button type="button" [class.active]="tab() === 'rejected'" (click)="tab.set('rejected')">Ditolak</button>
 </div>
 
 @if (loading()) {
   <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
 } @else if (tab() === 'pending') {
+  <div class="tab-panel">
   <div class="layout">
-    <div class="queue-list">
-      @for (k of pending(); track k.kaderID) {
-        <button type="button" class="queue-row" [class.active-row]="detail()?.submissionID === k.submissionID" (click)="select(k)">
-          <strong>{{ k.fullName }}</strong>
-          <span class="chip">{{ k.status }}</span>
-        </button>
-      } @empty {
-        <div class="card card-pad"><p class="text-muted">Tidak ada pendaftaran menunggu persetujuan.</p></div>
-      }
+    <div>
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="list-checks" [size]="14" /></span>Antrian</p>
+      <div class="queue-list">
+        @for (k of pending(); track k.kaderID) {
+          <button type="button" class="queue-row" [class.active-row]="detail()?.submissionID === k.submissionID" (click)="select(k)">
+            <span class="flex items-center gap-sm"><span class="icon-badge sm icon-badge-soft"><app-icon name="user-check" [size]="14" /></span><strong>{{ k.fullName }}</strong></span>
+            <span class="chip">{{ k.status }}</span>
+          </button>
+        } @empty {
+          <div class="card card-pad"><p class="text-muted">Tidak ada pendaftaran menunggu persetujuan.</p></div>
+        }
+      </div>
     </div>
 
     <div>
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="file-text" [size]="14" /></span>Detail Pendaftaran</p>
       @if (detail(); as d) {
-        <div class="detail-card">
+        <div class="card card-pad detail-card-fade" [class.is-visible]="!detailTransitioning()">
           <div class="flex justify-between items-center">
             <h3>{{ d.kader?.fullName }}</h3>
             <span class="chip">{{ d.status }}</span>
@@ -35,7 +40,7 @@
           <app-submission-answers-view [version]="version()" [answers]="d.answers" />
 
           <div class="decision-form">
-            <h4>Keputusan</h4>
+            <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="clipboard-check" [size]="14" /></span>Keputusan</p>
             <div class="form-group">
               <label class="form-label">Keputusan</label>
               <app-select [options]="decisionOptions" [(ngModel)]="decision" />
@@ -45,32 +50,49 @@
           </div>
         </div>
       } @else {
-        <div class="card card-pad"><p class="text-muted">Pilih pendaftar dari daftar untuk melihat detail &amp; memberi keputusan.</p></div>
+        <div class="card card-pad">
+          <div class="empty-state empty-state-inline">
+            <span class="icon-badge lg icon-badge-neutral"><app-icon name="file-text" [size]="26" /></span>
+            <h4>Belum ada yang dipilih</h4>
+            <p class="text-muted">Pilih pendaftar dari daftar untuk melihat detail &amp; memberi keputusan.</p>
+          </div>
+        </div>
       }
     </div>
   </div>
+  </div>
 } @else if (tab() === 'active') {
+  <div class="tab-panel">
   @for (k of active(); track k.kaderID) {
     <div class="active-item">
-      <div>
-        <strong>{{ k.fullName }}</strong>
-        <p class="text-muted">{{ k.uniqueCode }}</p>
+      <div class="flex items-center gap-sm">
+        <span class="icon-badge sm icon-badge-solid"><app-icon name="check" [size]="14" /></span>
+        <div>
+          <strong>{{ k.fullName }}</strong>
+          <p class="text-muted">{{ k.uniqueCode }}</p>
+        </div>
       </div>
       <button class="btn btn-outline btn-sm" (click)="deactivate(k, $event)">Nonaktifkan</button>
     </div>
   } @empty {
     <div class="card card-pad"><p class="text-muted">Belum ada kader aktif dari LDK ini.</p></div>
   }
+  </div>
 } @else {
+  <div class="tab-panel">
   @for (k of rejected(); track k.kaderID) {
     <div class="active-item">
-      <div>
-        <strong>{{ k.fullName }}</strong>
-        <p class="text-muted">Ditolak</p>
+      <div class="flex items-center gap-sm">
+        <span class="icon-badge sm icon-badge-danger"><app-icon name="x" [size]="14" /></span>
+        <div>
+          <strong>{{ k.fullName }}</strong>
+          <p class="text-muted">Ditolak</p>
+        </div>
       </div>
       <button class="btn btn-outline btn-sm" (click)="reinstate(k, $event)">Putihkan Kembali</button>
     </div>
   } @empty {
     <div class="card card-pad"><p class="text-muted">Belum ada kader yang ditolak dari LDK ini.</p></div>
   }
+  </div>
 }

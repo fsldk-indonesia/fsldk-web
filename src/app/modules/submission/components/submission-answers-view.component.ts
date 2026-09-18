@@ -44,7 +44,7 @@ import { AnswerResponse } from '../entities/submission';
     .answer-row { padding: 10px 0; border-bottom: 1px solid var(--color-border); }
     .answer-row:last-child { border-bottom: none; }
     .answer-row dt { font-weight: 600; font-size: .9rem; }
-    .answer-row dd { margin: 2px 0 0; color: var(--color-text-secondary); }
+    .answer-row dd { margin: 2px 0 0; color: var(--color-text-secondary); overflow-wrap: break-word; word-break: break-word; }
   `],
 })
 export class SubmissionAnswersViewComponent {

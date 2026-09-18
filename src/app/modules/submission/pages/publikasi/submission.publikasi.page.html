@@ -7,20 +7,24 @@
   <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
 } @else {
   <div class="layout">
-    <div class="queue-list">
-      @for (item of queue(); track item.submissionID) {
-        <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
-          <strong>{{ orgName(item.organizationID) }}</strong>
-          <span class="chip" [class.chip-green]="item.status === 'PUBLISHED'">{{ statusLabel(item.status) }}</span>
-        </button>
-      } @empty {
-        <div class="card card-pad"><p class="text-muted">Tidak ada submission yang perlu dipublikasikan.</p></div>
-      }
+    <div>
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="list-checks" [size]="14" /></span>Antrian</p>
+      <div class="queue-list">
+        @for (item of queue(); track item.submissionID) {
+          <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
+            <span class="flex items-center gap-sm"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span><strong>{{ orgName(item.organizationID) }}</strong></span>
+            <span class="chip" [class.chip-green]="item.status === 'PUBLISHED'">{{ statusLabel(item.status) }}</span>
+          </button>
+        } @empty {
+          <div class="card card-pad"><p class="text-muted">Tidak ada submission yang perlu dipublikasikan.</p></div>
+        }
+      </div>
     </div>
 
     <div>
       @if (detail(); as d) {
-        <div class="detail-card">
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="file-text" [size]="14" /></span>Detail Submission</p>
+        <div class="card card-pad detail-card-fade" [class.is-visible]="!detailTransitioning()">
           <div class="flex justify-between items-center">
             <h3>{{ orgName(d.organizationID) }}</h3>
             <span class="chip" [class.chip-green]="d.status === 'PUBLISHED'">{{ statusLabel(d.status) }}</span>
@@ -33,10 +37,10 @@
 
           <div class="action-bar">
             @if (d.status === 'LEVEL_ESTABLISHED') {
-              <h4>Publikasi</h4>
+              <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="send" [size]="14" /></span>Publikasi</p>
               <button class="btn btn-primary" (click)="publish()" [disabled]="busy()">Publikasikan Hasil</button>
             } @else if (d.status === 'PUBLISHED') {
-              <h4>Aksi Koreksi</h4>
+              <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="rotate-ccw" [size]="14" /></span>Aksi Koreksi</p>
               <div class="form-group"><label class="form-label">Alasan Buka Kembali</label><textarea class="form-control" rows="2" [(ngModel)]="reopenReason" placeholder="Wajib diisi untuk Buka Kembali untuk Koreksi"></textarea></div>
               <div class="btn-row">
                 <button class="btn btn-outline" (click)="reopen()" [disabled]="busy() || !reopenReason.trim()">Buka Kembali untuk Koreksi</button>
@@ -46,7 +50,12 @@
           </div>
         </div>
       } @else {
-        <div class="card card-pad"><p class="text-muted">Pilih submission dari daftar untuk melihat detail.</p></div>
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-neutral"><app-icon name="file-text" [size]="14" /></span>Detail Submission</p>
+        <div class="card card-pad empty-state">
+          <span class="icon-badge lg icon-badge-soft"><app-icon name="file-text" [size]="26" /></span>
+          <h4>Belum ada submission dipilih</h4>
+          <p>Pilih submission dari daftar untuk melihat detail.</p>
+        </div>
       }
     </div>
   </div>

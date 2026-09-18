@@ -1,7 +1,8 @@
-import { Organization } from '../../entities/organization';
+import { SelectOption } from '../../../../shared/select.component';
 
 export interface OrganizationPuskomdaListView {
-  setOrganizations(orgs: Organization[], count: number): void;
+  setProvinceOptions(options: SelectOption[]): void;
+  setRegencyOptions(options: SelectOption[]): void;
   setSaving(saving: boolean): void;
   onSaveSuccess(): void;
   onActionSettled(id: number): void;

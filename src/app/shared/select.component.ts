@@ -1,5 +1,5 @@
 import { Component, ElementRef, Input, OnDestroy, forwardRef, inject, signal } from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 export interface SelectOption {
   value: unknown;
@@ -15,6 +15,7 @@ export interface SelectOption {
 @Component({
   selector: 'app-select',
   standalone: true,
+  imports: [FormsModule],
   template: `
     <div class="app-select" [class.open]="open()" [class.disabled]="disabled">
       <button type="button" class="app-select-control" [disabled]="disabled"
@@ -23,17 +24,23 @@ export interface SelectOption {
         <span [class.placeholder]="!selectedOption()">{{ selectedOption()?.label ?? placeholder }}</span>
         <i class="fas fa-chevron-down"></i>
       </button>
-      <ul class="app-select-menu" role="listbox" [class.open]="open()"
-          [style.top.px]="pos().top" [style.left.px]="pos().left"
-          [style.width.px]="pos().width" [style.maxHeight.px]="pos().maxH">
-        @for (opt of options; track opt.value; let i = $index) {
-          <li role="option" [attr.aria-selected]="opt.value === value"
-              [class.selected]="opt.value === value" [class.active]="i === activeIndex()"
-              (mouseenter)="activeIndex.set(i)" (click)="choose(opt)">{{ opt.label }}</li>
-        } @empty {
-          <li class="empty">Tidak ada pilihan</li>
+      <div class="app-select-menu" [class.open]="open()"
+           [style.top.px]="pos().top" [style.left.px]="pos().left"
+           [style.width.px]="pos().width">
+        @if (searchable) {
+          <input class="app-select-search" type="text" placeholder="Cari…" [(ngModel)]="query"
+                 (ngModelChange)="onQueryChange()" (click)="$event.stopPropagation()" (keydown)="onSearchKeydown($event)">
         }
-      </ul>
+        <ul class="app-select-list" role="listbox" [style.maxHeight.px]="listMaxH()">
+          @for (opt of filteredOptions(); track opt.value; let i = $index) {
+            <li role="option" [attr.aria-selected]="opt.value === value"
+                [class.selected]="opt.value === value" [class.active]="i === activeIndex()"
+                (mouseenter)="activeIndex.set(i)" (click)="choose(opt)">{{ opt.label }}</li>
+          } @empty {
+            <li class="empty">Tidak ada pilihan</li>
+          }
+        </ul>
+      </div>
     </div>
   `,
   styles: [`
@@ -59,21 +66,31 @@ export interface SelectOption {
     .app-select-menu {
       position: fixed; z-index: 1000;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-xs);
-      box-shadow: var(--shadow-lg); list-style: none; margin: 0; padding: 6px;
-      overflow-y: auto; overscroll-behavior: contain;
+      box-shadow: var(--shadow-lg); margin: 0; padding: 6px;
       display: flex; flex-direction: column; gap: 3px;
       opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-4px) scale(.98);
       transition: opacity .12s ease, transform .12s ease, visibility 0s linear .12s;
     }
     .app-select-menu.open { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); transition: opacity .12s ease, transform .12s ease, visibility 0s linear 0s; }
     @media (prefers-reduced-motion: reduce) { .app-select-menu { transition: none; } }
-    .app-select-menu li { padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
-    .app-select-menu li:hover { background: var(--color-bg-alt); }
-    .app-select-menu li.active { background: var(--color-bg-alt); }
-    .app-select-menu li.selected { background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; }
-    .app-select-menu li.selected.active { background: var(--color-primary); color: #fff; }
-    .app-select-menu li.empty { color: var(--color-muted); cursor: default; }
-    .app-select-menu li.empty:hover { background: none; }
+    /* Kotak cari-dalam-daftar — dipakai untuk dropdown berisi banyak opsi
+       (mis. Provinsi/Kota-Kabupaten dari wilayah.id), diaktifkan lewat
+       [searchable]="true". Filter murni client-side (filteredOptions()) —
+       opsinya sudah dimuat penuh sekali oleh presenter, sama seperti pola
+       .role-search di RoleIndexPage. */
+    .app-select-search {
+      flex-shrink: 0; margin-bottom: 4px; padding: 8px 10px; border: 1px solid var(--color-border);
+      border-radius: 6px; font-size: .85rem; font-family: var(--font-body); color: var(--color-text);
+    }
+    .app-select-search:focus { outline: none; border-color: var(--color-primary); }
+    .app-select-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; }
+    .app-select-list li { padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
+    .app-select-list li:hover { background: var(--color-bg-alt); }
+    .app-select-list li.active { background: var(--color-bg-alt); }
+    .app-select-list li.selected { background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; }
+    .app-select-list li.selected.active { background: var(--color-primary); color: #fff; }
+    .app-select-list li.empty { color: var(--color-muted); cursor: default; }
+    .app-select-list li.empty:hover { background: none; }
   `],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectComponent), multi: true }],
 })
@@ -83,11 +100,31 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   @Input() options: SelectOption[] = [];
   @Input() placeholder = 'Pilih…';
   @Input() disabled = false;
+  /** Tampilkan kotak cari-dalam-daftar di atas opsi — nyalakan untuk daftar
+   *  panjang (mis. Provinsi/Kota-Kabupaten dari wilayah.id). */
+  @Input() searchable = false;
 
   value: unknown = null;
   open = signal(false);
   activeIndex = signal(-1); // keyboard-highlighted option
+  query = '';
   pos = signal({ top: 0, left: 0, width: 0, maxH: 240 });
+
+  /** Opsi yang cocok dengan `query` (label, case-insensitive) — dipakai
+   *  template & navigasi keyboard alih-alih `options` mentah saat
+   *  `searchable` aktif. Selalu = `options` saat query kosong. */
+  filteredOptions(): SelectOption[] {
+    const q = this.query.trim().toLowerCase();
+    if (!q) return this.options;
+    return this.options.filter((o) => o.label.toLowerCase().includes(q));
+  }
+
+  /** Tinggi maksimum daftar opsi = tinggi total popup (pos().maxH) dikurangi
+   *  tinggi kotak cari (kalau ada) — supaya popup tidak melebihi maxH yang
+   *  sudah dihitung reposition() memperhitungkan ruang viewport tersisa. */
+  listMaxH(): number {
+    return this.searchable ? Math.max(80, this.pos().maxH - 44) : this.pos().maxH;
+  }
 
   private onChange: (value: unknown) => void = () => {};
   private onTouched: () => void = () => {};
@@ -140,18 +177,49 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
 
   private openMenu(): void {
     this.reposition();
-    const sel = this.options.findIndex((o) => o.value === this.value);
+    this.query = '';
+    const sel = this.filteredOptions().findIndex((o) => o.value === this.value);
     this.activeIndex.set(sel >= 0 ? sel : 0);
     this.open.set(true);
-    // Keep focus on the trigger so arrow keys / Enter reach onKeydown even when
-    // the menu was opened by something other than a real focusing click.
-    (this.el.nativeElement.querySelector('.app-select-control') as HTMLElement | null)?.focus();
+    if (this.searchable) {
+      // Fokus langsung ke kotak cari supaya pengguna bisa mengetik tanpa klik
+      // tambahan — beda dari trigger biasa (di bawah) yang dipertahankan
+      // fokusnya supaya panah/Enter tetap tertangkap onKeydown.
+      setTimeout(() => (this.el.nativeElement.querySelector('.app-select-search') as HTMLElement | null)?.focus());
+    } else {
+      // Keep focus on the trigger so arrow keys / Enter reach onKeydown even when
+      // the menu was opened by something other than a real focusing click.
+      (this.el.nativeElement.querySelector('.app-select-control') as HTMLElement | null)?.focus();
+    }
     this.scrollActiveIntoView();
   }
 
   private close(): void {
     this.open.set(false);
     this.activeIndex.set(-1);
+  }
+
+  /** Ketikan di kotak cari menyaring daftar (filteredOptions()) — activeIndex
+   *  di-reset ke 0 tiap kali hasil filter berubah supaya panah/Enter langsung
+   *  konsisten dengan opsi yang sedang tersorot secara visual. */
+  onQueryChange(): void {
+    this.activeIndex.set(this.filteredOptions().length > 0 ? 0 : -1);
+  }
+
+  /** handler ini hanya menangani navigasi keyboard yang tetap harus
+   *  berfungsi walau fokus ada di input cari, bukan di trigger. */
+  onSearchKeydown(event: KeyboardEvent): void {
+    switch (event.key) {
+      case 'ArrowDown': event.preventDefault(); this.moveActive(1); break;
+      case 'ArrowUp': event.preventDefault(); this.moveActive(-1); break;
+      case 'Enter': {
+        event.preventDefault();
+        const opt = this.filteredOptions()[this.activeIndex()];
+        if (opt) this.choose(opt);
+        break;
+      }
+      case 'Escape': event.preventDefault(); this.close(); break;
+    }
   }
 
   onKeydown(event: KeyboardEvent): void {
@@ -169,13 +237,13 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
         if (this.open()) { event.preventDefault(); this.setActive(0); }
         break;
       case 'End':
-        if (this.open()) { event.preventDefault(); this.setActive(this.options.length - 1); }
+        if (this.open()) { event.preventDefault(); this.setActive(this.filteredOptions().length - 1); }
         break;
       case 'Enter':
       case ' ':
         event.preventDefault();
         if (this.open()) {
-          const opt = this.options[this.activeIndex()];
+          const opt = this.filteredOptions()[this.activeIndex()];
           if (opt) this.choose(opt);
         } else {
           this.openMenu();
@@ -191,7 +259,7 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   }
 
   private moveActive(delta: number): void {
-    const n = this.options.length;
+    const n = this.filteredOptions().length;
     if (n === 0) return;
     this.setActive(Math.min(n - 1, Math.max(0, this.activeIndex() + delta)));
   }
@@ -203,7 +271,7 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
 
   private scrollActiveIntoView(): void {
     setTimeout(() => {
-      const items = this.el.nativeElement.querySelectorAll('.app-select-menu li');
+      const items = this.el.nativeElement.querySelectorAll('.app-select-list li');
       (items[this.activeIndex()] as HTMLElement | undefined)?.scrollIntoView({ block: 'nearest' });
     });
   }

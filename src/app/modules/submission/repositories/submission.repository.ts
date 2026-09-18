@@ -30,9 +30,19 @@ export class SubmissionRepository {
     return this.api.listQueue({ formCode, status, page, limit, organizationID });
   }
 
-  /** Seluruh submission satu form dalam cakupan akses caller, tanpa filter status — dipakai halaman laporan. */
-  listAll(formCode: string, organizationID?: number, page = 1, limit = 200): Observable<Pagination<SubmissionResponse>> {
-    return this.api.listQueue({ formCode, page, limit, organizationID });
+  /** Seluruh submission satu form dalam cakupan akses caller, terpaginasi
+   *  penuh dengan sort/status multi/search nama LDK — dipakai `<app-cms-index>`
+   *  di halaman Laporan (Menu Laporan Puskomda & Laporan Nasional Puskomnas,
+   *  satu komponen yang sama). `status` kosong = tanpa filter (semua status). */
+  listAll(
+    formCode: string,
+    params: { page: number; limit: number; sort: string; status: string[]; search: string },
+    organizationID?: number,
+  ): Observable<Pagination<SubmissionResponse>> {
+    return this.api.listQueue({
+      formCode, page: params.page, limit: params.limit, sort: params.sort,
+      status: params.status.join(','), search: params.search, organizationID,
+    });
   }
 
   review(id: number, body: ReviewRequest): Observable<SubmissionResponse> { return this.api.review(id, body); }

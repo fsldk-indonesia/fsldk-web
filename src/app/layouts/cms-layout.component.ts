@@ -22,18 +22,41 @@ const MOBILE_BREAKPOINT = 900;
  *  saja). Ditulis generik supaya modul lain bisa ikut dikelompokkan tanpa
  *  perlu menulis ulang mekanismenya — dipakai "Kantong Amal" dan
  *  "Shortlink" (Shortlink + Permintaan Shortlink, lihat migrasi
- *  0033_shortlink_sidebar_group.up.sql di fsldk-api). */
+ *  0033_shortlink_sidebar_group.up.sql di fsldk-api).
+ *
+ *  `routePrefixes` (jamak) dipakai untuk grup yang anggotanya BUKAN nested di
+ *  bawah satu prefix yang sama — mis. "Pengguna" ("/cms/users") dan "Role
+ *  Pengguna" ("/cms/roles") dua rute top-level independen, beda dari
+ *  Shortlink yang child-nya sama-sama di bawah "/cms/shortlink/...". Cukup
+ *  isi salah satu (`routePrefix` ATAU `routePrefixes`) — keduanya dinormalisasi
+ *  ke array yang sama lewat prefixesOf() di bawah. */
 interface SidebarGroupConfig {
   label: string;
   icon: string;
-  routePrefix: string;
+  routePrefix?: string;
+  routePrefixes?: string[];
 }
 const SIDEBAR_GROUPS: SidebarGroupConfig[] = [
   { label: 'Kantong Amal', icon: 'hand-heart', routePrefix: '/cms/kantong-amal' },
   { label: 'Shortlink', icon: 'link', routePrefix: '/cms/shortlink' },
   { label: 'QR Code', icon: 'qr-code', routePrefix: '/cms/qrcode' },
   { label: 'FSLDK Goods', icon: 'shopping-bag', routePrefix: '/cms/goods' },
+  { label: 'Pengguna', icon: 'users', routePrefixes: ['/cms/users', '/cms/roles'] },
 ];
+
+function prefixesOf(g: SidebarGroupConfig): string[] {
+  return g.routePrefixes ?? (g.routePrefix ? [g.routePrefix] : []);
+}
+
+/** Cocok jika menuRoute PERSIS SAMA dengan salah satu prefix (rute top-level
+ *  independen, mis. grup "Pengguna" -> "/cms/users"/"/cms/roles") ATAU
+ *  nested SATU TINGKAT di bawahnya (mis. grup "Shortlink" -> anak-anak di
+ *  bawah "/cms/shortlink/..."). Dua pola beda ditangani satu fungsi supaya
+ *  SIDEBAR_GROUPS bisa dipakai dengan bentuk routePrefix TUNGGAL (existing)
+ *  maupun routePrefixes JAMAK (baru) tanpa cabang terpisah di pemanggilnya. */
+function matchesGroup(menuRoute: string, group: SidebarGroupConfig): boolean {
+  return prefixesOf(group).some((p) => menuRoute === p || menuRoute.startsWith(p + '/'));
+}
 
 type SidebarEntry =
   | { kind: 'item'; item: MenuItem }
@@ -127,7 +150,11 @@ function canvasSilhouetteUrl(hex: string): string {
             <div class="org-switcher">
               <button class="org-switcher-btn" type="button" (click)="toggleOrgDropdown($event)">
                 <app-icon [name]="switcherIcon()" [size]="14" />
-                <span>{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
+                @if (orgOptionsLoading() && !currentOrgName()) {
+                  <span class="skel skel-line org-switcher-skel"></span>
+                } @else {
+                  <span>{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
+                }
                 <app-icon name="chevron-down" [size]="12" />
               </button>
               @if (orgDropdownOpen()) {
@@ -138,7 +165,7 @@ function canvasSilhouetteUrl(hex: string): string {
                       {{ o.organizationName }}
                     </button>
                   } @empty {
-                    <p class="text-muted org-empty">Tidak ada organisasi lain.</p>
+                    <p class="text-muted org-empty">Tidak ada {{ orgNoun() }} lain.</p>
                   }
                 </div>
               }
@@ -314,6 +341,7 @@ function canvasSilhouetteUrl(hex: string): string {
        aktif (lihat .cms.tier-*), tidak perlu di-hardcode di sini. Hover
        naik jadi solid fill supaya kontras "sedang ditekan" makin jelas. */
     .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-full); border: 1.5px solid var(--color-primary-soft); background: var(--color-primary-tint); color: var(--color-primary-dark); font-weight: 700; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .org-switcher-skel { width: 90px; height: 13px; }
     .org-switcher-btn:hover { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent); transform: translateY(-1px); }
     .org-switcher-btn span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .org-dropdown-panel { left: 0; right: auto; min-width: 280px; max-height: 360px; overflow-y: auto; gap: 4px; }
@@ -438,37 +466,25 @@ function canvasSilhouetteUrl(hex: string): string {
       .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 0; padding: 8px 14px; gap: 10px; }
     }
 
-    /* Tema per tier (poin 2 miss-development-clarification.md): CMS Utama
-       (tanpa kelas tier-*) tetap tema default. LDK/Puskomda/Puskomnas
-       memakai mix 70% warna tier + 20% putih + 10% hijau brand (#00933b),
-       diterapkan ke SELURUH permukaan termasuk card/panel konten (bukan
-       cuma background halaman & sidebar) sesuai keputusan yang dikonfirmasi
-       — kontras teks tetap dijaga karena tint-nya sangat ringan (--color-text
-       tidak diubah, tetap gelap solid). Dihitung sekali lewat color-mix()
-       sebagai custom property, dipakai ulang oleh .card/.cms/.sidebar/.topbar.
-     */
+    /* Tema per tier (revisi — sebelumnya tint warna tier disebar ke SELURUH
+       permukaan termasuk card/sidebar/topbar/background halaman lewat
+       color-mix(), tapi itu bikin card kelihatan abu-abu/pudar dibanding
+       Portal Admin yang solid putih. Sekarang page/sidebar/topbar/card tetap
+       putih/netral persis seperti Portal Admin di semua tier — warna tier
+       HANYA nempel di permukaan yang sudah baca var(--color-primary/-soft)
+       lewat styles.scss global: button/pill/chip/badge/icon-badge, active
+       nav item sidebar, dan accent lain yang sudah ada sebelum perubahan ini. */
     .cms.tier-ldk {
       --color-primary: #063c84; --color-primary-dark: #042c61; --color-primary-darker: #021a3a;
       --color-primary-bright: #1f5db3; --color-primary-soft: #e2e9f5; --color-primary-tint: #f4f7fc;
-      --tier-mix: color-mix(in srgb, #063c84 70%, color-mix(in srgb, #ffffff 66.7%, #00933b 33.3%) 30%);
     }
     .cms.tier-puskomda {
       --color-primary: #186541; --color-primary-dark: #0f4a30; --color-primary-darker: #092e1d;
       --color-primary-bright: #2f9161; --color-primary-soft: #e0f0e6; --color-primary-tint: #f4faf6;
-      --tier-mix: color-mix(in srgb, #186541 70%, color-mix(in srgb, #ffffff 66.7%, #00933b 33.3%) 30%);
     }
     .cms.tier-puskomnas {
       --color-primary: #55408f; --color-primary-dark: #3e2f6b; --color-primary-darker: #291f47;
       --color-primary-bright: #7a63b8; --color-primary-soft: #ece8f7; --color-primary-tint: #f8f6fc;
-      --tier-mix: color-mix(in srgb, #55408f 70%, color-mix(in srgb, #ffffff 66.7%, #00933b 33.3%) 30%);
-    }
-    .cms.tier-ldk, .cms.tier-puskomda, .cms.tier-puskomnas {
-      background-color: color-mix(in srgb, var(--tier-mix) 22%, var(--color-bg-warm) 78%);
-    }
-    .cms.tier-ldk .sidebar, .cms.tier-puskomda .sidebar, .cms.tier-puskomnas .sidebar,
-    .cms.tier-ldk .topbar, .cms.tier-puskomda .topbar, .cms.tier-puskomnas .topbar,
-    .cms.tier-ldk .cms-content ::ng-deep .card, .cms.tier-puskomda .cms-content ::ng-deep .card, .cms.tier-puskomnas .cms-content ::ng-deep .card {
-      background-color: color-mix(in srgb, var(--tier-mix) 14%, #fff 86%);
     }
   `],
 })
@@ -515,14 +531,14 @@ export class CmsLayoutComponent implements OnInit {
     const entries: SidebarEntry[] = [];
     const seen = new Set<string>();
     for (const item of items) {
-      const group = SIDEBAR_GROUPS.find((g) => item.menuRoute.startsWith(g.routePrefix + '/'));
+      const group = SIDEBAR_GROUPS.find((g) => matchesGroup(item.menuRoute, g));
       if (!group) {
         entries.push({ kind: 'item', item });
         continue;
       }
       if (seen.has(group.label)) continue;
       seen.add(group.label);
-      const children = items.filter((i) => i.menuRoute.startsWith(group.routePrefix + '/'));
+      const children = items.filter((i) => matchesGroup(i.menuRoute, group));
       entries.push({ kind: 'group', config: group, children });
     }
     return entries;
@@ -536,6 +552,12 @@ export class CmsLayoutComponent implements OnInit {
   isGroupExpanded(label: string): boolean { return this.expandedGroups().has(label); }
 
   currentOrgID = signal<number | undefined>(undefined);
+  /** True sampai panggilan switcherList() PERTAMA selesai — dipakai trigger
+   *  switcher untuk menampilkan skeleton alih-alih placeholder "Pilih
+   *  Puskomda/LDK" (yang kalau tampil sesaat sebelum auto-select di
+   *  loadOrgOptions() selesai, kelihatan seperti default gagal ter-resolve
+   *  padahal cuma race loading singkat). */
+  orgOptionsLoading = signal(true);
   orgOptions = signal<MeOrganization[]>([]);
   orgSearch = signal('');
 
@@ -558,7 +580,7 @@ export class CmsLayoutComponent implements OnInit {
     // terbuka, supaya pengguna tidak "kehilangan" halaman yang sedang
     // dibuka di balik dropdown tertutup.
     const currentUrl = this.router.url;
-    const activeGroup = SIDEBAR_GROUPS.find((g) => currentUrl.startsWith(g.routePrefix + '/'));
+    const activeGroup = SIDEBAR_GROUPS.find((g) => prefixesOf(g).some((p) => currentUrl.startsWith(p)));
     if (activeGroup) this.expandedGroups.set(new Set([activeGroup.label]));
 
     if (this.showOrgSwitcher()) {
@@ -574,6 +596,7 @@ export class CmsLayoutComponent implements OnInit {
     this.orgRepo.switcherList(this.tier(), q ? undefined : this.currentOrgID(), q || undefined).subscribe({
       next: (list) => {
         this.orgOptions.set(list);
+        this.orgOptionsLoading.set(false);
         // Belum ada organizationID eksplisit di URL (mis. baru pindah ke shell
         // ini dari dropdown akun) — jangan biarkan switcher "lepas" menampilkan
         // placeholder "Pilih Organisasi" (miss-development-prompt-3.md poin 2),
@@ -583,7 +606,7 @@ export class CmsLayoutComponent implements OnInit {
           this.selectOrganization(list[0].organizationID);
         }
       },
-      error: () => {},
+      error: () => { this.orgOptionsLoading.set(false); },
     });
   }
 

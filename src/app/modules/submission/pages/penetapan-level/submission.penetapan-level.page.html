@@ -7,20 +7,24 @@
   <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
 } @else {
   <div class="layout">
-    <div class="queue-list">
-      @for (item of queue(); track item.submissionID) {
-        <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
-          <strong>{{ orgName(item.organizationID) }}</strong>
-          <span class="chip">{{ statusLabel(item.status) }}</span>
-        </button>
-      } @empty {
-        <div class="card card-pad"><p class="text-muted">Tidak ada submission menunggu penetapan level.</p></div>
-      }
+    <div>
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="list-checks" [size]="14" /></span>Antrian</p>
+      <div class="queue-list">
+        @for (item of queue(); track item.submissionID) {
+          <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
+            <span class="flex items-center gap-sm"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span><strong>{{ orgName(item.organizationID) }}</strong></span>
+            <span class="chip">{{ statusLabel(item.status) }}</span>
+          </button>
+        } @empty {
+          <div class="card card-pad"><p class="text-muted">Tidak ada submission menunggu penetapan level.</p></div>
+        }
+      </div>
     </div>
 
     <div>
       @if (detail(); as d) {
-        <div class="detail-card">
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="file-text" [size]="14" /></span>Detail Submission</p>
+        <div class="card card-pad detail-card-fade" [class.is-visible]="!detailTransitioning()">
           <div class="flex justify-between items-center">
             <h3>{{ orgName(d.organizationID) }}</h3>
             <span class="chip">{{ statusLabel(d.status) }}</span>
@@ -33,7 +37,7 @@
           }
 
           <div class="decision-form">
-            <h4>Penetapan Level</h4>
+            <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="award" [size]="14" /></span>Penetapan Level</p>
             <div class="form-group">
               <label class="form-label">Level</label>
               <app-select [options]="levelOptions" [(ngModel)]="levelCode" placeholder="Pilih level" />
@@ -43,7 +47,12 @@
           </div>
         </div>
       } @else {
-        <div class="card card-pad"><p class="text-muted">Pilih submission dari daftar untuk menetapkan level.</p></div>
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-neutral"><app-icon name="file-text" [size]="14" /></span>Detail Submission</p>
+        <div class="card card-pad empty-state">
+          <span class="icon-badge lg icon-badge-soft"><app-icon name="file-text" [size]="26" /></span>
+          <h4>Belum ada submission dipilih</h4>
+          <p>Pilih submission dari daftar untuk menetapkan level.</p>
+        </div>
       }
     </div>
   </div>

@@ -1,6 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { PhoneInputComponent } from '../../../../shared/phone-input.component';
+import { IconComponent } from '../../../../shared/icon.component';
+import { WilayahService } from '../../../../core/services/wilayah.service';
 import { Organization } from '../../entities/organization';
 import { OrganizationProfileFormValue, OrganizationProfilePresenter } from './organization.profile.presenter';
 import { OrganizationProfileView } from './organization.profile.view';
@@ -13,7 +17,7 @@ const emptyForm = (): OrganizationProfileFormValue => ({
   selector: 'app-organization-profile-page',
   standalone: true,
   templateUrl: './organization.profile.page.html',
-  imports: [FormsModule, ImageUploadComponent],
+  imports: [FormsModule, ImageUploadComponent, SelectComponent, PhoneInputComponent, IconComponent],
   providers: [OrganizationProfilePresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -31,21 +35,57 @@ const emptyForm = (): OrganizationProfileFormValue => ({
     .avatar { width: 64px; height: 64px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; font-size: 1.3rem; }
     img.avatar { object-fit: cover; }
     .photo-upload app-image-upload { display: block; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 28px 0 14px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .form-section-label:first-of-type { margin-top: 4px; }
     .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
     @media (max-width: 640px) { .grid-cols-2 { grid-template-columns: 1fr; } }
   `],
 })
 export class OrganizationProfilePage implements OnInit, OrganizationProfileView {
   private presenter = inject(OrganizationProfilePresenter);
+  private wilayah = inject(WilayahService);
 
   organization = signal<Organization | null>(null);
   loading = signal(true);
   saving = signal(false);
   form: OrganizationProfileFormValue = emptyForm();
 
+  /** id provinsi/kota terpilih di dropdown — HANYA dipakai untuk resolve
+   *  label (form.provinceName/cityName) & memicu lookup regencies(); tidak
+   *  pernah dikirim ke backend (organization_dto cuma punya kolom nama
+   *  bebas, tanpa FK ke wilayah). Data lama yang provinceName/cityName-nya
+   *  tidak persis cocok dengan wilayah.id manapun sengaja dibiarkan kosong
+   *  di sini (placeholder) — tidak ada fuzzy-matching, lihat komentar di
+   *  WilayahService. */
+  provinceOptions = signal<SelectOption[]>([]);
+  cityOptions = signal<SelectOption[]>([]);
+  selectedProvinceID: string | null = null;
+  selectedCityID: string | null = null;
+
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.load();
+    this.wilayah.provinces().subscribe((options) => this.provinceOptions.set(options));
+  }
+
+  onProvinceChange(): void {
+    const label = this.provinceOptions().find((o) => o.value === this.selectedProvinceID)?.label ?? '';
+    this.form.provinceName = label;
+    this.selectedCityID = null;
+    this.form.cityName = '';
+    this.cityOptions.set([]);
+    if (this.selectedProvinceID) {
+      this.wilayah.regencies(this.selectedProvinceID).subscribe((options) => this.cityOptions.set(options));
+    }
+  }
+
+  onCityChange(): void {
+    const label = this.cityOptions().find((o) => o.value === this.selectedCityID)?.label ?? '';
+    this.form.cityName = label;
   }
 
   save(): void { this.presenter.save(this.form); }

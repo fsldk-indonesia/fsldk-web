@@ -21,16 +21,21 @@ import { SubmissionStatusView } from './submission.status.view';
   providers: [SubmissionStatusPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    .status-card { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-radius: var(--radius-md); background: var(--color-primary-soft); margin-bottom: 20px; }
-    .status-card.tone-danger { background: #fdecec; color: #9a1c1c; }
-    .status-card.tone-warning { background: var(--color-ember-soft); color: var(--color-ember-dark); }
+    .status-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 20px; border-radius: var(--radius-md); background: var(--color-primary-soft); margin-bottom: 20px; }
+    .status-card.tone-danger { background: var(--color-danger-soft); }
+    .status-card.tone-danger h2 { color: var(--color-danger); }
+    .status-card.tone-warning { background: var(--color-ember-soft); }
+    .status-card.tone-warning h2 { color: var(--color-ember-dark); }
     .timeline { display: flex; flex-direction: column; gap: 0; }
     .timeline-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
     .timeline-item:last-child { border-bottom: none; }
     .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary); margin-top: 6px; flex-shrink: 0; }
-    .result-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 18px; margin-top: 16px; }
     .code-display { font-size: 1.4rem; font-weight: 700; letter-spacing: .5px; }
-    .section-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 18px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
   `],
 })
 export class SubmissionStatusPage implements OnInit, SubmissionStatusView {

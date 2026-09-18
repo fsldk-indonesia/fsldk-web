@@ -83,6 +83,11 @@ function buildShortlinkRequestIndexConfig(): CmsIndexConfig<ShortLinkRequest> {
     }
     .modal.modal-pop.open { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) { .modal-backdrop { transition: none; } }
+    /* Popup Alasan Penolakan jauh lebih kecil dari popup Tolak/Detail — cuma
+       menampilkan satu paragraf teks, max-width 460px milik .modal induk
+       terasa lebar kosong kalau dipakai apa adanya. */
+    .modal.modal-sm { max-width: 340px; }
+    .reason-text { margin: 0; white-space: pre-wrap; word-break: break-word; }
 
     .modal-close {
       position: absolute; top: 14px; right: 14px; z-index: 1; display: flex; align-items: center; justify-content: center;
@@ -143,6 +148,13 @@ export class ShortLinkRequestIndexPage implements OnInit, ShortLinkRequestIndexV
   rejectTarget: ShortLinkRequest | null = null;
   rejectReason = '';
 
+  // --- Popup Alasan Penolakan (dipicu klik ikon info baris Ditolak) ---
+  showReason = signal(false);
+  reasonPopupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
+  @ViewChild('reasonModalEl') private reasonModalEl?: ElementRef<HTMLElement>;
+  private reasonAnimation: Animation | null = null;
+  reasonTarget: ShortLinkRequest | null = null;
+
   // --- Popup Detail Permintaan (dipicu klik baris) ---
   showView = signal(false);
   viewPopupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
@@ -188,6 +200,22 @@ export class ShortLinkRequestIndexPage implements OnInit, ShortLinkRequestIndexV
     this.presenter.reject(this.rejectTarget.shortLinkRequestID, this.rejectReason.trim());
   }
 
+  // Dipicu klik ikon info di kolom Aksi baris berstatus Ditolak — popup kecil
+  // baca-saja, cukup menampilkan rejectionReason apa adanya (bukan full
+  // detail seperti popup View). stopPropagation di template mencegah ini
+  // ikut membuka popup Detail Permintaan di baris yang sama.
+  openReasonPopup(r: ShortLinkRequest, event?: Event): void {
+    event?.stopPropagation();
+    this.reasonPopupOrigin.set(popupOriginFromEvent(event));
+    this.reasonTarget = r;
+    this.showReason.set(true);
+    this.animateModal(this.reasonModalEl, 'reason', true);
+  }
+  closeReasonPopup(): void {
+    this.animateModal(this.reasonModalEl, 'reason', false);
+    this.showReason.set(false);
+  }
+
   // Dipicu klik baris (CmsIndexComponent rowClick) — popup detail baca-saja,
   // TIDAK menimpa alur Setujui/Tolak (tombol aksi tetap stopPropagation).
   openView(r: ShortLinkRequest): void {
@@ -203,15 +231,15 @@ export class ShortLinkRequestIndexPage implements OnInit, ShortLinkRequestIndexV
 
   /** Buka/tutup modal lewat Web Animations API — lihat catatan panjang di
    *  user.index.page.ts untuk root-cause kenapa CSS transition tidak dipakai.
-   *  Dipakai dua popup independen (Tolak & Detail) lewat parameter `which`
-   *  supaya masing-masing punya state Animation sendiri, tidak saling
-   *  meng-cancel animasi popup lain. */
-  private animateModal(elRef: ElementRef<HTMLElement> | undefined, which: 'reject' | 'view', opening: boolean): void {
+   *  Dipakai TIGA popup independen (Tolak, Alasan Penolakan & Detail) lewat
+   *  parameter `which` supaya masing-masing punya state Animation sendiri,
+   *  tidak saling meng-cancel animasi popup lain. */
+  private animateModal(elRef: ElementRef<HTMLElement> | undefined, which: 'reject' | 'reason' | 'view', opening: boolean): void {
     const el = elRef?.nativeElement;
     if (!el) return;
-    const current = which === 'reject' ? this.rejectAnimation : this.viewAnimation;
+    const current = which === 'reject' ? this.rejectAnimation : which === 'reason' ? this.reasonAnimation : this.viewAnimation;
     current?.cancel();
-    const { dx, dy } = which === 'reject' ? this.rejectPopupOrigin() : this.viewPopupOrigin();
+    const { dx, dy } = which === 'reject' ? this.rejectPopupOrigin() : which === 'reason' ? this.reasonPopupOrigin() : this.viewPopupOrigin();
     const closed: Keyframe = { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0.25)` };
     const open: Keyframe = { opacity: 1, transform: 'none' };
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -220,10 +248,13 @@ export class ShortLinkRequestIndexPage implements OnInit, ShortLinkRequestIndexV
       easing: 'cubic-bezier(.16, 1, .3, 1)',
       fill: 'forwards',
     });
-    if (which === 'reject') this.rejectAnimation = anim; else this.viewAnimation = anim;
+    if (which === 'reject') this.rejectAnimation = anim;
+    else if (which === 'reason') this.reasonAnimation = anim;
+    else this.viewAnimation = anim;
     anim.onfinish = () => {
       anim.cancel();
       if (which === 'reject' && this.rejectAnimation === anim) this.rejectAnimation = null;
+      if (which === 'reason' && this.reasonAnimation === anim) this.reasonAnimation = null;
       if (which === 'view' && this.viewAnimation === anim) this.viewAnimation = null;
     };
   }
