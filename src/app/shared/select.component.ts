@@ -279,7 +279,7 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   /** Place the fixed menu below the control, or above it when space is short. */
   private reposition(): void {
     const r = this.el.nativeElement.getBoundingClientRect();
-    const gap = 6;
+    const gap = 10;
     const desired = Math.min((this.options.length || 1) * 42 + 14, 240);
     const below = window.innerHeight - r.bottom - gap;
     const above = r.top - gap;

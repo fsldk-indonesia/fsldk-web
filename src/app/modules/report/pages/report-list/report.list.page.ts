@@ -47,7 +47,7 @@ function buildReportIndexConfig(): CmsIndexConfig<SubmissionResponse> {
   imports: [FormsModule, ModalBackdropDirective, SelectComponent, CmsIndexComponent, SubmissionAnswersViewComponent],
   providers: [ReportListPresenter],
   styles: [`
-    .page-head { margin-bottom: 20px; } .page-head h1 { margin-bottom: 2px; }
+    .page-head { margin-bottom: 28px; } .page-head h1 { margin-bottom: 2px; }
     .toolbar { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
     .toolbar .field { min-width: 200px; }
     .toolbar .field .app-select { width: 100%; }
