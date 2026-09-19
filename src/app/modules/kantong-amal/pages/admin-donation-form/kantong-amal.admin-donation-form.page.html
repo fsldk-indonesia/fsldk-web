@@ -44,7 +44,7 @@
       <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="user-circle" [size]="14" /></span>Detail Donatur (opsional)</p>
       <div class="grid grid-3 mb-0">
         <div class="form-group mb-0"><label class="form-label">Usia</label>
-          <input class="form-control" [(ngModel)]="form.donorAge" [disabled]="isReadonly"></div>
+          <input class="form-control" type="number" inputmode="numeric" min="0" max="120" step="1" [(ngModel)]="form.donorAge" [disabled]="isReadonly"></div>
         <div class="form-group mb-0"><label class="form-label">Domisili</label>
           <input class="form-control" [(ngModel)]="form.donorDomicile" [disabled]="isReadonly"></div>
         <div class="form-group mb-0"><label class="form-label">Pekerjaan</label>

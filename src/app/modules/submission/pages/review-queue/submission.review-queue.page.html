@@ -13,7 +13,7 @@
         @for (item of queue(); track item.submissionID) {
           <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
             <span class="flex items-center gap-sm"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span><strong>{{ orgName(item.organizationID) }}</strong></span>
-            <span class="chip">{{ statusLabel(item.status) }}</span>
+            <span class="chip" [class.chip-green]="statusTone(item.status) === 'success'">{{ statusLabel(item.status) }}</span>
           </button>
         } @empty {
           <div class="card card-pad"><p class="text-muted">Tidak ada submission menunggu keputusan.</p></div>
@@ -27,7 +27,7 @@
         <div class="card card-pad detail-card-fade" [class.is-visible]="!detailTransitioning()">
           <div class="flex justify-between items-center">
             <h3>{{ orgName(d.organizationID) }}</h3>
-            <span class="chip">{{ statusLabel(d.status) }}</span>
+            <span class="chip" [class.chip-green]="statusTone(d.status) === 'success'">{{ statusLabel(d.status) }}</span>
           </div>
           <p class="text-muted">Terkirim: {{ d.submittedDate }}</p>
 

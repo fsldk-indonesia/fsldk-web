@@ -5,7 +5,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
 import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
-import { SubmissionResponse, SubmissionDetail, LEVEL_OPTIONS, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
+import { SubmissionResponse, SubmissionDetail, LEVEL_OPTIONS, SUBMISSION_STATUS_LABELS, statusTone } from '../../entities/submission';
 import { SubmissionPenetapanLevelPresenter } from './submission.penetapan-level.presenter';
 import { SubmissionPenetapanLevelView } from './submission.penetapan-level.view';
 
@@ -33,8 +33,20 @@ import { SubmissionPenetapanLevelView } from './submission.penetapan-level.view'
     .queue-row:hover { border-color: var(--color-primary); }
     .queue-row.active { border-color: var(--color-primary); background: var(--color-primary-soft); }
     .decision-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 14px; }
+    /* transform:none (BUKAN translateY(0)) di state diam — keduanya sama
+       persis secara visual (offset 0px), tapi translateY(0) TETAP dianggap
+       "punya transform" oleh spec CSS (bukan literal none), jadi tetap
+       menjadikan elemen ini containing block baru untuk descendant
+       position:fixed — persis kuirk yang sama yang sudah didokumentasikan &
+       diperbaiki untuk .modal-pop di styles.scss. <app-select> "Level" di
+       dalam kartu ini pakai position:fixed utk popup-nya (select.component.ts
+       reposition() menghitung koordinat viewport-absolute lewat
+       getBoundingClientRect()) — begitu kartu ini closingBlock, top/left
+       yang seharusnya absolut-ke-viewport malah diresolusi relatif ke kartu
+       ini, popup jadi "melenceng"/kepotong jauh dari trigger-nya (bug yang
+       dilaporkan). */
     .detail-card-fade { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
-    .detail-card-fade.is-visible { opacity: 1; transform: translateY(0); }
+    .detail-card-fade.is-visible { opacity: 1; transform: none; }
     .form-section-label {
       display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
       font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
@@ -57,6 +69,7 @@ export class SubmissionPenetapanLevelPage implements OnInit, SubmissionPenetapan
   justificationNote = '';
   readonly levelOptions: SelectOption[] = LEVEL_OPTIONS;
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
+  readonly statusTone = statusTone;
 
   ngOnInit(): void {
     this.presenter.attachView(this);

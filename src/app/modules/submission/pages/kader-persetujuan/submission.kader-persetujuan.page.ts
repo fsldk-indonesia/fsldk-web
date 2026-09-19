@@ -5,7 +5,7 @@ import { SelectComponent, SelectOption } from '../../../../shared/select.compone
 import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
-import { KaderInfo, SubmissionDetail, ReviewDecision } from '../../entities/submission';
+import { KaderInfo, SubmissionDetail, ReviewDecision, SUBMISSION_STATUS_LABELS, statusTone, KADER_STATUS_LABELS, kaderStatusTone } from '../../entities/submission';
 import { SubmissionKaderPersetujuanPresenter } from './submission.kader-persetujuan.presenter';
 import { SubmissionKaderPersetujuanView } from './submission.kader-persetujuan.view';
 
@@ -46,8 +46,12 @@ const DECISION_OPTIONS: SelectOption[] = [
       letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
     }
     .empty-state-inline { padding: 36px 20px 24px; }
+    /* transform:none di state diam — lihat catatan panjang di
+       submission.penetapan-level.page.ts (bug identik: translateY(0) tetap
+       jadi containing block position:fixed, bikin popup <app-select>
+       "melenceng" jauh dari trigger-nya). */
     .detail-card-fade { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
-    .detail-card-fade.is-visible { opacity: 1; transform: translateY(0); }
+    .detail-card-fade.is-visible { opacity: 1; transform: none; }
     @media (prefers-reduced-motion: reduce) { .detail-card-fade { opacity: 1; transform: none; transition: none; } }
   `],
 })
@@ -68,6 +72,13 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
   decision: ReviewDecision = 'APPROVED';
   note = '';
   decisionOptions = DECISION_OPTIONS;
+
+  readonly statusLabels = SUBMISSION_STATUS_LABELS;
+  readonly statusTone = statusTone;
+  readonly kaderStatusLabels = KADER_STATUS_LABELS;
+  readonly kaderStatusTone = kaderStatusTone;
+  statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
+  kaderStatusLabel(code: string): string { return this.kaderStatusLabels[code] ?? code; }
 
   ngOnInit(): void {
     this.presenter.attachView(this);

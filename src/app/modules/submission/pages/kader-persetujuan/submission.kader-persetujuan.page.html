@@ -20,7 +20,7 @@
         @for (k of pending(); track k.kaderID) {
           <button type="button" class="queue-row" [class.active-row]="detail()?.submissionID === k.submissionID" (click)="select(k)">
             <span class="flex items-center gap-sm"><span class="icon-badge sm icon-badge-soft"><app-icon name="user-check" [size]="14" /></span><strong>{{ k.fullName }}</strong></span>
-            <span class="chip">{{ k.status }}</span>
+            <span class="chip" [class.chip-green]="kaderStatusTone(k.status) === 'success'">{{ kaderStatusLabel(k.status) }}</span>
           </button>
         } @empty {
           <div class="card card-pad"><p class="text-muted">Tidak ada pendaftaran menunggu persetujuan.</p></div>
@@ -34,7 +34,7 @@
         <div class="card card-pad detail-card-fade" [class.is-visible]="!detailTransitioning()">
           <div class="flex justify-between items-center">
             <h3>{{ d.kader?.fullName }}</h3>
-            <span class="chip">{{ d.status }}</span>
+            <span class="chip" [class.chip-green]="statusTone(d.status) === 'success'">{{ statusLabel(d.status) }}</span>
           </div>
 
           <app-submission-answers-view [version]="version()" [answers]="d.answers" />

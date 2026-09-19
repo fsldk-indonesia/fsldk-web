@@ -6,7 +6,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
 import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
-import { SubmissionResponse, SubmissionDetail, ReviewDecision, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
+import { SubmissionResponse, SubmissionDetail, ReviewDecision, SUBMISSION_STATUS_LABELS, statusTone } from '../../entities/submission';
 import { SubmissionReviewQueuePresenter } from './submission.review-queue.presenter';
 import { SubmissionReviewQueueView } from './submission.review-queue.view';
 
@@ -32,8 +32,12 @@ import { SubmissionReviewQueueView } from './submission.review-queue.view';
     .decision-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 14px; }
     .checklist { display: flex; flex-direction: column; gap: 8px; }
     .actions-bar { display: flex; gap: 12px; }
+    /* transform:none di state diam — lihat catatan panjang di
+       submission.penetapan-level.page.ts (bug identik: translateY(0) tetap
+       jadi containing block position:fixed, bikin popup <app-select>
+       "melenceng" jauh dari trigger-nya). */
     .detail-card-fade { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
-    .detail-card-fade.is-visible { opacity: 1; transform: translateY(0); }
+    .detail-card-fade.is-visible { opacity: 1; transform: none; }
     .form-section-label {
       display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
       font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
@@ -63,6 +67,7 @@ export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueV
   checklist: Record<string, boolean> = {};
 
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
+  readonly statusTone = statusTone;
 
   decisionOptions: SelectOption[] = this.canApprove
     ? [{ value: 'APPROVED', label: 'Setujui' }, { value: 'REVISION_REQUESTED', label: 'Minta Revisi' }]
