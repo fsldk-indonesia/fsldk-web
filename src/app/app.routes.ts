@@ -29,6 +29,7 @@ import { zakatPublicRoutes } from './modules/zakat/zakat.routes';
 import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
 import { settingRoutes } from './modules/setting/setting.routes';
+import { welcomepopupRoutes } from './modules/welcomepopup/welcomepopup.routes';
 import { jobqueueRoutes } from './modules/jobqueue/jobqueue.routes';
 import { structurePublicRoutes, structureCmsRoutes } from './modules/structure/structure.routes';
 import { galleryPublicRoutes, galleryCmsRoutes } from './modules/gallery/gallery.routes';
@@ -130,6 +131,7 @@ export const routes: Routes = [
       ...qrcodeRoutes(),
       ...commentCmsRoutes(),
       ...settingRoutes(),
+      ...welcomepopupRoutes(),
       ...jobqueueRoutes(),
       ...structureCmsRoutes(),
       ...galleryCmsRoutes(),
