@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
+import { WelcomePopupComponent } from '../../components/welcome-popup.component';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
 import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
@@ -35,7 +36,7 @@ interface OrgMember {
   selector: 'app-home-index-page',
   standalone: true,
   templateUrl: './home.index.page.html',
-  imports: [RouterLink, DatePipe, IconComponent],
+  imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent],
   providers: [HomeIndexPresenter],
   styles: [`
     /* ---------- Kanvas: satu warna latar lembut + motif batik Kawung yang

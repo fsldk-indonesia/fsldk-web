@@ -149,6 +149,9 @@ const ICONS: Record<string, string> = {
   // ke icon-action, lihat kantong-amal.admin-campaign.page.html.
   pause: 'fas fa-pause',
   archive: 'fas fa-box-archive',
+  // Form Welcome Popup (Field Javascript/CSS).
+  code: 'fas fa-code',
+  palette: 'fas fa-palette',
 };
 
 /**
