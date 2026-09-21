@@ -1,6 +1,5 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Title } from '@angular/platform-browser';
 import { ContactRepository } from '../../repositories/contact.repository';
 import { ToastService } from '../../../../core/services/toast.service';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -484,11 +483,10 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
     }
   `],
 })
-export class ContactPublicIndexPage implements OnInit {
+export class ContactPublicIndexPage {
   private fb = inject(FormBuilder);
   repo = inject(ContactRepository);
   private toast = inject(ToastService);
-  private title = inject(Title);
 
   submittedSuccess = signal<boolean>(false);
   rateLimited = signal<boolean>(false);
@@ -500,10 +498,6 @@ export class ContactPublicIndexPage implements OnInit {
     subject: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
     message: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
   });
-
-  ngOnInit(): void {
-    this.title.setTitle('Hubungi Kami — FSLDK Indonesia');
-  }
 
   charCount(): number {
     return (this.form.value.message || '').length;

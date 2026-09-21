@@ -7,6 +7,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const contactPublicRoutes: () => Routes = () => [
   {
     path: 'tentang/kontak',
+    title: 'Hubungi Kami',
     loadComponent: () =>
       import('./pages/public-index/contact.public-index.page').then(
         (m) => m.ContactPublicIndexPage

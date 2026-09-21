@@ -4,6 +4,7 @@ import { Routes } from '@angular/router';
 export const statisticPublicRoutes: () => Routes = () => [
   {
     path: 'tentang/statistik-jaringan',
+    title: 'Statistik Jaringan',
     loadComponent: () =>
       import('./pages/index/statistic.index.page').then((m) => m.StatisticIndexPage),
   },

@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Public event routes — mounted as children of PublicLayoutComponent. */
 export const eventPublicRoutes: () => Routes = () => [
-  { path: 'event', loadComponent: () => import('./pages/public-index/event.public-index.page').then((m) => m.EventPublicIndexPage) },
-  { path: 'event/:slug', loadComponent: () => import('./pages/public-detail/event.public-detail.page').then((m) => m.EventPublicDetailPage) },
+  { path: 'event', title: 'Event', loadComponent: () => import('./pages/public-index/event.public-index.page').then((m) => m.EventPublicIndexPage) },
+  { path: 'event/:slug', title: 'Detail Event', loadComponent: () => import('./pages/public-detail/event.public-detail.page').then((m) => m.EventPublicDetailPage) },
 ];
 
 /** CMS event routes — mounted as children of CmsLayoutComponent. */

@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik berita — dipasang sebagai children dari PublicLayoutComponent. */
 export const newsPublicRoutes: () => Routes = () => [
-  { path: 'berita', loadComponent: () => import('./pages/public-index/news.public-index.page').then((m) => m.NewsPublicIndexPage) },
-  { path: 'berita/:slug', loadComponent: () => import('./pages/public-detail/news.public-detail.page').then((m) => m.NewsPublicDetailPage) },
+  { path: 'berita', title: 'Berita', loadComponent: () => import('./pages/public-index/news.public-index.page').then((m) => m.NewsPublicIndexPage) },
+  { path: 'berita/:slug', title: 'Detail Berita', loadComponent: () => import('./pages/public-detail/news.public-detail.page').then((m) => m.NewsPublicDetailPage) },
 ];
 
 /** Rute manajemen berita CMS — dipasang sebagai children dari CmsLayoutComponent. */

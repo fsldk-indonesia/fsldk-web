@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik goods — dipasang sebagai children dari PublicLayoutComponent. */
 export const goodsPublicRoutes: () => Routes = () => [
-  { path: 'fsldk-goods', loadComponent: () => import('./pages/public-index/goods.public-index.page').then((m) => m.GoodsPublicIndexPage) },
-  { path: 'fsldk-goods/:slug', loadComponent: () => import('./pages/public-detail/goods.public-detail.page').then((m) => m.GoodsPublicDetailPage) },
+  { path: 'fsldk-goods', title: 'FSLDK Goods', loadComponent: () => import('./pages/public-index/goods.public-index.page').then((m) => m.GoodsPublicIndexPage) },
+  { path: 'fsldk-goods/:slug', title: 'Detail Produk', loadComponent: () => import('./pages/public-detail/goods.public-detail.page').then((m) => m.GoodsPublicDetailPage) },
 ];
 
 /**

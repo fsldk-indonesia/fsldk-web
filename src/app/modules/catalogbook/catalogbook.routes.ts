@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Public catalogbook routes — mounted as children of PublicLayoutComponent. */
 export const catalogbookPublicRoutes: () => Routes = () => [
-  { path: 'perpustakaan', loadComponent: () => import('./pages/public-index/catalogbook.public-index.page').then((m) => m.CatalogBookPublicIndexPage) },
-  { path: 'perpustakaan/:slug', loadComponent: () => import('./pages/public-detail/catalogbook.public-detail.page').then((m) => m.CatalogBookPublicDetailPage) },
+  { path: 'perpustakaan', title: 'Perpustakaan', loadComponent: () => import('./pages/public-index/catalogbook.public-index.page').then((m) => m.CatalogBookPublicIndexPage) },
+  { path: 'perpustakaan/:slug', title: 'Detail Buku', loadComponent: () => import('./pages/public-detail/catalogbook.public-detail.page').then((m) => m.CatalogBookPublicDetailPage) },
 ];
 
 /** CMS catalogbook management routes — mounted as children of CmsLayoutComponent. */

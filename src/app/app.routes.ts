@@ -93,6 +93,7 @@ export const routes: Routes = [
       // ke sini juga, bukan didup dua rute untuk halaman yang sama).
       {
         path: 'akun/profil',
+        title: 'Profil Saya',
         canActivate: [verifiedGuard],
         loadComponent: () => import('./modules/user/pages/my-profile/user.my-profile.page').then((m) => m.UserMyProfilePage),
       },

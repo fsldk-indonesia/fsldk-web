@@ -3,7 +3,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Public finance-format route — mounted as a child of PublicLayoutComponent. */
 export const financeformatPublicRoutes: () => Routes = () => [
-  { path: 'format-keuangan', loadComponent: () => import('./pages/public-index/financeformat.public-index.page').then((m) => m.FinanceFormatPublicIndexPage) },
+  { path: 'format-keuangan', title: 'Format Keuangan', loadComponent: () => import('./pages/public-index/financeformat.public-index.page').then((m) => m.FinanceFormatPublicIndexPage) },
 ];
 
 /** CMS finance-format management routes — mounted as children of CmsLayoutComponent. */

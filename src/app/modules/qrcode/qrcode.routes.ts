@@ -34,10 +34,12 @@ export const qrcodeRoutes: () => Routes = () => [
 export const qrcodePublicRoutes: () => Routes = () => [
   {
     path: 'qrcode/ajukan',
+    title: 'Ajukan QR Code',
     loadComponent: () => import('./pages/public-submit/qrcoderequest.submit.page').then((m) => m.QrcodeRequestSubmitPage),
   },
   {
     path: 'qr/:id',
+    title: 'QR Code',
     loadComponent: () => import('./pages/detail/qrcode.detail.page').then((m) => m.QrcodeDetailPage),
   },
 ];

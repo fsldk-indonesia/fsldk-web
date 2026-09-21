@@ -8,6 +8,7 @@ export function galleryPublicRoutes(): Routes {
   return [
     {
       path: 'tentang/galeri',
+      title: 'Galeri Dokumentasi',
       loadComponent: () =>
         import('./pages/public-index/gallery.public-index.page').then(
           (m) => m.GalleryPublicIndexPage
@@ -15,6 +16,7 @@ export function galleryPublicRoutes(): Routes {
     },
     {
       path: 'tentang/galeri/:id',
+      title: 'Detail Galeri',
       loadComponent: () =>
         import('./pages/public-detail/gallery.public-detail.page').then(
           (m) => m.GalleryPublicDetailPage

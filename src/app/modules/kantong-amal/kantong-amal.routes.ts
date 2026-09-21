@@ -5,22 +5,27 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const kantongAmalPublicRoutes: () => Routes = () => [
   {
     path: 'kantong-amal',
+    title: 'Kantong Amal',
     loadComponent: () => import('./pages/campaign-list/kantong-amal.campaign-list.page').then((m) => m.KantongAmalCampaignListPage),
   },
   {
     path: 'kantong-amal/donasi/:publicRef/status',
+    title: 'Status Donasi',
     loadComponent: () => import('./pages/payment-status/kantong-amal.payment-status.page').then((m) => m.KantongAmalPaymentStatusPage),
   },
   {
     path: 'kantong-amal/donasi/:publicRef/bukti',
+    title: 'Bukti Donasi',
     loadComponent: () => import('./pages/donation-receipt/kantong-amal.donation-receipt.page').then((m) => m.KantongAmalDonationReceiptPage),
   },
   {
     path: 'kantong-amal/:slug/donasi',
+    title: 'Donasi',
     loadComponent: () => import('./pages/donate/kantong-amal.donate.page').then((m) => m.KantongAmalDonatePage),
   },
   {
     path: 'kantong-amal/:slug',
+    title: 'Detail Campaign',
     loadComponent: () => import('./pages/campaign-detail/kantong-amal.campaign-detail.page').then((m) => m.KantongAmalCampaignDetailPage),
   },
 ];

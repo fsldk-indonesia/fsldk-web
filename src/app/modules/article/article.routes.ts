@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik artikel — dipasang sebagai children dari PublicLayoutComponent. */
 export const articlePublicRoutes: () => Routes = () => [
-  { path: 'artikel', loadComponent: () => import('./pages/public-index/article.public-index.page').then((m) => m.ArticlePublicIndexPage) },
-  { path: 'artikel/:slug', loadComponent: () => import('./pages/public-detail/article.public-detail.page').then((m) => m.ArticlePublicDetailPage) },
+  { path: 'artikel', title: 'Artikel', loadComponent: () => import('./pages/public-index/article.public-index.page').then((m) => m.ArticlePublicIndexPage) },
+  { path: 'artikel/:slug', title: 'Detail Artikel', loadComponent: () => import('./pages/public-detail/article.public-detail.page').then((m) => m.ArticlePublicDetailPage) },
 ];
 
 /** Rute manajemen artikel CMS — dipasang sebagai children dari CmsLayoutComponent. */

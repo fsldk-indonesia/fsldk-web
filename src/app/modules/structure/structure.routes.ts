@@ -5,6 +5,7 @@ export function structurePublicRoutes(): Routes {
   return [
     {
       path: 'tentang/struktur',
+      title: 'Struktur Organisasi',
       loadComponent: () => import('./pages/public-index/structure.public-index.page').then((m) => m.StructurePublicIndexPage),
     },
   ];

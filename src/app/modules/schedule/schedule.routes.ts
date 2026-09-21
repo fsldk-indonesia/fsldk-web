@@ -3,7 +3,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Public schedule routes — mounted as children of PublicLayoutComponent. */
 export const schedulePublicRoutes: () => Routes = () => [
-  { path: 'jadwal', loadComponent: () => import('./pages/public-index/schedule.public-index.page').then((m) => m.SchedulePublicIndexPage) },
+  { path: 'jadwal', title: 'Jadwal', loadComponent: () => import('./pages/public-index/schedule.public-index.page').then((m) => m.SchedulePublicIndexPage) },
 ];
 
 /** CMS schedule management routes — mounted as children of CmsLayoutComponent. */

@@ -6,6 +6,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const dynamicFormPublicRoutes: () => Routes = () => [
   {
     path: 'form/:slug',
+    title: 'Formulir',
     loadComponent: () => import('./pages/public-fill/dynamicform.public-fill.page').then((m) => m.DynamicFormPublicFillPage),
   },
 ];

@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { environment } from '../../../../../environments/environment';
 import { StructureRepository } from '../../repositories/structure.repository';
 import { Structure } from '../../entities/structure';
@@ -157,7 +156,6 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 })
 export class StructurePublicIndexPage implements OnInit {
   private repo = inject(StructureRepository);
-  private title = inject(Title);
   private sanitizer = inject(DomSanitizer);
 
   items = signal<Structure[]>([]);
@@ -165,7 +163,6 @@ export class StructurePublicIndexPage implements OnInit {
   error = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.title.setTitle('Struktur Organisasi - FSLDK Indonesia');
     this.loadData();
   }
 
