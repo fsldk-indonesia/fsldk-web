@@ -213,7 +213,7 @@ function canvasSilhouetteUrl(hex: string): string {
                   </a>
                 }
                 <a routerLink="/akun/profil" (click)="closeAllDropdowns()">
-                  <span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="15" /></span>
+                  <span class="icon-badge sm icon-badge-solid"><app-icon name="user-circle" [size]="15" /></span>
                   <span class="dropdown-item-text">
                     <span class="dropdown-item-title">Profil Saya</span>
                     <span class="dropdown-item-caption">Lihat &amp; ubah profil Anda</span>

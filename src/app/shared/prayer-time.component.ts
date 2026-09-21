@@ -104,7 +104,7 @@ function toMinutes(time: string | undefined): number {
   `,
   styles: [`
     :host { display: contents; }
-    .prayer-btn { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary-soft); color: var(--color-primary-dark); font-family: var(--font-body); font-weight: 700; cursor: pointer; transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); white-space: nowrap; }
+    .prayer-btn { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-primary-soft); color: var(--color-primary-dark); font-family: var(--font-body); font-weight: 700; cursor: pointer; transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); white-space: nowrap; }
     .prayer-btn:hover { background: var(--color-primary); color: #fff; transform: translateY(-1px); }
     .prayer-btn-icon { font-size: 1rem; line-height: 1; flex-shrink: 0; }
     .prayer-btn-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }

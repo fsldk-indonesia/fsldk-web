@@ -28,7 +28,7 @@ const ICONS: Record<string, string> = {
   'empty-box': 'fas fa-box-open',
   error: 'fas fa-exclamation-triangle',
   search: 'fas fa-search',
-  guest: 'fas fa-user',
+  guest: 'fas fa-user-astronaut',
   'user-plus': 'fas fa-user-plus',
   'log-in': 'fas fa-sign-in-alt',
   'log-out': 'fas fa-sign-out-alt',

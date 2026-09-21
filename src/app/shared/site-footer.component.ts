@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { IconComponent } from './icon.component';
 import { NewsletterFormComponent } from './newsletter-form.component';
+import { schedulePath } from '../modules/schedule/schedule.path';
+import { zakatPath } from '../modules/zakat/zakat.path';
+import { goodsPath } from '../modules/goods/goods.path';
 
 /** Footer landing page — dipakai di PublicLayoutComponent dan KaderLayoutComponent
  *  (miss-development-prompt-2.md poin 4: navbar & footer Portal Kader HARUS identik
@@ -8,37 +12,52 @@ import { NewsletterFormComponent } from './newsletter-form.component';
 @Component({
   selector: 'app-site-footer',
   standalone: true,
-  imports: [IconComponent, NewsletterFormComponent],
+  imports: [RouterLink, IconComponent, NewsletterFormComponent],
   template: `
-    <footer class="pub-footer pattern-motif pattern-motif-dark">
+    <footer class="pub-footer">
+      <div class="foot-wave">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0,90 C360,10 1080,130 1440,50 L1440,120 L0,120 Z" fill="var(--color-text)"></path>
+        </svg>
+      </div>
+
       <div class="container">
-        <div class="flex items-center justify-between foot-top">
-          <span class="brand-text light">FSLDK <b>Indonesia</b></span>
-          <span class="foot-tagline">
-            <svg class="foot-glyph" width="34" height="26" viewBox="0 0 34 26" aria-hidden="true">
-              <path class="network-line" d="M17,13 L4,4 M17,13 L4,22 M17,13 L30,4 M17,13 L30,22" style="stroke:rgba(255,255,255,.35)" />
-              <circle class="network-node" cx="17" cy="13" r="4" />
-              <circle class="network-node gold" cx="4" cy="4" r="2.3" style="animation-delay:.3s" />
-              <circle class="network-node ember" cx="4" cy="22" r="2.3" style="animation-delay:.6s" />
-              <circle class="network-node gold" cx="30" cy="4" r="2.3" style="animation-delay:.9s" />
-              <circle class="network-node ember" cx="30" cy="22" r="2.3" style="animation-delay:1.2s" />
-            </svg>
-            Menyatukan Langkah Dakwah Kampus se-Indonesia
-          </span>
-        </div>
+        <div class="grid grid-4 foot-cols">
+          <div class="foot-col">
+            <span class="brand-text light">FSLDK <b>Indonesia</b></span>
+            <p class="foot-tagline">Menyatukan Langkah Dakwah Kampus se-Indonesia</p>
+            <p class="foot-desc">Forum silaturahmi &amp; pusat koordinasi Lembaga Dakwah Kampus se-Indonesia — merawat ukhuwah, membina kader, menggerakkan dakwah yang terpadu. Sejak 1986.</p>
+            <nav class="foot-social" aria-label="Media sosial FSLDK Indonesia">
+              @for (s of socialLinks; track s.href) {
+                <a [href]="s.href" target="_blank" rel="noopener" class="foot-social-btn" [attr.aria-label]="s.handle"><app-icon [name]="s.icon" [size]="15" /></a>
+              }
+            </nav>
+          </div>
 
-        <div class="foot-newsletter">
-          <span class="foot-newsletter-label"><app-icon name="mail" [size]="15" /> Berlangganan kabar FSLDK</span>
-          <app-newsletter-form />
-        </div>
+          <div class="foot-col">
+            <h5 class="foot-title"><app-icon name="sparkles" [size]="15" />Jelajahi</h5>
+            <div class="foot-links-grid">
+              @for (l of exploreLinks; track l.href) {
+                <a [routerLink]="l.href" class="foot-link-card"><app-icon [name]="l.icon" [size]="16" /><span>{{ l.label }}</span></a>
+              }
+            </div>
+          </div>
 
-        <nav class="foot-social" aria-label="Media sosial FSLDK Indonesia">
-          @for (s of socialLinks; track s.href) {
-            <a [href]="s.href" target="_blank" rel="noopener" class="foot-social-link">
-              <app-icon [name]="s.icon" [size]="15" />{{ s.handle }}
-            </a>
-          }
-        </nav>
+          <div class="foot-col">
+            <h5 class="foot-title"><app-icon name="info-circle" [size]="15" />Tentang Kami</h5>
+            <ul class="foot-plain-list">
+              @for (l of tentangLinks; track l.href) {
+                <li><a [routerLink]="l.href"><app-icon [name]="l.icon" [size]="14" />{{ l.label }}</a></li>
+              }
+            </ul>
+          </div>
+
+          <div class="foot-col">
+            <h5 class="foot-title"><app-icon name="mail" [size]="15" />Berlangganan</h5>
+            <p class="foot-desc">Dapatkan kabar &amp; info kegiatan FSLDK Indonesia langsung ke email Anda.</p>
+            <app-newsletter-form />
+          </div>
+        </div>
 
         <p class="foot-copy">&copy; {{ year }} Perkumpulan Forum Silaturahmi Lembaga Dakwah Kampus Indonesia. Sejak 1986.</p>
       </div>
@@ -46,39 +65,75 @@ import { NewsletterFormComponent } from './newsletter-form.component';
   `,
   styles: [`
     :host { display: block; }
-    /* Tanpa margin-top: margin ada DI LUAR background gelap footer, jadi
-       kalau diberi jarak lewat margin, warna putih halaman di belakangnya
-       akan terlihat sebagai garis/celah putih tepat sebelum footer.
-       Jarak sebelum footer sudah cukup dari padding section di atasnya. */
-    .pub-footer { background: var(--color-text); color: #c9cdd1; padding: 40px 0; }
+    .pub-footer { position: relative; background: var(--color-text); color: #c9cdd1; }
+    .foot-wave { position: relative; height: 60px; overflow: hidden; }
+    .foot-wave svg { position: absolute; bottom: 0; width: 100%; height: 100%; }
+    .pub-footer .container { padding-top: 8px; padding-bottom: 32px; }
+
     .brand-text { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; display: flex; flex-direction: column; line-height: 1.1; }
     .brand-text.light { color: #fff; } .brand-text.light b { color: var(--color-primary-bright); }
-    .foot-top { padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.1); flex-wrap: wrap; gap: 12px; }
-    .foot-tagline { display: flex; align-items: center; gap: 10px; }
-    .foot-glyph { flex-shrink: 0; overflow: visible; }
-    .foot-newsletter { margin-top: 20px; max-width: 420px; }
-    .foot-newsletter-label { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .88rem; color: #fff; margin-bottom: 10px; }
-    .foot-newsletter-label app-icon { color: var(--color-primary-bright); }
-    .foot-social { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-    .foot-social-link {
-      display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px;
-      border-radius: var(--radius-full); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
-      color: #fff; font-weight: 600; font-size: .82rem;
+
+    .foot-cols { align-items: start; }
+    .foot-col { display: flex; flex-direction: column; gap: 10px; }
+    .foot-tagline { font-weight: 600; color: var(--color-primary-bright); font-size: .85rem; margin: 0; }
+    .foot-desc { color: #9aa39c; font-size: .85rem; line-height: 1.6; margin: 0; }
+
+    .foot-social { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+    .foot-social-btn {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-sm); background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); color: #fff;
       transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
     }
-    .foot-social-link app-icon { color: var(--color-primary-bright); }
-    .foot-social-link:hover { background: rgba(255,255,255,.14); border-color: var(--color-gold); text-decoration: none; transform: translateY(-2px); }
-    .foot-copy { margin-top: 20px; font-size: .85rem; color: var(--color-muted); }
+    .foot-social-btn:hover { background: var(--color-primary); border-color: var(--color-primary); text-decoration: none; transform: translateY(-2px); }
+
+    .foot-title { display: flex; align-items: center; gap: 8px; color: #fff; font-family: var(--font-heading); font-size: .95rem; font-weight: 700; margin: 0 0 2px; }
+    .foot-title app-icon { color: var(--color-primary-bright); }
+
+    .foot-links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .foot-link-card {
+      display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 10px 6px;
+      border-radius: var(--radius-sm); background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); color: #c9cdd1;
+      font-size: .74rem; font-weight: 600; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .foot-link-card app-icon { color: var(--color-primary-bright); }
+    .foot-link-card:hover { background: rgba(0,147,59,.18); border-color: var(--color-primary); color: #fff; text-decoration: none; transform: translateY(-2px); }
+
+    .foot-plain-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+    .foot-plain-list a { display: flex; align-items: center; gap: 8px; padding: 6px 0; color: #c9cdd1; font-size: .85rem; font-weight: 500; transition: color var(--motion-fast) ease; }
+    .foot-plain-list a app-icon { color: var(--color-primary-bright); flex-shrink: 0; }
+    .foot-plain-list a:hover { color: #fff; text-decoration: none; }
+
+    .foot-copy { margin-top: 28px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1); font-size: .8rem; color: var(--color-muted); }
+
+    @media (max-width: 600px) { .foot-wave { height: 36px; } }
   `],
 })
 export class SiteFooterComponent {
   year = new Date().getFullYear();
 
   readonly socialLinks = [
-    { icon: 'instagram', handle: 'fsldkindonesia', href: 'https://instagram.com/fsldkindonesia' },
-    { icon: 'facebook', handle: 'fsldkindonesia', href: 'https://facebook.com/fsldkindonesia' },
-    { icon: 'tiktok', handle: 'fsldkindonesia', href: 'https://tiktok.com/@fsldkindonesia' },
-    { icon: 'x-twitter', handle: 'fsldkindonesia_', href: 'https://x.com/fsldkindonesia_' },
-    { icon: 'youtube', handle: 'fsldkindonesia5655', href: 'https://youtube.com/@fsldkindonesia5655' },
+    { icon: 'instagram', handle: 'Instagram @fsldkindonesia', href: 'https://instagram.com/fsldkindonesia' },
+    { icon: 'facebook', handle: 'Facebook fsldkindonesia', href: 'https://facebook.com/fsldkindonesia' },
+    { icon: 'tiktok', handle: 'TikTok @fsldkindonesia', href: 'https://tiktok.com/@fsldkindonesia' },
+    { icon: 'x-twitter', handle: 'X @fsldkindonesia_', href: 'https://x.com/fsldkindonesia_' },
+    { icon: 'youtube', handle: 'YouTube fsldkindonesia5655', href: 'https://youtube.com/@fsldkindonesia5655' },
+  ];
+
+  readonly exploreLinks = [
+    { icon: 'megaphone', label: 'Berita', href: '/berita' },
+    { icon: 'file-text', label: 'Artikel', href: '/artikel' },
+    { icon: 'book-open', label: 'Perpustakaan', href: '/perpustakaan' },
+    { icon: 'calendar-days', label: 'Event', href: '/event' },
+    { icon: 'calendar', label: 'Jadwal', href: schedulePath.publicIndex },
+    { icon: 'hand-heart', label: 'Kantong Amal', href: '/kantong-amal' },
+    { icon: 'calculator', label: 'Kalkulator Zakat', href: zakatPath.calculator },
+    { icon: 'shopping-bag', label: 'FSLDK Goods', href: goodsPath.publicIndex },
+  ];
+
+  readonly tentangLinks = [
+    { icon: 'sitemap', label: 'Struktur Organisasi', href: '/tentang/struktur' },
+    { icon: 'photo', label: 'Galeri', href: '/tentang/galeri' },
+    { icon: 'file-bar-chart', label: 'Statistik Jaringan', href: '/tentang/statistik-jaringan' },
+    { icon: 'messages', label: 'Hubungi Kami', href: '/tentang/kontak' },
   ];
 }

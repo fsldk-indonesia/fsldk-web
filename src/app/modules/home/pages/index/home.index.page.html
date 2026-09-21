@@ -4,15 +4,17 @@
   <div class="container hero-grid">
     <div class="hero-copy">
       <span class="hero-badge"><span class="hero-badge-dot"></span> {{ yearsSinceFounding }} Tahun Merajut Ukhuwah · Sejak {{ foundedYear }}</span>
-      <h1 class="hero-title">Menyatukan Langkah <span class="text-primary">Dakwah Kampus</span> se-Indonesia</h1>
+      <h1 class="hero-title">Menyatukan Langkah <span class="hero-title-accent">Dakwah Kampus</span> se-Indonesia</h1>
       <p class="hero-sub">FSLDK Indonesia adalah forum silaturahmi dan pusat koordinasi bagi Lembaga Dakwah Kampus di seluruh negeri — merawat ukhuwah, membina kader, dan menggerakkan dakwah yang terpadu dan kompak.</p>
     </div>
     <div class="hero-network" aria-hidden="true">
-      <span class="hero-network-badge">
-        <img src="assets/logo-fsldk-removebg.png" alt="">
-        <span>Puskomnas<br><small>1986 · Yogyakarta</small></span>
-      </span>
       <svg viewBox="0 0 640 240" class="hero-network-svg">
+        <defs>
+          <linearGradient id="islandFill" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="var(--color-primary-bright)" stop-opacity=".55" />
+            <stop offset="100%" stop-color="var(--color-primary)" stop-opacity=".35" />
+          </linearGradient>
+        </defs>
         <!-- Siluet kepulauan Indonesia — proyeksi Mercator dari data pantai
              asli (Natural Earth 1:110m via package `world-atlas` + `d3-geo`,
              digenerate sekali lewat skrip Node, bukan digambar tangan),
@@ -48,6 +50,59 @@
   </div>
 </section>
 
+<section class="section section-transition" id="tentang">
+  <div class="container">
+    <div class="text-center tentang-head reveal">
+      <span class="eyebrow">Tentang Kami</span>
+      <h2>Mengenal FSLDK Indonesia</h2>
+    </div>
+
+    <div class="tentang-tabs reveal" role="tablist">
+      @for (t of tentangTabs; track t.key) {
+        <button type="button" class="tentang-tab" role="tab" [attr.aria-selected]="activeTentangTab() === t.key" [class.active]="activeTentangTab() === t.key" (click)="activeTentangTab.set(t.key)">
+          <app-icon [name]="t.icon" [size]="15" /> {{ t.label }}
+        </button>
+      }
+    </div>
+
+    <div class="tentang-panel reveal">
+      @switch (activeTentangTab()) {
+        @case ('overview') {
+          <div class="tentang-overview">
+            <img src="assets/logo-fsldk.svg" alt="Logo FSLDK Indonesia" class="tentang-big-logo">
+            <div>
+              <span class="chip chip-green">Sejak {{ foundedYear }} · {{ yearsSinceFounding }} Tahun</span>
+              <p class="lead">Forum Silaturahmi Lembaga Dakwah Kampus (FSLDK) Indonesia adalah forum silaturahmi dan koordinasi antar Lembaga Dakwah Kampus (LDK) se-Indonesia, sebagai sarana bagi terciptanya gerak dakwah yang teratur, terpadu, dan kompak menuju ummatan wahidah. FSLDK Indonesia didirikan di Yogyakarta pada 25 Mei 1986.</p>
+            </div>
+          </div>
+        }
+        @case ('visi') {
+          <div class="tentang-visi">
+            <p class="big">Terwujudnya sinergi antar LDK se-Indonesia menuju Indonesia madani.</p>
+          </div>
+        }
+        @case ('misi') {
+          <ul class="mission">
+            @for (m of missionList; track m) { <li>{{ m }}</li> }
+          </ul>
+        }
+        @case ('struktur') {
+          <div class="grid grid-3">
+            @for (o of orgStructure; track o.position) {
+              <div class="card card-pad org reveal">
+                <div class="avatar big-av">{{ o.memberName.charAt(0) }}</div>
+                <h3>{{ o.memberName }}</h3>
+                <p class="text-muted">{{ o.position }}</p>
+                @if (o.level) { <span class="chip chip-green">{{ o.level }}</span> }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+</section>
+
 <section class="section stats-strip">
   <div class="container">
     <div class="stats-row">
@@ -61,7 +116,7 @@
 @if (networkStats(); as ns) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Data Jaringan</span>
         <h2>Statistik Jaringan Nasional</h2>
         <p class="page-subtitle" style="max-width:620px;margin:0 auto">Angka agregat LDK, Puskomda, dan Puskomnas se-Indonesia — terbuka untuk publik dan diperbarui langsung dari data pendataan.</p>
@@ -91,7 +146,7 @@
 @if (loading() || news().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Berita &amp; Kabar Dakwah Kampus</span>
         <h2>Ikuti Cerita Gerak Dakwah Kampus</h2>
       </div>
@@ -109,9 +164,10 @@
           }
         </div>
       } @else {
-        <div class="grid grid-3">
+        <div class="card-scroller">
           @for (n of news(); track n.newsID) {
-            <a class="news-card reveal" [routerLink]="['/berita', n.newsSlug]">
+            <a class="news-card reveal" [routerLink]="['/berita', n.newsSlug]"
+               (click)="openPreview($event, { chip: n.categoryName, title: n.newsTitle, metaLines: [n.authorName, formatDate(n.publishedDate)], link: ['/berita', n.newsSlug], ctaLabel: 'Baca Berita Lengkap' })">
               <div class="news-thumb">@if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <span>FOTO BERITA</span> }</div>
               <div class="news-body">
                 <span class="chip chip-green">{{ n.categoryName }}</span>
@@ -129,13 +185,14 @@
 @if (!loading() && articles().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Artikel &amp; Kajian</span>
         <h2>Gagasan &amp; Wawasan Dakwah Kampus</h2>
       </div>
-      <div class="grid grid-3">
+      <div class="card-scroller">
         @for (a of articles(); track a.articleID) {
-          <a class="news-card" [routerLink]="['/artikel', a.articleSlug]">
+          <a class="news-card reveal" [routerLink]="['/artikel', a.articleSlug]"
+             (click)="openPreview($event, { chip: a.categoryName, title: a.articleTitle, metaLines: [a.articleWriter || a.authorName, formatDate(a.publishedDate)], link: ['/artikel', a.articleSlug], ctaLabel: 'Baca Artikel Lengkap' })">
             <div class="news-thumb">@if (a.articleImage) { <img [src]="a.articleImage" [alt]="a.articleTitle"> } @else { <span>ARTIKEL</span> }</div>
             <div class="news-body">
               <span class="chip chip-green">{{ a.categoryName }}</span>
@@ -152,19 +209,21 @@
 @if (!loading() && catalogBooks().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Perpustakaan</span>
         <h2>Koleksi Buku Digital</h2>
       </div>
-      <div class="grid grid-3">
+      <div class="card-scroller">
         @for (b of catalogBooks(); track b.bookID) {
-          <a class="news-card reveal" [routerLink]="catalogbookPath.publicDetail(b.bookSlug)">
-            <div class="news-thumb">@if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle"> } @else { <span>BUKU</span> }</div>
+          <a class="news-card book-card reveal" [routerLink]="catalogbookPath.publicDetail(b.bookSlug)">
+            <div class="news-thumb book-thumb">
+              @if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle"> } @else { <span>BUKU</span> }
+              <span class="book-fav"><app-icon name="heart" [size]="12" /> {{ b.favoriteCount }}</span>
+            </div>
             <div class="news-body">
               <span class="chip chip-green">{{ b.bookCategoryName }}</span>
               <h3>{{ b.bookTitle }}</h3>
               <p class="meta">{{ b.authorName }} · {{ b.year }}</p>
-              <span class="fav"><app-icon name="heart" [size]="13" /> {{ b.favoriteCount }}</span>
             </div>
           </a>
         }
@@ -179,11 +238,11 @@
 @if (!loading() && events().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Agenda &amp; Kegiatan</span>
         <h2>Event Terbaru</h2>
       </div>
-      <div class="grid grid-3">
+      <div class="card-scroller">
         @for (e of events(); track e.eventID) {
           <a class="news-card reveal" [routerLink]="eventPath.publicDetail(e.eventSlug)">
             <div class="news-thumb">@if (e.eventImage) { <img [src]="e.eventImage" [alt]="e.eventTitle"> } @else { <span>EVENT</span> }</div>
@@ -208,18 +267,20 @@
 @if (!loading() && goods().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Layanan</span>
         <h2>FSLDK Goods</h2>
       </div>
-      <div class="grid grid-3">
+      <div class="card-scroller">
         @for (g of goods(); track g.goodsID) {
-          <a class="news-card reveal" [routerLink]="goodsPath.publicDetail(g.goodsSlug)">
-            <div class="news-thumb">@if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }</div>
+          <a class="news-card goods-card reveal" [routerLink]="goodsPath.publicDetail(g.goodsSlug)">
+            <div class="news-thumb goods-thumb">
+              @if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }
+              <span class="goods-price-badge">{{ formatRupiah(g.price) }}</span>
+            </div>
             <div class="news-body">
               <span class="chip chip-green">{{ g.categoryName }}</span>
               <h3>{{ g.goodsName }}</h3>
-              <p class="goods-price">{{ formatRupiah(g.price) }}</p>
             </div>
           </a>
         }
@@ -234,7 +295,7 @@
 @if (!loading() && schedules().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Jadwal</span>
         <h2>Agenda Kegiatan Terdekat</h2>
       </div>
@@ -266,21 +327,24 @@
 @if (!loading() && campaigns().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Kantong Amal</span>
         <h2>Salurkan Kebaikan, Bantu Sesama</h2>
       </div>
-      <div class="grid grid-3">
+      <div class="card-scroller">
         @for (c of campaigns(); track c.campaignID) {
-          <a class="news-card reveal" [routerLink]="kantongAmalPath.detail(c.slug)">
-            <div class="news-thumb">@if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }</div>
+          <a class="news-card campaign-card reveal" [routerLink]="kantongAmalPath.detail(c.slug)"
+             (click)="openPreview($event, { chip: c.categoryName, title: c.title, metaLines: [formatRupiah(c.collectedAmount) + ' terkumpul'], link: kantongAmalPath.detail(c.slug), ctaLabel: 'Lihat Campaign', progress: { percent: progressPercent(c), label: progressPercent(c) + '% tercapai' } })">
+            <div class="news-thumb">
+              @if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }
+              <span class="campaign-badge">{{ progressPercent(c) }}%</span>
+            </div>
             <div class="news-body">
               <span class="chip chip-green">{{ c.categoryName }}</span>
               <h3>{{ c.title }}</h3>
               <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent(c)"></div></div>
               <div class="progress-meta">
                 <span><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</span>
-                <span>{{ progressPercent(c) }}%</span>
               </div>
             </div>
           </a>
@@ -292,47 +356,6 @@
     </div>
   </section>
 }
-
-<section class="section hero-about" id="tentang">
-  <div class="container about-grid">
-    <div class="reveal">
-      <span class="eyebrow">Tentang Kami</span>
-      <h2>Tentang FSLDK Indonesia</h2>
-    </div>
-    <p class="lead reveal">Forum Silaturahmi Lembaga Dakwah Kampus (FSLDK) Indonesia adalah forum silaturahmi dan koordinasi antar Lembaga Dakwah Kampus (LDK) se-Indonesia, sebagai sarana bagi terciptanya gerak dakwah yang teratur, terpadu, dan kompak menuju ummatan wahidah. FSLDK Indonesia didirikan di Yogyakarta pada 25 Mei 1986.</p>
-  </div>
-</section>
-
-<section class="section">
-  <div class="container grid grid-2">
-    <div class="card card-pad reveal">
-      <span class="eyebrow">Visi</span>
-      <p class="big">Terwujudnya sinergi antar LDK se-Indonesia menuju Indonesia madani.</p>
-    </div>
-    <div class="card card-pad reveal">
-      <span class="eyebrow">Misi</span>
-      <ul class="mission">
-        @for (m of missionList; track m) { <li>{{ m }}</li> }
-      </ul>
-    </div>
-  </div>
-</section>
-
-<section class="section struktur">
-  <div class="container">
-    <div class="text-center" style="margin-bottom:32px"><span class="eyebrow">Struktur Organisasi</span><h2>Jaringan FSLDK Indonesia</h2></div>
-    <div class="grid grid-3">
-      @for (o of orgStructure; track o.position) {
-        <div class="card card-pad org reveal">
-          <div class="avatar big-av">{{ o.memberName.charAt(0) }}</div>
-          <h3>{{ o.memberName }}</h3>
-          <p class="text-muted">{{ o.position }}</p>
-          @if (o.level) { <span class="chip chip-green">{{ o.level }}</span> }
-        </div>
-      }
-    </div>
-  </div>
-</section>
 
 <section class="section cta-band">
   <div class="container">
@@ -346,7 +369,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section section-glow">
   <div class="container">
     <div class="contact-cta-inner reveal">
       <span class="eyebrow">Hubungi Kami</span>
@@ -358,9 +381,9 @@
 </section>
 
 @if (!loading() && latestGallery(); as gallery) {
-  <section class="section">
+  <section class="section section-glow">
     <div class="container">
-      <div class="text-center" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Galeri</span>
         <h2>Dokumentasi Kegiatan Terbaru</h2>
       </div>
@@ -379,3 +402,18 @@
     </div>
   </section>
 }
+
+<app-bottom-sheet [open]="!!previewSheet()" (closed)="previewSheet.set(null)">
+  @if (previewSheet(); as p) {
+    <span class="chip chip-green">{{ p.chip }}</span>
+    <h3 class="sheet-title">{{ p.title }}</h3>
+    @for (line of p.metaLines; track line) {
+      <p class="meta sheet-meta-line">{{ line }}</p>
+    }
+    @if (p.progress) {
+      <div class="progress-track"><div class="progress-fill" [style.width.%]="p.progress.percent"></div></div>
+      <p class="progress-meta"><span>{{ p.progress.label }}</span></p>
+    }
+    <button type="button" class="btn btn-primary btn-block sheet-cta" (click)="goToPreview()">{{ p.ctaLabel }} <app-icon name="chevron-right" [size]="14" /></button>
+  }
+</app-bottom-sheet>

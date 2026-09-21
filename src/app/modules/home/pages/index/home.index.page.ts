@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
 import { WelcomePopupComponent } from '../../components/welcome-popup.component';
+import { BottomSheetComponent } from '../../../../shared/bottom-sheet.component';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
 import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
@@ -32,25 +33,42 @@ interface OrgMember {
   level: string;
 }
 
+/** Data ringkas untuk preview di bottom sheet mobile (lihat openPreview()) —
+ *  satu bentuk generik dipakai lintas tipe kartu (berita/artikel/campaign)
+ *  supaya markup sheet-nya cukup satu blok, tidak perlu cabang per tipe. */
+interface CardPreview {
+  chip: string;
+  title: string;
+  metaLines: string[];
+  link: string[] | string;
+  ctaLabel: string;
+  progress?: { percent: number; label: string };
+}
+
 @Component({
   selector: 'app-home-index-page',
   standalone: true,
   templateUrl: './home.index.page.html',
-  imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent],
+  imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent, BottomSheetComponent],
   providers: [HomeIndexPresenter],
   styles: [`
-    /* ---------- Kanvas: satu warna latar lembut + motif batik Kawung yang
-       sama dipakai konsisten di SEMUA section polos di beranda (bukan lagi
-       flat color kosong), kecuali navbar (putih), footer (gelap, motifnya
-       sendiri via .pattern-motif-dark), dan hero (tint hijau→emas). Motif
-       ini identik dengan .pattern-motif di styles.scss global — opacity-nya
-       dibakar langsung di SVG (stroke-opacity) karena di sini dipakai sebagai
-       background-image langsung, bukan lewat ::before terpisah. ---------- */
-    .section {
-      background-color: var(--color-bg-warm);
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cg fill='none' stroke='%2300933b' stroke-width='1' stroke-opacity='.035'%3E%3Cellipse cx='24' cy='12' rx='6' ry='10'/%3E%3Cellipse cx='24' cy='36' rx='6' ry='10'/%3E%3Cellipse cx='36' cy='24' rx='10' ry='6'/%3E%3Cellipse cx='12' cy='24' rx='10' ry='6'/%3E%3Ccircle cx='24' cy='24' r='2.4' fill='%2300933b' fill-opacity='.035' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
-      background-size: 48px 48px;
+    /* ---------- Kanvas: putih polos di semua section (batik dihilangkan per
+       revamp-project prompt) — transisi warna dari hero ditangani khusus oleh
+       .section-transition (section pertama setelah hero), dan siluet cahaya
+       hijau redup menjelang footer oleh .section-glow (section terakhir
+       sebelum footer), bukan lagi motif berulang di semua section. ---------- */
+    .section { background: var(--color-bg); position: relative; }
+
+    .section-transition { background: linear-gradient(180deg, var(--color-primary-tint) 0%, var(--color-bg) 100%); }
+
+    .section-glow { overflow: hidden; }
+    .section-glow::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(circle 320px at 12% 30%, rgba(0,147,59,.07) 0%, transparent 70%),
+        radial-gradient(circle 380px at 88% 75%, rgba(0,147,59,.09) 0%, transparent 70%);
     }
+    .section-glow > .container { position: relative; z-index: 1; }
 
     /* ---------- Hero: dua kolom, latar hangat dua warna (hijau→emas) supaya
        viewport pertama langsung "berbunyi" energic, bukan cuma tint pucat.
@@ -63,13 +81,24 @@ interface OrgMember {
       mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
       -webkit-mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
     }
-    .hero-grid { position: relative; display: grid; grid-template-columns: 1fr 1.25fr; gap: 32px; align-items: center; }
+    /* Glow ambient satu ini menggantikan .hero-network::before yang lama —
+       dipindah jadi lapisan penuh se-hero (bukan terkurung kotak
+       .hero-network yang overflow:hidden) supaya warnanya benar-benar
+       menyatu ke gradient .hero sendiri, bukan terlihat "kepotong" di tepi
+       kotak grafik jaringan. */
+    .hero::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 60% 70% at 78% 60%, var(--color-gold-soft) 0%, var(--color-primary-soft) 40%, transparent 75%);
+      opacity: .9;
+    }
+    .hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1.25fr; gap: 32px; align-items: center; }
     /* hero-copy diberi stacking context sendiri di atas grafik jaringan —
        cegah teks tertutup bila grafik/glow di kolom sebelah melebar. */
     .hero-copy { position: relative; z-index: 2; }
     .hero-badge { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--color-gold); color: var(--color-gold-dark); padding: 8px 18px; border-radius: var(--radius-full); font-weight: 700; font-size: .85rem; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
     .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-gold); flex-shrink: 0; animation: node-pulse 2.4s ease-in-out infinite; }
-    .hero-title { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.01em; max-width: 16ch; line-height: 1.08; }
+    .hero-title { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.01em; max-width: 16ch; line-height: 1.12; }
+    .hero-title-accent { font-family: var(--font-accent); font-style: italic; font-weight: 600; color: var(--color-primary-dark); }
     .hero-sub { max-width: 46ch; font-size: 1.05rem; color: var(--color-text-secondary); }
 
     /* ---------- Visual hero "Peta Silaturahmi Nusantara": siluet kepulauan
@@ -78,22 +107,9 @@ interface OrgMember {
        di tiap pulau, garis menyala menunjukkan koordinasi yang aktif. Aspek
        rasio svg sengaja lebar (640:240) mengikuti bentang timur-barat
        Nusantara yang sesungguhnya, bukan kotak persegi. ---------- */
-    .hero-network { position: relative; z-index: 1; height: 300px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .hero-network::before {
-      content: ""; position: absolute; inset: -4%; z-index: 0; pointer-events: none;
-      background: radial-gradient(ellipse at 38% 78%, var(--color-gold-soft) 0%, var(--color-primary-soft) 45%, transparent 72%);
-      opacity: .85;
-    }
+    .hero-network { position: relative; z-index: 1; height: 300px; display: flex; align-items: center; justify-content: center; }
     .hero-network-svg { position: relative; z-index: 1; width: 100%; height: 100%; overflow: visible; }
-    .island-silhouette { fill: var(--color-primary-soft); stroke: var(--color-primary-bright); stroke-width: 1.3; stroke-linejoin: round; opacity: .95; }
-    .hero-network-badge {
-      position: absolute; bottom: 4px; left: 8px; top: auto; z-index: 2; display: flex; align-items: center; gap: 10px;
-      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-full);
-      padding: 6px 16px 6px 6px; box-shadow: var(--shadow); font-size: .78rem; font-weight: 700;
-      color: var(--color-text); line-height: 1.3; animation: float-y 5s ease-in-out infinite;
-    }
-    .hero-network-badge img { width: 30px; height: 30px; object-fit: contain; border-radius: 50%; background: var(--color-primary-soft); padding: 4px; }
-    .hero-network-badge small { font-weight: 600; color: var(--color-muted); }
+    .island-silhouette { fill: url(#islandFill); stroke: var(--color-primary-bright); stroke-width: 1.3; stroke-linejoin: round; opacity: .95; filter: drop-shadow(0 6px 14px rgba(0,147,59,.22)); }
 
     /* ---------- Statistik ringkas — hanya angka yang benar-benar bisa
        dipertanggungjawabkan (bukan klaim keanggotaan yang belum terverifikasi). ---------- */
@@ -118,13 +134,35 @@ interface OrgMember {
 
     .news-card { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
     .news-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); text-decoration: none; }
-    .news-thumb { aspect-ratio: 16/10; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
+    .news-thumb { position: relative; aspect-ratio: 16/10; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
     .news-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .news-body { padding: 20px; } .news-body h3 { margin: 12px 0 8px; font-size: 1.15rem; }
     .meta { color: var(--color-muted); font-size: .85rem; margin: 0; }
 
-    .fav { display: inline-flex; align-items: center; gap: 4px; color: var(--color-muted); font-size: .8rem; margin-top: 8px; }
-    .goods-price { font-weight: 700; color: var(--color-primary-dark); margin: 4px 0 0; }
+    /* ---------- Book card: siluet rak buku (thumb potret, bukan 16:10 seperti
+       kartu berita), rating disematkan sebagai ribbon di sudut sampul. ---------- */
+    .book-thumb { aspect-ratio: 3/4; }
+    .book-fav {
+      position: absolute; top: 10px; right: 10px; display: flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,.92); color: var(--color-text); font-size: .74rem; font-weight: 700;
+      padding: 4px 9px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
+    }
+    .book-fav app-icon { color: #e0455f; }
+
+    /* ---------- Goods card: siluet etalase toko (thumb kotak 1:1), harga
+       jadi badge mengambang di atas foto, bukan teks polos di bawah judul. ---------- */
+    .goods-thumb { aspect-ratio: 1/1; }
+    .goods-price-badge {
+      position: absolute; left: 10px; bottom: 10px; background: var(--color-primary); color: #fff;
+      font-weight: 800; font-size: .85rem; padding: 5px 12px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
+    }
+
+    /* ---------- Campaign card: badge persentase mengambang di foto —
+       progres jadi elemen visual utama, bukan cuma baris teks di bawah. ---------- */
+    .campaign-badge {
+      position: absolute; top: 10px; right: 10px; background: var(--color-gold); color: #fff;
+      font-weight: 800; font-size: .85rem; padding: 5px 12px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
+    }
 
     .progress-track { height: 6px; background: var(--color-primary-soft); border-radius: var(--radius-full); overflow: hidden; margin-top: 12px; }
     .progress-fill { height: 100%; background: var(--color-primary); border-radius: var(--radius-full); }
@@ -152,14 +190,32 @@ interface OrgMember {
     .gallery-count { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .85rem; margin-top: 10px; }
     @media (max-width: 640px) { .gallery-card { grid-template-columns: 1fr; } }
 
-    .hero-about { padding: 56px 0 8px; }
-    .about-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 32px; align-items: start; }
     .lead { font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; line-height: 1.5; color: var(--color-text); margin: 0; }
     .big { font-size: 1.3rem; font-weight: 600; line-height: 1.4; margin-top: 12px; }
     .mission { margin: 12px 0 0; padding-left: 20px; color: var(--color-text-secondary); }
     .mission li { margin-bottom: 8px; }
     .org { text-align: center; } .big-av { width: 64px; height: 64px; font-size: 1.5rem; margin: 0 auto 14px; }
     .narrow { max-width: 760px; margin: 0 auto; }
+
+    /* ---------- Tentang Kami: tab terpadu (Tentang/Visi/Misi/Struktur) di
+       atas beranda, menggantikan 3 section terpisah — konsepnya mengikuti
+       referensi ldksyahid-app (tab pill + logo besar di panel utama). ---------- */
+    .tentang-head { margin-bottom: 28px; }
+    .tentang-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+    .tentang-tab {
+      display: flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: var(--radius-full);
+      border: 1px solid var(--color-border); background: #fff; color: var(--color-text-secondary);
+      font-family: var(--font-heading); font-weight: 700; font-size: .88rem; cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .tentang-tab:hover { color: var(--color-primary-dark); border-color: var(--color-primary-soft); transform: translateY(-1px); }
+    .tentang-tab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 4px 12px rgba(0,147,59,.28); }
+    .tentang-panel { max-width: 900px; margin: 0 auto; }
+    .tentang-overview { display: flex; align-items: center; gap: 40px; }
+    .tentang-big-logo { width: 160px; height: 160px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 10px 24px rgba(0,147,59,.18)); }
+    .tentang-visi { text-align: center; padding: 12px 0; }
+    .tentang-panel .mission { max-width: 640px; margin: 0 auto; padding-left: 24px; }
+    @media (max-width: 720px) { .tentang-overview { flex-direction: column; text-align: center; gap: 20px; } .tentang-big-logo { width: 110px; height: 110px; } }
 
     /* ---------- CTA: satu-satunya medan hijau penuh di halaman ini (bagian
        dalam kartu saja) — bagian luar tetap memakai kanvas lembut yang sama
@@ -174,16 +230,40 @@ interface OrgMember {
     .cta-btn:hover { background: #fff; color: var(--color-primary-dark); opacity: .92; }
 
     @media (max-width: 900px) {
-      .hero-grid, .about-grid { grid-template-columns: 1fr; }
+      .hero-grid { grid-template-columns: 1fr; }
       .hero-network { height: 190px; margin-top: 8px; }
       .hero-network-svg { width: 100%; height: 100%; }
       .stats-row { grid-template-columns: 1fr; gap: 16px; }
       .cta-inner { flex-direction: column; align-items: flex-start; }
     }
+
+    /* ---------- Preview bottom sheet (mobile) — isi generik lintas tipe kartu. ---------- */
+    .sheet-title { margin: 10px 0 6px; }
+    .sheet-meta-line { margin: 0 0 4px; }
+    .sheet-cta { margin-top: 16px; justify-content: center; }
+
+    /* ---------- Card scroller: pengganti .grid.grid-3 KHUSUS di halaman ini
+       untuk daftar kartu (berita/artikel/buku/event/goods/campaign) — di
+       desktop tampil sebagai grid 3 kolom biasa, di mobile jadi horizontal
+       scroll-snap (bukan tumpukan 1 kolom) mengikuti referensi ldksyahid-app.
+       Sengaja class terpisah, BUKAN mengubah .grid-3 global di styles.scss,
+       supaya halaman/module lain yang reuse .grid-3 tidak ikut berubah. ---------- */
+    .card-scroller { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    @media (max-width: 900px) { .card-scroller { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) {
+      .card-scroller {
+        display: flex; overflow-x: auto; gap: 14px; padding: 4px 4px 14px; margin: -4px -4px 0;
+        scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      }
+      .card-scroller::-webkit-scrollbar { display: none; }
+      .card-scroller > * { flex: 0 0 78%; scroll-snap-align: start; }
+    }
   `],
 })
 export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
   private presenter = inject(HomeIndexPresenter);
+  private router = inject(Router);
+  private datePipe = new DatePipe('id-ID');
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
@@ -229,12 +309,43 @@ export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
   readonly foundedYear = 1986;
   readonly yearsSinceFounding = new Date().getFullYear() - this.foundedYear;
 
+  readonly tentangTabs: { key: 'overview' | 'visi' | 'misi' | 'struktur'; icon: string; label: string }[] = [
+    { key: 'overview', icon: 'info', label: 'Tentang' },
+    { key: 'visi', icon: 'star', label: 'Visi' },
+    { key: 'misi', icon: 'list-checks', label: 'Misi' },
+    { key: 'struktur', icon: 'sitemap', label: 'Struktur' },
+  ];
+  activeTentangTab = signal<'overview' | 'visi' | 'misi' | 'struktur'>('overview');
+
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
 
   ngOnDestroy(): void { this.networkLevelChart?.destroy(); }
 
   progressPercent(c: Campaign): number {
     return c.targetAmount > 0 ? Math.min(100, Math.round((c.collectedAmount / c.targetAmount) * 100)) : 0;
+  }
+
+  formatDate(d: string | Date | null | undefined): string {
+    return d ? (this.datePipe.transform(d, 'd MMM yyyy') ?? '') : '';
+  }
+
+  /** Mobile-only preview: klik kartu berita/artikel/campaign membuka bottom
+   *  sheet ringkas (bukan langsung pindah halaman) — sesuai revamp-project
+   *  prompt poin 9. Desktop tidak diganggu, routerLink jalan seperti biasa. */
+  previewSheet = signal<CardPreview | null>(null);
+
+  openPreview(event: Event, preview: CardPreview): void {
+    if (window.innerWidth > 720) return;
+    event.preventDefault();
+    this.previewSheet.set(preview);
+  }
+
+  goToPreview(): void {
+    const link = this.previewSheet()?.link;
+    this.previewSheet.set(null);
+    if (!link) return;
+    if (Array.isArray(link)) this.router.navigate(link);
+    else this.router.navigateByUrl(link);
   }
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
