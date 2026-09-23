@@ -73,7 +73,11 @@ interface CardPreview {
     /* ---------- Hero: dua kolom, latar hangat dua warna (hijau→emas) supaya
        viewport pertama langsung "berbunyi" energic, bukan cuma tint pucat.
        Motif geometris islami modern jadi tekstur, bukan sekadar titik. ---------- */
-    .hero { position: relative; background: linear-gradient(122deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 58%, var(--color-gold-soft) 100%); padding: 64px 0 56px; overflow: hidden; }
+    /* padding-top 144px = 64px desain asli + 80px kompensasi topbar yang
+       "menembus" ke sini lewat margin negatif (.pub-header.on-hero di
+       site-header.component.ts) — supaya badge/heading hero sendiri tidak
+       ikut ketutup header transparan yang mengambang di atasnya. */
+    .hero { position: relative; background: linear-gradient(122deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 58%, var(--color-gold-soft) 100%); padding: 144px 0 56px; overflow: hidden; }
     .hero-texture {
       position: absolute; inset: 0; opacity: .7; pointer-events: none;
       background-image: radial-gradient(circle, var(--color-primary-soft) 1.5px, transparent 1.6px);

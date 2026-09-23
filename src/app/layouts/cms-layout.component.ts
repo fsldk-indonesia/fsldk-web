@@ -4,6 +4,7 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { PermissionRepository } from '../modules/permission/repositories/permission.repository';
 import { OrganizationRepository } from '../modules/organization/repositories/organization.repository';
 import { OrgContextService } from '../core/services/org-context.service';
+import { AlertService } from '../core/services/alert.service';
 import { MenuItem } from '../modules/permission/entities/menu-item';
 import { MeOrganization } from '../modules/organization/entities/organization';
 import { IconComponent } from '../shared/icon.component';
@@ -219,7 +220,7 @@ function canvasSilhouetteUrl(hex: string): string {
                     <span class="dropdown-item-caption">Lihat &amp; ubah profil Anda</span>
                   </span>
                 </a>
-                <button type="button" class="dropdown-divider-top" (click)="logout()">
+                <button type="button" class="dropdown-divider-top" (click)="logout($event)">
                   <span class="icon-badge sm icon-badge-danger"><app-icon name="log-out" [size]="15" /></span>
                   <span class="dropdown-item-text">
                     <span class="dropdown-item-title">Keluar</span>
@@ -563,6 +564,7 @@ export class CmsLayoutComponent implements OnInit {
   private orgContext = inject(OrgContextService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private alert = inject(AlertService);
 
   tier = signal<Tier>('FSLDK');
   shellBase = computed(() => CMS_SHELL_BASE[this.tier()]);
@@ -740,7 +742,14 @@ export class CmsLayoutComponent implements OnInit {
   // 900px), jadi tidak perlu dicek ulang di sini.
   closeSidebar(): void { this.sidebarOpen.set(false); }
 
-  logout(): void {
+  async logout(event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(
+      'Apakah Anda yakin ingin keluar dari akun ini?',
+      { title: 'Keluar dari Akun', confirmLabel: 'Ya, Keluar', variant: 'danger' },
+      event,
+    );
+    if (!ok) return;
+    this.closeAllDropdowns();
     this.auth.logout();
     this.router.navigate(['/login']);
   }

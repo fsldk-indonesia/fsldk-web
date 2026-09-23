@@ -146,7 +146,7 @@ function toMinutes(time: string | undefined): number {
     .prayer-item-time { font-weight: 700; font-size: .9rem; color: var(--color-text); min-width: 42px; text-align: right; }
     .prayer-item.next-prayer .prayer-item-time { color: var(--color-primary-dark); }
 
-    @media (max-width: 420px) { .prayer-btn-label { display: none; } .prayer-btn { padding: 7px 10px; } }
+    @media (max-width: 420px) { .prayer-btn { padding: 7px 10px; } }
   `],
 })
 export class PrayerTimeComponent implements OnInit, AfterViewInit, OnDestroy {

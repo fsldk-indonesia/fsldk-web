@@ -1,6 +1,7 @@
 import { Component, HostListener, NgZone, OnDestroy, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
+import { AlertService } from '../core/services/alert.service';
 import { SubmissionRepository } from '../modules/submission/repositories/submission.repository';
 import { FORM_CODE_SENSUS_KADER } from '../modules/submission/entities/submission';
 import { shortlinkPath } from '../modules/shortlink/shortlink.path';
@@ -42,7 +43,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
   imports: [RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent],
   template: `
     <div class="nav-placeholder" [class.active]="scrolled()"></div>
-    <header class="pub-header" [class.scrolled]="scrolled()">
+    <header class="pub-header" [class.scrolled]="scrolled()" [class.on-hero]="!scrolled() && isHomeRoute()">
       <div class="container flex items-center justify-between">
         <a routerLink="/" class="brand" (click)="closeMobile()">
           <span class="brand-logo-wrap">
@@ -110,6 +111,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
           </div>
         </div>
 
+        <div class="mobile-right-group">
         <div class="topbar-end">
         <div class="topbar-prayer">
           <app-prayer-time />
@@ -153,7 +155,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
                     <span class="nav-dropdown-item-caption">Lihat &amp; ubah profil Anda</span>
                   </span>
                 </a>
-                <button type="button" class="dropdown-fun-item dropdown-divider-top" (click)="logout()">
+                <button type="button" class="dropdown-fun-item dropdown-divider-top" (click)="logout($event)">
                   <span class="icon-badge sm icon-badge-danger"><app-icon name="log-out" [size]="15" /></span>
                   <span class="nav-dropdown-item-text">
                     <span class="nav-dropdown-item-title">Keluar</span>
@@ -191,6 +193,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
         <button class="mobile-toggle" [class.active]="mobileOpen()" (click)="toggleMobile()" aria-label="Buka menu">
           <span></span><span></span><span></span>
         </button>
+        </div>
       </div>
     </header>
 
@@ -200,7 +203,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
         <a routerLink="/" class="brand" (click)="closeMobile()">
           <span class="brand-logo-wrap">
             <img src="assets/logo-fsldk.svg" alt="Logo FSLDK Indonesia" class="brand-logo-img sm">
-            <span class="brand-sparkle" aria-hidden="true">🍃</span>
+            <span class="brand-sparkle" aria-hidden="true">💫</span>
           </span>
           <span class="brand-text">FSLDK <b>Indonesia</b></span>
         </a>
@@ -209,14 +212,23 @@ const TIER_CAPTION: Record<CmsTier, string> = {
       @if (auth.isLoggedIn()) {
         <div class="mobile-account">
           @if (auth.user()?.photoURL) {
-            <img class="chip-avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
+            <img class="mobile-account-avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
           } @else {
-            <span class="chip-avatar">{{ initials() }}</span>
+            <span class="mobile-account-avatar">{{ initials() }}</span>
           }
-          {{ auth.user()?.fullName }}
+          <div class="mobile-account-text">
+            <span class="mobile-account-greeting">Marhaban, {{ auth.user()?.fullName }}! <span class="wave-emoji">👋</span></span>
+            <span class="mobile-account-email">{{ auth.user()?.email }}</span>
+          </div>
         </div>
       } @else {
-        <div class="mobile-account"><span class="chip-avatar guest"><app-icon name="guest" [size]="15" /></span> Pengunjung</div>
+        <div class="mobile-account">
+          <span class="mobile-account-avatar guest"><app-icon name="guest" [size]="18" /></span>
+          <div class="mobile-account-text">
+            <span class="mobile-account-greeting">Assalamu'alaikum, Sahabat! <span class="wave-emoji">👋</span></span>
+            <span class="mobile-account-email">Masuk untuk akses penuh</span>
+          </div>
+        </div>
       }
 
       <nav class="mobile-nav">
@@ -274,32 +286,76 @@ const TIER_CAPTION: Record<CmsTier, string> = {
             }
           </div>
         </div>
+
+        <div class="mobile-dropdown" [class.open]="mobileLainnyaOpen()">
+          <button type="button" class="mobile-dropdown-toggle" (click)="toggleMobileLainnya()">
+            <span class="mobile-nav-icon"><app-icon name="calendar" [size]="15" /></span>
+            <span>Lainnya</span>
+            <app-icon name="chevron-down" [size]="12" class="mobile-dropdown-arrow" />
+          </button>
+          <div class="mobile-dropdown-panel">
+            @for (item of moreItems; track item.href) {
+              <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMobile()">
+                <span class="icon-badge sm icon-badge-solid"><app-icon [name]="item.icon" [size]="15" /></span>
+                <span class="nav-dropdown-item-text">
+                  <span class="nav-dropdown-item-title">{{ item.title }}</span>
+                  <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
+                </span>
+              </a>
+            }
+          </div>
+        </div>
       </nav>
-      <div class="mobile-nav-extra">
-        <span class="mobile-nav-label">Lainnya</span>
-        @for (item of moreItems; track item.href) {
-          <a [routerLink]="item.href" routerLinkActive="active" class="nav-dropdown-item" (click)="closeMobile()">
-            <span class="icon-badge sm icon-badge-solid"><app-icon [name]="item.icon" [size]="15" /></span>
-            <span class="nav-dropdown-item-text">
-              <span class="nav-dropdown-item-title">{{ item.title }}</span>
-              <span class="nav-dropdown-item-caption">{{ item.caption }}</span>
-            </span>
-          </a>
-        }
-      </div>
       <div class="mobile-actions">
         @if (auth.isLoggedIn()) {
           @for (t of auth.accessibleCmsTiers(); track t) {
-            <a [routerLink]="shellBase(t) + '/dashboard'" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon [name]="shellIcon(t)" [size]="17" />{{ shellLabel(t) }}</a>
+            <a [routerLink]="shellBase(t) + '/dashboard'" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-action-card" (click)="closeMobile()"
+               [style.--tier-color]="tierColorOf(t)" [style.--tier-soft]="tierTintOf(t)">
+              <span class="icon-badge sm" [style.background]="tierColorOf(t)" style="color:#fff"><app-icon [name]="shellIcon(t)" [size]="15" /></span>
+              <span class="mobile-action-card-text">
+                <span class="mobile-action-card-title">{{ shellLabel(t) }}</span>
+                <span class="mobile-action-card-caption">{{ tierCaptionOf(t) }}</span>
+              </span>
+            </a>
           }
           @if (auth.isKaderSelfService()) {
-            <a [routerLink]="kaderNavLink()" class="btn btn-primary btn-block" (click)="closeMobile()"><app-icon name="id-card" [size]="17" />{{ kaderNavLabel() }}</a>
+            <a [routerLink]="kaderNavLink()" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="mobile-action-card" (click)="closeMobile()">
+              <span class="icon-badge sm icon-badge-soft"><app-icon name="id-card" [size]="15" /></span>
+              <span class="mobile-action-card-text">
+                <span class="mobile-action-card-title">{{ kaderNavLabel() }}</span>
+                <span class="mobile-action-card-caption">Pendataan &amp; status keanggotaan kader</span>
+              </span>
+            </a>
           }
-          <a routerLink="/akun/profil" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="user-circle" [size]="17" />Profil Saya</a>
-          <button type="button" class="btn btn-outline btn-block" (click)="logout(); closeMobile()"><app-icon name="log-out" [size]="17" />Keluar</button>
+          <a routerLink="/akun/profil" routerLinkActive="active" class="mobile-action-card" (click)="closeMobile()">
+            <span class="icon-badge sm icon-badge-solid"><app-icon name="user-circle" [size]="15" /></span>
+            <span class="mobile-action-card-text">
+              <span class="mobile-action-card-title">Profil Saya</span>
+              <span class="mobile-action-card-caption">Lihat &amp; ubah profil Anda</span>
+            </span>
+          </a>
+          <button type="button" class="mobile-action-card danger" (click)="logout($event)">
+            <span class="icon-badge sm icon-badge-danger"><app-icon name="log-out" [size]="15" /></span>
+            <span class="mobile-action-card-text">
+              <span class="mobile-action-card-title">Keluar</span>
+              <span class="mobile-action-card-caption">Keluar dari akun Anda</span>
+            </span>
+          </button>
         } @else {
-          <a routerLink="/login" class="btn btn-outline btn-block" (click)="closeMobile()"><app-icon name="log-in" [size]="17" />Masuk</a>
-          <a routerLink="/daftar" class="btn btn-primary btn-block" (click)="closeMobile()"><app-icon name="user-plus" [size]="17" />Daftar</a>
+          <a routerLink="/login" routerLinkActive="active" class="mobile-action-card" (click)="closeMobile()">
+            <span class="icon-badge sm icon-badge-solid"><app-icon name="log-in" [size]="15" /></span>
+            <span class="mobile-action-card-text">
+              <span class="mobile-action-card-title">Masuk</span>
+              <span class="mobile-action-card-caption">Login ke akun kamu</span>
+            </span>
+          </a>
+          <a routerLink="/daftar" routerLinkActive="active" class="mobile-action-card primary" (click)="closeMobile()">
+            <span class="icon-badge sm" style="background:rgba(255,255,255,.25);color:#fff"><app-icon name="user-plus" [size]="15" /></span>
+            <span class="mobile-action-card-text">
+              <span class="mobile-action-card-title">Daftar</span>
+              <span class="mobile-action-card-caption">Buat akun baru</span>
+            </span>
+          </a>
         }
       </div>
     </aside>
@@ -309,7 +365,51 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .nav-placeholder { height: 0; transition: height .2s ease; }
     .nav-placeholder.active { height: 78px; }
 
-    .pub-header { position: relative; top: 0; left: 0; width: 100%; z-index: 60; background: rgba(255,255,255,.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,.4); padding: 16px 0; }
+    /* Sengaja TIDAK pakai transition yang menempel terus-menerus di sini
+       (background/box-shadow/border-radius/padding) — sempat dicoba supaya
+       perpindahan relative<->fixed terasa mengalir, tapi kombinasi itu
+       dengan backdrop-filter:blur() di atas hero yang berat (SVG+gradasi)
+       bikin browser repaint terus-menerus tiap scroll = lag. Pola ldksyahid-
+       app dipakai sebagai gantinya: SATU animasi ringan (opacity+translateY,
+       keduanya accelerated GPU) yang cuma main sekali saat .scrolled
+       ditambahkan — jauh lebih murah daripada mentransisikan properti
+       layout/paint seperti box-shadow & border-radius tiap frame scroll. */
+    .pub-header {
+      position: relative; top: 0; left: 0; width: 100%; z-index: 60;
+      background: rgba(255,255,255,.5); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.4); padding: 16px 0;
+      animation: navSlideDown .7s var(--ease-out);
+    }
+    /* Animasi masuk dari atas ke bawah — dipasang di base (bukan cuma
+       .scrolled) supaya perpindahan fixed->relative (scroll balik ke atas)
+       ikut kelihatan turun dari atas juga, bukan cuma muncul instan seperti
+       sebelumnya. animation-name beda dari navFadeIn (dipakai .scrolled di
+       bawah), jadi browser tetap memutar ulang animasi ini setiap kali
+       .scrolled dilepas (computed animation-name benar-benar berubah).
+       Durasi sengaja lebih lambat (.7s) dengan var(--ease-out) — kurva
+       decelerate yang sama dipakai reveal on-scroll di seluruh app ini —
+       supaya headernya terasa "melayang turun" pelan-pelan mendarat,
+       bukan snap cepat seperti sebelumnya (referensi ldksyahid-app). */
+    @keyframes navSlideDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .pub-header { animation: none; } }
+    /* Cuma dipakai di Beranda (lihat isHomeRoute()) & hanya saat belum
+       scroll — margin negatif menarik .hero (section berikutnya) naik
+       "ketiban" di bawah header, supaya warnanya kelihatan menyatu dengan
+       .hero di baliknya alih-alih jadi bar putih terpisah DI ATAS hero.
+       backdrop-filter SENGAJA DIMATIKAN khusus di sini (beda dari base
+       .pub-header di atas) — .hero yang ditembusnya bukan latar statis,
+       tapi SVG+gradasi yang terus beranimasi (garis jaringan berdenyut,
+       reveal on-scroll), dan blur di atas backdrop yang terus berubah itu
+       yang bikin browser repaint tiap frame = lag nyata (dilaporkan
+       langsung). Transparansi tanpa blur jauh lebih murah — warna hero
+       tetap ikut tembus, cuma tidak "berkabut". .hero diberi padding-top
+       ekstra senilai margin ini (lihat home.index.page.ts) supaya konten
+       hero sendiri tidak ikut ketutup header. */
+    .pub-header.on-hero {
+      margin-bottom: -80px;
+      background: rgba(255,255,255,.75);
+      backdrop-filter: none; -webkit-backdrop-filter: none;
+    }
     /* Navbar sengaja lebih lebar dari .container standar (1180px dipakai
        semua section konten lain) — mengikuti pola ldksyahid-app yang
        navbar-nya terasa lega dan hampir penuh lebar layar, bukan sekadar
@@ -322,7 +422,8 @@ const TIER_CAPTION: Record<CmsTier, string> = {
       width: min(1300px, calc(100% - 120px));
       border: 1px solid var(--color-border); border-radius: 12px;
       box-shadow: var(--shadow-lg); background: #fff; padding: 8px 20px;
-      animation: navFadeIn .25s ease;
+      animation: navFadeIn .3s ease forwards;
+      will-change: transform, opacity;
     }
     /* .container punya padding 0 50px sebagai default (lebar penuh, lihat
        komentar di atas) — pas .scrolled jadi pill mengambang yang lebih
@@ -331,6 +432,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
        inset-nya cukup dari padding header saja. */
     .pub-header.scrolled .container { padding: 0; }
     @keyframes navFadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-12px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+    @media (prefers-reduced-motion: reduce) { .pub-header.scrolled { animation: none; } }
 
     .brand { display: flex; align-items: center; gap: 12px; margin-right: 16px; flex-shrink: 0; }
     .brand:hover { text-decoration: none; }
@@ -349,7 +451,25 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .mobile-nav a { position: relative; display: flex; align-items: center; gap: 7px; color: var(--color-text); font-weight: 600; transition: color var(--motion-fast) ease; }
     .pub-nav a svg, .mobile-nav a svg { opacity: .75; }
     .pub-nav a.active svg, .mobile-nav a.active svg { opacity: 1; }
-    .mobile-nav a:hover { text-decoration: none; color: var(--color-primary-dark); }
+    /* Digerbang @media(hover:hover) — touch (drawer mobile ini SELALU
+       disentuh, tidak pernah di-hover pointer) mensimulasikan :hover pada
+       elemen di bawah jari saat sentuhan MULAI (mis. scroll drawer yang
+       dimulai dengan jari di atas kartu ini), dan browser sering
+       membiarkan :hover itu "nyangkut" sampai ada tap lain di tempat lain
+       — persis yang dilaporkan ("kepencet" trigger dari scroll, bukan
+       benar-benar aktif). Tanpa gate ini, kartu manapun yang disentuh
+       duluan buat mulai scroll akan terlihat seperti ke-klik terus. */
+    @media (hover: hover) and (pointer: fine) {
+      .mobile-nav a:hover { text-decoration: none; color: var(--color-primary-dark); }
+    }
+    /* :active (BUKAN :hover) — ini yang benar buat feedback tap di layar
+       sentuh: cuma menyala SELAMA jari/tombol mouse ditekan lalu lepas
+       bersih begitu diangkat, tidak pernah "nyangkut" seperti :hover
+       tersimulasi di atas. Menggantikan tap-highlight bawaan browser yang
+       sengaja dimatikan (-webkit-tap-highlight-color) di rule dasarnya. */
+    .mobile-nav a:active, .mobile-nav a:focus, .mobile-nav a:link:active {
+      background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none !important; outline: none;
+    }
     .pub-nav a {
       position: relative; display: flex; align-items: center; gap: 6px;
       padding: 8px 13px; border-radius: 12px; color: var(--color-text); font-weight: 600; font-size: .86rem;
@@ -424,10 +544,11 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     /* Garis pemisah sebelum "Keluar" — sama seperti .dropdown-divider-top di
        cms-layout.component.ts, dipisah dari aksi navigasi di atasnya karena
        ini aksi destruktif (keluar akun). */
-    .dropdown-fun .dropdown-divider-top { border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 14px; }
+    .dropdown-fun .dropdown-divider-top,
+    .mobile-actions .dropdown-divider-top { border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 14px; }
     .dropdown-fun.open { opacity: 1; visibility: visible; transform: scale(1) translateY(0); }
     @media (prefers-reduced-motion: reduce) { .dropdown-fun { transition: opacity var(--motion-base) ease, visibility var(--motion-base); transform: none !important; } }
-    .mobile-account { display: flex; align-items: center; gap: 10px; padding: 8px 4px; font-weight: 600; color: var(--color-text); }
+    .mobile-account { display: flex; align-items: flex-start; gap: 10px; padding: 8px 4px; font-weight: 600; color: var(--color-text); }
 
     /* Dropdown item navbar "Lainnya" — sama idiom-nya dengan .dropdown-fun
        (hover desktop + toggle-click, ditutup lewat onDocumentClick), tapi
@@ -443,6 +564,11 @@ const TIER_CAPTION: Record<CmsTier, string> = {
        sendiri) alih-alih gaya dua-baris di bawah ini. */
     .pub-actions { flex-shrink: 0; }
     .topbar-end { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    /* display:contents di desktop — wrapper ini transparan buat layout,
+       topbar-end & mobile-toggle tetap jadi flex item langsung punya
+       .container (mobile-toggle sendiri sudah display:none di desktop,
+       jadi urusan gap di antara keduanya memang cuma relevan di mobile). */
+    .mobile-right-group { display: contents; }
     .nav-dropdown-wrap { position: relative; }
     .nav-dropdown-trigger {
       display: flex; align-items: center; gap: 5px; margin: 0; appearance: none;
@@ -500,28 +626,31 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     }
     .pub-nav a.nav-dropdown-item.active,
     .nav-dropdown-item.active {
-      background: var(--color-primary);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(0,147,59,.28);
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      box-shadow: none;
     }
     .pub-nav a.nav-dropdown-item.active:hover,
     .nav-dropdown-item.active:hover {
-      background: var(--color-primary-dark);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(0,147,59,.28);
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      box-shadow: none;
     }
     .pub-nav a.nav-dropdown-item.active .nav-dropdown-item-title,
     .nav-dropdown-item.active .nav-dropdown-item-title {
-      color: #fff;
+      color: var(--color-primary-dark);
     }
     .pub-nav a.nav-dropdown-item.active .nav-dropdown-item-caption,
     .nav-dropdown-item.active .nav-dropdown-item-caption {
-      color: rgba(255,255,255,.8);
+      color: var(--color-text-secondary);
     }
-    .pub-nav a.nav-dropdown-item.active .icon-badge,
-    .nav-dropdown-item.active .icon-badge {
-      background: rgba(255,255,255,.25); color: #fff;
-    }
+    /* Icon-badge item ini SENGAJA tidak ikut diubah warnanya saat .active
+       (beda dari .portal-item yang icon-nya memang butuh jadi translucent
+       putih di atas tint tier) — icon-badge-solid di sini sudah kontras
+       tinggi (hijau solid + ikon putih) dengan sendirinya, dan kalau
+       dipaksa jadi lingkaran putih translucent + ikon putih di atasnya,
+       ikonnya nyaris tak kelihatan (putih di atas putih pudar) — itu yang
+       bikin baris "Shortlink" dilaporkan pudar/susah dibaca. */
     .nav-dropdown-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
     .nav-dropdown-item-title { font-weight: 700; font-size: .9rem; }
     .nav-dropdown-item-caption { font-size: .76rem; color: var(--color-muted); font-weight: 500; line-height: 1.3; }
@@ -530,7 +659,9 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .mobile-nav-label { padding: 10px 14px 2px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
     .mobile-nav-extra .nav-dropdown-item { padding: 10px 14px; }
 
-    .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: var(--radius-xs); cursor: pointer; padding: 0; }
+    .mobile-toggle { display: none; flex-direction: column; justify-content: center; align-items: center; gap: 5px; width: 40px; height: 40px; background: var(--color-primary-soft); border: none; border-radius: var(--radius-xs); cursor: pointer; padding: 0; -webkit-tap-highlight-color: transparent; }
+    .mobile-toggle:active { background: var(--color-primary); }
+    .mobile-toggle:active span { background: #fff; }
     .mobile-toggle span { display: block; width: 18px; height: 2px; background: var(--color-primary-dark); border-radius: 2px; transition: transform .25s ease, opacity .25s ease; }
     .mobile-toggle.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .mobile-toggle.active span:nth-child(2) { opacity: 0; }
@@ -544,11 +675,33 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .mobile-drawer.active { right: 0; }
     .mobile-drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
     .mobile-close { width: 34px; height: 34px; border-radius: var(--radius-xs); background: var(--color-primary-soft); color: var(--color-primary-dark); border: none; font-size: 1.3rem; line-height: 1; cursor: pointer; }
-    .mobile-drawer .mobile-account { padding: 12px 18px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; font-size: .88rem; }
-    .mobile-drawer .mobile-account .chip-avatar { width: 32px; height: 32px; font-size: .8rem; }
+    /* Background lembut + font tebal supaya baris identitas ini terbaca
+       sebagai kartu ringkasan (bukan link nav yang bisa diklik) — sebelumnya
+       styling-nya nyaris sama dengan item nav di bawahnya (Beranda dst.)
+       hingga membingungkan (dilaporkan "aneh"). */
+    .mobile-drawer .mobile-account {
+      margin: 14px 16px 6px; padding: 14px 16px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-primary-tint), var(--color-primary-soft));
+      border: 1px solid var(--color-border); flex-shrink: 0;
+    }
+    .mobile-account-avatar {
+      width: 44px; height: 44px; border-radius: var(--radius-full); flex-shrink: 0; object-fit: cover;
+      border: 3px solid var(--color-primary); background: #fff; color: var(--color-primary-dark);
+      display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem;
+    }
+    .mobile-account-avatar.guest { color: var(--color-text-secondary); border-color: var(--color-border-strong); }
+    .mobile-account-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .mobile-account-greeting { font-weight: 700; font-size: .92rem; color: var(--color-text); line-height: 1.3; word-break: break-word; }
+    .mobile-account-email { font-size: .78rem; color: var(--color-text-secondary); line-height: 1.3; word-break: break-word; }
+    .wave-emoji { display: inline-block; animation: wave 1.8s ease-in-out infinite; transform-origin: 70% 70%; }
+    @keyframes wave { 0%, 60%, 100% { transform: rotate(0deg); } 10% { transform: rotate(14deg); } 20% { transform: rotate(-8deg); } 30% { transform: rotate(14deg); } 40% { transform: rotate(-4deg); } 50% { transform: rotate(10deg); } }
+    @media (prefers-reduced-motion: reduce) { .wave-emoji { animation: none; } }
     .mobile-drawer { overflow-y: auto; }
     .mobile-nav { display: flex; flex-direction: column; padding: 10px 12px; gap: 3px; }
-    .mobile-nav a { padding: 11px 13px; border-radius: var(--radius-sm); font-size: .88rem; }
+    .mobile-nav a {
+      padding: 11px 13px; border-radius: var(--radius-sm); font-size: .88rem;
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+    }
     .mobile-nav a.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .mobile-nav-icon { width: 28px; height: 28px; border-radius: var(--radius-sm); background: var(--color-primary-soft); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .mobile-nav a.active .mobile-nav-icon { background: var(--color-primary); color: #fff; }
@@ -558,8 +711,12 @@ const TIER_CAPTION: Record<CmsTier, string> = {
       border-radius: var(--radius-sm); border: none; background: none; cursor: pointer;
       color: var(--color-text); font-weight: 600; font-size: .88rem; font-family: var(--font-body);
       transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
     }
-    .mobile-dropdown-toggle:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    @media (hover: hover) and (pointer: fine) {
+      .mobile-dropdown-toggle:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    }
+    .mobile-dropdown-toggle:active { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none !important; outline: none; }
     .mobile-dropdown-toggle span:nth-child(2) { flex: 1; }
     .mobile-dropdown-arrow { transition: transform var(--motion-fast) ease; opacity: .7; }
     .mobile-dropdown.open .mobile-dropdown-toggle { background: var(--color-primary-soft); color: var(--color-primary-dark); }
@@ -573,10 +730,81 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     @media (prefers-reduced-motion: reduce) { .mobile-dropdown-panel { transition: none; } }
 
     .mobile-actions { margin-top: auto; padding: 16px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+    /* Portal/Profil Saya/Keluar: bentuk kartu berbingkai SAMA PERSIS bobot
+       visual .btn-outline (Masuk/Daftar) — border + radius + padding sama —
+       tapi isinya icon-badge + judul + caption singkat (bukan cuma label
+       satu baris) supaya tetap informatif seperti versi sebelumnya. Ini
+       titik tengah dari 2 percobaan yang ditolak: baris nav polos tanpa
+       bingkai (dianggap kurang "berbentuk tombol") dan tumpukan btn-outline
+       tanpa deskripsi (dianggap membosankan). */
+    .mobile-action-card {
+      display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+      border: 1.5px solid var(--color-border); background: #fff; border-radius: var(--radius-md);
+      padding: 10px 14px; cursor: pointer; font-family: var(--font-body);
+      transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+      /* Ini <a>/<button>, teksnya selectable secara default — gestur scroll
+         yang mulai persis di atas teks bisa disalahartikan browser sebagai
+         "mulai seleksi teks" (bukan scroll), memicu garis bawah highlight
+         seleksi yang dilaporkan ("garis bawah pas discroll"). Dimatikan di
+         sini (dan elemen nav mobile lain di bawah) supaya sentuhan di area
+         ini SELALU dibaca sebagai scroll/tap, tidak pernah seleksi teks. */
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* :hover di sini digerbang @media(hover:hover) — tanpa ini, kartu yang
+       disentuh duluan untuk MULAI SCROLL drawer akan "nyangkut" kelihatan
+       seperti aktif/ke-klik (browser mobile mensimulasikan :hover di titik
+       sentuh, dan itu sering tidak lepas sampai ada tap lain) — inilah yang
+       dilaporkan sebagai "Portal Admin kepencet pas scroll ke bawah". */
+    @media (hover: hover) and (pointer: fine) {
+      .mobile-action-card:hover { background: var(--tier-soft, var(--color-primary-soft)); border-color: var(--tier-color, var(--color-primary)); text-decoration: none; transform: translateY(-1px); }
+      .mobile-action-card:hover .mobile-action-card-title { color: var(--tier-color, var(--color-primary-dark)); }
+    }
+    .mobile-action-card.active { background: var(--color-primary-soft); border-color: var(--color-primary); }
+    .mobile-action-card.active .mobile-action-card-title { color: var(--color-primary-dark); }
+    /* :active PSEUDO-CLASS (tekanan jari sedang berlangsung) — beda dari
+       .active di atas (kelas rute-sedang-aktif dari routerLinkActive).
+       text-decoration:none!important + outline:none dipaksa di sini karena
+       beberapa browser mobile punya aturan bawaan :link:active yang
+       spesifisitasnya bisa menang atas reset polos a{text-decoration:none}. */
+    .mobile-action-card:active {
+      background: var(--tier-soft, var(--color-primary-soft)); border-color: var(--tier-color, var(--color-primary));
+      text-decoration: none !important; outline: none;
+    }
+    .mobile-action-card:active .mobile-action-card-title { color: var(--tier-color, var(--color-primary-dark)); }
+    .mobile-action-card-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .mobile-action-card-title { font-weight: 700; font-size: .88rem; color: var(--color-text); }
+    .mobile-action-card-caption { font-size: .74rem; color: var(--color-muted); }
+    /* Keluar tetap dibedakan warnanya (merah) sebagai satu-satunya aksi
+       destruktif di daftar ini — bukan navigasi ke halaman lain. */
+    @media (hover: hover) and (pointer: fine) {
+      .mobile-action-card.danger:hover { background: var(--color-danger-soft); border-color: var(--color-danger); }
+      .mobile-action-card.danger:hover .mobile-action-card-title { color: var(--color-danger); }
+    }
+    /* Daftar tetap ditonjolkan (solid hijau) dibanding Masuk (putih
+       berbingkai) — mempertahankan hierarki btn-primary vs btn-outline yang
+       lama, cuma bentuknya sekarang kartu icon+caption, bukan tombol polos. */
+    .mobile-action-card.primary { background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); border-color: transparent; }
+    .mobile-action-card.primary .mobile-action-card-title { color: #fff; }
+    .mobile-action-card.primary .mobile-action-card-caption { color: rgba(255,255,255,.8); }
+    @media (hover: hover) and (pointer: fine) {
+      .mobile-action-card.primary:hover { background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary)); border-color: transparent; }
+      .mobile-action-card.primary:hover .mobile-action-card-title { color: #fff; }
+    }
 
     @media (max-width: 1080px) {
       .pub-nav-group, .pub-actions { display: none; }
       .mobile-toggle { display: flex; }
+      /* Di desktop wrapper ini display:contents (lihat rule dasarnya) supaya
+         topbar-end & mobile-toggle langsung jadi flex item .container — tapi
+         itu artinya keduanya ikut kena gap besar milik .container (dipakai
+         buat jarak antar brand/menu/aksi di desktop) DAN ikut disebar rata
+         oleh justify-content:space-between jadi 3 kelompok terpisah (brand |
+         prayer | hamburger), bikin jarak prayer-hamburger di mobile jadi
+         lebar sekali. Di mobile, jadikan wrapper ini SATU flex item sungguhan
+         (bukan contents lagi) dengan gap kecil sendiri — .container yang
+         tadinya menyebar 3 anak sekarang cuma menyebar 2 (brand | grup ini). */
+      .mobile-right-group { display: flex; align-items: center; gap: 10px; }
       .pub-header { padding: 12px 0; }
       .pub-header .container { padding: 0 30px; }
       .pub-header.scrolled { top: 10px; width: calc(100% - 24px); padding: 8px 14px; }
@@ -589,6 +817,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   private submissionRepo = inject(SubmissionRepository);
   private router = inject(Router);
   private ngZone = inject(NgZone);
+  private alert = inject(AlertService);
 
   private kaderSubmissionStatus = signal<string | null | undefined>(undefined);
 
@@ -651,6 +880,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   moreMenuOpen = signal(false);
   mobileTentangOpen = signal(false);
   mobileLayananOpen = signal(false);
+  mobileLainnyaOpen = signal(false);
 
   private onScroll = (): void => {
     const isScrolled = window.scrollY > 80;
@@ -683,6 +913,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
 
   toggleMobileTentang(): void { this.mobileTentangOpen.update((v) => !v); }
   toggleMobileLayanan(): void { this.mobileLayananOpen.update((v) => !v); }
+  toggleMobileLainnya(): void { this.mobileLainnyaOpen.update((v) => !v); }
 
   openUserMenu(): void { this.userMenuOpen.set(true); }
   closeUserMenu(): void { this.userMenuOpen.set(false); }
@@ -710,6 +941,13 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   toggleMoreMenu(event: Event): void {
     event.stopPropagation();
     this.moreMenuOpen.update((v) => !v);
+  }
+
+  /** Dipakai untuk overlay header di atas .hero HANYA di Beranda (lihat
+   *  .pub-header.on-hero) — halaman publik lain tidak punya section hero
+   *  yang bisa "ditembus" kaca-nya, jadi tetap normal-flow seperti biasa. */
+  isHomeRoute(): boolean {
+    return this.router.url.split('?')[0] === '/';
   }
 
   isTentangKamiActive(): boolean {
@@ -743,7 +981,15 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   // tierTintOf() di cms-layout.component.ts (putih dicampur 15% warna tier).
   tierTintOf(t: CmsTier): string { return `color-mix(in srgb, #fff 85%, ${TIER_COLOR[t]} 15%)`; }
 
-  logout(): void {
+  async logout(event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(
+      'Apakah Anda yakin ingin keluar dari akun ini?',
+      { title: 'Keluar dari Akun', confirmLabel: 'Ya, Keluar', variant: 'danger' },
+      event,
+    );
+    if (!ok) return;
+    this.closeUserMenu();
+    this.closeMobile();
     this.auth.logout();
     this.router.navigate(['/']);
   }

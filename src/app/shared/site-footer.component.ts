@@ -16,59 +16,70 @@ import { goodsPath } from '../modules/goods/goods.path';
   template: `
     <footer class="pub-footer">
       <div class="foot-wave">
-        <svg viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0,90 C360,10 1080,130 1440,50 L1440,120 L0,120 Z" fill="var(--color-text)"></path>
+        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden="true">
+          <path style="fill: var(--color-text)" d="M0,64C240,160,480,192,720,160C960,128,1200,32,1440,64L1440,320L0,320Z"></path>
         </svg>
       </div>
 
-      <div class="container">
-        <div class="grid grid-4 foot-cols">
-          <div class="foot-col">
-            <span class="brand-text light">FSLDK <b>Indonesia</b></span>
-            <p class="foot-tagline">Menyatukan Langkah Dakwah Kampus se-Indonesia</p>
-            <p class="foot-desc">Forum silaturahmi &amp; pusat koordinasi Lembaga Dakwah Kampus se-Indonesia — merawat ukhuwah, membina kader, menggerakkan dakwah yang terpadu. Sejak 1986.</p>
-            <nav class="foot-social" aria-label="Media sosial FSLDK Indonesia">
-              @for (s of socialLinks; track s.href) {
-                <a [href]="s.href" target="_blank" rel="noopener" class="foot-social-btn" [attr.aria-label]="s.handle"><app-icon [name]="s.icon" [size]="15" /></a>
-              }
-            </nav>
-          </div>
+      <div class="foot-main">
+        <div class="container">
+          <div class="grid grid-4 foot-cols">
+            <div class="foot-col">
+              <span class="brand-text light">FSLDK <b>Indonesia</b></span>
+              <p class="foot-tagline">Menyatukan Langkah Dakwah Kampus se-Indonesia</p>
+              <p class="foot-desc">Forum silaturahmi &amp; pusat koordinasi Lembaga Dakwah Kampus se-Indonesia — merawat ukhuwah, membina kader, menggerakkan dakwah yang terpadu. Sejak 1986.</p>
+              <nav class="foot-social" aria-label="Media sosial FSLDK Indonesia">
+                @for (s of socialLinks; track s.href) {
+                  <a [href]="s.href" target="_blank" rel="noopener" class="foot-social-btn" [attr.aria-label]="s.handle"><app-icon [name]="s.icon" [size]="15" /></a>
+                }
+              </nav>
+            </div>
 
-          <div class="foot-col">
-            <h5 class="foot-title"><app-icon name="sparkles" [size]="15" />Jelajahi</h5>
-            <div class="foot-links-grid">
-              @for (l of exploreLinks; track l.href) {
-                <a [routerLink]="l.href" class="foot-link-card"><app-icon [name]="l.icon" [size]="16" /><span>{{ l.label }}</span></a>
-              }
+            <div class="foot-col">
+              <h5 class="foot-title"><app-icon name="sparkles" [size]="15" />Jelajahi</h5>
+              <div class="foot-links-grid">
+                @for (l of exploreLinks; track l.href) {
+                  <a [routerLink]="l.href" class="foot-link-card"><app-icon [name]="l.icon" [size]="16" /><span>{{ l.label }}</span></a>
+                }
+              </div>
+            </div>
+
+            <div class="foot-col">
+              <h5 class="foot-title"><app-icon name="info-circle" [size]="15" />Tentang Kami</h5>
+              <ul class="foot-plain-list">
+                @for (l of tentangLinks; track l.href) {
+                  <li><a [routerLink]="l.href"><app-icon [name]="l.icon" [size]="14" />{{ l.label }}</a></li>
+                }
+              </ul>
+            </div>
+
+            <div class="foot-col">
+              <h5 class="foot-title"><app-icon name="mail" [size]="15" />Berlangganan</h5>
+              <p class="foot-desc">Dapatkan kabar &amp; info kegiatan FSLDK Indonesia langsung ke email Anda.</p>
+              <app-newsletter-form />
             </div>
           </div>
 
-          <div class="foot-col">
-            <h5 class="foot-title"><app-icon name="info-circle" [size]="15" />Tentang Kami</h5>
-            <ul class="foot-plain-list">
-              @for (l of tentangLinks; track l.href) {
-                <li><a [routerLink]="l.href"><app-icon [name]="l.icon" [size]="14" />{{ l.label }}</a></li>
-              }
-            </ul>
-          </div>
-
-          <div class="foot-col">
-            <h5 class="foot-title"><app-icon name="mail" [size]="15" />Berlangganan</h5>
-            <p class="foot-desc">Dapatkan kabar &amp; info kegiatan FSLDK Indonesia langsung ke email Anda.</p>
-            <app-newsletter-form />
-          </div>
+          <p class="foot-copy">&copy; {{ year }} Perkumpulan Forum Silaturahmi Lembaga Dakwah Kampus Indonesia. Sejak 1986.</p>
         </div>
-
-        <p class="foot-copy">&copy; {{ year }} Perkumpulan Forum Silaturahmi Lembaga Dakwah Kampus Indonesia. Sejak 1986.</p>
       </div>
     </footer>
   `,
   styles: [`
     :host { display: block; }
-    .pub-footer { position: relative; background: var(--color-text); color: #c9cdd1; }
+    /* Background gelap SENGAJA ada di .foot-main, BUKAN di <footer> sendiri
+       — kalau ditaruh di <footer>, dia jadi "di belakang" .foot-wave juga
+       (karena .foot-wave anak dari <footer>), sehingga bagian transparan
+       SVG wave-nya cuma menembus warna gelap yang SAMA lagi (bukan warna
+       putih halaman di ATAS footer) dan wave-nya jadi tak kelihatan sama
+       sekali walau path/fill-nya sendiri sudah benar. Struktur ini
+       mengikuti pola ldksyahid-app (.footer-fun transparan, .footer-main
+       yang gelap, wave sebagai sibling sebelum -main, bukan child-nya). */
+    .pub-footer { position: relative; color: #c9cdd1; }
     .foot-wave { position: relative; height: 60px; overflow: hidden; }
     .foot-wave svg { position: absolute; bottom: 0; width: 100%; height: 100%; }
-    .pub-footer .container { padding-top: 8px; padding-bottom: 32px; }
+    .foot-main { background: var(--color-text); }
+    .foot-main .container { padding-top: 8px; padding-bottom: 32px; }
 
     .brand-text { font-family: var(--font-heading); font-weight: 700; font-size: 1.15rem; display: flex; flex-direction: column; line-height: 1.1; }
     .brand-text.light { color: #fff; } .brand-text.light b { color: var(--color-primary-bright); }
