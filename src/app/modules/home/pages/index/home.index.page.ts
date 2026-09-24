@@ -18,6 +18,9 @@ import { eventPath } from '../../../event/event.path';
 import { goodsPath } from '../../../goods/goods.path';
 import { schedulePath } from '../../../schedule/schedule.path';
 import { kantongAmalPath } from '../../../kantong-amal/kantong-amal.path';
+import { newsPath } from '../../../news/news.path';
+import { articlePath } from '../../../article/article.path';
+import { statisticPath } from '../../../statistic/statistic.path';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { HomeIndexPresenter } from './home.index.presenter';
 import { HomeIndexView } from './home.index.view';
@@ -222,9 +225,11 @@ interface CardPreview {
        dipertanggungjawabkan (bukan klaim keanggotaan yang belum terverifikasi). ---------- */
     .stats-strip { padding: 40px 0; }
     .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .stat-item { padding-top: 14px; border-top: 2px solid var(--color-primary-soft); }
+    .stat-item { display: flex; align-items: center; gap: 16px; padding-top: 14px; border-top: 2px solid var(--color-primary-soft); }
+    .stat-icon { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
     .stat-item b { display: block; font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: var(--color-primary-dark); }
     .stat-item span { font-size: .85rem; color: var(--color-text-secondary); font-weight: 600; }
+    .stats-more { margin-top: 28px; }
 
     /* ---------- Statistik Jaringan Nasional — ringkasan angka jaringan
        LDK/Puskomda/Puskomnas + satu chart, versi ringkas dari halaman penuh
@@ -245,6 +250,59 @@ interface CardPreview {
     .news-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .news-body { padding: 20px; } .news-body h3 { margin: 12px 0 8px; font-size: 1.15rem; }
     .meta { color: var(--color-muted); font-size: .85rem; margin: 0; }
+
+    /* ---------- Berita: "sorotan editorial" — satu berita terbaru tampil
+       besar (gambar dominan, excerpt, jumlah dibaca) di kiri, dua berita
+       berikutnya jadi daftar ringkas di kanan. Sengaja beda bentuk dari
+       Artikel di bawahnya (grid kartu teks) supaya kedua section terasa
+       punya identitas visual sendiri-sendiri, bukan pola kartu yang sama
+       diulang-ulang di seluruh beranda. ---------- */
+    .berita-spotlight { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: stretch; }
+    .berita-featured {
+      display: block; position: relative; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    .berita-featured:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); text-decoration: none; }
+    .berita-featured-thumb { position: relative; aspect-ratio: 16/9; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
+    .berita-featured-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .berita-featured-chip { position: absolute; left: 16px; bottom: 16px; box-shadow: var(--shadow-sm); }
+    .berita-featured-body { padding: 24px; }
+    .berita-featured-body h3 { margin: 0 0 10px; font-size: 1.4rem; line-height: 1.3; }
+    .berita-featured-excerpt { margin: 0 0 16px; color: var(--color-text-secondary); font-size: .95rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .berita-featured-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: .82rem; color: var(--color-muted); }
+    .berita-view-count { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: var(--color-primary-dark); }
+    .berita-list { display: flex; flex-direction: column; gap: 14px; }
+    .berita-list-item {
+      display: flex; gap: 14px; align-items: flex-start; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 14px; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease;
+    }
+    .berita-list-item:hover { box-shadow: var(--shadow); transform: translateY(-2px); text-decoration: none; border-color: var(--color-primary-soft); }
+    .berita-list-thumb { flex-shrink: 0; width: 68px; height: 68px; border-radius: 12px; overflow: hidden; background: var(--color-primary-soft); display: grid; place-items: center; color: var(--color-primary); }
+    .berita-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .berita-list-body { min-width: 0; }
+    .berita-list-body .chip { padding: 3px 10px; font-size: .7rem; }
+    .berita-list-body h4 { margin: 6px 0 4px; font-size: .95rem; line-height: 1.35; }
+    @media (max-width: 900px) { .berita-spotlight { grid-template-columns: 1fr; } }
+
+    /* ---------- Artikel: "kartu kajian" — teks-sentris (tanpa foto dominan
+       seperti Berita), aksen batang warna emas di kiri + excerpt
+       (articleIntro) + identitas penulis, kesan lebih tenang/reflektif
+       dibanding sorotan berita yang bergambar. ---------- */
+    .artikel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .artikel-card {
+      position: relative; display: block; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 26px 24px 22px 28px; overflow: hidden;
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease;
+    }
+    .artikel-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; border-color: var(--color-gold-soft); }
+    .artikel-card-accent { position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: linear-gradient(var(--color-gold), var(--color-gold-dark)); }
+    .artikel-card h3 { margin: 12px 0 10px; font-size: 1.1rem; line-height: 1.35; }
+    .artikel-intro { margin: 0 0 18px; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .artikel-writer { display: flex; align-items: center; gap: 10px; font-size: .8rem; color: var(--color-muted); font-weight: 600; }
+    .artikel-writer-avatar { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--color-gold-soft); color: var(--color-gold-dark); font-weight: 800; font-size: .8rem; }
+    @media (max-width: 900px) { .artikel-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .artikel-grid { grid-template-columns: 1fr; } }
 
     /* ---------- Book card: siluet rak buku (thumb potret, bukan 16:10 seperti
        kartu berita), rating disematkan sebagai ribbon di sudut sampul. ---------- */
@@ -620,6 +678,9 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   readonly schedulePath = schedulePath;
   readonly kantongAmalPath = kantongAmalPath;
   readonly contactPath = contactPath;
+  readonly newsPath = newsPath;
+  readonly articlePath = articlePath;
+  readonly statisticPath = statisticPath;
   readonly formatRupiah = formatRupiah;
 
   readonly missionList: MissionItem[] = [
