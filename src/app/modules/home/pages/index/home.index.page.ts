@@ -1,7 +1,6 @@
-import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
 import { WelcomePopupComponent } from '../../components/welcome-popup.component';
 import { BottomSheetComponent } from '../../../../shared/bottom-sheet.component';
@@ -13,8 +12,6 @@ import { Goods } from '../../../goods/entities/goods';
 import { Schedule } from '../../../schedule/entities/schedule';
 import { Campaign } from '../../../kantong-amal/entities/campaign';
 import { GalleryListItem } from '../../../gallery/entities/gallery';
-import { NetworkStats } from '../../../statistic/entities/statistic';
-import { statisticPath } from '../../../statistic/statistic.path';
 import { contactPath } from '../../../contact/contact.path';
 import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
 import { eventPath } from '../../../event/event.path';
@@ -25,12 +22,17 @@ import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { HomeIndexPresenter } from './home.index.presenter';
 import { HomeIndexView } from './home.index.view';
 
-Chart.register(...registerables);
-
 interface OrgMember {
   memberName: string;
   position: string;
   level: string;
+  icon: string;
+}
+
+interface MissionItem {
+  no: string;
+  icon: string;
+  text: string;
 }
 
 /** Data ringkas untuk preview di bottom sheet mobile (lihat openPreview()) —
@@ -52,23 +54,19 @@ interface CardPreview {
   imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent, BottomSheetComponent],
   providers: [HomeIndexPresenter],
   styles: [`
-    /* ---------- Kanvas: putih polos di semua section (batik dihilangkan per
-       revamp-project prompt) — transisi warna dari hero ditangani khusus oleh
-       .section-transition (section pertama setelah hero), dan siluet cahaya
-       hijau redup menjelang footer oleh .section-glow (section terakhir
-       sebelum footer), bukan lagi motif berulang di semua section. ---------- */
-    .section { background: var(--color-bg); position: relative; }
+    /* ---------- Kanvas: putih campur sedikit hijau (var(--color-primary-tint))
+       di SEMUA section beranda — dulu putih polos (var(--color-bg)) dengan
+       .section-transition sebagai satu-satunya section bertint hijau lalu
+       memudar ke putih, dan .section-glow (dot-dot radial hijau menyala)
+       khusus section terakhir sebelum footer. Disamakan semua supaya kanvas
+       kontennya konsisten satu warna dari ujung ke ujung, dot-dot glow-nya
+       dihapus (class section-glow juga sudah dilepas dari template). ---------- */
+    .section { background: var(--color-primary-tint); position: relative; }
 
-    .section-transition { background: linear-gradient(180deg, var(--color-primary-tint) 0%, var(--color-bg) 100%); }
-
-    .section-glow { overflow: hidden; }
-    .section-glow::before {
-      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background:
-        radial-gradient(circle 320px at 12% 30%, rgba(0,147,59,.07) 0%, transparent 70%),
-        radial-gradient(circle 380px at 88% 75%, rgba(0,147,59,.09) 0%, transparent 70%);
-    }
-    .section-glow > .container { position: relative; z-index: 1; }
+    /* padding-top diperkecil dari default .section (72px) — supaya jarak
+       kosong antara kartu kutipan di hero dan heading "Tentang Kami" tidak
+       terlihat seperti jeda/pemisah kosong yang lebar. */
+    .section-transition { position: relative; padding-top: 32px; }
 
     /* ---------- Hero: dua kolom, latar hangat dua warna (hijau→emas) supaya
        viewport pertama langsung "berbunyi" energic, bukan cuma tint pucat.
@@ -77,7 +75,44 @@ interface CardPreview {
        "menembus" ke sini lewat margin negatif (.pub-header.on-hero di
        site-header.component.ts) — supaya badge/heading hero sendiri tidak
        ikut ketutup header transparan yang mengambang di atasnya. */
-    .hero { position: relative; background: linear-gradient(122deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 58%, var(--color-gold-soft) 100%); padding: 144px 0 56px; overflow: hidden; }
+    .hero { position: relative; background: linear-gradient(122deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 58%, var(--color-gold-soft) 100%); padding: 144px 0 64px; overflow: hidden; }
+    /* Overlay VERTIKAL (bukan diikat ke sudut gradient diagonal 122deg di
+       atas) yang menutup 80px terakhir hero jadi rata var(--color-primary-tint)
+       — sama persis dengan warna .hero-wave & stop awal .section-transition
+       di bawahnya. Percobaan sebelumnya nge-tambah stop langsung di gradient
+       122deg itu sendiri cacat secara geometri: posisi stop di gradient
+       diagonal diukur di sepanjang GARIS gradientnya (bukan garis lurus
+       horizontal), jadi sisi kanan kotak butuh jarak lebih jauh untuk sampai
+       ke stop yang sama dibanding sisi kiri — makanya emas di kanan tetap
+       keliatan bocor. Overlay vertikal di sini seragam di seluruh lebar pada
+       ketinggian berapa pun. Tingginya disamakan dengan .hero-wave (80px)
+       supaya area yang "terbuka" di lekukan wave (lihat di bawah) juga sudah
+       rata tint, bukan masih menampakkan gold di baliknya. */
+    .hero::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom, transparent 0, transparent calc(100% - 80px), var(--color-primary-tint) 100%);
+    }
+    /* Wave: solid fill di bawah kurva SVG menyatu penuh dengan overlay di
+       atas (sama-sama var(--color-primary-tint)) dan dengan stop awal
+       .section-transition tepat setelahnya — garis batas lurusnya digantikan
+       lekukan organik supaya peralihannya tidak terbaca sebagai kotak kaku. */
+    /* drop-shadow (BUKAN box-shadow) supaya bayangannya ikut bentuk lekukan
+       wave, bukan kotak lurus — dy negatif melempar bayangan ke ATAS,
+       menjatuhi hero di baliknya, memberi kesan "Tentang Kami" adalah lapis
+       yang lebih depan/terangkat dibanding hero. Filter-nya SENGAJA di
+       elemen ini (.hero-wave), TERPISAH dari overflow:hidden yang ada di
+       .hero-wave-clip (anaknya) — filter + overflow:hidden di ELEMEN YANG
+       SAMA bisa bikin browser gagal nge-clip dengan benar (containment jadi
+       kacau saat filter aktif), muncul sebagai celah/garis putih di tepi. */
+    .hero-wave { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; height: 80px; line-height: 0; pointer-events: none; filter: drop-shadow(0 -8px 14px rgba(0,0,0,.12)); }
+    /* overflow:hidden di sini (bukan di .hero-wave) yang meng-clip svg 200%
+       ke lebar kontainer 100% — cuma jendela geser yang kelihatan. */
+    .hero-wave-clip { width: 100%; height: 100%; overflow: hidden; }
+    /* svg dua kali lebar kontainer (dua periode identik, lihat komentar di
+       HTML) lalu digeser translateX(-50%) — persis satu periode — supaya
+       animasinya loop mulus infinite tanpa "lompatan" di titik sambungnya. */
+    .hero-wave-clip svg { display: block; width: 200%; height: 80px; animation: heroWaveScroll 14s linear infinite; }
+    @keyframes heroWaveScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
     .hero-texture {
       position: absolute; inset: 0; opacity: .7; pointer-events: none;
       background-image: radial-gradient(circle, var(--color-primary-soft) 1.5px, transparent 1.6px);
@@ -99,6 +134,14 @@ interface CardPreview {
     /* hero-copy diberi stacking context sendiri di atas grafik jaringan —
        cegah teks tertutup bila grafik/glow di kolom sebelah melebar. */
     .hero-copy { position: relative; z-index: 2; }
+    /* Entrance staggered: badge → judul → paragraf muncul berurutan (bukan
+       langsung semua sekaligus) — opacity+translateY satu arah, GPU-friendly,
+       masing-masing delay .12s lebih lambat dari elemen sebelumnya. */
+    .hero-badge, .hero-title, .hero-sub { opacity: 0; animation: heroFadeUp .7s var(--ease-out) forwards; }
+    .hero-badge { animation-delay: .05s; }
+    .hero-title { animation-delay: .2s; }
+    .hero-sub { animation-delay: .35s; }
+    @keyframes heroFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
     .hero-badge { display: inline-flex; align-items: center; gap: 9px; background: #fff; border: 1px solid var(--color-gold); color: var(--color-gold-dark); padding: 8px 18px; border-radius: var(--radius-full); font-weight: 700; font-size: .85rem; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
     .hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-gold); flex-shrink: 0; animation: node-pulse 2.4s ease-in-out infinite; }
     .hero-title { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 800; letter-spacing: -.01em; max-width: 16ch; line-height: 1.12; }
@@ -111,9 +154,69 @@ interface CardPreview {
        di tiap pulau, garis menyala menunjukkan koordinasi yang aktif. Aspek
        rasio svg sengaja lebar (640:240) mengikuti bentang timur-barat
        Nusantara yang sesungguhnya, bukan kotak persegi. ---------- */
-    .hero-network { position: relative; z-index: 1; height: 300px; display: flex; align-items: center; justify-content: center; }
-    .hero-network-svg { position: relative; z-index: 1; width: 100%; height: 100%; overflow: visible; }
+    .hero-network { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+    /* .hero-map: pembungkus svg saja (bukan .hero-network yang juga memuat
+       kartu kutipan) — jadi acuan posisi % .network-tooltip persis pas di
+       atas svg, tidak ikut bergeser oleh tinggi kartu di bawahnya. */
+    .hero-map { position: relative; width: 100%; }
+    .hero-network-svg { position: relative; z-index: 1; width: 100%; height: 300px; overflow: visible; }
     .island-silhouette { fill: url(#islandFill); stroke: var(--color-primary-bright); stroke-width: 1.3; stroke-linejoin: round; opacity: .95; filter: drop-shadow(0 6px 14px rgba(0,147,59,.22)); }
+    /* Garis+simpul jaringan baru muncul (fade-in) setelah siluet peta selesai
+       "digambar sendiri" (animateIslandPath(), durasi 2.2s) — delay .8s
+       dipilih supaya overlap sedikit dengan ekor animasi gambar, bukan
+       menunggu sampai benar-benar selesai (terasa lebih menyatu). */
+    .network-overlay { opacity: 0; animation: heroFadeUp .6s ease-out .9s forwards; }
+    /* Tooltip custom pengganti <title> bawaan browser — kartu putih kecil
+       dengan anak panah, muncul tepat di atas simpul yang di-hover (posisi
+       dari leftPct/topPct di heroMapNodes, dihitung dari cx/cy yang sama
+       dengan svg jadi presisi). pointer-events:none supaya tidak mengganggu
+       mouseleave saat kursor bergerak menuju tooltip. */
+    .network-tooltip {
+      position: absolute; transform: translate(-50%, calc(-100% - 14px)); z-index: 10; pointer-events: none;
+      background: #fff; color: var(--color-text); font-family: var(--font-body); font-size: .78rem; font-weight: 700;
+      white-space: nowrap; padding: 7px 12px; border-radius: var(--radius-md); border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-lg); animation: tooltipPop .16s var(--ease-out);
+    }
+    .network-tooltip::before, .network-tooltip::after {
+      content: ''; position: absolute; left: 50%; transform: translateX(-50%); border: 7px solid transparent;
+    }
+    .network-tooltip::before { top: 100%; border-top-color: var(--color-border); }
+    .network-tooltip::after { top: calc(100% - 1px); border-width: 6px; border-top-color: #fff; }
+    @keyframes tooltipPop { from { opacity: 0; transform: translate(-50%, calc(-100% - 8px)) scale(.92); } to { opacity: 1; transform: translate(-50%, calc(-100% - 14px)) scale(1); } }
+    /* Kartu kutipan Al-Qur'an/Hadits di bawah peta — dokumen-flow biasa
+       (bukan lagi position:absolute) supaya section .hero ikut menyesuaikan
+       tingginya terhadap panjang kutipan yang sedang tampil (lihat
+       heroQuotes/quoteIndex di home.index.page.ts — dipilih acak sekali per
+       pemuatan halaman, jadi tidak ada perubahan tinggi mendadak setelah itu). */
+    .hero-network-caption {
+      display: flex; align-items: flex-start; gap: 10px; width: 100%; max-width: 480px;
+      margin: 0; padding: 14px 16px; background: rgba(255,255,255,.92); backdrop-filter: blur(6px);
+      border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+      opacity: 0; animation: heroFadeUp .6s var(--ease-out) 1.3s forwards;
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    /* Efek angkat saat hover — cuma di perangkat yang benar-benar punya mouse
+       (hover:hover + pointer:fine), supaya tidak "nyangkut" di layar sentuh
+       saat gestur scroll melewati kartu ini (lihat catatan yang sama di
+       site-header.component.ts untuk masalah serupa). */
+    @media (hover: hover) and (pointer: fine) {
+      .hero-network-caption:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,.14); }
+    }
+    .hero-network-caption-dot {
+      flex-shrink: 0; width: 9px; height: 9px; border-radius: 50%; margin-top: 5px;
+      background: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+    .hero-network-caption-body { min-width: 0; flex: 1; }
+    /* font-body polos (bukan font-accent italic) + warna secondary yang lebih
+       lembut — versi italic sebelumnya kurang nyaman dibaca. Teks selalu
+       ditampilkan penuh — tanpa lihat selengkapnya/hitung mundur/tombol
+       tutup — kutipan hanya berganti saat halaman dimuat ulang (lihat
+       heroQuotes/quoteIndex di home.index.page.ts). */
+    .hero-network-caption-text {
+      margin: 0; font-family: var(--font-body); font-size: .88rem; line-height: 1.6;
+      color: var(--color-text-secondary);
+    }
+    .hero-network-caption-source { display: block; margin-top: 8px; font-style: normal; font-size: .74rem; font-weight: 700; color: var(--color-primary-dark); }
 
     /* ---------- Statistik ringkas — hanya angka yang benar-benar bisa
        dipertanggungjawabkan (bukan klaim keanggotaan yang belum terverifikasi). ---------- */
@@ -194,18 +297,17 @@ interface CardPreview {
     .gallery-count { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .85rem; margin-top: 10px; }
     @media (max-width: 640px) { .gallery-card { grid-template-columns: 1fr; } }
 
-    .lead { font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; line-height: 1.5; color: var(--color-text); margin: 0; }
-    .big { font-size: 1.3rem; font-weight: 600; line-height: 1.4; margin-top: 12px; }
-    .mission { margin: 12px 0 0; padding-left: 20px; color: var(--color-text-secondary); }
-    .mission li { margin-bottom: 8px; }
-    .org { text-align: center; } .big-av { width: 64px; height: 64px; font-size: 1.5rem; margin: 0 auto 14px; }
-    .narrow { max-width: 760px; margin: 0 auto; }
+    /* font-body polos (bukan font-accent italic) + warna secondary yang lebih
+       lembut — sama seperti perbaikan sebelumnya di kartu kutipan hero. */
+    .lead { font-family: var(--font-body); font-size: 1.1rem; line-height: 1.6; color: var(--color-text-secondary); margin: 0; }
 
-    /* ---------- Tentang Kami: tab terpadu (Tentang/Visi/Misi/Struktur) di
-       atas beranda, menggantikan 3 section terpisah — konsepnya mengikuti
-       referensi ldksyahid-app (tab pill + logo besar di panel utama). ---------- */
+    /* ---------- Tentang Kami: tab terpadu (Tentang/Visi/Misi/Struktur),
+       referensi struktur tab ldksyahid-app (about/index.blade.php) — tapi
+       tiap panel dapat treatment visual sendiri (bukan satu kartu seragam),
+       konsisten dengan pola aslinya (intro-card-cr/vision-card-cr/dll beda
+       bentuk per tab). ---------- */
     .tentang-head { margin-bottom: 28px; }
-    .tentang-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+    .tentang-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 40px; }
     .tentang-tab {
       display: flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: var(--radius-full);
       border: 1px solid var(--color-border); background: #fff; color: var(--color-text-secondary);
@@ -214,12 +316,227 @@ interface CardPreview {
     }
     .tentang-tab:hover { color: var(--color-primary-dark); border-color: var(--color-primary-soft); transform: translateY(-1px); }
     .tentang-tab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 4px 12px rgba(0,147,59,.28); }
-    .tentang-panel { max-width: 900px; margin: 0 auto; }
-    .tentang-overview { display: flex; align-items: center; gap: 40px; }
-    .tentang-big-logo { width: 160px; height: 160px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 10px 24px rgba(0,147,59,.18)); }
-    .tentang-visi { text-align: center; padding: 12px 0; }
-    .tentang-panel .mission { max-width: 640px; margin: 0 auto; padding-left: 24px; }
-    @media (max-width: 720px) { .tentang-overview { flex-direction: column; text-align: center; gap: 20px; } .tentang-big-logo { width: 110px; height: 110px; } }
+    .tentang-tab:active { transform: translateY(0) scale(.96); }
+    .tentang-panel { max-width: 960px; margin: 0 auto; }
+    /* Muncul ulang (fade+slide) tiap kali tab diganti — @switch di template
+       me-render ulang elemen root tiap case, jadi animasi di sini otomatis
+       replay setiap ganti tab (beda dari .reveal yang cuma sekali jalan saat
+       scroll pertama, makanya panel-panel di bawah TIDAK pakai .reveal). */
+    .tentang-fade { animation: tentang-fade-in .4s var(--ease-out) both; }
+    @keyframes tentang-fade-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== Perkenalan (overview) — mengikuti about-img-cr/intro-card-cr di
+       ldksyahid-app: kolom kiri logo (TANPA glow warna apa pun, cuma float
+       halus) + label mengambang "Dakwah"/"Ukhuwah" + badge "Sejak" di sudut
+       + kutipan italic; kolom kanan kartu putih header ikon + paragraf +
+       grid sorotan singkat. ===== */
+    .tentang-overview { display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: center; }
+    .tentang-img-col { text-align: center; }
+    .tentang-img-frame { position: relative; display: inline-block; }
+    /* Sengaja TIDAK ada glow/halo warna apa pun di belakang logo — cuma
+       float halus naik-turun sebagai satu-satunya gerakannya. */
+    .tentang-big-logo {
+      width: 260px; height: 260px; object-fit: contain; display: block;
+      filter: drop-shadow(0 14px 28px rgba(0,0,0,.14));
+      animation: tentang-logo-float 4.5s ease-in-out infinite;
+    }
+    @keyframes tentang-logo-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .tentang-img-badge {
+      position: absolute; bottom: -10px; right: -10px; z-index: 3; display: flex; flex-direction: column; align-items: center;
+      background: #fff; border-radius: 16px; padding: .55rem 1rem; box-shadow: var(--shadow-lg);
+      transition: transform var(--motion-base) var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .tentang-img-badge:hover { transform: scale(1.08) rotate(-4deg); }
+    }
+    .tentang-badge-est { font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--color-muted); }
+    .tentang-badge-yr { font-family: var(--font-heading); font-size: 1.3rem; font-weight: 800; color: var(--color-primary); line-height: 1; }
+    .tentang-img-tag {
+      position: absolute; display: inline-flex; align-items: center; gap: 5px; z-index: 3;
+      background: #fff; padding: .4rem .85rem; border-radius: var(--radius-full); font-size: .74rem; font-weight: 700;
+      color: var(--color-primary-dark); box-shadow: var(--shadow-sm); animation: tentang-tag-float 4s ease-in-out infinite;
+    }
+    .tentang-img-tag.tag-1 { top: 8px; left: -14px; animation-delay: 0s; }
+    .tentang-img-tag.tag-2 { bottom: 34px; left: -22px; animation-delay: 1.5s; }
+    @keyframes tentang-tag-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .tentang-img-caption { margin: 20px auto 0; max-width: 280px; font-style: italic; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.6; }
+
+    .tentang-intro-card {
+      position: relative; overflow: hidden; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 32px;
+    }
+    /* Wash sudut lembut — motif sama seperti .tentang-visi-block, jaga
+       kartu ini tidak terasa putih polos dibanding panel Visi/Misi/Struktur. */
+    .tentang-intro-card::before {
+      content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 55% 45% at 100% 0%, var(--color-primary-tint) 0%, transparent 70%);
+    }
+    .tentang-intro-card > * { position: relative; z-index: 1; }
+    .tentang-intro-header { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+    /* Kotak ikon gradient + cincin transparan yang berdenyut membesar-
+       menghilang di sekelilingnya — dipakai ulang oleh Visi (.tentang-visi-icon-box). */
+    .tentang-icon-box {
+      position: relative; width: 56px; height: 56px; flex-shrink: 0; display: grid; place-items: center;
+      border-radius: 16px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary));
+      color: #fff; box-shadow: var(--shadow-sm);
+    }
+    .tentang-icon-ring {
+      position: absolute; inset: -4px; border: 2px solid var(--color-primary-soft); border-radius: 20px;
+      animation: tentang-icon-ring-pulse 3s ease-in-out infinite;
+    }
+    @keyframes tentang-icon-ring-pulse { 0%, 100% { transform: scale(1); opacity: .6; } 50% { transform: scale(1.15); opacity: 0; } }
+    .tentang-intro-title { margin: 0; font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: var(--color-text); }
+    .tentang-intro-subtitle { font-size: .82rem; color: var(--color-text-secondary); }
+    .tentang-features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
+    .tentang-feature {
+      position: relative; overflow: hidden; display: flex; align-items: center; gap: 8px;
+      padding: 11px 14px; background: var(--color-primary-tint); border-radius: 12px;
+      font-size: .85rem; font-weight: 600; color: var(--color-text);
+      transition: transform var(--motion-fast) var(--ease-out), color var(--motion-fast) ease;
+    }
+    .tentang-feature app-icon { color: var(--color-primary); flex-shrink: 0; }
+    .tentang-feature::after {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); transition: left .6s ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .tentang-feature:hover { transform: translateY(-2px); color: var(--color-primary-dark); }
+      .tentang-feature:hover::after { left: 100%; }
+    }
+
+    /* ===== Visi — medalion ikon kompas (motif icon-box sama seperti
+       Perkenalan) + pernyataan besar bergaya kutipan, ditutup garis gradient
+       yang "menggambar diri" tiap kali tab ini dibuka. ===== */
+    .tentang-visi-block {
+      position: relative; overflow: hidden; text-align: center; background: #fff;
+      border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+      padding: 60px 40px;
+    }
+    /* Wash radial lembut + pola titik halus di latar (motif sama seperti
+       .hero-texture) — dulu kartu ini putih polos, sekarang punya kedalaman
+       tanpa mengganggu keterbacaan kutipan di atasnya. */
+    .tentang-visi-block::before {
+      content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 0%, var(--color-primary-tint) 0%, transparent 70%),
+        radial-gradient(circle, var(--color-primary-soft) 1.4px, transparent 1.5px);
+      background-size: auto, 24px 24px;
+      opacity: .8;
+    }
+    .tentang-visi-quote-mark {
+      position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 0; pointer-events: none;
+      font-family: var(--font-accent); font-size: 10rem; line-height: 1; color: var(--color-primary-soft);
+    }
+    .tentang-visi-icon-box { position: relative; z-index: 1; width: 64px; height: 64px; margin: 0 auto 22px; }
+    .tentang-visi-statement {
+      position: relative; z-index: 1; max-width: 640px; margin: 0 auto; font-family: var(--font-accent);
+      font-style: italic; font-weight: 600; font-size: clamp(1.4rem, 2.6vw, 2rem); line-height: 1.5; color: var(--color-text);
+    }
+    .tentang-visi-underline {
+      display: block; width: 84px; height: 4px; margin: 26px auto 0; border-radius: var(--radius-full);
+      background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
+      animation: tentang-underline-grow .5s var(--ease-out) .35s both;
+    }
+    @keyframes tentang-underline-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+    /* ===== Misi — grid 7 kartu bernomor dengan ikon berbeda per misi,
+       terangkat halus saat hover, muncul bergelombang (stagger, lewat
+       [style.animation-delay.ms] di template) tiap kali tab ini dibuka. ===== */
+    .tentang-misi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .tentang-misi-card {
+      position: relative; overflow: hidden; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 26px 20px 20px;
+      animation: tentang-card-pop .45s var(--ease-out) both;
+      transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) ease, border-color var(--motion-fast) ease;
+    }
+    @keyframes tentang-card-pop { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: none; } }
+    .tentang-misi-card::before {
+      content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; opacity: 0;
+      background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
+      transition: opacity var(--motion-base) ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .tentang-misi-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--color-primary-soft); }
+      .tentang-misi-card:hover::before { opacity: 1; }
+    }
+    .tentang-misi-number { position: absolute; top: 14px; right: 18px; font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; line-height: 1; color: var(--color-primary-soft); }
+    .tentang-misi-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; margin-bottom: 14px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
+    /* Ikon berselang-seling 3 aksen warna (hijau/emas/ember) — dulu semua
+       kartu pakai gradient hijau seragam, sekarang gridnya kelihatan lebih
+       hidup/berwarna tanpa mengubah data (murni nth-child, cyclic per 3). */
+    .tentang-misi-card:nth-child(3n+2) .tentang-misi-icon { background: linear-gradient(150deg, var(--color-gold), var(--color-gold-dark)); }
+    .tentang-misi-card:nth-child(3n) .tentang-misi-icon { background: linear-gradient(150deg, var(--color-ember), var(--color-ember-dark)); }
+    .tentang-misi-card p { margin: 0; color: var(--color-text-secondary); font-size: .92rem; line-height: 1.55; }
+
+    /* ===== Struktur — timeline vertikal, jenjang organisasi berselang-seling
+       kiri/kanan mengikuti garis penghubung yang "tumbuh", tiap simpul dapat
+       medalion ikon + titik berdenyut sendiri; stagger via animation-delay
+       di template, replay tiap kali tab ini dibuka. ===== */
+    .tentang-timeline { position: relative; max-width: 880px; margin: 0 auto; padding: 4px 0; }
+    .tentang-timeline-line {
+      position: absolute; top: 0; left: 50%; width: 3px; height: 100%; margin-left: -1.5px; z-index: 0;
+      border-radius: var(--radius-full); background: linear-gradient(var(--color-primary-soft), var(--color-gold-soft));
+      transform-origin: top; animation: tentang-line-grow .9s var(--ease-out) both;
+    }
+    @keyframes tentang-line-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+    .tentang-timeline-item {
+      position: relative; z-index: 1; width: 50%; padding: 0 44px 22px 0;
+      animation: tentang-timeline-in-left .5s var(--ease-out) both;
+    }
+    .tentang-timeline-item.right { margin-left: 50%; padding: 0 0 22px 44px; animation-name: tentang-timeline-in-right; }
+    .tentang-timeline-item:last-child { padding-bottom: 0; }
+    @keyframes tentang-timeline-in-left { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes tentang-timeline-in-right { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
+    .tentang-timeline-dot {
+      position: absolute; top: 6px; right: -7px; width: 14px; height: 14px; border-radius: 50%; z-index: 2;
+      background: var(--color-primary); box-shadow: 0 0 0 5px var(--color-primary-tint), 0 0 0 6px var(--color-primary-soft);
+      animation: node-pulse 2.4s ease-in-out infinite;
+    }
+    .tentang-timeline-item.right .tentang-timeline-dot { right: auto; left: -7px; }
+    .tentang-timeline-card { position: relative; overflow: hidden; }
+    .tentang-timeline-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; margin-bottom: 10px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
+    /* Aksen warna berselang-seling sama seperti kartu Misi — konsisten
+       secara visual antar dua tab, sekaligus bantu mata membedakan tiap
+       jenjang jaringan yang berurutan. */
+    .tentang-timeline-item:nth-child(3n+2) .tentang-timeline-icon { background: linear-gradient(150deg, var(--color-gold), var(--color-gold-dark)); }
+    .tentang-timeline-item:nth-child(3n) .tentang-timeline-icon { background: linear-gradient(150deg, var(--color-ember), var(--color-ember-dark)); }
+    .tentang-timeline-card h3 { margin: 2px 0 8px; font-size: 1.05rem; }
+    .tentang-timeline-card p { margin: 6px 0 0; font-size: .85rem; line-height: 1.5; }
+    /* Nomor jenjang raksasa transparan di sudut kartu — dulu kartu di sisi
+       kosong terasa "melayang" tanpa penanda urutan; sekarang tiap kartu
+       jelas ini simpul ke berapa dalam jenjang, sekaligus mengisi ruang
+       kosong supaya timeline tidak terasa lengang. */
+    .tentang-timeline-card::after {
+      content: attr(data-index); position: absolute; top: 8px; right: 16px; z-index: 0;
+      font-family: var(--font-display); font-weight: 800; font-size: 2.4rem; line-height: 1;
+      color: var(--color-primary-tint);
+    }
+    .tentang-timeline-item.right .tentang-timeline-card::after { right: auto; left: 16px; }
+    .tentang-timeline-icon, .tentang-timeline-card h3, .tentang-timeline-card .chip, .tentang-timeline-card p { position: relative; z-index: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tentang-fade, .tentang-big-logo, .tentang-icon-ring, .tentang-img-tag, .tentang-visi-underline,
+      .tentang-misi-card, .tentang-timeline-line, .tentang-timeline-item, .tentang-timeline-dot {
+        animation: none;
+      }
+      .tentang-fade, .tentang-misi-card, .tentang-timeline-item { opacity: 1; transform: none; }
+    }
+    @media (max-width: 900px) {
+      .tentang-misi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 720px) {
+      .tentang-overview { grid-template-columns: 1fr; text-align: center; gap: 28px; }
+      .tentang-img-tag.tag-1 { top: 5px; left: 5px; }
+      .tentang-img-tag.tag-2 { bottom: 35px; left: 0; }
+      .tentang-big-logo { width: 220px; height: 220px; }
+      .tentang-intro-card { padding: 24px; }
+      .tentang-features-grid { grid-template-columns: 1fr; }
+      .tentang-visi-block { padding: 40px 24px; }
+      .tentang-misi-grid { grid-template-columns: 1fr; }
+      .tentang-timeline-line { left: 20px; margin-left: 0; }
+      .tentang-timeline-item, .tentang-timeline-item.right { width: auto; margin-left: 0; padding: 0 0 32px 44px; }
+      .tentang-timeline-item .tentang-timeline-dot, .tentang-timeline-item.right .tentang-timeline-dot { left: 13px; right: auto; }
+    }
 
     /* ---------- CTA: satu-satunya medan hijau penuh di halaman ini (bagian
        dalam kartu saja) — bagian luar tetap memakai kanvas lembut yang sama
@@ -235,10 +552,26 @@ interface CardPreview {
 
     @media (max-width: 900px) {
       .hero-grid { grid-template-columns: 1fr; }
-      .hero-network { height: 190px; margin-top: 8px; }
-      .hero-network-svg { width: 100%; height: 100%; }
+      .hero-network { margin-top: 8px; }
+      .hero-network-svg { height: 190px; }
+      .hero-network-caption { max-width: 100%; }
+      .hero-network-caption-text { font-size: .82rem; }
       .stats-row { grid-template-columns: 1fr; gap: 16px; }
       .cta-inner { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* Animasi baru di hero (entrance staggered, garis gambar peta, fade-in
+       jaringan, kartu kutipan, tooltip) semuanya dihormati prefers-reduced-
+       motion — dimatikan total, langsung tampil final tanpa gerakan. Path
+       drawing-nya sendiri sudah dicek terpisah lewat JS di
+       animateIslandPath(). */
+    @media (prefers-reduced-motion: reduce) {
+      .hero-badge, .hero-title, .hero-sub, .network-overlay, .hero-network-caption {
+        opacity: 1; animation: none;
+      }
+      .network-tooltip { animation: none; }
+      .hero-network-caption:hover { transform: none; }
+      .hero-wave-clip svg { animation: none; }
     }
 
     /* ---------- Preview bottom sheet (mobile) — isi generik lintas tipe kartu. ---------- */
@@ -264,10 +597,12 @@ interface CardPreview {
     }
   `],
 })
-export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
+export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   private presenter = inject(HomeIndexPresenter);
   private router = inject(Router);
   private datePipe = new DatePipe('id-ID');
+
+  @ViewChild('islandPath') private islandPathRef?: ElementRef<SVGPathElement>;
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
@@ -277,10 +612,7 @@ export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
   schedules = signal<Schedule[]>([]);
   campaigns = signal<Campaign[]>([]);
   latestGallery = signal<GalleryListItem | null>(null);
-  networkStats = signal<NetworkStats | null>(null);
   loading = signal(true);
-
-  private networkLevelChart: Chart | null = null;
 
   readonly catalogbookPath = catalogbookPath;
   readonly eventPath = eventPath;
@@ -288,26 +620,25 @@ export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
   readonly schedulePath = schedulePath;
   readonly kantongAmalPath = kantongAmalPath;
   readonly contactPath = contactPath;
-  readonly statisticPath = statisticPath;
   readonly formatRupiah = formatRupiah;
 
-  readonly missionList: string[] = [
-    'Membangkitkan kembali identitas Islam pada mahasiswa muslim dan masyarakat.',
-    'Mengokohkan fikrah dan syariat Islam untuk melahirkan khoiru ummah.',
-    'Membangkitkan jiwa nasionalisme dan patriotisme.',
-    'Membangun, menjaga, dan mengelola jaringan.',
-    'Membangun profesionalitas lembaga.',
-    'Membentuk dan mengakselerasi kemuslimahan nasional.',
-    'Mewujudkan lembaga yang mandiri secara finansial.',
+  readonly missionList: MissionItem[] = [
+    { no: '01', icon: 'fingerprint', text: 'Membangkitkan kembali identitas Islam pada mahasiswa muslim dan masyarakat.' },
+    { no: '02', icon: 'book-open', text: 'Mengokohkan fikrah dan syariat Islam untuk melahirkan khoiru ummah.' },
+    { no: '03', icon: 'flag', text: 'Membangkitkan jiwa nasionalisme dan patriotisme.' },
+    { no: '04', icon: 'share-nodes', text: 'Membangun, menjaga, dan mengelola jaringan.' },
+    { no: '05', icon: 'briefcase', text: 'Membangun profesionalitas lembaga.' },
+    { no: '06', icon: 'venus', text: 'Membentuk dan mengakselerasi kemuslimahan nasional.' },
+    { no: '07', icon: 'coins', text: 'Mewujudkan lembaga yang mandiri secara finansial.' },
   ];
 
   readonly orgStructure: OrgMember[] = [
-    { memberName: 'Puskomnas', position: 'Pusat Komunikasi Nasional — LDK koordinator tertinggi FSLDK Indonesia, dipilih dalam FSLDKN untuk masa kerja 2 tahun.', level: 'Nasional' },
-    { memberName: 'BK Puskomnas', position: 'Badan Khusus Puskomnas — LDK yang ditunjuk untuk kerja khusus (Hubungan Internasional, Kebangsaan, Kemanusiaan, Kemuslimahan, Kepalestinaan).', level: 'Nasional' },
-    { memberName: 'Puskomda', position: 'Pusat Komunikasi Daerah — LDK koordinator FSLDK tingkat daerah, dipilih dalam musyawarah daerah untuk masa kerja 2 tahun.', level: 'Daerah' },
-    { memberName: 'LDK', position: 'Lembaga Dakwah Kampus — menaungi aktivitas dakwah Islam secara legal dan formal di perguruan tinggi.', level: 'Kampus' },
-    { memberName: 'ADK', position: 'Aktivis Dakwah Kampus — individu muslim berstatus mahasiswa yang berperan dalam aktivitas dakwah kampus.', level: 'Individu' },
-    { memberName: 'IKA FSLDK', position: 'Ikatan Keluarga Alumni FSLDK — wadah berhimpun alumni aktivis dakwah kampus.', level: 'Alumni' },
+    { memberName: 'Puskomnas', position: 'Pusat Komunikasi Nasional — LDK koordinator tertinggi FSLDK Indonesia, dipilih dalam FSLDKN untuk masa kerja 2 tahun.', level: 'Nasional', icon: 'landmark' },
+    { memberName: 'BK Puskomnas', position: 'Badan Khusus Puskomnas — LDK yang ditunjuk untuk kerja khusus (Hubungan Internasional, Kebangsaan, Kemanusiaan, Kemuslimahan, Kepalestinaan).', level: 'Nasional', icon: 'shield-check' },
+    { memberName: 'Puskomda', position: 'Pusat Komunikasi Daerah — LDK koordinator FSLDK tingkat daerah, dipilih dalam musyawarah daerah untuk masa kerja 2 tahun.', level: 'Daerah', icon: 'building-2' },
+    { memberName: 'LDK', position: 'Lembaga Dakwah Kampus — menaungi aktivitas dakwah Islam secara legal dan formal di perguruan tinggi.', level: 'Kampus', icon: 'mosque' },
+    { memberName: 'ADK', position: 'Aktivis Dakwah Kampus — individu muslim berstatus mahasiswa yang berperan dalam aktivitas dakwah kampus.', level: 'Individu', icon: 'user-check' },
+    { memberName: 'IKA FSLDK', position: 'Ikatan Keluarga Alumni FSLDK — wadah berhimpun alumni aktivis dakwah kampus.', level: 'Alumni', icon: 'award' },
   ];
 
   readonly foundedYear = 1986;
@@ -315,15 +646,142 @@ export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
 
   readonly tentangTabs: { key: 'overview' | 'visi' | 'misi' | 'struktur'; icon: string; label: string }[] = [
     { key: 'overview', icon: 'info', label: 'Tentang' },
-    { key: 'visi', icon: 'star', label: 'Visi' },
+    { key: 'visi', icon: 'compass', label: 'Visi' },
     { key: 'misi', icon: 'list-checks', label: 'Misi' },
     { key: 'struktur', icon: 'sitemap', label: 'Struktur' },
   ];
   activeTentangTab = signal<'overview' | 'visi' | 'misi' | 'struktur'>('overview');
 
-  ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
+  /** Kutipan Al-Qur'an/Hadits statis — dipilih supaya nyambung langsung
+   *  dengan pesan hero ("Menyatukan Langkah Dakwah Kampus se-Indonesia" /
+   *  forum silaturahmi & koordinasi LDK, merawat ukhuwah, membina kader,
+   *  menggerakkan dakwah yang terpadu dan kompak), bukan kutipan ukhuwah
+   *  generik. Terjemahan Indonesia saja (tanpa teks Arab). Sumber dicantumkan
+   *  supaya bisa diverifikasi; terjemahan mengikuti versi yang umum dikutip,
+   *  bukan salinan verbatim satu penerbit tertentu. */
+  readonly heroQuotes: { text: string; source: string }[] = [
+    {
+      text: 'Dan berpegang teguhlah kamu semuanya pada tali (agama) Allah, dan janganlah kamu bercerai berai. Ingatlah nikmat Allah kepadamu ketika dahulu kamu bermusuh-musuhan, lalu Allah mempersatukan hatimu sehingga dengan karunia-Nya kamu menjadi bersaudara.',
+      source: 'QS. Ali ‘Imran: 103',
+    },
+    {
+      text: 'Dan hendaklah ada di antara kamu segolongan umat yang menyeru kepada kebajikan, menyuruh kepada yang ma’ruf, dan mencegah dari yang munkar. Merekalah orang-orang yang beruntung.',
+      source: 'QS. Ali ‘Imran: 104',
+    },
+    {
+      text: 'Sesungguhnya Allah menyukai orang-orang yang berjuang di jalan-Nya dalam barisan yang teratur, seakan-akan mereka seperti suatu bangunan yang tersusun kokoh.',
+      source: 'QS. Ash-Shaff: 4',
+    },
+    {
+      text: 'Dan tolong-menolonglah kamu dalam (mengerjakan) kebajikan dan takwa, dan jangan tolong-menolong dalam berbuat dosa dan pelanggaran.',
+      source: 'QS. Al-Ma’idah: 2',
+    },
+    {
+      text: 'Serulah (manusia) kepada jalan Tuhanmu dengan hikmah dan pelajaran yang baik, dan berdebatlah dengan mereka dengan cara yang lebih baik.',
+      source: 'QS. An-Nahl: 125',
+    },
+    {
+      text: 'Siapakah yang lebih baik perkataannya daripada orang yang menyeru kepada Allah, mengerjakan amal saleh, dan berkata, “Sesungguhnya aku termasuk orang-orang muslim”?',
+      source: 'QS. Fussilat: 33',
+    },
+    {
+      text: 'Sesungguhnya orang-orang mukmin itu bersaudara, karena itu damaikanlah antara kedua saudaramu yang berselisih dan bertakwalah kepada Allah agar kamu mendapat rahmat.',
+      source: 'QS. Al-Hujurat: 10',
+    },
+    {
+      text: 'Dan orang-orang yang beriman, laki-laki dan perempuan, sebagian mereka menjadi penolong bagi sebagian yang lain. Mereka menyuruh mengerjakan yang ma’ruf, mencegah dari yang munkar.',
+      source: 'QS. At-Taubah: 71',
+    },
+    {
+      text: 'Wahai orang-orang yang beriman! Masuklah ke dalam Islam secara keseluruhan (kaffah), dan janganlah kamu ikuti langkah-langkah setan.',
+      source: 'QS. Al-Baqarah: 208',
+    },
+    {
+      text: 'Dan taatlah kepada Allah dan Rasul-Nya, dan janganlah kamu berbantah-bantahan yang menyebabkan kamu menjadi gentar dan hilang kekuatanmu, dan bersabarlah. Sesungguhnya Allah beserta orang-orang yang sabar.',
+      source: 'QS. Al-Anfal: 46',
+    },
+    {
+      text: 'Sampaikanlah dariku walau satu ayat.',
+      source: 'HR. Bukhari, dari Abdullah bin Amr bin Ash',
+    },
+    {
+      text: 'Sebaik-baik kalian adalah yang mempelajari Al-Qur’an dan mengajarkannya.',
+      source: 'HR. Bukhari, dari Utsman bin Affan',
+    },
+    {
+      text: 'Perumpamaan orang-orang mukmin dalam hal saling mencintai, saling menyayangi, dan saling melindungi mereka adalah seperti satu tubuh. Apabila salah satu anggota tubuh mengeluh sakit, maka seluruh tubuh lainnya turut merasakan, hingga tidak bisa tidur dan demam.',
+      source: 'HR. Bukhari dan Muslim, dari Nu’man bin Basyir',
+    },
+    {
+      text: 'Seorang mukmin bagi mukmin lainnya seperti sebuah bangunan yang sebagiannya menguatkan sebagian yang lain.',
+      source: 'HR. Bukhari dan Muslim, dari Abu Musa Al-Asy’ari',
+    },
+    {
+      text: 'Barangsiapa menempuh suatu jalan untuk mencari ilmu, maka Allah akan mudahkan baginya jalan menuju surga.',
+      source: 'HR. Muslim, dari Abu Hurairah',
+    },
+    {
+      text: 'Barangsiapa merintis dalam Islam suatu kebiasaan yang baik, maka ia mendapat pahalanya dan pahala orang-orang yang mengamalkannya setelah itu, tanpa mengurangi sedikit pun pahala mereka.',
+      source: 'HR. Muslim, dari Jarir bin Abdullah',
+    },
+    {
+      text: 'Barangsiapa menunjukkan kepada kebaikan, maka ia akan mendapat pahala seperti pahala orang yang mengerjakannya.',
+      source: 'HR. Muslim, dari Abu Mas’ud Al-Anshari',
+    },
+  ];
+  /** Dipilih acak sekali saat komponen dibuat (bukan interval) — kutipan
+   *  hanya berganti saat halaman dimuat ulang (refresh/navigasi ulang),
+   *  bukan otomatis berputar sendiri. */
+  quoteIndex = signal(Math.floor(Math.random() * this.heroQuotes.length));
+  activeQuote = computed(() => this.heroQuotes[this.quoteIndex()]);
 
-  ngOnDestroy(): void { this.networkLevelChart?.destroy(); }
+  /** Data 7 simpul peta jaringan — satu sumber untuk dua hal sekaligus: (1)
+   *  render <circle> ping+node lewat @for di template (menggantikan 14 blok
+   *  markup yang tadinya diulang manual), (2) posisi tooltip custom (lihat
+   *  hoveredNode di bawah), karena leftPct/topPct dihitung dari cx/cy yang
+   *  sama persis (cx/640*100, cy/240*100 sesuai viewBox svg). Tooltip custom
+   *  ini menggantikan <title> bawaan browser (kotak hitam polos) yang kurang
+   *  bagus tampilannya. */
+  readonly heroMapNodes: { cx: number; cy: number; r: number; colorClass: '' | 'gold' | 'ember'; nodeDelay: string; pingDelay: string; label: string; leftPct: number; topPct: number }[] = [
+    { cx: 217.6, cy: 190.1, r: 15, colorClass: '', nodeDelay: '0s', pingDelay: '0s', label: 'Puskomnas FSLDK Indonesia — Yogyakarta', leftPct: 34.0, topPct: 79.2 },
+    { cx: 62.5, cy: 38.8, r: 11, colorClass: 'gold', nodeDelay: '.2s', pingDelay: '.7s', label: 'Simpul jaringan — Medan, Sumatera', leftPct: 9.8, topPct: 16.2 },
+    { cx: 204, cy: 86.8, r: 10, colorClass: 'ember', nodeDelay: '.5s', pingDelay: '1.4s', label: 'Simpul jaringan — Pontianak, Kalimantan', leftPct: 31.9, topPct: 36.2 },
+    { cx: 281.9, cy: 201.6, r: 8, colorClass: '', nodeDelay: '.7s', pingDelay: '2.1s', label: 'Simpul jaringan — Denpasar, Bali', leftPct: 44.0, topPct: 84.0 },
+    { cx: 337.8, cy: 154.8, r: 10, colorClass: 'gold', nodeDelay: '.3s', pingDelay: '.4s', label: 'Simpul jaringan — Makassar, Sulawesi', leftPct: 52.8, topPct: 64.5 },
+    { cx: 453.8, cy: 135.5, r: 9, colorClass: 'ember', nodeDelay: '.9s', pingDelay: '1.8s', label: 'Simpul jaringan — Ambon, Maluku', leftPct: 70.9, topPct: 56.5 },
+    { cx: 620, cy: 120.1, r: 11, colorClass: '', nodeDelay: '.6s', pingDelay: '2.5s', label: 'Simpul jaringan — Jayapura, Papua', leftPct: 96.9, topPct: 50.0 },
+  ];
+  hoveredNode = signal<(typeof this.heroMapNodes)[number] | null>(null);
+
+  ngOnInit(): void {
+    this.presenter.attachView(this);
+    this.presenter.load();
+  }
+
+  ngAfterViewInit(): void {
+    this.animateIslandPath();
+  }
+
+  /** Efek "peta digambar sendiri" — stroke di-dash sepanjang total panjang
+   *  path (dihitung via getTotalLength(), bukan angka tebakan, supaya presisi
+   *  berapa pun kompleksnya path-nya), lalu dashoffset dianimasikan dari
+   *  panjang penuh ke 0 lewat Web Animations API. Dihormati prefers-reduced-
+   *  motion — langsung tampil penuh tanpa animasi kalau user memintanya. */
+  private animateIslandPath(): void {
+    const path = this.islandPathRef?.nativeElement;
+    if (!path) return;
+    const length = path.getTotalLength();
+    path.style.strokeDasharray = `${length}`;
+    path.style.strokeDashoffset = `${length}`;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      path.style.strokeDashoffset = '0';
+      return;
+    }
+    path.animate(
+      [{ strokeDashoffset: length }, { strokeDashoffset: 0 }],
+      { duration: 1400, easing: 'ease-out', fill: 'forwards' },
+    );
+  }
 
   progressPercent(c: Campaign): number {
     return c.targetAmount > 0 ? Math.min(100, Math.round((c.collectedAmount / c.targetAmount) * 100)) : 0;
@@ -361,28 +819,4 @@ export class HomeIndexPage implements OnInit, OnDestroy, HomeIndexView {
   setSchedules(schedules: Schedule[]): void { this.schedules.set(schedules); }
   setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
   setLatestGallery(gallery: GalleryListItem | null): void { this.latestGallery.set(gallery); }
-
-  setNetworkStats(stats: NetworkStats | null): void {
-    this.networkStats.set(stats);
-    // Kanvas baru ada di DOM setelah @if di template merender ulang dengan
-    // data ini — ditunda satu tick (pola sama dipakai dashboard CMS &
-    // statistic.index.page.ts untuk chart Chart.js-nya).
-    setTimeout(() => this.renderNetworkChart(stats), 0);
-  }
-
-  private renderNetworkChart(stats: NetworkStats | null): void {
-    this.networkLevelChart?.destroy();
-    this.networkLevelChart = null;
-    if (!stats || stats.byLevel.length === 0) return;
-    const canvas = document.getElementById('networkLevelChart') as HTMLCanvasElement | null;
-    if (!canvas) return;
-    this.networkLevelChart = new Chart(canvas, {
-      type: 'doughnut',
-      data: {
-        labels: stats.byLevel.map((l) => l.levelLabel),
-        datasets: [{ data: stats.byLevel.map((l) => l.count), backgroundColor: ['#00933b', '#00b34d', '#5cd685', '#a7ecc0', '#d7f3e2'] }],
-      },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
-    });
-  }
 }

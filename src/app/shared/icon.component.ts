@@ -152,6 +152,15 @@ const ICONS: Record<string, string> = {
   // Form Welcome Popup (Field Javascript/CSS).
   code: 'fas fa-code',
   palette: 'fas fa-palette',
+  // Section "Tentang Kami" beranda — ikon Visi (compass) dan kartu Misi
+  // (fingerprint/flag/share-nodes/briefcase/venus/coins), lihat home.index.page.ts.
+  compass: 'fas fa-compass',
+  fingerprint: 'fas fa-fingerprint',
+  flag: 'fas fa-flag',
+  'share-nodes': 'fas fa-share-nodes',
+  briefcase: 'fas fa-briefcase',
+  venus: 'fas fa-venus',
+  coins: 'fas fa-coins',
 };
 
 /**
