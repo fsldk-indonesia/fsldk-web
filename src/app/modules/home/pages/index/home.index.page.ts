@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -221,16 +221,6 @@ interface CardPreview {
     }
     .hero-network-caption-source { display: block; margin-top: 8px; font-style: normal; font-size: .74rem; font-weight: 700; color: var(--color-primary-dark); }
 
-    /* ---------- Statistik ringkas — hanya angka yang benar-benar bisa
-       dipertanggungjawabkan (bukan klaim keanggotaan yang belum terverifikasi). ---------- */
-    .stats-strip { padding: 40px 0; }
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .stat-item { display: flex; align-items: center; gap: 16px; padding-top: 14px; border-top: 2px solid var(--color-primary-soft); }
-    .stat-icon { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
-    .stat-item b { display: block; font-family: var(--font-heading); font-size: 2rem; font-weight: 800; color: var(--color-primary-dark); }
-    .stat-item span { font-size: .85rem; color: var(--color-text-secondary); font-weight: 600; }
-    .stats-more { margin-top: 28px; }
-
     /* ---------- Statistik Jaringan Nasional — ringkasan angka jaringan
        LDK/Puskomda/Puskomnas + satu chart, versi ringkas dari halaman penuh
        /tentang/statistik-jaringan (link "Lihat Selengkapnya" di bawahnya). ---------- */
@@ -313,25 +303,90 @@ interface CardPreview {
       padding: 4px 9px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
     }
     .book-fav app-icon { color: #e0455f; }
-
-    /* ---------- Goods card: siluet etalase toko (thumb kotak 1:1), harga
-       jadi badge mengambang di atas foto, bukan teks polos di bawah judul. ---------- */
-    .goods-thumb { aspect-ratio: 1/1; }
-    .goods-price-badge {
-      position: absolute; left: 10px; bottom: 10px; background: var(--color-primary); color: #fff;
-      font-weight: 800; font-size: .85rem; padding: 5px 12px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
+    /* Jumlah halaman — data (b.pages) yang tadinya tidak dipakai di kartu
+       ringkas beranda, memperkuat kesan "sampul buku" bersama book-fav. */
+    .book-pages {
+      position: absolute; left: 10px; bottom: 10px; background: rgba(22,33,28,.68); color: #fff;
+      font-size: .72rem; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-full);
     }
 
-    /* ---------- Campaign card: badge persentase mengambang di foto —
-       progres jadi elemen visual utama, bukan cuma baris teks di bawah. ---------- */
-    .campaign-badge {
-      position: absolute; top: 10px; right: 10px; background: var(--color-gold); color: #fff;
-      font-weight: 800; font-size: .85rem; padding: 5px 12px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
+    /* ---------- Event card: "poster" — foto penuh + overlay gradasi bawah
+       menampung judul/lokasi (bukan lagi thumb+body terpisah seperti kartu
+       lain), badge tanggal mengambang gaya agenda-mini-date, chip status
+       (Akan Datang/Berlangsung/Selesai) di sudut kanan. ---------- */
+    .event-card {
+      position: relative; display: block; aspect-ratio: 3/4; border-radius: var(--radius-lg); overflow: hidden;
+      box-shadow: var(--shadow-sm); transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
     }
+    .event-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
+    .event-card-media { position: relative; width: 100%; height: 100%; background: var(--color-primary-soft); }
+    .event-card-media img { width: 100%; height: 100%; object-fit: cover; }
+    .event-card-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(4,20,10,.88) 0%, rgba(4,20,10,.2) 55%, transparent 75%);
+    }
+    .event-date-badge {
+      position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; align-items: center;
+      background: #fff; border-radius: 12px; padding: 6px 10px; box-shadow: var(--shadow-sm); line-height: 1;
+    }
+    .event-date-badge .day { font-family: var(--font-heading); font-weight: 800; font-size: 1.2rem; color: var(--color-primary-dark); }
+    .event-date-badge .mon { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
+    .event-status-chip {
+      position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.92); color: var(--color-primary-dark);
+      font-size: .7rem; font-weight: 800; padding: 4px 10px; border-radius: var(--radius-full);
+    }
+    .event-status-chip.ongoing { background: var(--color-gold); color: #fff; }
+    .event-status-chip.past { background: rgba(255,255,255,.7); color: var(--color-muted); }
+    .event-card-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; color: #fff; }
+    .event-card-caption .chip { margin-bottom: 8px; }
+    .event-card-caption h3 { color: #fff; margin: 0 0 6px; font-size: 1.05rem; line-height: 1.3; }
+    .event-card-location { display: flex; align-items: center; gap: 5px; margin: 0; font-size: .78rem; color: rgba(255,255,255,.85); }
 
-    .progress-track { height: 6px; background: var(--color-primary-soft); border-radius: var(--radius-full); overflow: hidden; margin-top: 12px; }
-    .progress-fill { height: 100%; background: var(--color-primary); border-radius: var(--radius-full); }
-    .progress-meta { display: flex; justify-content: space-between; font-size: .8rem; color: var(--color-text-secondary); margin-top: 6px; }
+    /* ---------- Goods card: overlay hover berisi shortDescription + CTA
+       (data yang tadinya tidak dipakai sama sekali di kartu ringkas
+       beranda), ribbon "Unggulan" diagonal untuk isFeatured, badge stok
+       untuk availabilityStatus selain 'available'. ---------- */
+    .goods-card2 { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
+    .goods-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
+    .goods-card2-media { position: relative; aspect-ratio: 1/1; background: var(--color-primary-soft); overflow: hidden; }
+    .goods-card2-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
+    @media (hover: hover) and (pointer: fine) { .goods-card2:hover .goods-card2-media img { transform: scale(1.06); } }
+    .goods-featured-ribbon {
+      position: absolute; top: 14px; left: -32px; transform: rotate(-45deg); background: var(--color-gold); color: #fff;
+      font-size: .66rem; font-weight: 800; letter-spacing: .03em; padding: 4px 36px; box-shadow: var(--shadow-sm);
+    }
+    .goods-unavailable-badge {
+      position: absolute; top: 10px; right: 10px; background: rgba(22,33,28,.72); color: #fff;
+      font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full);
+    }
+    .goods-card2-overlay {
+      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; padding: 16px;
+      background: linear-gradient(to top, rgba(4,55,26,.92) 0%, transparent 62%); color: #fff;
+      opacity: 0; transform: translateY(8px); transition: opacity var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) { .goods-card2:hover .goods-card2-overlay { opacity: 1; transform: translateY(0); } }
+    .goods-card2-overlay p { margin: 0; font-size: .8rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .goods-card2-cta { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 800; }
+    .goods-card2-price { display: block; margin-top: 10px; font-weight: 800; color: var(--color-primary-dark); font-size: 1.05rem; }
+
+    /* ---------- Campaign card: cincin progres melingkar (conic-gradient,
+       tanpa chart lib) menggantikan bar linear + badge persen — progres jadi
+       elemen visual utama yang lebih kuat, bar linear (.progress-track/
+       .progress-fill/.progress-meta) tetap dipakai TERPISAH di bottom sheet
+       preview mobile (openPreview), tidak dihapus. ---------- */
+    .campaign-card2 { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
+    .campaign-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
+    .campaign-card2-media { aspect-ratio: 16/10; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
+    .campaign-card2-media img { width: 100%; height: 100%; object-fit: cover; }
+    .campaign-card2-body { display: flex; align-items: center; gap: 16px; }
+    .campaign-ring {
+      --pct: 0; flex-shrink: 0; position: relative; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
+      background: conic-gradient(var(--color-gold) calc(var(--pct) * 1%), var(--color-primary-soft) 0);
+    }
+    .campaign-ring::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
+    .campaign-ring span { position: relative; z-index: 1; font-family: var(--font-heading); font-weight: 800; font-size: .82rem; color: var(--color-primary-dark); }
+    .campaign-card2-info { min-width: 0; }
+    .campaign-card2-info h3 { margin: 6px 0 4px; font-size: 1rem; }
 
     .agenda-mini-list { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin: 0 auto; }
     .agenda-mini-item { display: flex; gap: 18px; align-items: flex-start; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; }
@@ -365,16 +420,39 @@ interface CardPreview {
        konsisten dengan pola aslinya (intro-card-cr/vision-card-cr/dll beda
        bentuk per tab). ---------- */
     .tentang-head { margin-bottom: 28px; }
-    .tentang-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 40px; }
-    .tentang-tab {
-      display: flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: var(--radius-full);
-      border: 1px solid var(--color-border); background: #fff; color: var(--color-text-secondary);
-      font-family: var(--font-heading); font-weight: 700; font-size: .88rem; cursor: pointer;
-      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    /* Satu bar pil tunggal (bukan tombol lepas-lepas) — pola tabs-cr-wrapper
+       di ldksyahid-app (about/index.blade.php): pil aksen (.tentang-tabs-slider)
+       meluncur di bawah tab aktif, posisinya dihitung dari offsetLeft/offsetWidth
+       tombol asli lewat updateTentangTabSlider() di home.index.page.ts (bukan
+       persentase tetap, karena tiap label beda panjang). Warna disesuaikan ke
+       palet fsldk (hijau), bukan teal seperti aslinya. */
+    .tentang-tabs { display: flex; justify-content: center; margin-bottom: 40px; }
+    .tentang-tabs-bar {
+      position: relative; display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 2px;
+      background: #fff; padding: 6px; border-radius: 18px; box-shadow: var(--shadow-sm);
     }
-    .tentang-tab:hover { color: var(--color-primary-dark); border-color: var(--color-primary-soft); transform: translateY(-1px); }
-    .tentang-tab.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 4px 12px rgba(0,147,59,.28); }
-    .tentang-tab:active { transform: translateY(0) scale(.96); }
+    .tentang-tabs-slider {
+      position: absolute; top: 6px; left: 0; width: 0; height: calc(100% - 12px); z-index: 1; pointer-events: none;
+      border-radius: 14px; background: linear-gradient(135deg, var(--color-primary-bright), var(--color-primary));
+      box-shadow: 0 4px 12px rgba(0,147,59,.28);
+      transition: left .4s cubic-bezier(.4,0,.2,1), width .4s cubic-bezier(.4,0,.2,1);
+    }
+    .tentang-tab {
+      position: relative; z-index: 2;
+      display: flex; align-items: center; gap: 7px; padding: 10px 20px; border-radius: 14px;
+      border: none; background: transparent; color: var(--color-text-secondary);
+      font-family: var(--font-heading); font-weight: 700; font-size: .88rem; cursor: pointer;
+      transition: color var(--motion-fast) ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .tentang-tab:not(.active):hover { color: var(--color-primary-dark); }
+    }
+    .tentang-tab.active { color: #fff; }
+    .tentang-tab:active { transform: scale(.96); }
+    @media (max-width: 480px) {
+      .tentang-tabs-slider { display: none; }
+      .tentang-tab.active { background: var(--color-primary); box-shadow: 0 4px 12px rgba(0,147,59,.28); }
+    }
     .tentang-panel { max-width: 960px; margin: 0 auto; }
     /* Muncul ulang (fade+slide) tiap kali tab diganti — @switch di template
        me-render ulang elemen root tiap case, jadi animasi di sini otomatis
@@ -388,7 +466,11 @@ interface CardPreview {
        halus) + label mengambang "Dakwah"/"Ukhuwah" + badge "Sejak" di sudut
        + kutipan italic; kolom kanan kartu putih header ikon + paragraf +
        grid sorotan singkat. ===== */
-    .tentang-overview { display: grid; grid-template-columns: 300px 1fr; gap: 48px; align-items: center; }
+    /* Kolom gambar dipersempit (300px -> 260px, pas lebar .tentang-big-logo)
+       supaya .tentang-intro-card di kanan lebih lebar — sorotan singkatnya
+       (.tentang-features-grid) jadi bisa 3 kolom alih-alih 2, motong satu
+       baris supaya kartu tidak terlalu panjang ke bawah. */
+    .tentang-overview { display: grid; grid-template-columns: 260px 1fr; gap: 40px; align-items: center; }
     .tentang-img-col { text-align: center; }
     .tentang-img-frame { position: relative; display: inline-block; }
     /* Sengaja TIDAK ada glow/halo warna apa pun di belakang logo — cuma
@@ -445,7 +527,7 @@ interface CardPreview {
     @keyframes tentang-icon-ring-pulse { 0%, 100% { transform: scale(1); opacity: .6; } 50% { transform: scale(1.15); opacity: 0; } }
     .tentang-intro-title { margin: 0; font-family: var(--font-heading); font-weight: 700; font-size: 1.1rem; color: var(--color-text); }
     .tentang-intro-subtitle { font-size: .82rem; color: var(--color-text-secondary); }
-    .tentang-features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 16px; }
+    .tentang-features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
     .tentang-feature {
       position: relative; overflow: hidden; display: flex; align-items: center; gap: 8px;
       padding: 11px 14px; background: var(--color-primary-tint); border-radius: 12px;
@@ -468,7 +550,7 @@ interface CardPreview {
     .tentang-visi-block {
       position: relative; overflow: hidden; text-align: center; background: #fff;
       border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
-      padding: 60px 40px;
+      padding: 48px 40px;
     }
     /* Wash radial lembut + pola titik halus di latar (motif sama seperti
        .hero-texture) — dulu kartu ini putih polos, sekarang punya kedalaman
@@ -481,106 +563,175 @@ interface CardPreview {
       background-size: auto, 24px 24px;
       opacity: .8;
     }
-    .tentang-visi-quote-mark {
-      position: absolute; top: -6px; left: 50%; transform: translateX(-50%); z-index: 0; pointer-events: none;
-      font-family: var(--font-accent); font-size: 10rem; line-height: 1; color: var(--color-primary-soft);
+    /* Medalion ikon dikelilingi 3 titik dekorasi yang mengorbit pelan +
+       berdenyut bergantian — mengganti cincin berdenyut statis (yang masih
+       dipakai Perkenalan), pola sama seperti .v-icon-orbit di ldksyahid-app. */
+    .tentang-visi-icon-wrap { position: relative; z-index: 1; display: inline-block; margin-bottom: 20px; }
+    .tentang-visi-icon-box { position: relative; z-index: 1; width: 72px; height: 72px; margin: 0; }
+    .tentang-visi-orbit { position: absolute; inset: -22px; animation: tentang-visi-orbit-spin 12s linear infinite; }
+    .tentang-visi-orbit-dot { position: absolute; font-size: .95rem; animation: tentang-visi-orbit-pulse 3s ease-in-out infinite; animation-delay: var(--delay); }
+    .tentang-visi-orbit-dot:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+    .tentang-visi-orbit-dot:nth-child(2) { bottom: 6px; left: 2px; }
+    .tentang-visi-orbit-dot:nth-child(3) { bottom: 6px; right: 2px; }
+    @keyframes tentang-visi-orbit-spin { to { transform: rotate(360deg); } }
+    @keyframes tentang-visi-orbit-pulse { 0%, 100% { opacity: .4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.3); } }
+    .tentang-visi-title {
+      position: relative; z-index: 1; margin: 0 0 18px; font-family: var(--font-heading);
+      font-weight: 800; font-size: 1.2rem; color: var(--color-text);
     }
-    .tentang-visi-icon-box { position: relative; z-index: 1; width: 64px; height: 64px; margin: 0 auto 22px; }
+    .tentang-visi-quote-mark { font-family: var(--font-display); font-size: 1.7rem; font-weight: 800; color: var(--color-primary); opacity: .4; line-height: 0; vertical-align: -.28em; }
+    .tentang-visi-hl { position: relative; color: var(--color-primary-dark); font-weight: 700; }
+    .tentang-visi-hl::after { content: ''; position: absolute; left: 0; bottom: 1px; width: 100%; height: 3px; border-radius: 2px; background: var(--color-primary-soft); z-index: -1; }
     .tentang-visi-statement {
-      position: relative; z-index: 1; max-width: 640px; margin: 0 auto; font-family: var(--font-accent);
-      font-style: italic; font-weight: 600; font-size: clamp(1.4rem, 2.6vw, 2rem); line-height: 1.5; color: var(--color-text);
+      position: relative; z-index: 1; max-width: 640px; margin: 0 auto 28px; font-family: var(--font-accent);
+      font-style: italic; font-weight: 600; font-size: clamp(1.15rem, 2vw, 1.5rem); line-height: 1.6; color: var(--color-text);
     }
-    .tentang-visi-underline {
-      display: block; width: 84px; height: 4px; margin: 26px auto 0; border-radius: var(--radius-full);
-      background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
-      animation: tentang-underline-grow .5s var(--ease-out) .35s both;
+    /* Pilar kunci dari kalimat visi (sinergi / LDK se-Indonesia / Indonesia
+       madani) — chip yang menampilkan penjelasan singkat saat di-hover,
+       pola sama seperti .pillar-cr + .pillar-hover-card di ldksyahid-app. */
+    .tentang-visi-pillars { position: relative; z-index: 1; display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+    .tentang-visi-pillar {
+      position: relative; display: flex; align-items: center; gap: 8px; padding: 10px 20px;
+      background: var(--color-primary-tint); border-radius: var(--radius-full); font-weight: 600; font-size: .88rem;
+      color: var(--color-primary-dark); transition: transform var(--motion-base) var(--ease-out);
     }
-    @keyframes tentang-underline-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    @media (hover: hover) and (pointer: fine) {
+      .tentang-visi-pillar:hover { transform: translateY(-4px); }
+    }
+    .tentang-visi-pillar-icon { font-size: 1.1rem; }
+    .tentang-visi-pillar-card {
+      position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(8px);
+      width: 210px; background: #fff; border: 1px solid var(--color-border); border-radius: 12px;
+      box-shadow: var(--shadow-lg); padding: .85rem 1rem; opacity: 0; visibility: hidden; z-index: 10;
+      transition: opacity var(--motion-base) ease, transform var(--motion-base) ease, visibility var(--motion-base);
+    }
+    .tentang-visi-pillar-card::after {
+      content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: #fff;
+    }
+    .tentang-visi-pillar-card p { margin: 0; font-size: .8rem; font-style: normal; line-height: 1.5; color: var(--color-text-secondary); }
+    @media (hover: hover) and (pointer: fine) {
+      .tentang-visi-pillar:hover .tentang-visi-pillar-card { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    }
+    @media (hover: none), (pointer: coarse) {
+      .tentang-visi-pillar-card { display: none; }
+    }
 
     /* ===== Misi — grid 7 kartu bernomor dengan ikon berbeda per misi,
        terangkat halus saat hover, muncul bergelombang (stagger, lewat
-       [style.animation-delay.ms] di template) tiap kali tab ini dibuka. ===== */
-    .tentang-misi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+       [style.animation-delay.ms] di template) tiap kali tab ini dibuka.
+       Grid 12 kolom murni via nth-child: baris 1 = 3 kartu (span 4/12),
+       baris 2 = 4 kartu (span 3/12) — jadi kedua baris selalu terisi penuh
+       tanpa kartu yang menggantung sendirian, dan kartu sedikit dikecilkan
+       (padding/ikon/font) supaya proporsional pas 4 kartu sebaris. ===== */
+    .tentang-misi-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+    .tentang-misi-card:nth-child(-n+3) { grid-column: span 4; }
+    .tentang-misi-card:nth-child(n+4) { grid-column: span 3; }
     .tentang-misi-card {
       position: relative; overflow: hidden; background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 26px 20px 20px;
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 20px 18px 16px;
       animation: tentang-card-pop .45s var(--ease-out) both;
       transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) ease, border-color var(--motion-fast) ease;
     }
     @keyframes tentang-card-pop { from { opacity: 0; transform: translateY(18px) scale(.96); } to { opacity: 1; transform: none; } }
+    /* Cincin aksen gradient yang berputar mengelilingi tepi kartu saat hover
+       (bukan cuma garis di atas) — trik mask conic-gradient dengan sudut
+       (--tentang-misi-angle) yang dianimasikan via @property, jadi cuma
+       warnanya yang "berjalan" keliling tepi, bentuk cincinnya sendiri diam
+       mengikuti border-radius (tidak perlu transform:rotate yang bisa
+       kepotong overflow:hidden pada kartu). */
     .tentang-misi-card::before {
-      content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; opacity: 0;
-      background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
+      content: ''; position: absolute; inset: 0; z-index: 2; border-radius: inherit; padding: 2px;
+      background: conic-gradient(from var(--tentang-misi-angle), transparent, var(--color-primary), var(--color-gold), var(--color-ember), transparent);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      opacity: 0; pointer-events: none;
       transition: opacity var(--motion-base) ease;
     }
+    @property --tentang-misi-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+    @keyframes tentang-misi-border-spin { to { --tentang-misi-angle: 360deg; } }
     @media (hover: hover) and (pointer: fine) {
       .tentang-misi-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--color-primary-soft); }
-      .tentang-misi-card:hover::before { opacity: 1; }
+      .tentang-misi-card:hover::before { opacity: 1; animation: tentang-misi-border-spin 2.4s linear infinite; }
     }
-    .tentang-misi-number { position: absolute; top: 14px; right: 18px; font-family: var(--font-display); font-weight: 800; font-size: 1.6rem; line-height: 1; color: var(--color-primary-soft); }
-    .tentang-misi-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; margin-bottom: 14px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
+    .tentang-misi-number { position: absolute; top: 12px; right: 16px; font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; line-height: 1; color: var(--color-primary-soft); }
+    .tentang-misi-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; margin-bottom: 12px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
     /* Ikon berselang-seling 3 aksen warna (hijau/emas/ember) — dulu semua
        kartu pakai gradient hijau seragam, sekarang gridnya kelihatan lebih
        hidup/berwarna tanpa mengubah data (murni nth-child, cyclic per 3). */
     .tentang-misi-card:nth-child(3n+2) .tentang-misi-icon { background: linear-gradient(150deg, var(--color-gold), var(--color-gold-dark)); }
     .tentang-misi-card:nth-child(3n) .tentang-misi-icon { background: linear-gradient(150deg, var(--color-ember), var(--color-ember-dark)); }
-    .tentang-misi-card p { margin: 0; color: var(--color-text-secondary); font-size: .92rem; line-height: 1.55; }
+    .tentang-misi-card p { margin: 0; color: var(--color-text-secondary); font-size: .86rem; line-height: 1.5; }
 
-    /* ===== Struktur — timeline vertikal, jenjang organisasi berselang-seling
-       kiri/kanan mengikuti garis penghubung yang "tumbuh", tiap simpul dapat
-       medalion ikon + titik berdenyut sendiri; stagger via animation-delay
-       di template, replay tiap kali tab ini dibuka. ===== */
-    .tentang-timeline { position: relative; max-width: 880px; margin: 0 auto; padding: 4px 0; }
-    .tentang-timeline-line {
-      position: absolute; top: 0; left: 50%; width: 3px; height: 100%; margin-left: -1.5px; z-index: 0;
-      border-radius: var(--radius-full); background: linear-gradient(var(--color-primary-soft), var(--color-gold-soft));
-      transform-origin: top; animation: tentang-line-grow .9s var(--ease-out) both;
+    /* ===== Struktur — hub (Puskomnas) + connector + grid kartu turunan,
+       mengikuti pola #tab-keluarga di ldksyahid-app (about/index.blade.php:
+       .kl-pusat-card / .kl-connector / .kl-grid / .kl-card), warna
+       disesuaikan ke palet fsldk. ===== */
+    .tentang-struktur { max-width: 880px; margin: 0 auto; }
+    .struktur-pusat-wrap { display: flex; justify-content: center; }
+    .struktur-pusat-card {
+      position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: 6px;
+      background: #fff; border: 2px solid var(--color-primary-soft); border-radius: 24px; padding: 26px 44px;
+      animation: tentang-struktur-pusat-glow 4s ease-in-out infinite;
     }
-    @keyframes tentang-line-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
-    .tentang-timeline-item {
-      position: relative; z-index: 1; width: 50%; padding: 0 44px 22px 0;
-      animation: tentang-timeline-in-left .5s var(--ease-out) both;
+    @keyframes tentang-struktur-pusat-glow {
+      0%, 100% { box-shadow: 0 8px 30px rgba(0,147,59,.12); }
+      50% { box-shadow: 0 8px 40px rgba(0,147,59,.24), 0 0 0 8px rgba(0,147,59,.06); }
     }
-    .tentang-timeline-item.right { margin-left: 50%; padding: 0 0 22px 44px; animation-name: tentang-timeline-in-right; }
-    .tentang-timeline-item:last-child { padding-bottom: 0; }
-    @keyframes tentang-timeline-in-left { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes tentang-timeline-in-right { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
-    .tentang-timeline-dot {
-      position: absolute; top: 6px; right: -7px; width: 14px; height: 14px; border-radius: 50%; z-index: 2;
-      background: var(--color-primary); box-shadow: 0 0 0 5px var(--color-primary-tint), 0 0 0 6px var(--color-primary-soft);
-      animation: node-pulse 2.4s ease-in-out infinite;
+    .struktur-pusat-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff;
+      font-family: var(--font-heading); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      padding: 5px 16px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm); white-space: nowrap;
     }
-    .tentang-timeline-item.right .tentang-timeline-dot { right: auto; left: -7px; }
-    .tentang-timeline-card { position: relative; overflow: hidden; }
-    .tentang-timeline-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; margin-bottom: 10px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
-    /* Aksen warna berselang-seling sama seperti kartu Misi — konsisten
-       secara visual antar dua tab, sekaligus bantu mata membedakan tiap
-       jenjang jaringan yang berurutan. */
-    .tentang-timeline-item:nth-child(3n+2) .tentang-timeline-icon { background: linear-gradient(150deg, var(--color-gold), var(--color-gold-dark)); }
-    .tentang-timeline-item:nth-child(3n) .tentang-timeline-icon { background: linear-gradient(150deg, var(--color-ember), var(--color-ember-dark)); }
-    .tentang-timeline-card h3 { margin: 2px 0 8px; font-size: 1.05rem; }
-    .tentang-timeline-card p { margin: 6px 0 0; font-size: .85rem; line-height: 1.5; }
-    /* Nomor jenjang raksasa transparan di sudut kartu — dulu kartu di sisi
-       kosong terasa "melayang" tanpa penanda urutan; sekarang tiap kartu
-       jelas ini simpul ke berapa dalam jenjang, sekaligus mengisi ruang
-       kosong supaya timeline tidak terasa lengang. */
-    .tentang-timeline-card::after {
-      content: attr(data-index); position: absolute; top: 8px; right: 16px; z-index: 0;
-      font-family: var(--font-display); font-weight: 800; font-size: 2.4rem; line-height: 1;
-      color: var(--color-primary-tint);
+    .struktur-pusat-icon {
+      display: grid; place-items: center; width: 60px; height: 60px; margin-bottom: 4px; border-radius: 18px;
+      background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm);
     }
-    .tentang-timeline-item.right .tentang-timeline-card::after { right: auto; left: 16px; }
-    .tentang-timeline-icon, .tentang-timeline-card h3, .tentang-timeline-card .chip, .tentang-timeline-card p { position: relative; z-index: 1; }
+    .struktur-pusat-name { font-family: var(--font-heading); font-weight: 800; font-size: 1.1rem; color: var(--color-text); }
+    .struktur-pusat-sub { font-size: .8rem; color: var(--color-text-secondary); text-align: center; max-width: 320px; }
+    .struktur-connector { display: flex; flex-direction: column; align-items: center; padding: 0 2rem; }
+    .struktur-connector-line { width: 3px; height: 26px; border-radius: 3px; background: linear-gradient(180deg, var(--color-primary), var(--color-primary-soft)); }
+    .struktur-connector-spread {
+      position: relative; width: 72%; height: 3px; border-radius: 3px;
+      background: linear-gradient(90deg, transparent, var(--color-primary) 20%, var(--color-primary) 80%, transparent);
+    }
+    .struktur-connector-spread::before, .struktur-connector-spread::after {
+      content: ''; position: absolute; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary);
+    }
+    .struktur-connector-spread::before { left: 20%; }
+    .struktur-connector-spread::after { right: 20%; }
+    .struktur-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 26px; }
+    .struktur-card {
+      position: relative; flex: 0 1 220px; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);
+      padding: 22px 18px 18px; text-align: center;
+      animation: tentang-card-pop .45s var(--ease-out) both;
+      transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) ease, border-color var(--motion-fast) ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .struktur-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); border-color: var(--color-primary-soft); }
+    }
+    .struktur-card-icon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
+    /* Aksen warna berselang-seling sama seperti kartu Misi. */
+    .struktur-card:nth-child(3n+2) .struktur-card-icon { background: linear-gradient(150deg, var(--color-gold), var(--color-gold-dark)); }
+    .struktur-card:nth-child(3n) .struktur-card-icon { background: linear-gradient(150deg, var(--color-ember), var(--color-ember-dark)); }
+    .struktur-card-name { font-family: var(--font-heading); font-weight: 700; font-size: .95rem; color: var(--color-text); }
+    .struktur-card-desc { margin: 0; font-size: .78rem; line-height: 1.5; color: var(--color-text-secondary); }
 
     @media (prefers-reduced-motion: reduce) {
-      .tentang-fade, .tentang-big-logo, .tentang-icon-ring, .tentang-img-tag, .tentang-visi-underline,
-      .tentang-misi-card, .tentang-timeline-line, .tentang-timeline-item, .tentang-timeline-dot {
+      .tentang-fade, .tentang-big-logo, .tentang-icon-ring, .tentang-img-tag,
+      .tentang-visi-orbit, .tentang-visi-orbit-dot,
+      .tentang-misi-card, .struktur-pusat-card, .struktur-card {
         animation: none;
       }
-      .tentang-fade, .tentang-misi-card, .tentang-timeline-item { opacity: 1; transform: none; }
+      .tentang-fade, .tentang-misi-card, .struktur-card { opacity: 1; transform: none; }
+      .tentang-tabs-slider { transition: none; }
     }
     @media (max-width: 900px) {
       .tentang-misi-grid { grid-template-columns: repeat(2, 1fr); }
+      .tentang-misi-card:nth-child(-n+3), .tentang-misi-card:nth-child(n+4) { grid-column: span 1; }
+      .tentang-features-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 720px) {
       .tentang-overview { grid-template-columns: 1fr; text-align: center; gap: 28px; }
@@ -591,9 +742,8 @@ interface CardPreview {
       .tentang-features-grid { grid-template-columns: 1fr; }
       .tentang-visi-block { padding: 40px 24px; }
       .tentang-misi-grid { grid-template-columns: 1fr; }
-      .tentang-timeline-line { left: 20px; margin-left: 0; }
-      .tentang-timeline-item, .tentang-timeline-item.right { width: auto; margin-left: 0; padding: 0 0 32px 44px; }
-      .tentang-timeline-item .tentang-timeline-dot, .tentang-timeline-item.right .tentang-timeline-dot { left: 13px; right: auto; }
+      .struktur-pusat-card { padding: 22px 28px; }
+      .struktur-card { flex-basis: 100%; }
     }
 
     /* ---------- CTA: satu-satunya medan hijau penuh di halaman ini (bagian
@@ -614,7 +764,6 @@ interface CardPreview {
       .hero-network-svg { height: 190px; }
       .hero-network-caption { max-width: 100%; }
       .hero-network-caption-text { font-size: .82rem; }
-      .stats-row { grid-template-columns: 1fr; gap: 16px; }
       .cta-inner { flex-direction: column; align-items: flex-start; }
     }
 
@@ -661,6 +810,7 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   private datePipe = new DatePipe('id-ID');
 
   @ViewChild('islandPath') private islandPathRef?: ElementRef<SVGPathElement>;
+  @ViewChildren('tentangTabBtn') private tentangTabBtnRefs!: QueryList<ElementRef<HTMLButtonElement>>;
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
@@ -701,6 +851,12 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     { memberName: 'ADK', position: 'Aktivis Dakwah Kampus — individu muslim berstatus mahasiswa yang berperan dalam aktivitas dakwah kampus.', level: 'Individu', icon: 'user-check' },
     { memberName: 'IKA FSLDK', position: 'Ikatan Keluarga Alumni FSLDK — wadah berhimpun alumni aktivis dakwah kampus.', level: 'Alumni', icon: 'award' },
   ];
+  /** Puskomnas jadi satu-satunya "pusat" di puncak (bukan sejajar dengan BK
+   *  Puskomnas) — sisanya jadi kartu turunan di grid bawahnya, mengikuti
+   *  pola hub+grid #tab-keluarga di ldksyahid-app. */
+  readonly orgHub = this.orgStructure[0];
+  readonly orgHubSubtitle = this.orgHub.position.split('—')[0].trim();
+  readonly orgBranches = this.orgStructure.slice(1);
 
   readonly foundedYear = 1986;
   readonly yearsSinceFounding = new Date().getFullYear() - this.foundedYear;
@@ -712,6 +868,30 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     { key: 'struktur', icon: 'sitemap', label: 'Struktur' },
   ];
   activeTentangTab = signal<'overview' | 'visi' | 'misi' | 'struktur'>('overview');
+  /** Posisi/lebar pil aksen yang "meluncur" di bawah tab aktif — dihitung dari
+   *  offsetLeft/offsetWidth tombol asli (bukan persentase tetap), mengikuti
+   *  pola tabs-cr-slider di ldksyahid-app (about/index.blade.php) karena
+   *  label tiap tab beda panjang. Dihitung ulang tiap ganti tab & saat resize. */
+  tabSliderLeft = signal(0);
+  tabSliderWidth = signal(0);
+
+  selectTentangTab(key: 'overview' | 'visi' | 'misi' | 'struktur'): void {
+    this.activeTentangTab.set(key);
+    this.updateTentangTabSlider();
+  }
+
+  private updateTentangTabSlider(): void {
+    const index = this.tentangTabs.findIndex((t) => t.key === this.activeTentangTab());
+    const btn = this.tentangTabBtnRefs?.get(index)?.nativeElement;
+    if (!btn) return;
+    this.tabSliderLeft.set(btn.offsetLeft);
+    this.tabSliderWidth.set(btn.offsetWidth);
+  }
+
+  @HostListener('window:resize')
+  onTentangTabsResize(): void {
+    this.updateTentangTabSlider();
+  }
 
   /** Kutipan Al-Qur'an/Hadits statis — dipilih supaya nyambung langsung
    *  dengan pesan hero ("Menyatukan Langkah Dakwah Kampus se-Indonesia" /
@@ -821,6 +1001,7 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   ngAfterViewInit(): void {
     this.animateIslandPath();
+    setTimeout(() => this.updateTentangTabSlider());
   }
 
   /** Efek "peta digambar sendiri" — stroke di-dash sepanjang total panjang

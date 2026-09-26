@@ -120,12 +120,23 @@
       <h2>Mengenal FSLDK Indonesia</h2>
     </div>
 
-    <div class="tentang-tabs reveal" role="tablist">
-      @for (t of tentangTabs; track t.key) {
-        <button type="button" class="tentang-tab" role="tab" [attr.aria-selected]="activeTentangTab() === t.key" [class.active]="activeTentangTab() === t.key" (click)="activeTentangTab.set(t.key)">
-          <app-icon [name]="t.icon" [size]="15" /> {{ t.label }}
-        </button>
-      }
+    <div class="tentang-tabs reveal">
+      <div class="tentang-tabs-bar" role="tablist">
+        <span class="tentang-tabs-slider" aria-hidden="true" [style.left.px]="tabSliderLeft()" [style.width.px]="tabSliderWidth()"></span>
+        @for (t of tentangTabs; track t.key) {
+          <button
+            #tentangTabBtn
+            type="button"
+            class="tentang-tab"
+            role="tab"
+            [attr.aria-selected]="activeTentangTab() === t.key"
+            [class.active]="activeTentangTab() === t.key"
+            (click)="selectTentangTab(t.key)"
+          >
+            <app-icon [name]="t.icon" [size]="15" /> {{ t.label }}
+          </button>
+        }
+      </div>
     </div>
 
     <div class="tentang-panel reveal">
@@ -173,22 +184,52 @@
           </div>
         }
         @case ('visi') {
-          <!-- Medalion ikon kompas (motif icon-box+icon-ring yang sama seperti
-               Perkenalan) di atas pernyataan besar bergaya kutipan (tanda kutip
-               raksasa transparan di belakang teks), ditutup garis bawah
-               gradient yang "menggambar diri" tiap kali tab ini dibuka. -->
+          <!-- Mengikuti pola .vision-card-cr di ldksyahid-app (about/index.blade.php):
+               medalion ikon dikelilingi 3 titik dekorasi yang mengorbit
+               (bukan cincin berdenyut statis seperti Perkenalan), judul visi,
+               kutipan dengan frasa kunci ditandai warna, ditutup 3 pilar
+               (chip) yang menampilkan penjelasan singkat saat di-hover. -->
           <div class="tentang-visi-block tentang-fade">
-            <span class="tentang-visi-quote-mark" aria-hidden="true">&ldquo;</span>
-            <span class="tentang-icon-box tentang-visi-icon-box"><app-icon name="compass" [size]="30" /><span class="tentang-icon-ring" aria-hidden="true"></span></span>
-            <span class="eyebrow">Visi</span>
-            <p class="tentang-visi-statement">Terwujudnya sinergi antar LDK se-Indonesia menuju Indonesia madani.</p>
-            <span class="tentang-visi-underline" aria-hidden="true"></span>
+            <span class="tentang-visi-icon-wrap">
+              <span class="tentang-icon-box tentang-visi-icon-box"><app-icon name="compass" [size]="30" /></span>
+              <span class="tentang-visi-orbit" aria-hidden="true">
+                <span class="tentang-visi-orbit-dot" style="--delay:0s">✨</span>
+                <span class="tentang-visi-orbit-dot" style="--delay:1s">⭐</span>
+                <span class="tentang-visi-orbit-dot" style="--delay:2s">🌟</span>
+              </span>
+            </span>
+            <h3 class="tentang-visi-title">Visi FSLDK Indonesia</h3>
+            <p class="tentang-visi-statement">
+              <span class="tentang-visi-quote-mark" aria-hidden="true">&ldquo;</span>Terwujudnya <span class="tentang-visi-hl">sinergi</span> antar <span class="tentang-visi-hl">LDK se-Indonesia</span> menuju <span class="tentang-visi-hl">Indonesia madani</span>.<span class="tentang-visi-quote-mark" aria-hidden="true">&rdquo;</span>
+            </p>
+            <div class="tentang-visi-pillars">
+              <div class="tentang-visi-pillar">
+                <span class="tentang-visi-pillar-icon">🤝</span>
+                <span>Sinergi</span>
+                <div class="tentang-visi-pillar-card"><p>Kolaborasi erat antar LDK, saling menguatkan dalam gerak dakwah kampus.</p></div>
+              </div>
+              <div class="tentang-visi-pillar">
+                <span class="tentang-visi-pillar-icon">🗺️</span>
+                <span>LDK se-Indonesia</span>
+                <div class="tentang-visi-pillar-card"><p>Menjangkau jaringan Lembaga Dakwah Kampus di seluruh penjuru Indonesia.</p></div>
+              </div>
+              <div class="tentang-visi-pillar">
+                <span class="tentang-visi-pillar-icon">🕌</span>
+                <span>Indonesia Madani</span>
+                <div class="tentang-visi-pillar-card"><p>Masyarakat yang beradab, berkeadilan, dan berlandaskan nilai-nilai Islam.</p></div>
+              </div>
+            </div>
           </div>
         }
         @case ('misi') {
           <!-- Grid 7 kartu bernomor — tiap kartu punya ikon berbeda mewakili
-               isi misinya, muncul bergelombang (stagger) tiap tab ini dibuka,
-               terangkat halus saat di-hover. -->
+               isi misinya, muncul bergelombang (stagger) tiap tab ini dibuka.
+               Baris 1 berisi 3 kartu (span 4/12), baris 2 berisi 4 kartu
+               (span 3/12) — murni via nth-child di CSS, bukan lewat kelas
+               per-item, supaya tiap baris selalu terisi penuh dan
+               proporsional tanpa kartu yang menggantung sendirian. Saat
+               di-hover, garis aksen berputar mengelilingi tepi kartu (bukan
+               cuma di atas). -->
           <div class="tentang-misi-grid">
             @for (m of missionList; track m.no; let i = $index) {
               <div class="tentang-misi-card" [style.animation-delay.ms]="i * 70">
@@ -200,49 +241,41 @@
           </div>
         }
         @case ('struktur') {
-          <!-- Timeline vertikal — jenjang organisasi (Nasional → Daerah →
-               Kampus → Individu → Alumni) berselang-seling kiri/kanan
-               mengikuti garis penghubung yang "tumbuh" tiap tab ini dibuka,
-               tiap simpul dapat medalion ikon sendiri (field `icon` di
-               orgStructure, home.index.page.ts). -->
-          <div class="tentang-timeline">
-            <span class="tentang-timeline-line"></span>
-            @for (o of orgStructure; track o.position; let i = $index) {
-              <div class="tentang-timeline-item" [class.right]="i % 2 === 1" [style.animation-delay.ms]="i * 110">
-                <span class="tentang-timeline-dot" aria-hidden="true"></span>
-                <div class="card card-pad tentang-timeline-card" [attr.data-index]="'0' + (i + 1)">
-                  <span class="tentang-timeline-icon"><app-icon [name]="o.icon" [size]="19" /></span>
-                  <h3>{{ o.memberName }}</h3>
-                  @if (o.level) { <span class="chip chip-green">{{ o.level }}</span> }
-                  <p class="text-muted">{{ o.position }}</p>
-                </div>
+          <!-- Hub + connector + grid — mengikuti pola #tab-keluarga di
+               ldksyahid-app (about/index.blade.php): satu kartu "pusat" di
+               atas (Puskomnas, koordinator tertinggi), disambung garis
+               penghubung yang menyebar, ke grid kartu turunannya di bawah.
+               Bukan replikasi mentah pola fakultas (semua setara) — 5 kartu
+               turunan di sini tetap tampilkan chip jenjangnya (Nasional/
+               Daerah/Kampus/Individu/Alumni) karena, beda dari fakultas yang
+               memang sederajat, urutannya di orgStructure benar-benar
+               berjenjang (lihat home.index.page.ts). -->
+          <div class="tentang-struktur">
+            <div class="struktur-pusat-wrap">
+              <div class="struktur-pusat-card">
+                <span class="struktur-pusat-badge">Pusat</span>
+                <span class="struktur-pusat-icon"><app-icon [name]="orgHub.icon" [size]="28" /></span>
+                <span class="struktur-pusat-name">{{ orgHub.memberName }}</span>
+                <span class="struktur-pusat-sub">{{ orgHubSubtitle }}</span>
               </div>
-            }
+            </div>
+            <div class="struktur-connector" aria-hidden="true">
+              <span class="struktur-connector-line"></span>
+              <span class="struktur-connector-spread"></span>
+            </div>
+            <div class="struktur-grid">
+              @for (o of orgBranches; track o.memberName; let i = $index) {
+                <div class="struktur-card" [style.animation-delay.ms]="i * 70">
+                  <span class="struktur-card-icon"><app-icon [name]="o.icon" [size]="20" /></span>
+                  <span class="struktur-card-name">{{ o.memberName }}</span>
+                  @if (o.level) { <span class="chip chip-green">{{ o.level }}</span> }
+                  <p class="struktur-card-desc">{{ o.position }}</p>
+                </div>
+              }
+            </div>
           </div>
         }
       }
-    </div>
-  </div>
-</section>
-
-<section class="section stats-strip">
-  <div class="container">
-    <div class="stats-row">
-      <div class="stat-item reveal">
-        <span class="stat-icon"><app-icon name="calendar" [size]="20" /></span>
-        <div><b>1986</b><span>Tahun berdiri, di Yogyakarta</span></div>
-      </div>
-      <div class="stat-item reveal">
-        <span class="stat-icon"><app-icon name="sitemap" [size]="20" /></span>
-        <div><b>{{ orgStructure.length }}</b><span>Tingkatan jaringan nasional</span></div>
-      </div>
-      <div class="stat-item reveal">
-        <span class="stat-icon"><app-icon name="list-checks" [size]="20" /></span>
-        <div><b>{{ missionList.length }}</b><span>Misi utama perjuangan</span></div>
-      </div>
-    </div>
-    <div class="text-center stats-more reveal">
-      <a [routerLink]="statisticPath.publicIndex" class="btn btn-outline btn-sm">Lihat Statistik Jaringan Lengkap <app-icon name="chevron-right" [size]="13" /></a>
     </div>
   </div>
 </section>
@@ -252,7 +285,7 @@
     <div class="container">
       <div class="text-center reveal" style="margin-bottom:40px">
         <span class="eyebrow">Berita &amp; Kabar Dakwah Kampus</span>
-        <h2>Ikuti Cerita Gerak Dakwah Kampus</h2>
+        <h2>Ikuti Cerita Gerakan Dakwah Kampus</h2>
       </div>
       @if (loading()) {
         <div class="grid grid-3">
@@ -350,6 +383,7 @@
             <div class="news-thumb book-thumb">
               @if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle"> } @else { <span>BUKU</span> }
               <span class="book-fav"><app-icon name="heart" [size]="12" /> {{ b.favoriteCount }}</span>
+              @if (b.pages) { <span class="book-pages">{{ b.pages }} hlm</span> }
             </div>
             <div class="news-body">
               <span class="chip chip-green">{{ b.bookCategoryName }}</span>
@@ -375,15 +409,24 @@
       </div>
       <div class="card-scroller">
         @for (e of events(); track e.eventID) {
-          <a class="news-card reveal" [routerLink]="eventPath.publicDetail(e.eventSlug)">
-            <div class="news-thumb">@if (e.eventImage) { <img [src]="e.eventImage" [alt]="e.eventTitle"> } @else { <span>EVENT</span> }</div>
-            <div class="news-body">
-              <span class="chip chip-green">{{ e.eventDivision }}</span>
-              <h3>{{ e.eventTitle }}</h3>
-              <p class="meta">
-                @if (e.startDate) { {{ e.startDate | date:'d MMM yyyy' }} }
-                @if (e.location) { · {{ e.location }} }
-              </p>
+          <a class="event-card reveal" [routerLink]="eventPath.publicDetail(e.eventSlug)">
+            <div class="event-card-media">
+              @if (e.eventImage) { <img [src]="e.eventImage" [alt]="e.eventTitle"> } @else { <span>EVENT</span> }
+              <span class="event-card-overlay" aria-hidden="true"></span>
+              @if (e.startDate) {
+                <span class="event-date-badge">
+                  <span class="day">{{ e.startDate | date:'d' }}</span>
+                  <span class="mon">{{ e.startDate | date:'MMM' }}</span>
+                </span>
+              }
+              <span class="event-status-chip" [class.ongoing]="e.status === 'ongoing'" [class.past]="e.status === 'past'">
+                {{ e.status === 'ongoing' ? 'Berlangsung' : e.status === 'past' ? 'Selesai' : 'Akan Datang' }}
+              </span>
+              <div class="event-card-caption">
+                <span class="chip chip-green">{{ e.eventDivision }}</span>
+                <h3>{{ e.eventTitle }}</h3>
+                @if (e.location) { <p class="event-card-location"><app-icon name="map-pin" [size]="12" /> {{ e.location }}</p> }
+              </div>
             </div>
           </a>
         }
@@ -404,14 +447,22 @@
       </div>
       <div class="card-scroller">
         @for (g of goods(); track g.goodsID) {
-          <a class="news-card goods-card reveal" [routerLink]="goodsPath.publicDetail(g.goodsSlug)">
-            <div class="news-thumb goods-thumb">
+          <a class="goods-card2 reveal" [routerLink]="goodsPath.publicDetail(g.goodsSlug)">
+            <div class="goods-card2-media">
               @if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }
-              <span class="goods-price-badge">{{ formatRupiah(g.price) }}</span>
+              @if (g.isFeatured) { <span class="goods-featured-ribbon">Unggulan</span> }
+              @if (g.availabilityStatus !== 'available') {
+                <span class="goods-unavailable-badge">{{ g.availabilityStatus === 'out_of_stock' ? 'Stok Habis' : 'Segera Hadir' }}</span>
+              }
+              <div class="goods-card2-overlay">
+                @if (g.shortDescription) { <p>{{ g.shortDescription }}</p> }
+                <span class="goods-card2-cta">Lihat Produk <app-icon name="chevron-right" [size]="12" /></span>
+              </div>
             </div>
             <div class="news-body">
               <span class="chip chip-green">{{ g.categoryName }}</span>
               <h3>{{ g.goodsName }}</h3>
+              <span class="goods-card2-price">{{ formatRupiah(g.price) }}</span>
             </div>
           </a>
         }
@@ -464,18 +515,17 @@
       </div>
       <div class="card-scroller">
         @for (c of campaigns(); track c.campaignID) {
-          <a class="news-card campaign-card reveal" [routerLink]="kantongAmalPath.detail(c.slug)"
+          <a class="campaign-card2 reveal" [routerLink]="kantongAmalPath.detail(c.slug)"
              (click)="openPreview($event, { chip: c.categoryName, title: c.title, metaLines: [formatRupiah(c.collectedAmount) + ' terkumpul'], link: kantongAmalPath.detail(c.slug), ctaLabel: 'Lihat Campaign', progress: { percent: progressPercent(c), label: progressPercent(c) + '% tercapai' } })">
-            <div class="news-thumb">
+            <div class="campaign-card2-media">
               @if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }
-              <span class="campaign-badge">{{ progressPercent(c) }}%</span>
             </div>
-            <div class="news-body">
-              <span class="chip chip-green">{{ c.categoryName }}</span>
-              <h3>{{ c.title }}</h3>
-              <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent(c)"></div></div>
-              <div class="progress-meta">
-                <span><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</span>
+            <div class="news-body campaign-card2-body">
+              <div class="campaign-ring" [style.--pct]="progressPercent(c)"><span>{{ progressPercent(c) }}%</span></div>
+              <div class="campaign-card2-info">
+                <span class="chip chip-green">{{ c.categoryName }}</span>
+                <h3>{{ c.title }}</h3>
+                <p class="meta"><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</p>
               </div>
             </div>
           </a>
