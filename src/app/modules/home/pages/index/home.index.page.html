@@ -424,33 +424,88 @@
   </section>
 }
 
-@if (!loading() && catalogBooks().length > 0) {
+@if (loading() || catalogBooks().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
+      <div class="reveal" style="margin-bottom:40px">
         <span class="eyebrow">Perpustakaan</span>
         <h2>Koleksi Buku Digital</h2>
       </div>
-      <div class="card-scroller">
-        @for (b of catalogBooks(); track b.bookID) {
-          <a class="news-card book-card reveal" [routerLink]="catalogbookPath.publicDetail(b.bookSlug)">
-            <div class="news-thumb book-thumb">
-              @if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle"> } @else { <span>BUKU</span> }
-              <span class="book-fav"><app-icon name="heart" [size]="12" /> {{ b.favoriteCount }}</span>
-              @if (b.pages) { <span class="book-pages">{{ b.pages }} hlm</span> }
+      @if (loading()) {
+        <div class="grid grid-3">
+          @for (i of [1,2,3]; track i) {
+            <div class="card" style="overflow:hidden">
+              <span class="skel skel-thumb" style="border-radius:0"></span>
+              <div class="card-pad">
+                <span class="skel skel-line" style="width:80px;height:20px;border-radius:999px"></span>
+                <span class="skel skel-title" style="margin-top:12px"></span>
+                <span class="skel skel-line" style="width:50%"></span>
+              </div>
             </div>
-            <div class="news-body">
-              <span class="chip chip-green">{{ b.bookCategoryName }}</span>
-              <h3>{{ b.bookTitle }}</h3>
-              <p class="meta">{{ b.authorName }} · {{ b.year }}</p>
-            </div>
-          </a>
-        }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="catalogbookPath.publicIndex" class="btn btn-outline">Lihat Semua Buku</a>
-      </div>
+          }
+        </div>
+      }
     </div>
+    @if (!loading()) {
+      <!-- Mirror horizontal dari .berita-carousel — DOM dibalik (track-wrap
+           duluan, panel belakangan) supaya panel hijau jatuh di KANAN dan
+           kartu buku bleed ke tepi KIRI viewport, kebalikan dari Berita yang
+           bleed ke kanan. Kartu/media/overlay pakai ULANG class
+           .news-carousel-card & kerabatnya apa adanya (simetris, tidak ada
+           properti kiri/kanan) — cuma shell (panel+track-wrap+panah) yang
+           benar-benar perlu versi cermin (.pustaka-carousel-*). -->
+      <div class="pustaka-carousel reveal">
+        <div class="pustaka-carousel-track-wrap">
+          <button type="button" class="pustaka-carousel-arrow prev" (click)="scrollBooks(-1)" aria-label="Buku sebelumnya">
+            <app-icon name="chevron-left" [size]="16" />
+          </button>
+          <div class="pustaka-carousel-track" #booksTrack>
+            @for (b of catalogBooksForCarousel(); track b.bookID) {
+              <a
+                class="news-carousel-card"
+                [routerLink]="isMobilePreview() ? null : catalogbookPath.publicDetail(b.bookSlug)"
+                (click)="openPreview($event, {
+                  chip: b.bookCategoryName,
+                  title: b.bookTitle,
+                  metaLines: [],
+                  metaRows: [
+                    { icon: 'user-check', label: 'Penulis', value: b.authorName },
+                    { icon: 'landmark', label: 'Penerbit', value: b.publisherName },
+                    { icon: 'calendar', label: 'Tahun', value: b.year }
+                  ],
+                  link: catalogbookPath.publicDetail(b.bookSlug),
+                  ctaLabel: 'Baca Detail Buku',
+                  image: b.coverImage,
+                  excerpt: b.synopsis || b.description
+                })"
+              >
+                <div class="news-carousel-media">
+                  @if (b.coverImage) { <img [src]="b.coverImage" [alt]="b.bookTitle"> } @else { <span class="news-carousel-media-fallback">SAMPUL BUKU</span> }
+                  <span class="news-carousel-scrim" aria-hidden="true"></span>
+                  <div class="news-carousel-overlay">
+                    <h4>{{ b.bookTitle }}</h4>
+                    <div class="news-carousel-meta">
+                      <span>{{ b.authorName }}</span>
+                      <span class="news-carousel-meta-dot"><span></span> {{ b.year }}</span>
+                      @if (b.pages) { <span class="news-carousel-meta-dot"><span></span> {{ b.pages }} hlm</span> }
+                    </div>
+                  </div>
+                </div>
+              </a>
+            }
+          </div>
+          <button type="button" class="pustaka-carousel-arrow next" (click)="scrollBooks(1)" aria-label="Buku berikutnya">
+            <app-icon name="chevron-right" [size]="16" />
+          </button>
+        </div>
+        <div class="pustaka-carousel-intro">
+          <span class="pustaka-carousel-silhouette" aria-hidden="true"><app-icon name="book-open" [size]="150" /></span>
+          <span class="pustaka-carousel-icon"><app-icon name="book-open" [size]="24" /></span>
+          <p>Koleksi buku digital seputar dakwah kampus, keislaman, dan pengembangan diri kader FSLDK Indonesia.</p>
+          <a [routerLink]="catalogbookPath.publicIndex" class="pustaka-carousel-cta">Lihat Semua Buku <app-icon name="chevron-right" [size]="13" /></a>
+        </div>
+      </div>
+    }
   </section>
 }
 
@@ -591,18 +646,6 @@
     </div>
   </section>
 }
-
-<section class="section cta-band">
-  <div class="container">
-    <div class="cta-inner reveal">
-      <div>
-        <h2>Siap jadi bagian gerakan ini?</h2>
-        <p class="text-muted" style="color:rgba(255,255,255,.85)">Ikuti kabar terbaru dan silaturahmi bersama FSLDK Indonesia.</p>
-      </div>
-      <a routerLink="/berita" class="btn cta-btn">Baca Berita Terbaru</a>
-    </div>
-  </div>
-</section>
 
 <section class="section">
   <div class="container">

@@ -403,6 +403,75 @@ interface CardPreview {
       .news-carousel-media { aspect-ratio: 4 / 5; }
     }
 
+    /* ---------- Perpustakaan: mirror horizontal PERSIS dari .berita-carousel
+       di atas — sama semuanya (panel solid + overlap + panah + kartu foto
+       full-bleed), cuma DOM dan setiap properti kiri/kanan dibalik: panel
+       hijau di KANAN, kartu bleed ke tepi KIRI viewport (kebalikan Berita
+       yang bleed kanan). Kartu/media/scrim/overlay/meta pakai ULANG
+       .news-carousel-card & kerabatnya langsung tanpa modifikasi — semua
+       simetris (tidak ada left/right), jadi tidak perlu versi cermin
+       sendiri. Hanya shell (panel+track-wrap+panah) yang genuinely beda. ---------- */
+    .pustaka-carousel {
+      display: flex; border-radius: 0 var(--radius-lg) var(--radius-lg) 0; overflow: hidden;
+      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
+      margin-right: max(20px, calc((100vw - 1140px) / 2));
+    }
+    .pustaka-carousel-intro {
+      position: relative; overflow: hidden;
+      flex: 0 0 420px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; padding: 96px 26px; text-align: center; color: #fff; background: var(--color-primary);
+    }
+    .pustaka-carousel-silhouette {
+      position: absolute; left: -34px; bottom: -34px; z-index: 0; color: rgba(255,255,255,.14);
+      transform: rotate(12deg); pointer-events: none;
+    }
+    /* margin-LEFT (bukan margin-right seperti Berita) — zona aman hijau
+       polos sekarang ada di KIRI panel (sisi yang ditumpuk kartu terakhir),
+       jadi teks/tombol digeser ke KANAN. */
+    .pustaka-carousel-icon, .pustaka-carousel-intro p, .pustaka-carousel-cta {
+      position: relative; z-index: 1; max-width: 150px; margin-left: 218px;
+    }
+    .pustaka-carousel-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+    .pustaka-carousel-intro p { margin-block: 0; font-size: .88rem; line-height: 1.6; opacity: .92; }
+    .pustaka-carousel-cta {
+      display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
+      color: #fff; padding: 10px 20px; border-radius: var(--radius-full); font-weight: 700; font-size: .76rem;
+      letter-spacing: .04em; text-transform: uppercase;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .pustaka-carousel-cta:hover { background: #fff; color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); text-decoration: none; }
+    /* margin-RIGHT negatif (bukan margin-left seperti Berita) — track-wrap
+       mendahului panel di DOM, jadi untuk menumpuk kartu TERAKHIR ke tepi
+       KIRI panel, track-wrap-nya sendiri yang "diperpanjang" ke kanan
+       menembus wilayah panel (bukan panel yang ditarik ke kiri). */
+    .pustaka-carousel-track-wrap { position: relative; z-index: 2; flex: 1; min-width: 0; margin-right: -230px; background: transparent; }
+    .pustaka-carousel-track {
+      display: flex; align-items: center; gap: 18px; overflow-x: auto; height: 100%; padding: 20px 0 20px 20px; scroll-behavior: smooth;
+      scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .pustaka-carousel-track::-webkit-scrollbar { display: none; }
+    .pustaka-carousel-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+      width: 40px; height: 40px; border-radius: 50%; border: none; background: #fff; box-shadow: var(--shadow-lg);
+      display: grid; place-items: center; color: var(--color-primary-dark); cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .pustaka-carousel-arrow:hover { background: var(--color-primary); color: #fff; transform: translateY(-50%) scale(1.08); }
+    .pustaka-carousel-arrow.prev { left: 10px; }
+    .pustaka-carousel-arrow.next { right: 10px; }
+    @media (max-width: 720px) {
+      .pustaka-carousel { flex-direction: column; border-radius: var(--radius-lg); margin-left: 20px; }
+      .pustaka-carousel-intro { flex: none; padding: 24px 20px; }
+      .pustaka-carousel-icon, .pustaka-carousel-intro p, .pustaka-carousel-cta { max-width: none; margin-left: 0; }
+      .pustaka-carousel-arrow { display: none; }
+      /* Inset statis di wrapper (bukan di track yang overflow-x:auto) sejak
+         awal — lihat catatan panjang di .berita-carousel-track-wrap mobile
+         soal kenapa padding/margin di DALAM elemen scroll selalu dibatalkan
+         oleh scroll-snap-type:mandatory. */
+      .pustaka-carousel-track-wrap { margin-right: 0; background: #fff; padding: 0 14px; }
+      .pustaka-carousel-track { padding: 14px 0; }
+    }
+
     /* ---------- Artikel: "kartu kajian" — teks-sentris (tanpa foto dominan
        seperti Berita), aksen batang warna emas di kiri + excerpt
        (articleIntro) + identitas penulis, kesan lebih tenang/reflektif
@@ -1078,10 +1147,19 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   @ViewChild('islandPath') private islandPathRef?: ElementRef<SVGPathElement>;
   @ViewChildren('tentangTabBtn') private tentangTabBtnRefs!: QueryList<ElementRef<HTMLButtonElement>>;
   @ViewChild('newsTrack') private newsTrackRef?: ElementRef<HTMLElement>;
+  @ViewChild('booksTrack') private booksTrackRef?: ElementRef<HTMLElement>;
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
   catalogBooks = signal<CatalogBook[]>([]);
+  /** .pustaka-carousel dirender terbalik (buku terakhir di kiri, buku
+   *  PERTAMA di kanan) — panel hijau ada di kanan, jadi biar buku pertama
+   *  yang nempel/menimpa panel (posisi "langsung kelihatan" tanpa geser,
+   *  mirror dari Berita di mana berita pertama yang nempel ke panel kiri),
+   *  urutan tampil harus dibalik dari urutan data. Scroll awal juga
+   *  di-set ke ujung kanan (lihat setCatalogBooks) supaya buku pertama itu
+   *  yang kelihatan di rest position, bukan resting di tengah daftar. */
+  catalogBooksForCarousel = computed(() => [...this.catalogBooks()].reverse());
   events = signal<EventListItem[]>([]);
   goods = signal<Goods[]>([]);
   schedules = signal<Schedule[]>([]);
@@ -1381,6 +1459,14 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
   }
 
+  /** Sama seperti scrollNews() — carousel Perpustakaan (mirror horizontal
+   *  Berita, lihat .pustaka-carousel di atas). */
+  scrollBooks(direction: 1 | -1): void {
+    const track = this.booksTrackRef?.nativeElement;
+    if (!track) return;
+    track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
+  }
+
   setLoading(loading: boolean): void { this.loading.set(loading); }
 
   /** Root cause dari "kartu pertama mepet ke panel hijau di mobile" — BUKAN
@@ -1400,7 +1486,19 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     });
   }
   setArticles(articles: Article[]): void { this.articles.set(articles); }
-  setCatalogBooks(books: CatalogBook[]): void { this.catalogBooks.set(books); }
+
+  /** Rest position di-set ke ujung KANAN (scrollWidth - clientWidth), bukan
+   *  0 — track dirender terbalik (lihat catalogBooksForCarousel) supaya
+   *  buku pertama jatuh di kanan (nempel panel hijau yang juga di kanan).
+   *  Tanpa ini, resting position default (0) malah nampilin buku
+   *  TERAKHIR dulu (kiri), buku pertama baru kelihatan setelah discroll. */
+  setCatalogBooks(books: CatalogBook[]): void {
+    this.catalogBooks.set(books);
+    requestAnimationFrame(() => {
+      const track = this.booksTrackRef?.nativeElement;
+      if (track) track.scrollLeft = track.scrollWidth - track.clientWidth;
+    });
+  }
   setEvents(events: EventListItem[]): void { this.events.set(events); }
   setGoods(goods: Goods[]): void { this.goods.set(goods); }
   setSchedules(schedules: Schedule[]): void { this.schedules.set(schedules); }
