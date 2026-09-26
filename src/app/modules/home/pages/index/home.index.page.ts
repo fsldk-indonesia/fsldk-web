@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { IconComponent } from '../../../../shared/icon.component';
 import { WelcomePopupComponent } from '../../components/welcome-popup.component';
 import { BottomSheetComponent } from '../../../../shared/bottom-sheet.component';
+import { PopupModalComponent } from '../../../../shared/popup-modal.component';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
 import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
@@ -54,7 +55,7 @@ interface CardPreview {
   selector: 'app-home-index-page',
   standalone: true,
   templateUrl: './home.index.page.html',
-  imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent, BottomSheetComponent],
+  imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent, BottomSheetComponent, PopupModalComponent],
   providers: [HomeIndexPresenter],
   styles: [`
     /* ---------- Kanvas: putih campur sedikit hijau (var(--color-primary-tint))
@@ -663,6 +664,111 @@ interface CardPreview {
     .tentang-misi-card:nth-child(3n) .tentang-misi-icon { background: linear-gradient(150deg, var(--color-ember), var(--color-ember-dark)); }
     .tentang-misi-card p { margin: 0; color: var(--color-text-secondary); font-size: .86rem; line-height: 1.5; }
 
+    /* ===== Misi (mobile) — amplop surat menggantikan grid di layar sempit
+       (lihat toggle display di breakpoint 720px). Ketuk amplop memicu class
+       .open yang menganimasikan 3 lapisan sekaligus murni lewat transisi CSS
+       (flap terbuka via rotateX, surat mengintip naik, seal memudar) —
+       elemen TIDAK di-mount/unmount lewat @if (pola sama seperti
+       BottomSheetComponent/.sheet-overlay), jadi transisi buka & tutup
+       sama-sama mulus tanpa perlu setTimeout. ===== */
+    .misi-envelope { display: none; }
+    @media (max-width: 720px) {
+      .tentang-misi-grid { display: none; }
+      .misi-envelope {
+        display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 260px;
+        margin: 8px auto 0; padding: 0; border: none; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+      }
+    }
+    .misi-envelope-stage {
+      position: relative; width: 100%; aspect-ratio: 3 / 2; perspective: 1000px;
+      animation: misi-envelope-bob 2.8s ease-in-out infinite;
+    }
+    .misi-envelope.open .misi-envelope-stage { animation-play-state: paused; }
+    @keyframes misi-envelope-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    .misi-envelope-shadow {
+      position: absolute; left: 8%; right: 8%; bottom: -10px; height: 14px; border-radius: 50%;
+      background: rgba(22,33,28,.16); filter: blur(4px);
+      transition: opacity var(--motion-base) ease, transform var(--motion-base) ease;
+    }
+    .misi-envelope.open .misi-envelope-shadow { opacity: .5; transform: scaleX(.85); }
+    /* Badan amplop kertas krem (bukan hijau solid) + dua garis lipatan
+       samar (gradient diagonal terang/gelap, motif kertas terlipat X-seam
+       amplop asli) — jauh lebih meyakinkan sebagai foto amplop sungguhan
+       ketimbang kotak gradient hijau polos sebelumnya. */
+    .misi-envelope-back {
+      position: absolute; inset: 0; border-radius: 8px;
+      border: 1px solid rgba(22,33,28,.08);
+      background:
+        linear-gradient(200deg, transparent 48%, rgba(0,0,0,.07) 50%, transparent 52%),
+        linear-gradient(160deg, transparent 48%, rgba(255,255,255,.4) 50%, transparent 52%),
+        linear-gradient(165deg, #fffef9 0%, #f2ecdc 100%);
+      box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .misi-envelope-letter {
+      position: absolute; left: 12%; right: 12%; top: 18%; bottom: 30%; z-index: 1;
+      background: #fff; border-radius: 6px; box-shadow: 0 6px 14px rgba(22,33,28,.16), 0 0 0 1px rgba(22,33,28,.05);
+      padding: 8px 10px 10px; display: flex; flex-direction: column; gap: 5px; justify-content: flex-end;
+      transform: translateY(10%); transition: transform .55s cubic-bezier(.16,1,.3,1);
+    }
+    .misi-envelope.open .misi-envelope-letter { transform: translateY(-62%); }
+    /* Judul "Misi FSLDK Indonesia" ditaruh DI DALAM kartu surat putih (bukan
+       lagi overlay terpisah di badan amplop krem) supaya selalu terbaca di
+       atas putih, dan diletakkan di bagian bawah kartu (justify-content:
+       flex-end di atas) supaya tidak ketiban seal lilin yang duduk di
+       tengah-atas kartu. */
+    .misi-envelope-letter-title {
+      font-family: var(--font-heading); font-weight: 800; font-size: .72rem; letter-spacing: .01em;
+      line-height: 1.25; text-align: center; color: var(--color-primary-dark);
+    }
+    .misi-envelope-letter-line { height: 5px; border-radius: 3px; background: var(--color-primary-soft); }
+    .misi-envelope-letter-line.short { width: 60%; }
+    /* Flap tetap krem/coklat muda di kedua state (tertutup MAUPUN terbuka) —
+       hanya beda gradasi untuk kesan sisi-dalam terlipat, TIDAK berubah jadi
+       hijau, supaya amplop tetap konsisten sebagai kertas coklat/krem. */
+    .misi-envelope-flap {
+      position: absolute; top: 0; left: 0; right: 0; height: 56%; z-index: 2;
+      clip-path: polygon(0 0, 100% 0, 50% 90%);
+      background: linear-gradient(165deg, #f8f2e4, #e8dfca);
+      transform-origin: top center; transform: rotateX(0deg);
+      transition: transform .5s cubic-bezier(.16,1,.3,1), background .4s ease, box-shadow .5s ease;
+      box-shadow: 0 6px 10px rgba(0,0,0,.14);
+    }
+    .misi-envelope.open .misi-envelope-flap {
+      transform: rotateX(-170deg); box-shadow: none;
+      background: linear-gradient(165deg, #e9dcc0, #d8c6a0);
+    }
+    /* Seal lilin mengilap — radial-gradient off-center (highlight) + inset
+       shadow ganda (terang di atas, gelap di bawah) untuk kesan timbul. */
+    .misi-envelope-seal {
+      position: absolute; top: 42%; left: 50%; z-index: 3; transform: translate(-50%, -50%) scale(1);
+      width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+      background: radial-gradient(circle at 34% 30%, var(--color-gold) 0%, var(--color-gold-dark) 75%); color: #fff;
+      box-shadow: 0 3px 7px rgba(0,0,0,.28), inset 0 1px 2px rgba(255,255,255,.5), inset 0 -2px 3px rgba(0,0,0,.22);
+      transition: opacity .35s ease, transform .35s ease;
+    }
+    .misi-envelope.open .misi-envelope-seal { opacity: 0; transform: translate(-50%, -50%) scale(.4); }
+    /* Isi app-bottom-sheet carousel misi — @for dgn key misiActiveIndex() di
+       template memaksa Angular re-render .misi-sheet-content tiap ganti
+       slide, supaya animation slide-in-nya (arah beda utk next/prev) replay
+       tiap kali, bukan cuma sekali saat sheet pertama dibuka. */
+    .misi-sheet-content { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 8px 4px 20px; }
+    .misi-sheet-content.dir-next { animation: misi-sheet-slide-next .35s var(--ease-out) both; }
+    .misi-sheet-content.dir-prev { animation: misi-sheet-slide-prev .35s var(--ease-out) both; }
+    @keyframes misi-sheet-slide-next { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes misi-sheet-slide-prev { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+    .misi-sheet-number { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; color: var(--color-primary); }
+    .misi-sheet-icon { display: grid; place-items: center; width: 56px; height: 56px; margin: 6px 0 16px; border-radius: 18px; background: linear-gradient(150deg, var(--color-primary-bright), var(--color-primary)); color: #fff; box-shadow: var(--shadow-sm); }
+    .misi-sheet-text { margin: 0; font-size: 1.05rem; font-weight: 600; line-height: 1.6; color: var(--color-text); }
+    .misi-sheet-nav { display: flex; align-items: center; justify-content: center; gap: 18px; }
+    .misi-sheet-arrow {
+      display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--color-border);
+      background: #fff; color: var(--color-primary-dark); cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease;
+    }
+    .misi-sheet-arrow:active { background: var(--color-primary-tint); border-color: var(--color-primary-soft); }
+    .misi-sheet-dots { display: flex; align-items: center; gap: 6px; }
+    .misi-sheet-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border-strong); transition: background var(--motion-fast) ease, transform var(--motion-fast) ease; }
+    .misi-sheet-dot.active { background: var(--color-primary); transform: scale(1.3); }
+
     /* ===== Struktur — hub (Puskomnas) + connector + grid kartu turunan,
        mengikuti pola #tab-keluarga di ldksyahid-app (about/index.blade.php:
        .kl-pusat-card / .kl-connector / .kl-grid / .kl-card), warna
@@ -722,11 +828,14 @@ interface CardPreview {
     @media (prefers-reduced-motion: reduce) {
       .tentang-fade, .tentang-big-logo, .tentang-icon-ring, .tentang-img-tag,
       .tentang-visi-orbit, .tentang-visi-orbit-dot,
-      .tentang-misi-card, .struktur-pusat-card, .struktur-card {
+      .tentang-misi-card, .struktur-pusat-card, .struktur-card,
+      .misi-envelope-stage, .misi-sheet-content {
         animation: none;
       }
-      .tentang-fade, .tentang-misi-card, .struktur-card { opacity: 1; transform: none; }
-      .tentang-tabs-slider { transition: none; }
+      .tentang-fade, .tentang-misi-card, .struktur-card, .misi-sheet-content { opacity: 1; transform: none; }
+      .tentang-tabs-slider, .misi-envelope-shadow, .misi-envelope-letter, .misi-envelope-flap, .misi-envelope-seal {
+        transition: none;
+      }
     }
     @media (max-width: 900px) {
       .tentang-misi-grid { grid-template-columns: repeat(2, 1fr); }
@@ -842,6 +951,36 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     { no: '06', icon: 'venus', text: 'Membentuk dan mengakselerasi kemuslimahan nasional.' },
     { no: '07', icon: 'coins', text: 'Mewujudkan lembaga yang mandiri secara finansial.' },
   ];
+  /** Amplop surat misi — pengganti grid kartu khusus mobile (lihat breakpoint
+   *  di CSS .misi-envelope). Ketuk amplop membuka app-bottom-sheet kedua yang
+   *  isinya carousel 1 misi per slide (panah/kiri-kanan), bukan bottom sheet
+   *  generik previewSheet (bentuk datanya beda: carousel butuh index+arah,
+   *  bukan chip/title/metaLines). misiDirection dipakai murni untuk memilih
+   *  arah animasi slide-masuk konten (lihat @for key-trick di template yang
+   *  memaksa Angular re-render elemen tiap ganti index, supaya animation
+   *  CSS-nya replay). */
+  misiSheetOpen = signal(false);
+  misiActiveIndex = signal(0);
+  misiDirection = signal<'next' | 'prev'>('next');
+
+  openMisiSheet(): void {
+    this.misiActiveIndex.set(0);
+    this.misiSheetOpen.set(true);
+  }
+
+  closeMisiSheet(): void {
+    this.misiSheetOpen.set(false);
+  }
+
+  nextMisi(): void {
+    this.misiDirection.set('next');
+    this.misiActiveIndex.update((i) => (i + 1) % this.missionList.length);
+  }
+
+  prevMisi(): void {
+    this.misiDirection.set('prev');
+    this.misiActiveIndex.update((i) => (i - 1 + this.missionList.length) % this.missionList.length);
+  }
 
   readonly orgStructure: OrgMember[] = [
     { memberName: 'Puskomnas', position: 'Pusat Komunikasi Nasional — LDK koordinator tertinggi FSLDK Indonesia, dipilih dalam FSLDKN untuk masa kerja 2 tahun.', level: 'Nasional', icon: 'landmark' },

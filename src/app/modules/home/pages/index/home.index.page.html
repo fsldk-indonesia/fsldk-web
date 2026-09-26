@@ -239,6 +239,34 @@
               </div>
             }
           </div>
+          <!-- Amplop surat — pengganti grid di layar mobile (display:none di
+               atas breakpoint, lihat .misi-envelope). Muncul dengan fade+naik
+               (.tentang-fade) tiap kali tab Misi dibuka di mobile. Ketuk amplop
+               = flap kebuka (kertas krem -> lining hijau brand kelihatan) +
+               surat mengintip naik + seal lilin memudar (murni CSS, dipicu
+               class .open dari misiSheetOpen()), bersamaan app-popup-modal
+               muncul di tengah layar (bukan bottom sheet) berisi carousel
+               1 misi per slide. -->
+          <button
+            type="button"
+            class="misi-envelope tentang-fade"
+            [class.open]="misiSheetOpen()"
+            [attr.aria-expanded]="misiSheetOpen()"
+            aria-haspopup="dialog"
+            (click)="openMisiSheet()"
+          >
+            <span class="misi-envelope-stage">
+              <span class="misi-envelope-shadow" aria-hidden="true"></span>
+              <span class="misi-envelope-back" aria-hidden="true"></span>
+              <span class="misi-envelope-letter">
+                <span class="misi-envelope-letter-title">Misi FSLDK Indonesia</span>
+                <span class="misi-envelope-letter-line" aria-hidden="true"></span>
+                <span class="misi-envelope-letter-line short" aria-hidden="true"></span>
+              </span>
+              <span class="misi-envelope-flap" aria-hidden="true"></span>
+              <span class="misi-envelope-seal" aria-hidden="true"><app-icon name="list-checks" [size]="16" /></span>
+            </span>
+          </button>
         }
         @case ('struktur') {
           <!-- Hub + connector + grid — mengikuti pola #tab-keluarga di
@@ -598,3 +626,29 @@
     <button type="button" class="btn btn-primary btn-block sheet-cta" (click)="goToPreview()">{{ p.ctaLabel }} <app-icon name="chevron-right" [size]="14" /></button>
   }
 </app-bottom-sheet>
+
+<!-- Popup carousel misi (mobile) — dibuka dari amplop surat di tab Misi.
+     Sengaja app-popup-modal (kartu tengah layar), BUKAN app-bottom-sheet
+     seperti previewSheet di atas — surat yang "keluar" dari amplop secara
+     konsep lebih pas muncul sebagai popup tengah, bukan meluncur dari bawah.
+     variant="paper" bikin kartunya kelihatan seperti lembar surat (krem,
+     garis lipatan) dan transisi bukanya seperti kertas terlipat yang
+     dibentangkan (lihat popup-modal.component.ts). -->
+<app-popup-modal [open]="misiSheetOpen()" (closed)="closeMisiSheet()" label="Misi FSLDK Indonesia" variant="paper">
+  @for (m of [missionList[misiActiveIndex()]]; track misiActiveIndex()) {
+    <div class="misi-sheet-content" [class.dir-next]="misiDirection() === 'next'" [class.dir-prev]="misiDirection() === 'prev'">
+      <span class="misi-sheet-number">{{ m.no }}</span>
+      <span class="misi-sheet-icon"><app-icon [name]="m.icon" [size]="26" /></span>
+      <p class="misi-sheet-text">{{ m.text }}</p>
+    </div>
+  }
+  <div class="misi-sheet-nav">
+    <button type="button" class="misi-sheet-arrow" (click)="prevMisi()" aria-label="Misi sebelumnya"><app-icon name="chevron-left" [size]="15" /></button>
+    <span class="misi-sheet-dots">
+      @for (m of missionList; track m.no; let i = $index) {
+        <span class="misi-sheet-dot" [class.active]="i === misiActiveIndex()"></span>
+      }
+    </span>
+    <button type="button" class="misi-sheet-arrow" (click)="nextMisi()" aria-label="Misi berikutnya"><app-icon name="chevron-right" [size]="15" /></button>
+  </div>
+</app-popup-modal>
