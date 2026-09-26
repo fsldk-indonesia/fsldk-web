@@ -39,15 +39,27 @@
 
           <app-submission-answers-view [version]="version()" [answers]="d.answers" />
 
-          <div class="decision-form">
-            <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="clipboard-check" [size]="14" /></span>Keputusan</p>
-            <div class="form-group">
-              <label class="form-label">Keputusan</label>
-              <app-select [options]="decisionOptions" [(ngModel)]="decision" />
+          @if (isReviewable(d.status)) {
+            <div class="decision-form">
+              <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="clipboard-check" [size]="14" /></span>Keputusan</p>
+              <div class="form-group">
+                <label class="form-label">Keputusan</label>
+                <app-select [options]="decisionOptions" [(ngModel)]="decision" />
+              </div>
+              <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" rows="3" [(ngModel)]="note" placeholder="Catatan untuk kader (wajib bila meminta revisi/menolak)"></textarea></div>
+              <button class="btn btn-primary" (click)="submitDecision()" [disabled]="busy()">Kirim Keputusan</button>
             </div>
-            <div class="form-group"><label class="form-label">Catatan</label><textarea class="form-control" rows="3" [(ngModel)]="note" placeholder="Catatan untuk kader (wajib bila meminta revisi/menolak)"></textarea></div>
-            <button class="btn btn-primary" (click)="submitDecision()" [disabled]="busy()">Kirim Keputusan</button>
-          </div>
+          } @else {
+            <div class="decision-form">
+              <p class="text-muted">
+                @if (d.status === 'DRAFT') {
+                  Pendaftaran ini sudah diputihkan kembali dan dikembalikan ke status Draf — menunggu kader mengisi ulang formulirnya sebelum bisa direview lagi.
+                } @else {
+                  Pendaftaran berstatus "{{ statusLabel(d.status) }}" belum/tidak bisa direview di sini.
+                }
+              </p>
+            </div>
+          }
         </div>
       } @else {
         <div class="card card-pad">

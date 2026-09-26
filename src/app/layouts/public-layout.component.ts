@@ -44,7 +44,15 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
        walau kontennya pendek (mis. halaman verifikasi email) — sebelumnya
        footer tidak flex-grow sehingga menyisakan celah putih di bawah
        footer pada halaman pendek (miss-development-prompt-2.md poin 3). */
-    .page-shell { min-height: 100dvh; display: flex; flex-direction: column; }
+    /* background di SINI (.page-shell), bukan di <main> — percobaan
+       sebelumnya taruh background di <main> tidak menyelesaikan celah putih
+       di belakang wave site-footer, karena <footer> itu SIBLING dari <main>
+       (sejajar di dalam .page-shell ini), bukan child-nya. Bagian transparan
+       (puncak lekukan) wave footer menembus ke backdrop DI BELAKANG <footer>
+       itu sendiri — yaitu .page-shell ini (atau <body> kalau ini juga
+       transparan), bukan <main>. tint sendiri sangat dekat ke putih
+       (#f3faf5) jadi aman dipakai default di semua halaman publik. */
+    .page-shell { min-height: 100dvh; display: flex; flex-direction: column; background: var(--color-primary-tint); }
     main { flex: 1; }
   `],
 })

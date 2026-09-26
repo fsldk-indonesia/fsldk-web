@@ -15,10 +15,22 @@ import { goodsPath } from '../modules/goods/goods.path';
   imports: [RouterLink, IconComponent, NewsletterFormComponent],
   template: `
     <footer class="pub-footer">
+      <!-- overflow:hidden (yang meng-clip svg 200% ke lebar kontainer) dipisah
+           ke elemen ANAK (.foot-wave-clip) dari elemen yang pegang filter
+           drop-shadow (.foot-wave) — overflow:hidden + filter di ELEMEN YANG
+           SAMA bisa bikin browser gagal nge-clip dengan benar, muncul
+           sebagai celah/garis putih di tepi. Dipisah 2 lapis supaya aman. -->
       <div class="foot-wave">
-        <svg viewBox="0 0 1440 320" preserveAspectRatio="none" aria-hidden="true">
-          <path style="fill: var(--color-text)" d="M0,64C240,160,480,192,720,160C960,128,1200,32,1440,64L1440,320L0,320Z"></path>
-        </svg>
+        <div class="foot-wave-clip">
+          <!-- Path satu periode (lebar 1440) diulang persis sekali lagi
+               digeser +1440 dalam viewBox lebar 2880 — dua repetisi identik,
+               supaya svg-nya (lebar 200%, lihat CSS) bisa digeser
+               translateX(-50%) tepat satu periode penuh dan animasinya loop
+               mulus infinite. -->
+          <svg viewBox="0 0 2880 320" preserveAspectRatio="none" aria-hidden="true">
+            <path style="fill: var(--color-text)" d="M0,64C240,160,480,192,720,160C960,128,1200,32,1440,64C1680,160,1920,192,2160,160C2400,128,2640,32,2880,64L2880,320L0,320Z"></path>
+          </svg>
+        </div>
       </div>
 
       <div class="foot-main">
@@ -76,8 +88,23 @@ import { goodsPath } from '../modules/goods/goods.path';
        mengikuti pola ldksyahid-app (.footer-fun transparan, .footer-main
        yang gelap, wave sebagai sibling sebelum -main, bukan child-nya). */
     .pub-footer { position: relative; color: #c9cdd1; }
-    .foot-wave { position: relative; height: 60px; overflow: hidden; }
-    .foot-wave svg { position: absolute; bottom: 0; width: 100%; height: 100%; }
+    /* drop-shadow (BUKAN box-shadow) supaya bayangannya ikut lekukan wave —
+       dy negatif melempar bayangan ke ATAS, menjatuhi konten halaman di
+       baliknya, memberi kesan footer adalah lapis paling depan/terangkat
+       (sama seperti .hero-wave di home.index.page.ts untuk batas hero →
+       Tentang Kami — bersama jadi tiga lapis: footer > konten > hero).
+       Filter-nya SENGAJA di elemen ini (.foot-wave), TERPISAH dari
+       overflow:hidden yang ada di .foot-wave-clip (anaknya) — filter +
+       overflow:hidden di ELEMEN YANG SAMA bisa bikin browser gagal nge-clip
+       dengan benar, muncul sebagai celah/garis putih di tepi. */
+    .foot-wave { position: relative; height: 60px; filter: drop-shadow(0 -12px 24px rgba(0,0,0,.22)); }
+    .foot-wave-clip { width: 100%; height: 100%; overflow: hidden; }
+    /* svg dua kali lebar kontainer (dua periode identik, lihat komentar di
+       template) digeser translateX(-50%) — persis satu periode — supaya
+       animasinya loop mulus infinite tanpa "lompatan" di titik sambungnya. */
+    .foot-wave-clip svg { position: absolute; bottom: 0; width: 200%; height: 100%; animation: footWaveScroll 16s linear infinite; }
+    @keyframes footWaveScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    @media (prefers-reduced-motion: reduce) { .foot-wave-clip svg { animation: none; } }
     .foot-main { background: var(--color-text); }
     .foot-main .container { padding-top: 8px; padding-bottom: 32px; }
 

@@ -80,6 +80,19 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
   statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
   kaderStatusLabel(code: string): string { return this.kaderStatusLabels[code] ?? code; }
 
+  /** Backend (submission_service_impl.go requiredTierForStatus) cuma
+   *  menerima submission KADER berstatus SUBMITTED/LDK_REVIEW untuk di-
+   *  review. Tab "Menunggu Persetujuan" di sini disaring dari ms_kader.status
+   *  = PENDING — status itu juga dipakai ulang saat kader "diputihkan
+   *  kembali" (reset ke tr_submission.status = DRAFT, menunggu kader isi
+   *  ulang formulir), jadi submission berstatus DRAFT bisa nyasar tampil di
+   *  antrian ini walau belum bisa direview. Guard ini menyembunyikan form
+   *  keputusan untuk status yang bukan SUBMITTED/LDK_REVIEW, supaya tidak
+   *  memicu error "Status pendataan tidak dapat direview saat ini". */
+  isReviewable(status: string): boolean {
+    return status === 'SUBMITTED' || status === 'LDK_REVIEW';
+  }
+
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadAll();

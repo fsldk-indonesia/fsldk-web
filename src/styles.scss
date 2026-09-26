@@ -462,17 +462,27 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 /* ---------- Motion: scroll reveal & floating accents ---------- */
 /* CSS-native scroll-driven reveal — no scroll listeners/JS. Browsers without
    support for animation-timeline simply show the element static (progressive
-   enhancement, never a broken/invisible state). */
-.reveal { animation: reveal-in linear both; animation-timeline: view(); animation-range: entry 0% cover 25%; }
+   enhancement, never a broken/invisible state).
+   animation-timeline: view() itu LIVE mengikuti posisi scroll saat ini,
+   BUKAN "sekali muncul lalu tetap" seperti IntersectionObserver biasa — kalau
+   user berhenti scroll SEBELUM ujung range (cover 25%) tercapai, elemennya
+   nyangkut di opacity setengah jalan selama itu juga (bukan animasi yang
+   "belum sempat jalan", tapi progress-nya sendiri memang belum sampai ujung).
+   Range lama (entry 0% cover 25%) butuh scroll 25% MASUK ke fase cover —
+   terlalu jauh, jadi sering nyangkut burem tiap kali user berhenti scroll di
+   titik wajar (begitu konten kelihatan). Dipersempit jadi murni dalam fase
+   entry (0%–55%) — selesai jauh lebih cepat/awal, praktis selalu tuntas
+   begitu elemen kelihatan separuh, jadi jarang nyangkut di tengah jalan. */
+.reveal { animation: reveal-in linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
 @keyframes reveal-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @supports not (animation-timeline: view()) { .reveal { animation: none; opacity: 1; } }
 
 /* Stagger halus untuk kartu sebaris dalam grid — tiap kolom masuk sedikit
    lebih lambat dari yang sebelumnya, memberi kesan "gelombang" alih-alih
    semua kartu muncul serentak. */
-.grid > .reveal:nth-child(2) { animation-range: entry 4% cover 29%; }
-.grid > .reveal:nth-child(3) { animation-range: entry 8% cover 33%; }
-.grid > .reveal:nth-child(4) { animation-range: entry 12% cover 37%; }
+.grid > .reveal:nth-child(2) { animation-range: entry 4% entry 59%; }
+.grid > .reveal:nth-child(3) { animation-range: entry 8% entry 63%; }
+.grid > .reveal:nth-child(4) { animation-range: entry 12% entry 67%; }
 
 .float-accent { animation: float-y 4s ease-in-out infinite; }
 @keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -546,6 +556,7 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
   filter: drop-shadow(0 0 7px rgba(0,147,59,.4));
   transform-box: fill-box; transform-origin: center;
   animation: node-pulse 2.8s ease-in-out infinite;
+  cursor: help;
 }
 .network-node.gold { fill: var(--color-gold); filter: drop-shadow(0 0 7px rgba(217,154,31,.45)); }
 .network-node.ember { fill: var(--color-ember); filter: drop-shadow(0 0 7px rgba(193,98,46,.45)); }
@@ -561,6 +572,20 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
    jelas walau grafiknya sekarang jauh lebih besar & padat. */
 .network-line.thick { stroke-width: 2.6; opacity: .7; stroke: var(--color-primary-bright); }
 @keyframes line-flow { to { stroke-dashoffset: -90; } }
+
+/* Cincin radar yang beriak keluar dari tiap simpul — menegaskan kesan
+   "sinyal aktif menyebar", bukan cuma titik statis yang berdenyut. */
+.network-ping {
+  fill: none; stroke: var(--color-primary); stroke-width: 1.6; opacity: 0;
+  pointer-events: none; transform-box: fill-box; transform-origin: center;
+  animation: node-ping 3.2s ease-out infinite;
+}
+.network-ping.gold { stroke: var(--color-gold); }
+.network-ping.ember { stroke: var(--color-ember); }
+@keyframes node-ping {
+  0% { transform: scale(.7); opacity: .6; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
 
 /* ---------- Transisi antar-halaman (View Transitions API via Angular Router) ----------
    Angular's withViewTransitions() memicu view-transition browser native pada
@@ -648,7 +673,7 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 /* ---------- Aksesibilitas: hormati preferensi pengurangan gerak ---------- */
 @media (prefers-reduced-motion: reduce) {
   .spinner, .skel, .btn, .chip, .card-hover, .form-control,
-  .network-node, .network-line, .stagger-in, .modal-pop {
+  .network-node, .network-line, .network-ping, .stagger-in, .modal-pop {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
