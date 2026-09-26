@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik berita — dipasang sebagai children dari PublicLayoutComponent. */
 export const newsPublicRoutes: () => Routes = () => [
-  { path: 'berita', loadComponent: () => import('./pages/public-index/news.public-index.page').then((m) => m.NewsPublicIndexPage) },
-  { path: 'berita/:slug', loadComponent: () => import('./pages/public-detail/news.public-detail.page').then((m) => m.NewsPublicDetailPage) },
+  { path: 'berita', title: 'Berita', loadComponent: () => import('./pages/public-index/news.public-index.page').then((m) => m.NewsPublicIndexPage) },
+  { path: 'berita/:slug', title: 'Detail Berita', loadComponent: () => import('./pages/public-detail/news.public-detail.page').then((m) => m.NewsPublicDetailPage) },
 ];
 
 /** Rute manajemen berita CMS — dipasang sebagai children dari CmsLayoutComponent. */
@@ -28,6 +28,17 @@ export const newsCmsRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'news.update' },
     title: 'Edit Berita',
+    loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
+  },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // NewsIndexPage), bukan cuma dari ikon Edit.
+    path: 'news/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'news.view', viewOnly: true },
+    title: 'Detail Berita',
     loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
   },
 ];

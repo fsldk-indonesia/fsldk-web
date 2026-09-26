@@ -5,6 +5,7 @@ export function structurePublicRoutes(): Routes {
   return [
     {
       path: 'tentang/struktur',
+      title: 'Struktur Organisasi',
       loadComponent: () => import('./pages/public-index/structure.public-index.page').then((m) => m.StructurePublicIndexPage),
     },
   ];
@@ -31,6 +32,17 @@ export function structureCmsRoutes(): Routes {
       canActivate: [permissionGuard],
       data: { permission: 'structure.update' },
       title: 'Edit Struktur',
+      loadComponent: () => import('./pages/form/structure.form.page').then((m) => m.StructureFormPage),
+    },
+    {
+      // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+      // lewat route data `viewOnly` yang membuat semua field disabled dan
+      // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+      // StructureIndexPage) — pola sama seperti Berita/Event/Perpustakaan/Jadwal.
+      path: 'structures/:id/view',
+      canActivate: [permissionGuard],
+      data: { permission: 'structure.view', viewOnly: true },
+      title: 'Detail Struktur',
       loadComponent: () => import('./pages/form/structure.form.page').then((m) => m.StructureFormPage),
     },
   ];

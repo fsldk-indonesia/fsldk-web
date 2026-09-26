@@ -1,0 +1,123 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Pesan Kontak</h1><p class="text-muted">Kelola pesan dan pertanyaan masuk yang dikirim pengunjung melalui form Hubungi Kami.</p></div>
+</div>
+
+<app-cms-index
+  [config]="config"
+  [dataSource]="dataSource"
+  [bulkDeleteEnabled]="canDelete"
+  (rowClick)="openView($event)"
+  (bulkDelete)="onBulkDelete($event)">
+  <ng-template #rowTemplate let-m let-isColumnVisible="isColumnVisible">
+    <td>
+      <div class="sender-name" [class.font-bold]="!m.isRead">{{ m.senderName }}</div>
+      <div class="sender-email text-muted text-xs">{{ m.email }}</div>
+    </td>
+    @if (isColumnVisible('subject')) { <td [class.font-bold]="!m.isRead">{{ m.subject }}</td> }
+    @if (isColumnVisible('isRead')) {
+      <td>
+        @if (!m.isRead) {
+          <span class="chip chip-green"><app-icon name="mail" [size]="11" /> Baru</span>
+        } @else {
+          <span class="chip chip-gray"><app-icon name="check" [size]="11" /> Dibaca</span>
+        }
+      </td>
+    }
+    @if (isColumnVisible('createdDate')) { <td class="text-muted">{{ m.createdDate | date:'d MMM y, HH:mm' }}</td> }
+    <td (click)="$event.stopPropagation()">
+      <div class="table-actions">
+        @if (canDelete) {
+          <button type="button" class="icon-action danger" [disabled]="isBusy(m.messageID)" (click)="remove(m, $event)" title="Hapus">
+            @if (isBusy(m.messageID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+          </button>
+        }
+      </div>
+    </td>
+  </ng-template>
+</app-cms-index>
+
+<div class="modal-backdrop" [class.open]="showForm()" appModalBackdrop (backdropClose)="close()">
+  <div #modalEl class="modal modal-pop" [class.open]="showForm()" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
+    <h3>{{ modalTitle }}</h3>
+    <p class="text-muted">{{ modalSubtitle }}</p>
+
+    @if (!selectedMessage()) {
+      <div class="modal-body text-center py-lg">
+        <div class="spinner"></div>
+      </div>
+    } @else if (viewMode === 'detail') {
+      <div class="modal-body">
+        <div class="form-section-group">
+          <div class="field-card">
+            <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="13" /></span>Informasi Pengirim</p>
+            <div class="form-group"><label class="form-label">Nama Pengirim</label><input class="form-control" [value]="selectedMessage()!.senderName" disabled></div>
+            <div class="form-group"><label class="form-label">Email</label>
+              <div class="flex items-center gap-sm">
+                <input class="form-control" [value]="selectedMessage()!.email" disabled>
+                <a [href]="'mailto:' + selectedMessage()!.email" class="icon-action" title="Kirim email langsung"><app-icon name="envelope" [size]="14" /></a>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="form-group"><label class="form-label">Waktu Kirim</label><input class="form-control" [value]="selectedMessage()!.createdDate | date:'d MMMM y, HH:mm'" disabled></div>
+              <div class="form-group"><label class="form-label">Alamat IP</label><input class="form-control" [value]="selectedMessage()!.ipAddress || '–'" disabled></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-group">
+          <div class="field-card">
+            <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="mail-open" [size]="13" /></span>Isi Pesan</p>
+            <div class="form-group"><label class="form-label">Subjek</label><input class="form-control" [value]="selectedMessage()!.subject" disabled></div>
+            <div class="form-group mb-0"><label class="form-label">Pesan</label>
+              <textarea class="form-control" rows="6" [value]="selectedMessage()!.message" disabled style="resize:vertical"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer footer-between">
+        <button class="btn btn-ghost" (click)="close()">Tutup</button>
+        <button class="btn btn-primary" (click)="openReply()"><app-icon name="send" [size]="13" /> Balas via Email</button>
+      </div>
+    } @else {
+      <div class="modal-body">
+        <div class="form-section-group">
+          <div class="field-card">
+            <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="13" /></span>Penerima</p>
+            <p class="text-sm" style="margin:0">
+              <span class="badge badge-published">{{ selectedMessage()!.senderName }} &lt;{{ selectedMessage()!.email }}&gt;</span>
+            </p>
+            <div class="info-box" style="margin:10px 0 0">
+              <app-icon name="info-circle" [size]="14" />
+              <span>Email balasan dikirim otomatis oleh sistem dari alamat noreply resmi.</span>
+            </div>
+            <div class="reply-original-box" style="margin-top:12px">
+              <span class="text-xs font-bold text-muted" style="display:block; margin-bottom:4px">Pesan asli:</span>
+              <p class="text-sm text-secondary" style="margin:0; white-space:pre-wrap; max-height:80px; overflow-y:auto; font-style:italic">"{{ selectedMessage()!.message }}"</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section-group">
+          <div class="field-card">
+            <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="mail-open" [size]="13" /></span>Balasan</p>
+            <div class="form-group"><label class="form-label">Subjek Email</label>
+              <input class="form-control" [ngModel]="replySubjectText()" (ngModelChange)="replySubjectText.set($event)" [disabled]="sending()" placeholder="Subjek balasan...">
+            </div>
+            <div class="form-group mb-0"><label class="form-label">Pesan Balasan</label>
+              <textarea class="form-control" rows="7" [ngModel]="replyBodyText()" (ngModelChange)="replyBodyText.set($event)" [disabled]="sending()"
+                        placeholder="Tulis balasan resmi untuk pengirim pesan..." style="resize:vertical"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer footer-between">
+        <button class="btn btn-ghost" (click)="backToDetail()" [disabled]="sending()">Batal</button>
+        <button class="btn btn-primary" (click)="submitReply()" [disabled]="sending() || !replySubjectText().trim() || !replyBodyText().trim()">
+          @if (sending()) { <span class="spinner"></span> } @else { <app-icon name="send" [size]="13" /> Kirim Balasan }
+        </button>
+      </div>
+    }
+  </div>
+</div>

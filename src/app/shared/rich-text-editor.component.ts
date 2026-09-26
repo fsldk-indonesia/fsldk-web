@@ -26,6 +26,7 @@ import { UploadService } from '../core/services/upload.service';
     <editor
       licenseKey="gpl"
       [init]="editorConfig"
+      [disabled]="disabled"
       [(ngModel)]="value"
       (ngModelChange)="valueChange.emit($event)">
     </editor>
@@ -33,6 +34,7 @@ import { UploadService } from '../core/services/upload.service';
 })
 export class RichTextEditorComponent {
   @Input() value = '';
+  @Input() disabled = false;
   readonly valueChange = output<string>();
 
   private uploadService = inject(UploadService);

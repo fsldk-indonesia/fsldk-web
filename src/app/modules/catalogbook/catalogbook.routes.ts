@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Public catalogbook routes — mounted as children of PublicLayoutComponent. */
 export const catalogbookPublicRoutes: () => Routes = () => [
-  { path: 'perpustakaan', loadComponent: () => import('./pages/public-index/catalogbook.public-index.page').then((m) => m.CatalogBookPublicIndexPage) },
-  { path: 'perpustakaan/:slug', loadComponent: () => import('./pages/public-detail/catalogbook.public-detail.page').then((m) => m.CatalogBookPublicDetailPage) },
+  { path: 'perpustakaan', title: 'Perpustakaan', loadComponent: () => import('./pages/public-index/catalogbook.public-index.page').then((m) => m.CatalogBookPublicIndexPage) },
+  { path: 'perpustakaan/:slug', title: 'Detail Buku', loadComponent: () => import('./pages/public-detail/catalogbook.public-detail.page').then((m) => m.CatalogBookPublicDetailPage) },
 ];
 
 /** CMS catalogbook management routes — mounted as children of CmsLayoutComponent. */
@@ -28,6 +28,17 @@ export const catalogbookCmsRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'catalogbook.update' },
     title: 'Edit Buku',
+    loadComponent: () => import('./pages/form/catalogbook.form.page').then((m) => m.CatalogBookFormPage),
+  },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // CatalogBookIndexPage) — pola sama seperti Berita/Event.
+    path: 'catalog-books/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'catalogbook.view', viewOnly: true },
+    title: 'Detail Buku',
     loadComponent: () => import('./pages/form/catalogbook.form.page').then((m) => m.CatalogBookFormPage),
   },
 ];

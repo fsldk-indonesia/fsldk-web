@@ -20,4 +20,5 @@ export class FinanceFormatApiService {
   update(id: number, body: unknown): Observable<FinanceFormat> { return this.api.put(`/finance-formats/${id}`, body); }
   publish(id: number, isActive: boolean): Observable<unknown> { return this.api.patch(`/finance-formats/${id}/publish`, { isActive }); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/finance-formats/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/finance-formats/bulk-delete', { ids }); }
 }

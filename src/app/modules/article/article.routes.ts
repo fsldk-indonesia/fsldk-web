@@ -3,8 +3,8 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik artikel — dipasang sebagai children dari PublicLayoutComponent. */
 export const articlePublicRoutes: () => Routes = () => [
-  { path: 'artikel', loadComponent: () => import('./pages/public-index/article.public-index.page').then((m) => m.ArticlePublicIndexPage) },
-  { path: 'artikel/:slug', loadComponent: () => import('./pages/public-detail/article.public-detail.page').then((m) => m.ArticlePublicDetailPage) },
+  { path: 'artikel', title: 'Artikel', loadComponent: () => import('./pages/public-index/article.public-index.page').then((m) => m.ArticlePublicIndexPage) },
+  { path: 'artikel/:slug', title: 'Detail Artikel', loadComponent: () => import('./pages/public-detail/article.public-detail.page').then((m) => m.ArticlePublicDetailPage) },
 ];
 
 /** Rute manajemen artikel CMS — dipasang sebagai children dari CmsLayoutComponent. */
@@ -28,6 +28,17 @@ export const articleCmsRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'article.update' },
     title: 'Edit Artikel',
+    loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
+  },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // ArticleIndexPage), bukan cuma dari ikon Edit.
+    path: 'articles/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'article.view', viewOnly: true },
+    title: 'Detail Artikel',
     loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
   },
 ];

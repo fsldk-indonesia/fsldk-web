@@ -2,10 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
 import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import { FormVersionDetail } from '../../../submission-form/entities/submission-form';
-import { SubmissionResponse, SubmissionDetail, ReviewDecision, SUBMISSION_STATUS_LABELS } from '../../entities/submission';
+import { SubmissionResponse, SubmissionDetail, ReviewDecision, SUBMISSION_STATUS_LABELS, statusTone } from '../../entities/submission';
 import { SubmissionReviewQueuePresenter } from './submission.review-queue.presenter';
 import { SubmissionReviewQueueView } from './submission.review-queue.view';
 
@@ -13,11 +14,14 @@ import { SubmissionReviewQueueView } from './submission.review-queue.view';
   selector: 'app-submission-review-queue-page',
   standalone: true,
   templateUrl: './submission.review-queue.page.html',
-  imports: [FormsModule, SelectComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
+  imports: [FormsModule, SelectComponent, IconComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
   providers: [SubmissionReviewQueuePresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
+    /* min-width:0 — lihat catatan panjang di submission.penetapan-level.page.ts
+       (pola/bug identik, halaman ini share komponen scoring-panel yang sama). */
     .layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
+    .layout > div { min-width: 0; }
     @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
     .queue-list { display: flex; flex-direction: column; gap: 8px; }
     .queue-row { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; cursor: pointer; text-align: left; }
@@ -25,10 +29,20 @@ import { SubmissionReviewQueueView } from './submission.review-queue.view';
     .queue-row.active { border-color: var(--color-primary); background: var(--color-primary-soft); }
     .queue-row strong { font-size: .92rem; }
     .queue-row .chip { align-self: flex-start; }
-    .detail-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 20px; }
     .decision-form { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 14px; }
     .checklist { display: flex; flex-direction: column; gap: 8px; }
     .actions-bar { display: flex; gap: 12px; }
+    /* transform:none di state diam — lihat catatan panjang di
+       submission.penetapan-level.page.ts (bug identik: translateY(0) tetap
+       jadi containing block position:fixed, bikin popup <app-select>
+       "melenceng" jauh dari trigger-nya). */
+    .detail-card-fade { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
+    .detail-card-fade.is-visible { opacity: 1; transform: none; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
   `],
 })
 export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueView {
@@ -46,12 +60,14 @@ export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueV
   detail = signal<SubmissionDetail | null>(null);
   loading = signal(true);
   busy = signal(false);
+  detailTransitioning = signal(false);
 
   decision: ReviewDecision = 'REVISION_REQUESTED';
   note = '';
   checklist: Record<string, boolean> = {};
 
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
+  readonly statusTone = statusTone;
 
   decisionOptions: SelectOption[] = this.canApprove
     ? [{ value: 'APPROVED', label: 'Setujui' }, { value: 'REVISION_REQUESTED', label: 'Minta Revisi' }]
@@ -70,6 +86,7 @@ export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueV
     this.note = '';
     this.checklist = {};
     for (const s of this.version()?.sections ?? []) this.checklist[s.sectionCode] = false;
+    this.detailTransitioning.set(true);
     this.presenter.openDetail(item.submissionID);
   }
 
@@ -94,7 +111,10 @@ export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueV
   setQueue(items: SubmissionResponse[]): void { this.queue.set(items); }
   setOrgNames(names: Record<number, string>): void { this.orgNames.set(names); }
   setVersion(version: FormVersionDetail): void { this.version.set(version); }
-  setDetail(detail: SubmissionDetail): void { this.detail.set(detail); }
+  setDetail(detail: SubmissionDetail): void {
+    this.detail.set(detail);
+    requestAnimationFrame(() => this.detailTransitioning.set(false));
+  }
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
   onDecisionSuccess(): void { this.detail.set(null); }

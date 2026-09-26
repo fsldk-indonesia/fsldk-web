@@ -1,9 +1,10 @@
 import { Job, JobStats } from '../../entities/job';
 
 export interface JobQueueIndexView {
-  setJobs(items: Job[], count: number): void;
   setStats(stats: JobStats): void;
-  onActionSettled(id: number): void;
+  setDetail(job: Job): void;
   onRetrySuccess(): void;
   onRemoveSuccess(): void;
+  onBulkDeleteSuccess(): void;
+  onActionSettled(id: number): void;
 }

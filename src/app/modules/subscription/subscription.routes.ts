@@ -5,6 +5,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const subscriptionPublicRoutes: () => Routes = () => [
   {
     path: 'unsubscribe',
+    title: 'Berhenti Berlangganan',
     loadComponent: () =>
       import('./pages/unsubscribe/subscription.unsubscribe.page').then((m) => m.SubscriptionUnsubscribePage),
   },

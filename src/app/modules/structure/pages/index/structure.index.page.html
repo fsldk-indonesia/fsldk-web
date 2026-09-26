@@ -1,0 +1,30 @@
+<div class="flex justify-between items-center page-head">
+  <div><h1>Manajemen Struktur Organisasi</h1><p class="text-muted">Kelola data kepengurusan dan formasi FSLDK Indonesia.</p></div>
+  @if (canCreate) { <a routerLink="/cms/structures/create" class="btn btn-primary">+ Tambah Struktur</a> }
+</div>
+
+<app-cms-index
+  [config]="config"
+  [dataSource]="dataSource"
+  [bulkDeleteEnabled]="canDelete"
+  [canCreate]="canCreate"
+  (rowClick)="viewStructure($event)"
+  (bulkDelete)="onBulkDelete($event)">
+  <ng-template #rowTemplate let-s let-isColumnVisible="isColumnVisible">
+    <td><strong>{{ s.structureName }}</strong></td>
+    @if (isColumnVisible('batch')) { <td><span class="badge badge-published">{{ s.batch }} ({{ s.period }})</span></td> }
+    @if (isColumnVisible('createdDate')) { <td class="text-muted">{{ s.createdDate | date:'d MMM yyyy' }}</td> }
+    <td (click)="$event.stopPropagation()">
+      <div class="table-actions">
+        @if (canUpdate) {
+          <a class="icon-action" [routerLink]="['/cms/structures', s.structureID, 'edit']" title="Edit"><app-icon name="edit" [size]="14" /></a>
+        }
+        @if (canDelete) {
+          <button type="button" class="icon-action danger" [disabled]="isBusy(s.structureID)" (click)="remove(s, $event)" title="Hapus">
+            @if (isBusy(s.structureID)) { <span class="spinner spinner-dark spinner-xs"></span> } @else { <app-icon name="trash" [size]="14" /> }
+          </button>
+        }
+      </div>
+    </td>
+  </ng-template>
+</app-cms-index>

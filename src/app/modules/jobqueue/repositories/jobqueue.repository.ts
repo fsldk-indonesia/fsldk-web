@@ -13,4 +13,5 @@ export class JobQueueRepository {
   stats(): Observable<JobStats> { return this.api.stats(); }
   retry(id: number): Observable<unknown> { return this.api.retry(id); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
 }

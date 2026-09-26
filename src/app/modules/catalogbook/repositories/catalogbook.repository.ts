@@ -26,4 +26,5 @@ export class CatalogBookRepository {
   update(id: number, body: unknown): Observable<CatalogBook> { return this.api.update(id, body); }
   publish(id: number, isActive: boolean): Observable<unknown> { return this.api.publish(id, isActive); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
 }

@@ -17,8 +17,8 @@ export class RoleIndexPresenter extends BasePresenter<RoleIndexView> {
   private permissionRepo = inject(PermissionRepository);
   private toast = inject(ToastService);
 
-  loadRoles(): void {
-    this.roleRepo.list().subscribe({ next: (r) => this.view.setRoles(r), error: () => {} });
+  loadRoles(search = ''): void {
+    this.roleRepo.list(search).subscribe({ next: (r) => this.view.setRoles(r), error: () => {} });
   }
 
   loadPermissions(): void {

@@ -104,7 +104,7 @@ function toMinutes(time: string | undefined): number {
   `,
   styles: [`
     :host { display: contents; }
-    .prayer-btn { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: var(--radius-full); border: 1px solid var(--color-border); background: var(--color-primary-soft); color: var(--color-primary-dark); font-family: var(--font-body); font-weight: 700; cursor: pointer; transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); white-space: nowrap; }
+    .prayer-btn { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-primary-soft); color: var(--color-primary-dark); font-family: var(--font-body); font-weight: 700; cursor: pointer; transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); white-space: nowrap; }
     .prayer-btn:hover { background: var(--color-primary); color: #fff; transform: translateY(-1px); }
     .prayer-btn-icon { font-size: 1rem; line-height: 1; flex-shrink: 0; }
     .prayer-btn-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; }
@@ -146,7 +146,7 @@ function toMinutes(time: string | undefined): number {
     .prayer-item-time { font-weight: 700; font-size: .9rem; color: var(--color-text); min-width: 42px; text-align: right; }
     .prayer-item.next-prayer .prayer-item-time { color: var(--color-primary-dark); }
 
-    @media (max-width: 420px) { .prayer-btn-label { display: none; } .prayer-btn { padding: 7px 10px; } }
+    @media (max-width: 420px) { .prayer-btn { padding: 7px 10px; } }
   `],
 })
 export class PrayerTimeComponent implements OnInit, AfterViewInit, OnDestroy {

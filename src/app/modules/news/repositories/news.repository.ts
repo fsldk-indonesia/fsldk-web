@@ -20,4 +20,5 @@ export class NewsRepository {
   update(id: number, body: unknown): Observable<News> { return this.api.update(id, body); }
   publish(id: number, isPublished: boolean): Observable<unknown> { return this.api.publish(id, isPublished); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
 }

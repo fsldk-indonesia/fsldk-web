@@ -105,8 +105,7 @@ import { environment } from '../../../../../environments/environment';
       position: fixed;
       inset: 0;
       z-index: 9999;
-      background: rgba(10, 15, 25, 0.94);
-      backdrop-filter: blur(12px);
+      background: rgba(0, 0, 0, 0.85);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -231,7 +230,6 @@ import { environment } from '../../../../../environments/environment';
       height: auto;
       object-fit: contain;
       border-radius: 12px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
       animation: zoomIn 0.22s ease-out;
     }
 

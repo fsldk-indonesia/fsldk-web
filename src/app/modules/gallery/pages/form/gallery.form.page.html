@@ -1,0 +1,188 @@
+<div class="page-head">
+  <h1>{{ isReadonly ? 'Detail Galeri' : (editId ? 'Ubah Galeri' : 'Tambah Galeri') }}</h1>
+  <p class="text-muted">{{ pageSubtitle }}</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad text-center py-xl">
+    <div class="spinner"></div>
+    <p class="mt-sm text-muted">Memuat data galeri…</p>
+  </div>
+} @else {
+  <div class="form-card">
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span>Informasi Utama Kegiatan</p>
+      <div class="grid grid-2">
+        <div class="form-group"><label class="form-label">Nama Kegiatan / Event</label>
+          <input class="form-control form-control-lg" [(ngModel)]="form.eventName" [disabled]="isReadonly" placeholder="Contoh: Rakornas FSLDK Indonesia 2026"></div>
+        <div class="form-group"><label class="form-label">Tema / Tagline Kegiatan</label>
+          <input class="form-control" [(ngModel)]="form.eventTheme" [disabled]="isReadonly" placeholder="Contoh: Bersatu dalam Dakwah Membangun Peradaban"></div>
+      </div>
+    </section>
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="calendar-days" [size]="14" /></span>Jadwal &amp; Tautan</p>
+      <div class="grid grid-2">
+        <div class="form-group"><label class="form-label">Tanggal Pelaksanaan Kegiatan <span class="text-muted" style="font-weight:400">(opsional)</span></label>
+          <app-datetime-picker [(ngModel)]="form.eventDate" [showTime]="false" [disabled]="isReadonly" placeholder="Pilih tanggal kegiatan…" />
+        </div>
+        <div class="form-group"><label class="form-label">Tautan / ID Video YouTube <span class="text-muted" style="font-weight:400">(opsional)</span></label>
+          <input class="form-control" [(ngModel)]="form.youtubeVideoID" [disabled]="isReadonly" placeholder="Contoh: https://www.youtube.com/watch?v=…"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Tautan Dokumentasi Lengkap <span class="text-muted" style="font-weight:400">(opsional, mis. Google Drive)</span></label>
+        <input type="url" class="form-control" [(ngModel)]="form.documentLink" [disabled]="isReadonly" placeholder="Contoh: https://drive.google.com/drive/folders/…"></div>
+    </section>
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="image" [size]="14" /></span>Foto Sampul</p>
+      <div class="form-group"><app-image-upload [(value)]="form.coverImage" [disabled]="isReadonly" />
+        <p class="form-hint">Format JPG/PNG/WebP, rasio 16:9 atau 4:3 direkomendasikan.</p></div>
+    </section>
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="book-open" [size]="14" /></span>Deskripsi Kegiatan</p>
+      <div class="form-group"><app-rich-text-editor [(value)]="form.eventDescription" [disabled]="isReadonly" /></div>
+    </section>
+
+    <section class="card card-pad form-section-card">
+      <p class="form-section-label">
+        <span class="icon-badge sm icon-badge-soft"><app-icon name="images" [size]="14" /></span>
+        {{ isReadonly ? 'Foto Dokumentasi (' + existingPhotos().length + ' Foto)' : (editId ? 'Kelola Foto Tambahan (' + existingPhotos().length + ' Foto)' : 'Foto Tambahan Awal (Opsional)') }}
+      </p>
+
+      @if (isReadonly) {
+        @if (photosLoading()) {
+          <div class="text-center py-md text-muted"><div class="spinner"></div> Memuat daftar foto...</div>
+        } @else if (existingPhotos().length === 0) {
+          <p class="text-muted text-center py-md">Belum ada foto tambahan pada galeri ini.</p>
+        } @else {
+          <div class="photo-tiles">
+            @for (photo of existingPhotos(); track photo.photoID; let i = $index) {
+              <div class="photo-tile">
+                <img [src]="photo.imagePath" [alt]="photo.caption || 'Foto ' + (i + 1)" class="photo-tile-img" (click)="openLightbox(i)">
+                <div class="photo-tile-content">
+                  <span class="photo-order-badge">#{{ i + 1 }}</span>
+                  <div class="photo-caption-text">{{ photo.caption || '(Tanpa keterangan)' }}</div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      } @else if (editId) {
+        <div class="add-photo-box">
+          <h4 style="font-size:.92rem; font-weight:700; margin:0 0 14px">Tambah Satu Foto ke Galeri</h4>
+          <div class="grid grid-2">
+            <div><app-image-upload [value]="newPhotoPath() || ''" (valueChange)="newPhotoPath.set($event)" /></div>
+            <div class="photo-input-column">
+              <div class="form-group" style="margin-bottom:16px"><label class="form-label">Keterangan / Caption <span class="text-muted" style="font-weight:400">(opsional)</span></label>
+                <input class="form-control" placeholder="Contoh: Sesi foto bersama peserta" [(ngModel)]="newPhotoCaption">
+              </div>
+              <div class="photo-btn-wrap">
+                <button type="button" class="btn btn-primary btn-sm" [disabled]="!newPhotoPath() || addingPhoto()" (click)="onAddPhotoCMS()">
+                  @if (addingPhoto()) { <span class="spinner spinner-xs"></span> } @else { + Simpan Foto Baru }
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (photosLoading()) {
+          <div class="text-center py-md text-muted"><div class="spinner"></div> Memuat daftar foto...</div>
+        } @else if (existingPhotos().length === 0) {
+          <p class="text-muted text-center py-md">Belum ada foto tambahan pada galeri ini.</p>
+        } @else {
+          <div class="photo-tiles">
+            @for (photo of existingPhotos(); track photo.photoID; let i = $index) {
+              <div class="photo-tile">
+                <img [src]="photo.imagePath" [alt]="photo.caption || 'Foto ' + (i + 1)" class="photo-tile-img" (click)="openLightbox(i)">
+                <div class="photo-tile-content">
+                  <span class="photo-order-badge">#{{ i + 1 }}</span>
+                  <div class="photo-caption-text">{{ photo.caption || '(Tanpa keterangan)' }}</div>
+                  <div class="photo-actions">
+                    <button type="button" class="btn-icon-sm" title="Pindah ke Atas / Kiri" [disabled]="i === 0" (click)="movePhoto(i, -1)"><app-icon name="arrow-up" [size]="12" /></button>
+                    <button type="button" class="btn-icon-sm" title="Pindah ke Bawah / Kanan" [disabled]="i === existingPhotos().length - 1" (click)="movePhoto(i, 1)"><app-icon name="arrow-down" [size]="12" /></button>
+                    <button type="button" class="btn-icon-sm text-primary" title="Ubah Keterangan" (click)="openEditCaptionModal(photo)"><app-icon name="edit" [size]="12" /></button>
+                    <button type="button" class="btn-icon-sm text-danger" title="Hapus Foto" (click)="deletePhotoCMS(photo.photoID, $event)"><app-icon name="trash" [size]="12" /></button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      } @else {
+        <p class="text-muted text-sm" style="margin-bottom:16px">Anda dapat menambahkan beberapa foto sekarang atau menyimpannya terlebih dahulu lalu mengelolanya nanti.</p>
+        <div class="add-photo-box">
+          <div class="grid grid-2">
+            <div><label class="form-label text-sm">Unggah Foto</label>
+              <app-image-upload [value]="newPhotoPath() || ''" (valueChange)="newPhotoPath.set($event)" /></div>
+            <div class="photo-input-column">
+              <div class="form-group" style="margin-bottom:16px"><label class="form-label">Keterangan Foto <span class="text-muted" style="font-weight:400">(opsional)</span></label>
+                <input class="form-control" placeholder="Contoh: Dokumentasi pembukaan" [(ngModel)]="newPhotoCaption">
+              </div>
+              <div class="photo-btn-wrap">
+                <button type="button" class="btn btn-outline btn-sm" [disabled]="!newPhotoPath()" (click)="addStagedPhoto()">+ Tambahkan ke Daftar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (stagedPhotos().length > 0) {
+          <div class="staged-grid">
+            @for (p of stagedPhotos(); track $index; let i = $index) {
+              <div class="staged-card">
+                <img [src]="p.imagePath" [alt]="p.caption || 'Foto ' + (i + 1)" class="staged-img">
+                <div class="staged-info">
+                  <span class="text-xs text-muted font-bold">#{{ i + 1 }}</span>
+                  <span class="staged-caption">{{ p.caption || '(Tanpa caption)' }}</span>
+                  <button type="button" class="icon-action danger" style="width:26px; height:26px" (click)="removeStagedPhoto(i)"><app-icon name="trash" [size]="12" /></button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </section>
+
+    <div class="form-actions">
+      <a routerLink="/cms/galleries" class="btn btn-ghost">Batal</a>
+      @if (!isReadonly) {
+        <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+          @if (saving()) { <span class="spinner"></span> } @else { {{ editId ? 'Simpan Perubahan' : 'Simpan Galeri' }} }
+        </button>
+      }
+    </div>
+  </div>
+}
+
+<app-gallery-lightbox
+  [photos]="existingPhotos()"
+  [isOpen]="lightboxOpen()"
+  [initialIndex]="lightboxIndex()"
+  [galleryTitle]="form.eventName"
+  (close)="lightboxOpen.set(false)" />
+
+@if (editingCaptionPhoto(); as photo) {
+  <div class="caption-modal-backdrop" appModalBackdrop (backdropClose)="closeCaptionModal()">
+    <div class="caption-modal" (click)="$event.stopPropagation()">
+      <div class="caption-modal-header">
+        <h3 class="caption-modal-title"><app-icon name="edit" [size]="16" /> Ubah Keterangan Foto</h3>
+        <button type="button" class="btn-close" (click)="closeCaptionModal()" [disabled]="savingCaption()" aria-label="Tutup"><app-icon name="x" [size]="16" /></button>
+      </div>
+      <div class="caption-preview-box">
+        <img [src]="photo.imagePath" alt="Preview foto" class="caption-preview-thumb">
+        <p class="caption-preview-hint">Keterangan ini akan ditampilkan saat pengunjung membuka foto di galeri publik.</p>
+      </div>
+      <div class="form-group mb-0"><label class="form-label">Keterangan / Caption</label>
+        <input class="form-control" placeholder="Masukkan keterangan foto..."
+               [ngModel]="editingCaptionText()" (ngModelChange)="editingCaptionText.set($event)"
+               (keydown.enter)="savePhotoCaption()" autofocus>
+      </div>
+      <div class="caption-modal-footer">
+        <button type="button" class="btn btn-outline btn-sm" (click)="closeCaptionModal()" [disabled]="savingCaption()">Batal</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="savePhotoCaption()" [disabled]="savingCaption()">
+          @if (savingCaption()) { <span class="spinner spinner-sm"></span> } @else { Simpan Keterangan }
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -147,6 +147,17 @@ img { max-width: 100%; }
 }
 @media (min-width: 601px) and (max-width: 900px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } }
 
+/* Hampir setiap halaman index CMS (4 portal) memakai kombo class yang sama
+   persis: `class="flex justify-between items-center page-head"` (judul+
+   subjudul di kiri, tombol "+ Tambah X" di kanan) — di-set satu kali di sini
+   secara global alih-alih diulang per halaman, supaya di mobile tombolnya
+   turun ke baris sendiri (full width, gampang di-tap) alih-alih berdesakan
+   sejajar dengan judul yang bisa cukup panjang. */
+@media (max-width: 640px) {
+  .page-head.flex { flex-wrap: wrap; row-gap: 12px; }
+  .page-head.flex > .btn { width: 100%; justify-content: center; }
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -451,17 +462,27 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 /* ---------- Motion: scroll reveal & floating accents ---------- */
 /* CSS-native scroll-driven reveal — no scroll listeners/JS. Browsers without
    support for animation-timeline simply show the element static (progressive
-   enhancement, never a broken/invisible state). */
-.reveal { animation: reveal-in linear both; animation-timeline: view(); animation-range: entry 0% cover 25%; }
+   enhancement, never a broken/invisible state).
+   animation-timeline: view() itu LIVE mengikuti posisi scroll saat ini,
+   BUKAN "sekali muncul lalu tetap" seperti IntersectionObserver biasa — kalau
+   user berhenti scroll SEBELUM ujung range (cover 25%) tercapai, elemennya
+   nyangkut di opacity setengah jalan selama itu juga (bukan animasi yang
+   "belum sempat jalan", tapi progress-nya sendiri memang belum sampai ujung).
+   Range lama (entry 0% cover 25%) butuh scroll 25% MASUK ke fase cover —
+   terlalu jauh, jadi sering nyangkut burem tiap kali user berhenti scroll di
+   titik wajar (begitu konten kelihatan). Dipersempit jadi murni dalam fase
+   entry (0%–55%) — selesai jauh lebih cepat/awal, praktis selalu tuntas
+   begitu elemen kelihatan separuh, jadi jarang nyangkut di tengah jalan. */
+.reveal { animation: reveal-in linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
 @keyframes reveal-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 @supports not (animation-timeline: view()) { .reveal { animation: none; opacity: 1; } }
 
 /* Stagger halus untuk kartu sebaris dalam grid — tiap kolom masuk sedikit
    lebih lambat dari yang sebelumnya, memberi kesan "gelombang" alih-alih
    semua kartu muncul serentak. */
-.grid > .reveal:nth-child(2) { animation-range: entry 4% cover 29%; }
-.grid > .reveal:nth-child(3) { animation-range: entry 8% cover 33%; }
-.grid > .reveal:nth-child(4) { animation-range: entry 12% cover 37%; }
+.grid > .reveal:nth-child(2) { animation-range: entry 4% entry 59%; }
+.grid > .reveal:nth-child(3) { animation-range: entry 8% entry 63%; }
+.grid > .reveal:nth-child(4) { animation-range: entry 12% entry 67%; }
 
 .float-accent { animation: float-y 4s ease-in-out infinite; }
 @keyframes float-y { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -486,12 +507,21 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 .skel-avatar { width: 40px; height: 40px; border-radius: var(--radius-full); }
 .skel-thumb { width: 100%; aspect-ratio: 16/10; border-radius: var(--radius-md); }
 
-/* ---------- Empty & error states ---------- */
-.empty-state { text-align: center; padding: 48px 20px; color: var(--color-muted); }
+/* ---------- Empty & error states ----------
+   Statis (tanpa animasi) — icon-badge diberi glow radial lembut di
+   belakangnya lewat pseudo-element supaya tidak terasa polos, dan tipografi
+   diberi sedikit jarak lebih untuk kesan lebih lega/rapi. */
+.empty-state { text-align: center; padding: 56px 20px; color: var(--color-muted); }
 .empty-state .empty-icon { width: 48px; height: 48px; margin: 0 auto 14px; color: var(--color-border-strong); }
-.empty-state h4 { color: var(--color-text); margin: 0 0 6px; font-size: 1rem; }
-.empty-state p { margin: 0 0 16px; font-size: .88rem; }
+.empty-state h4 { color: var(--color-text); margin: 0 0 8px; font-size: 1.05rem; }
+.empty-state p { margin: 0 auto 18px; font-size: .88rem; max-width: 360px; }
 .empty-state.is-error .empty-icon { color: var(--color-danger); }
+.empty-state .icon-badge { position: relative; z-index: 0; }
+.empty-state .icon-badge::before {
+  content: ''; position: absolute; inset: -14px; z-index: -1; border-radius: 50%;
+  background: radial-gradient(circle, var(--color-primary-tint) 0%, transparent 72%);
+}
+.empty-state.is-error .icon-badge::before { background: radial-gradient(circle, var(--color-danger-soft) 0%, transparent 72%); }
 
 /* ---------- Motif batik Kawung (tekstur, bukan bingkai) ----------
    Empat elips membentuk kelopak yang mengelilingi titik pusat — motif batik
@@ -526,6 +556,7 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
   filter: drop-shadow(0 0 7px rgba(0,147,59,.4));
   transform-box: fill-box; transform-origin: center;
   animation: node-pulse 2.8s ease-in-out infinite;
+  cursor: help;
 }
 .network-node.gold { fill: var(--color-gold); filter: drop-shadow(0 0 7px rgba(217,154,31,.45)); }
 .network-node.ember { fill: var(--color-ember); filter: drop-shadow(0 0 7px rgba(193,98,46,.45)); }
@@ -541,6 +572,20 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
    jelas walau grafiknya sekarang jauh lebih besar & padat. */
 .network-line.thick { stroke-width: 2.6; opacity: .7; stroke: var(--color-primary-bright); }
 @keyframes line-flow { to { stroke-dashoffset: -90; } }
+
+/* Cincin radar yang beriak keluar dari tiap simpul — menegaskan kesan
+   "sinyal aktif menyebar", bukan cuma titik statis yang berdenyut. */
+.network-ping {
+  fill: none; stroke: var(--color-primary); stroke-width: 1.6; opacity: 0;
+  pointer-events: none; transform-box: fill-box; transform-origin: center;
+  animation: node-ping 3.2s ease-out infinite;
+}
+.network-ping.gold { stroke: var(--color-gold); }
+.network-ping.ember { stroke: var(--color-ember); }
+@keyframes node-ping {
+  0% { transform: scale(.7); opacity: .6; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
 
 /* ---------- Transisi antar-halaman (View Transitions API via Angular Router) ----------
    Angular's withViewTransitions() memicu view-transition browser native pada
@@ -628,7 +673,7 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 /* ---------- Aksesibilitas: hormati preferensi pengurangan gerak ---------- */
 @media (prefers-reduced-motion: reduce) {
   .spinner, .skel, .btn, .chip, .card-hover, .form-control,
-  .network-node, .network-line, .stagger-in, .modal-pop {
+  .network-node, .network-line, .network-ping, .stagger-in, .modal-pop {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;

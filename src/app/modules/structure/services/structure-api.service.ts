@@ -1,37 +1,20 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../core/entities/api-response';
+import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import { Structure, StructureCreateReq, StructureUpdateReq } from '../entities/structure';
 
+/** Raw HTTP calls for the org structure archive — public & CMS. */
 @Injectable({ providedIn: 'root' })
 export class StructureApiService {
-  private http = inject(HttpClient);
-  private apiBase = environment.apiBaseUrl;
+  private api = inject(ApiService);
 
-  listPublic(): Observable<ApiResponse<Structure[]>> {
-    return this.http.get<ApiResponse<Structure[]>>(`${this.apiBase}/public/structures`);
-  }
+  listPublic(): Observable<Structure[]> { return this.api.get('/public/structures'); }
 
-  listCMS(params: HttpParams): Observable<ApiResponse<Pagination<Structure>>> {
-    return this.http.get<ApiResponse<Pagination<Structure>>>(`${this.apiBase}/structures`, { params });
-  }
-
-  getByID(id: number): Observable<ApiResponse<Structure>> {
-    return this.http.get<ApiResponse<Structure>>(`${this.apiBase}/structures/${id}`);
-  }
-
-  create(req: StructureCreateReq): Observable<ApiResponse<{ structureID: number }>> {
-    return this.http.post<ApiResponse<{ structureID: number }>>(`${this.apiBase}/structures`, req);
-  }
-
-  update(id: number, req: StructureUpdateReq): Observable<ApiResponse<null>> {
-    return this.http.put<ApiResponse<null>>(`${this.apiBase}/structures/${id}`, req);
-  }
-
-  delete(id: number): Observable<ApiResponse<null>> {
-    return this.http.delete<ApiResponse<null>>(`${this.apiBase}/structures/${id}`);
-  }
+  cmsList(q: Record<string, unknown>): Observable<Pagination<Structure>> { return this.api.get('/structures', q); }
+  cmsGet(id: number): Observable<Structure> { return this.api.get(`/structures/${id}`); }
+  create(body: StructureCreateReq): Observable<{ structureID: number }> { return this.api.post('/structures', body); }
+  update(id: number, body: StructureUpdateReq): Observable<unknown> { return this.api.put(`/structures/${id}`, body); }
+  remove(id: number): Observable<unknown> { return this.api.delete(`/structures/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/structures/bulk-delete', { ids }); }
 }

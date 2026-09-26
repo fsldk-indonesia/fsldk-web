@@ -4,6 +4,7 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { PermissionRepository } from '../modules/permission/repositories/permission.repository';
 import { OrganizationRepository } from '../modules/organization/repositories/organization.repository';
 import { OrgContextService } from '../core/services/org-context.service';
+import { AlertService } from '../core/services/alert.service';
 import { MenuItem } from '../modules/permission/entities/menu-item';
 import { MeOrganization } from '../modules/organization/entities/organization';
 import { IconComponent } from '../shared/icon.component';
@@ -22,18 +23,41 @@ const MOBILE_BREAKPOINT = 900;
  *  saja). Ditulis generik supaya modul lain bisa ikut dikelompokkan tanpa
  *  perlu menulis ulang mekanismenya — dipakai "Kantong Amal" dan
  *  "Shortlink" (Shortlink + Permintaan Shortlink, lihat migrasi
- *  0033_shortlink_sidebar_group.up.sql di fsldk-api). */
+ *  0033_shortlink_sidebar_group.up.sql di fsldk-api).
+ *
+ *  `routePrefixes` (jamak) dipakai untuk grup yang anggotanya BUKAN nested di
+ *  bawah satu prefix yang sama — mis. "Pengguna" ("/cms/users") dan "Role
+ *  Pengguna" ("/cms/roles") dua rute top-level independen, beda dari
+ *  Shortlink yang child-nya sama-sama di bawah "/cms/shortlink/...". Cukup
+ *  isi salah satu (`routePrefix` ATAU `routePrefixes`) — keduanya dinormalisasi
+ *  ke array yang sama lewat prefixesOf() di bawah. */
 interface SidebarGroupConfig {
   label: string;
   icon: string;
-  routePrefix: string;
+  routePrefix?: string;
+  routePrefixes?: string[];
 }
 const SIDEBAR_GROUPS: SidebarGroupConfig[] = [
   { label: 'Kantong Amal', icon: 'hand-heart', routePrefix: '/cms/kantong-amal' },
   { label: 'Shortlink', icon: 'link', routePrefix: '/cms/shortlink' },
   { label: 'QR Code', icon: 'qr-code', routePrefix: '/cms/qrcode' },
   { label: 'FSLDK Goods', icon: 'shopping-bag', routePrefix: '/cms/goods' },
+  { label: 'Pengguna', icon: 'users', routePrefixes: ['/cms/users', '/cms/roles'] },
 ];
+
+function prefixesOf(g: SidebarGroupConfig): string[] {
+  return g.routePrefixes ?? (g.routePrefix ? [g.routePrefix] : []);
+}
+
+/** Cocok jika menuRoute PERSIS SAMA dengan salah satu prefix (rute top-level
+ *  independen, mis. grup "Pengguna" -> "/cms/users"/"/cms/roles") ATAU
+ *  nested SATU TINGKAT di bawahnya (mis. grup "Shortlink" -> anak-anak di
+ *  bawah "/cms/shortlink/..."). Dua pola beda ditangani satu fungsi supaya
+ *  SIDEBAR_GROUPS bisa dipakai dengan bentuk routePrefix TUNGGAL (existing)
+ *  maupun routePrefixes JAMAK (baru) tanpa cabang terpisah di pemanggilnya. */
+function matchesGroup(menuRoute: string, group: SidebarGroupConfig): boolean {
+  return prefixesOf(group).some((p) => menuRoute === p || menuRoute.startsWith(p + '/'));
+}
 
 type SidebarEntry =
   | { kind: 'item'; item: MenuItem }
@@ -88,6 +112,9 @@ function canvasSilhouetteUrl(hex: string): string {
         <div class="side-brand">
           <span class="brand-icon"><img src="assets/logo-fsldk.svg" alt="Logo FSLDK"></span>
           <span>{{ brandLabel() }}</span>
+          <button type="button" class="sidebar-close" (click)="closeSidebar()" aria-label="Tutup sidebar">
+            <app-icon name="x" [size]="18" />
+          </button>
         </div>
         <nav class="side-nav">
           <a [routerLink]="shellBase() + '/dashboard'" queryParamsHandling="preserve" routerLinkActive="active" (click)="close()" class="stagger-in" style="--stagger-i:0">
@@ -118,6 +145,8 @@ function canvasSilhouetteUrl(hex: string): string {
         </nav>
       </aside>
 
+      <div class="sidebar-backdrop" [class.open]="sidebarOpen()" (click)="closeSidebar()"></div>
+
       <div class="cms-main">
         <header class="topbar">
           <button class="hamburger" (click)="toggle()" aria-label="Buka/tutup sidebar">
@@ -127,7 +156,11 @@ function canvasSilhouetteUrl(hex: string): string {
             <div class="org-switcher">
               <button class="org-switcher-btn" type="button" (click)="toggleOrgDropdown($event)">
                 <app-icon [name]="switcherIcon()" [size]="14" />
-                <span>{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
+                @if (orgOptionsLoading() && !currentOrgName()) {
+                  <span class="skel skel-line org-switcher-skel org-switcher-text"></span>
+                } @else {
+                  <span class="org-switcher-text">{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
+                }
                 <app-icon name="chevron-down" [size]="12" />
               </button>
               @if (orgDropdownOpen()) {
@@ -138,7 +171,7 @@ function canvasSilhouetteUrl(hex: string): string {
                       {{ o.organizationName }}
                     </button>
                   } @empty {
-                    <p class="text-muted org-empty">Tidak ada organisasi lain.</p>
+                    <p class="text-muted org-empty">Tidak ada {{ orgNoun() }} lain.</p>
                   }
                 </div>
               }
@@ -146,9 +179,9 @@ function canvasSilhouetteUrl(hex: string): string {
           }
           <div class="spacer"></div>
           <app-prayer-time [tier]="tier()" />
-          <a routerLink="/" class="nav-website-link">
+          <a routerLink="/" class="nav-website-link" title="Website">
             <app-icon name="globe" [size]="15" />
-            Website
+            <span class="nav-website-text">Website</span>
           </a>
           <div class="user-dropdown" (mouseenter)="openDropdown()" (mouseleave)="closeDropdown()">
             <button class="user-chip" type="button" (click)="toggleDropdown($event)">
@@ -181,13 +214,13 @@ function canvasSilhouetteUrl(hex: string): string {
                   </a>
                 }
                 <a routerLink="/akun/profil" (click)="closeAllDropdowns()">
-                  <span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="15" /></span>
+                  <span class="icon-badge sm icon-badge-solid"><app-icon name="user-circle" [size]="15" /></span>
                   <span class="dropdown-item-text">
                     <span class="dropdown-item-title">Profil Saya</span>
                     <span class="dropdown-item-caption">Lihat &amp; ubah profil Anda</span>
                   </span>
                 </a>
-                <button type="button" class="dropdown-divider-top" (click)="logout()">
+                <button type="button" class="dropdown-divider-top" (click)="logout($event)">
                   <span class="icon-badge sm icon-badge-danger"><app-icon name="log-out" [size]="15" /></span>
                   <span class="dropdown-item-text">
                     <span class="dropdown-item-title">Keluar</span>
@@ -222,7 +255,7 @@ function canvasSilhouetteUrl(hex: string): string {
        .cms-main mengikuti lewat margin-left di .cms.sidebar-collapsed
        (lihat rule-nya di bawah). */
     .sidebar {
-      width: 260px; background: #fff; border-right: 1px solid var(--color-border); color: var(--color-text);
+      width: 260px; max-width: 85vw; background: #fff; border-right: 1px solid var(--color-border); color: var(--color-text);
       display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100dvh; z-index: 40;
       overflow: hidden; box-shadow: 2px 0 28px rgba(15,23,20,.05);
       transition: transform var(--motion-slow) var(--ease-out), box-shadow var(--motion-slow) ease;
@@ -235,6 +268,26 @@ function canvasSilhouetteUrl(hex: string): string {
     }
     .brand-icon { width: 36px; height: 36px; border-radius: var(--radius-xs); overflow: hidden; flex-shrink: 0; box-shadow: var(--shadow-sm); }
     .brand-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Cuma tampil di mobile (lihat media query 900px) — di desktop hamburger
+       topbar sudah cukup, dan sidebar tidak menutupi apa pun untuk ditutup
+       lewat tombol khusus. Ditaruh di dalam sidebar sendiri (bukan cuma
+       andalkan backdrop) karena hamburger topbar TERTUTUP sidebar saat
+       overlay mobile terbuka (z-index sidebar 60 > topbar 20) — tanpa ini
+       satu-satunya cara tutup di mobile adalah tap backdrop kosong, yang
+       tidak cukup jelas/discoverable. */
+    .sidebar-close {
+      display: none; margin-left: auto; flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-full);
+      align-items: center; justify-content: center; border: none; background: var(--color-bg-alt); color: var(--color-text-secondary);
+      cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .sidebar-close:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    /* Scrim gelap di belakang sidebar overlay mobile — juga jadi target tap
+       untuk menutup sidebar (poin utama laporan "sidebar tidak bisa
+       ditutup"). z-index 50 sengaja di ANTARA topbar (20) & sidebar (60 saat
+       .open) supaya menggelapkan seluruh .cms-main tapi tidak menutupi
+       sidebar sendiri. Tidak pernah tampil di desktop (>900px, lihat media
+       query) karena sidebar di sana mendorong konten, bukan overlay. */
+    .sidebar-backdrop { display: none; }
     /* .side-nav adalah SATU-SATUNYA yang discroll — .side-brand di atas tetap
        diam (poin 6): min-height:0 wajib supaya flex child ini benar-benar
        bisa menciut & memicu overflow, bukan mendorong tinggi .sidebar. */
@@ -314,6 +367,7 @@ function canvasSilhouetteUrl(hex: string): string {
        aktif (lihat .cms.tier-*), tidak perlu di-hardcode di sini. Hover
        naik jadi solid fill supaya kontras "sedang ditekan" makin jelas. */
     .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-full); border: 1.5px solid var(--color-primary-soft); background: var(--color-primary-tint); color: var(--color-primary-dark); font-weight: 700; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .org-switcher-skel { width: 90px; height: 13px; }
     .org-switcher-btn:hover { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent); transform: translateY(-1px); }
     .org-switcher-btn span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .org-dropdown-panel { left: 0; right: auto; min-width: 280px; max-height: 360px; overflow-y: auto; gap: 4px; }
@@ -336,7 +390,7 @@ function canvasSilhouetteUrl(hex: string): string {
     /* Website & akun: tanpa latar sama sekali di kondisi diam (dicoba pakai
        latar abu, lalu hijau — keduanya ditolak), hover cukup highlight
        netral tipis seperti item dropdown lain di app ini. */
-    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); background: none; border: none; color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
+    .nav-website-link { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-xs); background: none; border: none; color: var(--color-text-secondary); font-weight: 600; font-size: .9rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; flex-shrink: 0; }
     .nav-website-link:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); text-decoration: none; }
     .user-dropdown { position: relative; }
     .user-chip { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: var(--radius-xs); font-family: var(--font-body); transition: background var(--motion-fast) ease; }
@@ -359,7 +413,9 @@ function canvasSilhouetteUrl(hex: string): string {
        ends at the trigger button, since the panel is absolutely positioned
        and out of flow) and the panel's box, so moving the pointer straight
        down from the trigger fires mouseleave on .user-dropdown before ever
-       reaching the panel, closing it before a click can land. */
+       reaching the panel, closing it before a click can land. Only matters
+       on real-hover devices (openDropdown/closeDropdown no-op elsewhere via
+       supportsHover()), but harmless to always render. */
     .dropdown-panel::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }
     @keyframes dropdown-panel-in { from { opacity: 0; transform: scale(.85) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
     @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
@@ -396,7 +452,7 @@ function canvasSilhouetteUrl(hex: string): string {
     /* Kotak "Cari organisasi..." tetap teks biasa (tanpa icon-badge), jadi
        pola opacity dim lama tidak lagi relevan — item lain sekarang pakai
        icon-badge berwarna (lihat markup), bukan ikon polos. */
-    .cms-content { padding: 32px 28px; flex: 1; }
+    .cms-content { padding: 32px 28px; flex: 1; min-width: 0; }
     /* Pembungkus card seragam untuk SEMUA halaman index & form CMS (4 portal),
        dipasang sekali di sini (bukan per-halaman) supaya konsisten & mudah
        diubah dari satu tempat — mengikuti lebar+center yang sama dengan
@@ -424,8 +480,12 @@ function canvasSilhouetteUrl(hex: string): string {
     .cms-footer-inner {
       background: var(--color-bg-alt); border-radius: var(--radius-md) var(--radius-md) 0 0;
       max-width: 1100px; margin: 0 auto; padding: 18px 24px;
+      padding-bottom: max(18px, env(safe-area-inset-bottom));
       display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
       font-size: .85rem; color: var(--color-text-secondary);
+    }
+    @media (max-width: 640px) {
+      .cms-footer-inner { flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px 18px; padding-bottom: max(16px, env(safe-area-inset-bottom)); text-align: left; }
     }
     @media (max-width: 900px) {
       /* Di bawah 900px sidebar jadi drawer mengambang (overlay), bukan
@@ -434,41 +494,66 @@ function canvasSilhouetteUrl(hex: string): string {
          .sidebar-collapsed (override base rule di atas yang berlaku untuk
          desktop), karena sidebar tidak lagi mendorong apa pun di mobile. */
       .sidebar.open { box-shadow: var(--shadow-lg); z-index: 60; }
+      .sidebar-close { display: flex; }
+      .sidebar-backdrop {
+        display: block; position: fixed; inset: 0; background: rgba(15,23,20,.5); z-index: 50;
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear var(--motion-slow);
+      }
+      .sidebar-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear 0s; }
       .cms-main, .cms.sidebar-collapsed .cms-main { margin-left: 0; }
-      .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 0; padding: 8px 14px; gap: 10px; }
+      .topbar, .cms.sidebar-collapsed .topbar { left: 8px; right: 8px; top: 0; padding: 8px 14px; gap: 8px; }
+      .cms-content { padding: 20px 14px; }
+      /* HANYA jarak kiri-kanan (bukan bikin "mengambang" penuh seperti
+         topbar) — footer TETAP nempel ke tepi bawah layar & radius TETAP
+         cuma di atas, sama seperti sebelumnya. Yang diperbaiki cuma:
+         footer-inner sebelumnya dibatasi max-width:1100px+margin:auto saja,
+         yang di bawah 1100px otomatis jadi 100% lebar .cms-main (= lebar
+         penuh viewport di mobile karena sidebar tidak lagi mendorong
+         konten), sehingga kelihatan nempel edge-to-edge kiri-kanan. */
+      .cms-footer { padding: 0 8px; }
+      .org-switcher-btn .org-switcher-text { max-width: 120px; }
+      .user-meta { display: none; }
+      .dropdown-panel, .org-dropdown-panel { min-width: 0; width: min(280px, calc(100vw - 32px)); }
+    }
+    /* Di bawah ini topbar makin sempit (ponsel kecil) — sembunyikan elemen
+       sekunder (label "Website", nama/role akun sudah disembunyikan sejak
+       900px) supaya hamburger + prayer-time + avatar tidak berdesakan/
+       terpotong. Ikon tetap tampil, cuma label teksnya yang hilang.
+       org-switcher-text (nama LDK/Puskomda) DIHAPUS TOTAL (bukan cuma
+       dipersempit ke 72px seperti sebelumnya) — di lebar ini kombinasi
+       hamburger+org-switcher+prayer-time+website+avatar tetap lebih lebar
+       dari layar walau teksnya sudah dipotong 72px, jadi avatar (elemen
+       TERAKHIR) kepentok/terpotong keluar dari topbar (dilaporkan
+       "kepotong"). Sisa ikon+chevron org-switcher masih cukup untuk buka
+       dropdown pencarian organisasi. */
+    @media (max-width: 560px) {
+      .nav-website-text { display: none; }
+      .nav-website-link { padding: 8px; }
+      .topbar { gap: 4px; padding: 8px; }
+      .org-switcher-btn { padding: 7px 9px; gap: 4px; }
+      .org-switcher-btn .org-switcher-text { display: none; }
     }
 
-    /* Tema per tier (poin 2 miss-development-clarification.md): CMS Utama
-       (tanpa kelas tier-*) tetap tema default. LDK/Puskomda/Puskomnas
-       memakai mix 70% warna tier + 20% putih + 10% hijau brand (#00933b),
-       diterapkan ke SELURUH permukaan termasuk card/panel konten (bukan
-       cuma background halaman & sidebar) sesuai keputusan yang dikonfirmasi
-       — kontras teks tetap dijaga karena tint-nya sangat ringan (--color-text
-       tidak diubah, tetap gelap solid). Dihitung sekali lewat color-mix()
-       sebagai custom property, dipakai ulang oleh .card/.cms/.sidebar/.topbar.
-     */
+    /* Tema per tier (revisi — sebelumnya tint warna tier disebar ke SELURUH
+       permukaan termasuk card/sidebar/topbar/background halaman lewat
+       color-mix(), tapi itu bikin card kelihatan abu-abu/pudar dibanding
+       Portal Admin yang solid putih. Sekarang page/sidebar/topbar/card tetap
+       putih/netral persis seperti Portal Admin di semua tier — warna tier
+       HANYA nempel di permukaan yang sudah baca var(--color-primary/-soft)
+       lewat styles.scss global: button/pill/chip/badge/icon-badge, active
+       nav item sidebar, dan accent lain yang sudah ada sebelum perubahan ini. */
     .cms.tier-ldk {
       --color-primary: #063c84; --color-primary-dark: #042c61; --color-primary-darker: #021a3a;
       --color-primary-bright: #1f5db3; --color-primary-soft: #e2e9f5; --color-primary-tint: #f4f7fc;
-      --tier-mix: color-mix(in srgb, #063c84 70%, color-mix(in srgb, #ffffff 66.7%, #00933b 33.3%) 30%);
     }
     .cms.tier-puskomda {
       --color-primary: #186541; --color-primary-dark: #0f4a30; --color-primary-darker: #092e1d;
       --color-primary-bright: #2f9161; --color-primary-soft: #e0f0e6; --color-primary-tint: #f4faf6;
-      --tier-mix: color-mix(in srgb, #186541 70%, color-mix(in srgb, #ffffff 66.7%, #00933b 33.3%) 30%);
     }
     .cms.tier-puskomnas {
       --color-primary: #55408f; --color-primary-dark: #3e2f6b; --color-primary-darker: #291f47;
       --color-primary-bright: #7a63b8; --color-primary-soft: #ece8f7; --color-primary-tint: #f8f6fc;
-      --tier-mix: color-mix(in srgb, #55408f 70%, color-mix(in srgb, #ffffff 66.7%, #00933b 33.3%) 30%);
-    }
-    .cms.tier-ldk, .cms.tier-puskomda, .cms.tier-puskomnas {
-      background-color: color-mix(in srgb, var(--tier-mix) 22%, var(--color-bg-warm) 78%);
-    }
-    .cms.tier-ldk .sidebar, .cms.tier-puskomda .sidebar, .cms.tier-puskomnas .sidebar,
-    .cms.tier-ldk .topbar, .cms.tier-puskomda .topbar, .cms.tier-puskomnas .topbar,
-    .cms.tier-ldk .cms-content ::ng-deep .card, .cms.tier-puskomda .cms-content ::ng-deep .card, .cms.tier-puskomnas .cms-content ::ng-deep .card {
-      background-color: color-mix(in srgb, var(--tier-mix) 14%, #fff 86%);
     }
   `],
 })
@@ -479,6 +564,7 @@ export class CmsLayoutComponent implements OnInit {
   private orgContext = inject(OrgContextService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private alert = inject(AlertService);
 
   tier = signal<Tier>('FSLDK');
   shellBase = computed(() => CMS_SHELL_BASE[this.tier()]);
@@ -515,14 +601,14 @@ export class CmsLayoutComponent implements OnInit {
     const entries: SidebarEntry[] = [];
     const seen = new Set<string>();
     for (const item of items) {
-      const group = SIDEBAR_GROUPS.find((g) => item.menuRoute.startsWith(g.routePrefix + '/'));
+      const group = SIDEBAR_GROUPS.find((g) => matchesGroup(item.menuRoute, g));
       if (!group) {
         entries.push({ kind: 'item', item });
         continue;
       }
       if (seen.has(group.label)) continue;
       seen.add(group.label);
-      const children = items.filter((i) => i.menuRoute.startsWith(group.routePrefix + '/'));
+      const children = items.filter((i) => matchesGroup(i.menuRoute, group));
       entries.push({ kind: 'group', config: group, children });
     }
     return entries;
@@ -536,6 +622,12 @@ export class CmsLayoutComponent implements OnInit {
   isGroupExpanded(label: string): boolean { return this.expandedGroups().has(label); }
 
   currentOrgID = signal<number | undefined>(undefined);
+  /** True sampai panggilan switcherList() PERTAMA selesai — dipakai trigger
+   *  switcher untuk menampilkan skeleton alih-alih placeholder "Pilih
+   *  Puskomda/LDK" (yang kalau tampil sesaat sebelum auto-select di
+   *  loadOrgOptions() selesai, kelihatan seperti default gagal ter-resolve
+   *  padahal cuma race loading singkat). */
+  orgOptionsLoading = signal(true);
   orgOptions = signal<MeOrganization[]>([]);
   orgSearch = signal('');
 
@@ -558,7 +650,7 @@ export class CmsLayoutComponent implements OnInit {
     // terbuka, supaya pengguna tidak "kehilangan" halaman yang sedang
     // dibuka di balik dropdown tertutup.
     const currentUrl = this.router.url;
-    const activeGroup = SIDEBAR_GROUPS.find((g) => currentUrl.startsWith(g.routePrefix + '/'));
+    const activeGroup = SIDEBAR_GROUPS.find((g) => prefixesOf(g).some((p) => currentUrl.startsWith(p)));
     if (activeGroup) this.expandedGroups.set(new Set([activeGroup.label]));
 
     if (this.showOrgSwitcher()) {
@@ -574,6 +666,7 @@ export class CmsLayoutComponent implements OnInit {
     this.orgRepo.switcherList(this.tier(), q ? undefined : this.currentOrgID(), q || undefined).subscribe({
       next: (list) => {
         this.orgOptions.set(list);
+        this.orgOptionsLoading.set(false);
         // Belum ada organizationID eksplisit di URL (mis. baru pindah ke shell
         // ini dari dropdown akun) — jangan biarkan switcher "lepas" menampilkan
         // placeholder "Pilih Organisasi" (miss-development-prompt-3.md poin 2),
@@ -583,7 +676,7 @@ export class CmsLayoutComponent implements OnInit {
           this.selectOrganization(list[0].organizationID);
         }
       },
-      error: () => {},
+      error: () => { this.orgOptionsLoading.set(false); },
     });
   }
 
@@ -603,8 +696,20 @@ export class CmsLayoutComponent implements OnInit {
     this.dropdownOpen.update((v) => !v);
   }
 
-  openDropdown(): void { this.dropdownOpen.set(true); }
-  closeDropdown(): void { this.dropdownOpen.set(false); }
+  // Hover-buka HANYA untuk perangkat yang beneran punya hover presisi (mouse
+  // desktop) — dicek lewat matchMedia, BUKAN diasumsikan dari lebar layar.
+  // Touchscreen tetap mengirim event mouseenter SINTETIS tepat sebelum click
+  // saat disentuh; kalau openDropdown() dibiarkan jalan di situ, urutannya
+  // jadi: tap pertama -> mouseenter buka -> click langsung toggle balik
+  // tertutup (net: tidak kelihatan berubah) -> baru tap KEDUA yang benar-benar
+  // membuka (mouseenter tidak terpicu lagi karena "hover" sintetisnya sudah
+  // dianggap aktif). (hover:hover) and (pointer:fine) adalah satu-satunya
+  // sinyal CSS yang cukup andal untuk membedakan mouse asli dari sentuhan.
+  private supportsHover(): boolean {
+    return window.matchMedia?.('(hover: hover) and (pointer: fine)').matches ?? false;
+  }
+  openDropdown(): void { if (this.supportsHover()) this.dropdownOpen.set(true); }
+  closeDropdown(): void { if (this.supportsHover()) this.dropdownOpen.set(false); }
 
   toggleOrgDropdown(event: Event): void {
     event.stopPropagation();
@@ -631,8 +736,20 @@ export class CmsLayoutComponent implements OnInit {
   // desktop sidebar mendorong konten, jadi ikut tertutup tiap klik menu
   // justru mengganggu, bukan membantu.
   close(): void { if (window.innerWidth <= MOBILE_BREAKPOINT) this.sidebarOpen.set(false); }
+  // Dipicu tombol X di sidebar & tap backdrop — TIDAK bersyarat lebar layar
+  // (beda dari close()) karena keduanya cuma pernah kelihatan/aktif di
+  // mobile (lihat CSS .sidebar-close/.sidebar-backdrop, display:none di atas
+  // 900px), jadi tidak perlu dicek ulang di sini.
+  closeSidebar(): void { this.sidebarOpen.set(false); }
 
-  logout(): void {
+  async logout(event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(
+      'Apakah Anda yakin ingin keluar dari akun ini?',
+      { title: 'Keluar dari Akun', confirmLabel: 'Ya, Keluar', variant: 'danger' },
+      event,
+    );
+    if (!ok) return;
+    this.closeAllDropdowns();
     this.auth.logout();
     this.router.navigate(['/login']);
   }

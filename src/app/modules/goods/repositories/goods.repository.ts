@@ -20,4 +20,5 @@ export class GoodsRepository {
   publish(id: number, isPublished: boolean): Observable<unknown> { return this.api.publish(id, isPublished); }
   featuredToggle(id: number, isFeatured: boolean): Observable<unknown> { return this.api.featuredToggle(id, isFeatured); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
 }

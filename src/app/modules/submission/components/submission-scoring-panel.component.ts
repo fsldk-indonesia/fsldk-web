@@ -32,30 +32,32 @@ import { ConsolidatedScoreResponse } from '../entities/submission';
         @if (!cs.isComplete) {
           <p class="text-muted incomplete-note">Skor belum lengkap — masih ada field yang belum dijawab/belum diberi skor manual.</p>
         }
-        <table class="scoring-table">
-          <thead>
-            <tr><th>Field</th><th>Skor</th><th>Maks</th><th>Normalisasi</th><th>Bobot</th><th>Kontribusi</th><th>Sumber</th></tr>
-          </thead>
-          <tbody>
-            @for (fs of cs.fields; track fs.fieldID) {
-              <tr>
-                <td>{{ fs.fieldLabel }}</td>
-                <td>
-                  @if (fs.source === 'MANUAL' && editable) {
-                    <input type="number" class="form-control score-input" [ngModel]="draft[fs.fieldID]" (ngModelChange)="draft[fs.fieldID] = $event" [min]="0" [max]="fs.maxScore">
-                  } @else {
-                    {{ fs.hasScore ? fs.rawScore : '—' }}
-                  }
-                </td>
-                <td>{{ fs.maxScore }}</td>
-                <td>{{ fs.hasScore ? (fs.normalized | number:'1.0-1') + '%' : '—' }}</td>
-                <td>{{ fs.weight }}%</td>
-                <td>{{ fs.hasScore ? (fs.weightedScore | number:'1.0-1') + '%' : '—' }}</td>
-                <td><span class="chip" [class.chip-green]="fs.source === 'AUTOMATIC'">{{ fs.source === 'AUTOMATIC' ? 'Otomatis' : 'Manual' }}</span></td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="scoring-table">
+            <thead>
+              <tr><th>Field</th><th>Skor</th><th>Maks</th><th>Normalisasi</th><th>Bobot</th><th>Kontribusi</th><th>Sumber</th></tr>
+            </thead>
+            <tbody>
+              @for (fs of cs.fields; track fs.fieldID) {
+                <tr>
+                  <td>{{ fs.fieldLabel }}</td>
+                  <td>
+                    @if (fs.source === 'MANUAL' && editable) {
+                      <input type="number" class="form-control score-input" [ngModel]="draft[fs.fieldID]" (ngModelChange)="draft[fs.fieldID] = $event" [min]="0" [max]="fs.maxScore">
+                    } @else {
+                      {{ fs.hasScore ? fs.rawScore : '—' }}
+                    }
+                  </td>
+                  <td>{{ fs.maxScore }}</td>
+                  <td>{{ fs.hasScore ? (fs.normalized | number:'1.0-1') + '%' : '—' }}</td>
+                  <td>{{ fs.weight }}%</td>
+                  <td>{{ fs.hasScore ? (fs.weightedScore | number:'1.0-1') + '%' : '—' }}</td>
+                  <td><span class="chip" [class.chip-green]="fs.source === 'AUTOMATIC'">{{ fs.source === 'AUTOMATIC' ? 'Otomatis' : 'Manual' }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
         @if (editable && hasManualFields(cs)) {
           <button class="btn btn-primary btn-sm" style="margin-top:12px" (click)="submitScores(cs)" [disabled]="busy">Simpan Skor</button>
         }
@@ -69,7 +71,7 @@ import { ConsolidatedScoreResponse } from '../entities/submission';
     .final-score { font-size: 1.5rem; font-weight: 700; color: var(--color-primary-dark); }
     .final-score.incomplete { color: var(--color-muted); }
     .incomplete-note { margin-bottom: 10px; }
-    .scoring-table { width: 100%; border-collapse: collapse; font-size: .86rem; margin-top: 10px; }
+    .scoring-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: .86rem; margin-top: 10px; }
     .scoring-table th, .scoring-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--color-border); }
     .scoring-table th { color: var(--color-text-secondary); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; }
     .score-input { width: 80px; padding: 4px 8px; }

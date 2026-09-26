@@ -29,7 +29,7 @@
   <div class="grid grid-2 mt-lg">
     <div class="card">
       <div class="card-pad">
-        <h3 class="group-title"><app-icon name="file-text" [size]="16" /> Informasi Penarikan</h3>
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span>Informasi Penarikan</p>
 
         <div class="wd-info-row">
           <span class="wd-info-label">Campaign</span>
@@ -60,7 +60,7 @@
 
     <div class="card">
       <div class="card-pad">
-        <h3 class="group-title"><app-icon name="history" [size]="16" /> Riwayat Transfer</h3>
+        <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="history" [size]="14" /></span>Riwayat Transfer</p>
 
         <ul class="wd-timeline">
           <li class="wd-tl-item">
@@ -104,5 +104,10 @@
     </div>
   </div>
 
-  <p class="mt-lg"><a [routerLink]="kantongAmalPath.adminWithdrawals"><app-icon name="arrow-left" [size]="14" /> Kembali ke Penarikan</a></p>
+  <div class="flex gap justify-between items-center mt-lg">
+    <a class="btn btn-outline" [routerLink]="kantongAmalPath.adminWithdrawals"><app-icon name="arrow-left" [size]="14" /> Kembali ke Penarikan</a>
+    @if (withdrawal()!.receiptUrl) {
+      <a class="btn wd-btn-receipt" [href]="withdrawal()!.receiptUrl" target="_blank" rel="noopener"><app-icon name="file-text" [size]="14" /> Lihat Bukti Transfer</a>
+    }
+  </div>
 }

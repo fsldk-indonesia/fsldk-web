@@ -29,8 +29,15 @@ export class SubmissionApiService {
   list(formCode: string, organizationID?: number): Observable<Pagination<SubmissionResponse>> {
     return this.api.get('/submissions', { formCode, limit: 1, organizationID });
   }
-  /** Daftar terpaginasi untuk antrean reviewer — satu status per panggilan (backend tidak mendukung filter IN-list). */
-  listQueue(q: { formCode?: string; status?: string; page?: number; limit?: number; organizationID?: number }): Observable<Pagination<SubmissionResponse>> {
+  /** Daftar terpaginasi mentah `/submissions`. `status` boleh comma-separated
+   *  (backend mem-parsing lewat `dto.ParseCSV` -> IN-list) — dipakai baik
+   *  antrean reviewer (satu status per panggilan) maupun halaman Laporan
+   *  (multi-status sekaligus lewat filter Status app-cms-index). `search`
+   *  dicocokkan ke nama/kode LDK (LEFT JOIN ms_organization di backend). */
+  listQueue(q: {
+    formCode?: string; status?: string; page?: number; limit?: number; organizationID?: number;
+    sort?: string; search?: string;
+  }): Observable<Pagination<SubmissionResponse>> {
     return this.api.get('/submissions', q);
   }
   get(id: number): Observable<SubmissionDetail> { return this.api.get(`/submissions/${id}`); }

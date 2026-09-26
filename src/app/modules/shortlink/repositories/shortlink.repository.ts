@@ -13,5 +13,6 @@ export class ShortlinkRepository {
   create(body: { destinationURL: string; shortKey?: string }): Observable<ShortLink> { return this.api.create(body); }
   update(id: number, body: { destinationURL: string; shortKey: string }): Observable<ShortLink> { return this.api.update(id, body); }
   remove(id: number): Observable<unknown> { return this.api.remove(id); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.bulkDelete(ids); }
   resolve(key: string): Observable<{ destinationURL: string }> { return this.api.resolve(key); }
 }

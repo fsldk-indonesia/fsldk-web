@@ -33,6 +33,7 @@ export const shortlinkRoutes: () => Routes = () => [
 export const shortlinkPublicRoutes: () => Routes = () => [
   {
     path: 'shortlink/ajukan',
+    title: 'Ajukan Shortlink',
     loadComponent: () => import('./pages/public-submit/shortlinkrequest.submit.page').then((m) => m.ShortlinkRequestSubmitPage),
   },
 ];

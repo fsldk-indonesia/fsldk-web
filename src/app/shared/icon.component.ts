@@ -28,7 +28,7 @@ const ICONS: Record<string, string> = {
   'empty-box': 'fas fa-box-open',
   error: 'fas fa-exclamation-triangle',
   search: 'fas fa-search',
-  guest: 'fas fa-user',
+  guest: 'fas fa-user-astronaut',
   'user-plus': 'fas fa-user-plus',
   'log-in': 'fas fa-sign-in-alt',
   'log-out': 'fas fa-sign-out-alt',
@@ -131,6 +131,36 @@ const ICONS: Record<string, string> = {
   'quote-left': 'fas fa-quote-left',
   'chart-bar': 'fas fa-chart-column',
   'chart-pie': 'fas fa-chart-pie',
+  // Panel "Attached Media" (Comment Control Center — View Comment).
+  paperclip: 'fas fa-paperclip',
+  // Pemetik warna kustom (ColorPickerComponent) — tombol "ambil warna dari layar".
+  'eye-dropper': 'fas fa-eye-dropper',
+  // Palet tipe field Formulir Dinamis (dynamicform.constants.ts FIELD_TYPES) —
+  // tiap tipe butuh ikon berbeda, sebelumnya banyak yang numpuk ke 'file-text'.
+  font: 'fas fa-font',
+  'align-left': 'fas fa-align-left',
+  hash: 'fas fa-hashtag',
+  upload: 'fas fa-upload',
+  paragraph: 'fas fa-paragraph',
+  'circle-dot': 'fas fa-circle-dot',
+  'square-check': 'fas fa-square-check',
+  sliders: 'fas fa-sliders',
+  // Aksi baris index Campaign (Jeda/Arsipkan) — dikonversi dari button teks
+  // ke icon-action, lihat kantong-amal.admin-campaign.page.html.
+  pause: 'fas fa-pause',
+  archive: 'fas fa-box-archive',
+  // Form Welcome Popup (Field Javascript/CSS).
+  code: 'fas fa-code',
+  palette: 'fas fa-palette',
+  // Section "Tentang Kami" beranda — ikon Visi (compass) dan kartu Misi
+  // (fingerprint/flag/share-nodes/briefcase/venus/coins), lihat home.index.page.ts.
+  compass: 'fas fa-compass',
+  fingerprint: 'fas fa-fingerprint',
+  flag: 'fas fa-flag',
+  'share-nodes': 'fas fa-share-nodes',
+  briefcase: 'fas fa-briefcase',
+  venus: 'fas fa-venus',
+  coins: 'fas fa-coins',
 };
 
 /**

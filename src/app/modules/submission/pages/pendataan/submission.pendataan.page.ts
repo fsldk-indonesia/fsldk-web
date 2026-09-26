@@ -40,7 +40,12 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .status-banner.tone-warning { background: var(--color-ember-soft); color: var(--color-ember-dark); }
     .status-banner.tone-success { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .section-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 18px; margin-bottom: 16px; }
-    .section-card h3 { margin-bottom: 4px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 14px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .section-desc { margin: -8px 0 14px; }
     .field-group { margin-top: 16px; }
     .field-label { font-weight: 600; font-size: .92rem; margin-bottom: 6px; display: block; }
     .field-help { color: var(--color-muted); font-size: .82rem; margin-top: 4px; }
@@ -48,7 +53,8 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .actions-bar { display: flex; gap: 12px; margin-top: 24px; }
     .answer-view { padding: 10px 0; border-bottom: 1px solid var(--color-border); }
     .answer-view dt { font-weight: 600; font-size: .88rem; }
-    .answer-view dd { color: var(--color-text-secondary); margin: 2px 0 0; }
+    .answer-view dd { color: var(--color-text-secondary); margin: 2px 0 0; overflow-wrap: break-word; word-break: break-word; }
+    .empty-state-inline { padding: 36px 20px 24px; }
   `],
 })
 export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView {

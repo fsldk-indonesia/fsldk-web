@@ -29,6 +29,7 @@ export class DynamicFormRepository {
   getSubmission(id: number, subId: number): Observable<DynamicFormSubmissionDetail> { return this.api.getSubmission(id, subId); }
   updateSubmission(id: number, subId: number, fd: FormData): Observable<unknown> { return this.api.updateSubmission(id, subId, fd); }
   deleteSubmission(id: number, subId: number): Observable<unknown> { return this.api.deleteSubmission(id, subId); }
+  bulkDeleteSubmissions(id: number, subIds: number[]): Observable<{ deleted: number[]; skipped: number[] }> { return this.api.bulkDeleteSubmissions(id, subIds); }
   deleteResponses(id: number): Observable<unknown> { return this.api.deleteResponses(id); }
   analytics(id: number): Observable<DynamicFormAnalytics> { return this.api.analytics(id); }
   exportCsv(id: number): Observable<{ blob: Blob; filename: string }> { return this.api.exportCsv(id); }

@@ -6,6 +6,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const dynamicFormPublicRoutes: () => Routes = () => [
   {
     path: 'form/:slug',
+    title: 'Formulir',
     loadComponent: () => import('./pages/public-fill/dynamicform.public-fill.page').then((m) => m.DynamicFormPublicFillPage),
   },
 ];
@@ -31,6 +32,17 @@ export const dynamicFormCmsRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'dynamicform.update' },
     title: 'Edit Formulir Dinamis',
+    loadComponent: () => import('./pages/form/dynamicform.form.page').then((m) => m.DynamicFormFormPage),
+  },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // DynamicFormIndexPage) — pola sama seperti Berita/Perpustakaan.
+    path: 'dynamic-forms/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'dynamicform.view', viewOnly: true },
+    title: 'Detail Formulir Dinamis',
     loadComponent: () => import('./pages/form/dynamicform.form.page').then((m) => m.DynamicFormFormPage),
   },
   {

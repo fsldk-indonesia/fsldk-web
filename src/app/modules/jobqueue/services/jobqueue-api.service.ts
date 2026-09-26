@@ -14,4 +14,5 @@ export class JobQueueApiService {
   stats(): Observable<JobStats> { return this.api.get('/job-queue/stats'); }
   retry(id: number): Observable<unknown> { return this.api.post(`/job-queue/${id}/retry`); }
   remove(id: number): Observable<unknown> { return this.api.delete(`/job-queue/${id}`); }
+  bulkDelete(ids: number[]): Observable<unknown> { return this.api.post('/job-queue/bulk-delete', { ids }); }
 }

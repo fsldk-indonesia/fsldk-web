@@ -45,8 +45,12 @@ export class GoodsFormPresenter extends BasePresenter<GoodsFormView> {
   private categoryRepo = inject(GoodsCategoryRepository);
   private toast = inject(ToastService);
 
+  /** limit besar supaya dropdown kategori dapat "semua" kategori dalam satu
+   *  request — endpoint /goods-categories kini terpaginasi untuk kebutuhan
+   *  Kategori Goods index (lihat GoodsCategoryIndexPresenter), pola sama
+   *  seperti OrganizationRepository.list({ limit: 200 }) untuk dropdown LDK. */
   loadCategories(): void {
-    this.categoryRepo.cmsList().subscribe({ next: (c) => this.view.setCategories(c), error: () => {} });
+    this.categoryRepo.cmsList({ limit: 200 }).subscribe({ next: (p) => this.view.setCategories(p.data), error: () => {} });
   }
 
   loadForEdit(id: number): void {

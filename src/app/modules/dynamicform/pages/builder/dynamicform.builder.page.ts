@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
@@ -63,77 +63,127 @@ const emptyFieldForm = (type: DynamicFieldType = 'short_text'): FieldFormValue =
   imports: [FormsModule, RouterLink, IconComponent, ModalBackdropDirective, SelectComponent],
   providers: [DynamicFormBuilderPresenter],
   styles: [`
-    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .88rem; margin-bottom: 10px; }
-    .header-bar { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-    .header-bar h1 { margin-bottom: 4px; }
+    .page-footer { display: flex; justify-content: flex-end; margin-top: 22px; }
+
+    /* Header — kartu bertekstur gradien tipis, bukan sekadar judul polos di
+       atas halaman, supaya jadi "banner" workspace formulir yang jelas. */
+    .header-bar {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+      margin-bottom: 24px; padding: 20px 24px; border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #fff 0%, var(--color-bg-warm) 100%);
+      border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);
+    }
+    .header-bar h1 { margin: 0 0 8px; }
+    .header-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .version-chip { font-size: .74rem; font-weight: 700; color: var(--color-muted); background: var(--color-bg-alt); padding: 3px 10px; border-radius: var(--radius-full); }
     .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    .builder { display: grid; grid-template-columns: 260px minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+    .builder { display: grid; grid-template-columns: 268px minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
     @media (max-width: 1180px) { .builder { grid-template-columns: 240px minmax(0, 1fr); } .builder .sidebar { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } }
     @media (max-width: 760px) { .builder { grid-template-columns: 1fr; } .builder .sidebar { grid-template-columns: 1fr; } }
 
     /* col 1 — palette */
     .palette { position: sticky; top: 16px; }
-    .col-title { display: flex; align-items: center; gap: 8px; font-size: .95rem; font-weight: 700; }
-    .palette h4 { margin: 14px 0 6px; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--color-muted); }
-    .palette h4:first-of-type { margin-top: 10px; }
-    .palette button { display: flex; align-items: center; gap: 9px; width: 100%; text-align: left; padding: 8px 10px; border: 0; background: transparent; border-radius: var(--radius-xs); cursor: pointer; font-size: .88rem; color: var(--color-text); transition: background var(--motion-fast) ease; }
-    .palette button:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    .palette .card { padding: 18px; }
+    .col-title { display: flex; align-items: center; gap: 8px; font-size: .95rem; font-weight: 800; margin: 0 0 4px; }
+    .palette-group { margin-top: 18px; }
+    .palette-group:first-of-type { margin-top: 12px; }
+    .palette-group h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--color-muted); font-weight: 800; }
+    .palette-group h4::after { content: ''; flex: 1; height: 1px; background: var(--color-border); }
+    .tool-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 7px 8px; border: 1px solid transparent; background: transparent; border-radius: var(--radius-md); cursor: pointer; font-size: .86rem; font-weight: 600; color: var(--color-text); margin-bottom: 2px; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, transform var(--motion-fast) ease; }
+    .tool-btn:hover { background: #fff; border-color: var(--color-border); box-shadow: var(--shadow-xs, 0 1px 3px rgba(20,23,26,.08)); transform: translateX(2px); }
+    .tool-icon { width: 26px; height: 26px; border-radius: var(--radius-xs); display: flex; align-items: center; justify-content: center; background: var(--color-bg-alt); color: var(--color-text-secondary); flex-shrink: 0; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
+    .tool-btn:hover .tool-icon { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 
     /* col 2 — active fields */
     .active-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
     .count-badge { font-size: .74rem; font-weight: 700; color: var(--color-muted); background: var(--color-bg-alt); padding: 3px 10px; border-radius: var(--radius-full); }
-    .quick-add { position: sticky; top: 16px; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; padding: 10px; margin-bottom: 12px;
+    .quick-add { position: sticky; top: 16px; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; padding: 10px; margin-bottom: 14px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); }
     .quick-add .btn { flex: 1; min-width: 130px; justify-content: center; }
-    .header-image-preview { position: relative; margin-bottom: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; }
+    .header-image-preview { position: relative; margin-bottom: 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm); }
     .header-image-preview img { width: 100%; max-height: 150px; object-fit: cover; display: block; }
     .header-image-preview .hi-actions { display: flex; gap: 8px; padding: 8px; background: #fff; }
 
-    .field-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; transition: box-shadow var(--motion-fast) ease, opacity var(--motion-fast) ease, border-color var(--motion-fast) ease; }
-    .field-card .grip { color: var(--color-border-strong); cursor: grab; flex-shrink: 0; margin-top: 2px; align-self: center; }
+    .field-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; box-shadow: 0 1px 2px rgba(20,23,26,.03); transition: box-shadow var(--motion-fast) ease, opacity var(--motion-fast) ease, border-color var(--motion-fast) ease; }
+    .field-card:hover { box-shadow: var(--shadow-sm); border-color: var(--color-border-strong); }
+    .field-card .grip { color: var(--color-border-strong); cursor: grab; flex-shrink: 0; align-self: center; padding: 4px; transition: color var(--motion-fast) ease; }
+    .field-card:hover .grip { color: var(--color-muted); }
     .field-card .grip:active { cursor: grabbing; }
     .field-card.dragging { opacity: .45; }
     .field-card.drag-over { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-soft); }
-    .field-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
-    .field-meta .type { font-size: .78rem; color: var(--color-muted); }
+    .field-type-icon { width: 34px; height: 34px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; background: var(--color-bg-alt); color: var(--color-text-secondary); flex-shrink: 0; align-self: center; }
+    .field-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; flex: 1; }
+    .type-pill { display: inline-flex; align-items: center; font-size: .72rem; font-weight: 700; color: var(--color-text-secondary); background: var(--color-bg-alt); padding: 2px 9px; border-radius: var(--radius-full); width: fit-content; }
     .field-meta .help { font-size: .82rem; color: var(--color-muted); }
     .card-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
 
+    .section-card { border-style: dashed; border-width: 1.5px; border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .section-card .field-type-icon { background: #fff; color: var(--color-primary-dark); }
+
     /* col 3 — sidebar */
     .sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 16px; }
-    .sidebar-card { padding: 16px; }
-    .sidebar-title { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 700; margin: 0 0 12px; }
-    .drive-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius-xs); text-decoration: none; color: var(--color-text); transition: background var(--motion-fast) ease; }
-    .drive-row:hover { background: var(--color-bg-alt); }
-    .drive-row app-icon { color: var(--color-primary-dark); flex-shrink: 0; margin-top: 1px; }
+    .sidebar-card { padding: 18px; }
+    .sidebar-title { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 800; margin: 0 0 14px; }
+    .drive-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius-xs); text-decoration: none; color: var(--color-text); transition: background var(--motion-fast) ease, transform var(--motion-fast) ease; }
+    .drive-row:hover { background: var(--color-bg-alt); transform: translateX(2px); }
     .drive-row strong { display: block; font-size: .85rem; }
     .drive-row span { display: block; font-size: .78rem; color: var(--color-muted); }
-    .tips-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-    .tips-list li { display: flex; gap: 8px; font-size: .82rem; color: var(--color-text-secondary); line-height: 1.5; }
+    .tips-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+    .tips-list li { display: flex; gap: 10px; font-size: .82rem; color: var(--color-text-secondary); line-height: 1.5; }
     .tips-list li app-icon { color: var(--color-primary); flex-shrink: 0; margin-top: 2px; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(20,23,26,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .modal { background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column; }
-    .modal > h3 { flex-shrink: 0; margin-bottom: 16px; }
-    .modal-body { overflow-y: auto; flex: 1 1 auto; min-height: 0; padding-right: 6px; }
-    .modal-footer { flex-shrink: 0; display: flex; justify-content: flex-end; gap: 10px; padding-top: 20px; }
+
+    /* Modal — selalu di-render (bukan @if) supaya transisi TUTUP juga
+       kelihatan, digerakkan lewat Web Animations API (lihat animateModal()) —
+       pola sama persis seperti popup Pengguna/Pesan Kontak/Subscription. */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(20,23,26,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear var(--motion-slow);
+    }
+    .modal-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear 0s; }
+    .modal.modal-pop {
+      background: #fff; border-radius: var(--radius-lg); padding: 26px; width: 100%; max-width: 580px; max-height: 88vh; display: flex; flex-direction: column;
+      animation: none; opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25);
+    }
+    .modal.modal-pop.open { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .modal-backdrop { transition: none; } }
+
+    .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; margin-bottom: 4px; }
+    .modal-title { display: flex; align-items: center; gap: 10px; font-size: 1.05rem; margin: 0; }
+    .modal > p.text-muted { flex-shrink: 0; margin: 2px 0 16px; font-size: .85rem; }
+    .modal-close { background: transparent; border: none; cursor: pointer; color: var(--color-text-secondary); padding: 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: background var(--motion-fast) ease; }
+    .modal-close:hover { background: var(--color-bg-alt); color: var(--color-text); }
+
+    .modal-body {
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 16px;
+      border-radius: var(--radius-xs); background: var(--color-bg-alt);
+      box-shadow: inset 0 8px 10px -8px rgba(20,23,26,.14), inset 0 -8px 10px -8px rgba(20,23,26,.14);
+    }
+    .field-card-form { display: flex; flex-direction: column; gap: 14px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card-form .form-group { margin-bottom: 0; }
+    .field-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0;
+      font-family: var(--font-heading); font-weight: 700; font-size: .72rem;
+      letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--color-border); }
+
     .opt-row { display: flex; gap: 8px; margin-bottom: 6px; }
+    .opt-row:last-of-type { margin-bottom: 0; }
     .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .divider-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--color-muted);
-      font-weight: 700; border-top: 1px solid var(--color-border); padding-top: 14px; margin: 18px 0 12px; }
-    .section-card { border-style: dashed; border-color: var(--color-primary); background: var(--color-primary-soft); }
-    .add-section-btn { width: 100%; margin-bottom: 10px; }
     .route-row { display: grid; grid-template-columns: 120px 1fr; gap: 10px; align-items: center; margin-bottom: 8px; }
+    .route-row:last-of-type { margin-bottom: 0; }
     .route-row .opt-name { font-size: .85rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
     /* Live preview */
-    .preview-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .preview-toggle button { border: 1px solid var(--color-border); background: #fff; font-size: .78rem; padding: 3px 10px; cursor: pointer; }
-    .preview-toggle button:first-child { border-radius: var(--radius-xs) 0 0 var(--radius-xs); }
-    .preview-toggle button:last-child { border-radius: 0 var(--radius-xs) var(--radius-xs) 0; border-left: 0; }
-    .preview-toggle button.on { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
-    .preview-frame { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-alt); padding: 16px; margin: 8px auto 0; transition: max-width var(--motion-base) ease; }
+    .preview-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .preview-toggle { display: flex; gap: 4px; background: var(--color-bg-alt); border-radius: var(--radius-full); padding: 3px; }
+    .preview-toggle button { border: none; background: transparent; color: var(--color-text-secondary); font-size: .76rem; font-weight: 700; padding: 4px 12px; border-radius: var(--radius-full); cursor: pointer; transition: all var(--motion-fast) ease; }
+    .preview-toggle button.on { background: #fff; color: var(--color-primary-dark); box-shadow: var(--shadow-xs, 0 1px 3px rgba(20,23,26,.1)); }
+    .preview-frame { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-bg-warm); padding: 16px; margin: 0 auto; box-shadow: inset 0 1px 2px rgba(20,23,26,.04); transition: max-width var(--motion-base) ease; }
     .preview-frame.mobile { max-width: 320px; }
-    .preview-frame .p-label { font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+    .preview-frame .p-label { font-weight: 700; font-size: .9rem; margin-bottom: 6px; }
     .preview-frame .p-help { font-size: .8rem; color: var(--color-muted); margin-bottom: 8px; }
     .preview-frame .p-ctrl { width: 100%; padding: 9px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; font-size: .88rem; color: var(--color-muted); }
     .preview-frame .p-opt { display: flex; align-items: center; gap: 8px; font-size: .88rem; margin: 4px 0; }
@@ -153,6 +203,8 @@ export class DynamicFormBuilderPage implements OnInit, DynamicFormBuilderView {
   form = signal<DynamicForm | null>(null);
   busy = signal(false);
   popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
+  @ViewChild('modalEl') private modalEl?: ElementRef<HTMLElement>;
+  private modalAnimation: Animation | null = null;
 
   showModal = signal(false);
   editFieldId: number | null = null;
@@ -186,6 +238,7 @@ export class DynamicFormBuilderPage implements OnInit, DynamicFormBuilderView {
 
   typesInGroup(group: string) { return FIELD_TYPES.filter((t) => t.group === group && !t.paletteHidden); }
   fieldTypeLabel = fieldTypeLabel;
+  fieldTypeIcon(t: DynamicFieldType): string { return FIELD_TYPES.find((f) => f.value === t)?.icon ?? 'file-text'; }
   isDisplay = isDisplayField;
   isOptionType(t: DynamicFieldType): boolean { return OPTION_FIELD_TYPES.includes(t); }
   canRoute(t: DynamicFieldType): boolean { return ROUTING_FIELD_TYPES.includes(t); }
@@ -196,6 +249,7 @@ export class DynamicFormBuilderPage implements OnInit, DynamicFormBuilderView {
     this.editFieldId = null;
     this.fieldForm = emptyFieldForm(type);
     this.showModal.set(true);
+    this.animateModal(true);
   }
 
   openEdit(f: DynamicFormField, event?: Event): void {
@@ -218,9 +272,36 @@ export class DynamicFormBuilderPage implements OnInit, DynamicFormBuilderView {
     };
     this.syncRoutingRoutes(routing?.routes ?? []);
     this.showModal.set(true);
+    this.animateModal(true);
   }
 
-  closeModal(): void { this.showModal.set(false); }
+  closeModal(): void {
+    this.animateModal(false);
+    this.showModal.set(false);
+  }
+
+  /** Buka/tutup modal digerakkan lewat Web Animations API — pola & alasan
+   *  sama persis seperti popup Pengguna/Pesan Kontak/Subscription (lihat
+   *  catatan panjang di sana). */
+  private animateModal(opening: boolean): void {
+    const el = this.modalEl?.nativeElement;
+    if (!el) return;
+    this.modalAnimation?.cancel();
+    const { dx, dy } = this.popupOrigin();
+    const closed: Keyframe = { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0.25)` };
+    const open: Keyframe = { opacity: 1, transform: 'none' };
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const anim = el.animate(opening ? [closed, open] : [open, closed], {
+      duration: reduceMotion ? 1 : 250,
+      easing: 'cubic-bezier(.16, 1, .3, 1)',
+      fill: 'forwards',
+    });
+    this.modalAnimation = anim;
+    anim.onfinish = () => {
+      anim.cancel();
+      if (this.modalAnimation === anim) this.modalAnimation = null;
+    };
+  }
 
   /** Keep one routing row per current option, preserving any existing targets. */
   syncRoutingRoutes(existing: { optionValue: string; targetSectionFieldID: number }[] = this.fieldForm.routingRoutes as never): void {

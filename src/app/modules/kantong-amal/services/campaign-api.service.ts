@@ -21,6 +21,7 @@ export class CampaignApiService {
   create(body: CreateCampaignRequest): Observable<CampaignDetail> { return this.api.post('/campaigns', body); }
   update(id: number, body: UpdateCampaignRequest): Observable<CampaignDetail> { return this.api.put(`/campaigns/${id}`, body); }
   delete(id: number): Observable<void> { return this.api.delete(`/campaigns/${id}`); }
+  bulkDelete(ids: number[]): Observable<{ deleted: number[]; skipped: number[] }> { return this.api.post('/campaigns/bulk-delete', { ids }); }
   publish(id: number): Observable<CampaignDetail> { return this.api.post(`/campaigns/${id}/publish`); }
   pause(id: number): Observable<CampaignDetail> { return this.api.post(`/campaigns/${id}/pause`); }
   resume(id: number): Observable<CampaignDetail> { return this.api.post(`/campaigns/${id}/resume`); }

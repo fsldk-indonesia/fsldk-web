@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Title, DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { GalleryRepository } from '../../repositories/gallery.repository';
@@ -581,7 +581,6 @@ import { environment } from '../../../../../environments/environment';
 export class GalleryPublicDetailPage implements OnInit {
   repo = inject(GalleryRepository);
   private route = inject(ActivatedRoute);
-  private title = inject(Title);
   private sanitizer = inject(DomSanitizer);
 
   galleryId = 0;

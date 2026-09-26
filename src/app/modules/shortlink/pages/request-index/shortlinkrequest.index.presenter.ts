@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ShortlinkRequestRepository } from '../../repositories/shortlinkrequest.repository';
+import { ShortLinkRequest } from '../../entities/shortlink-request';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { ShortLinkRequestIndexView } from './shortlinkrequest.index.view';
 
 @Injectable()
@@ -9,10 +13,17 @@ export class ShortLinkRequestIndexPresenter extends BasePresenter<ShortLinkReque
   private shortlinkRequestRepo = inject(ShortlinkRequestRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, status: string): void {
-    this.shortlinkRequestRepo.cmsList({ page, limit, status }).subscribe({
-      next: (p) => this.view.setRequests(p.data, p.count),
-      error: () => {},
+  /** dataSource untuk <app-cms-index> — status multi-select digabung
+   *  comma-separated (backend parse lewat dto.ParseCSV, lihat
+   *  shortlinkrequest_handler_impl.go), search dipetakan ke satu target
+   *  gabungan (requesterName/requesterEmail/destinationURL, lihat
+   *  shortlinkrequest_repository_impl.go List()). */
+  list(params: CmsListParams): Observable<Pagination<ShortLinkRequest>> {
+    return this.shortlinkRequestRepo.cmsList({
+      page: params.page, limit: params.limit, sort: params.sort,
+      status: params.status.join(','),
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      dateFrom: params.dateFrom, dateTo: params.dateTo,
     });
   }
 

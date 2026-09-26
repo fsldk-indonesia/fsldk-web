@@ -5,22 +5,27 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const kantongAmalPublicRoutes: () => Routes = () => [
   {
     path: 'kantong-amal',
+    title: 'Kantong Amal',
     loadComponent: () => import('./pages/campaign-list/kantong-amal.campaign-list.page').then((m) => m.KantongAmalCampaignListPage),
   },
   {
     path: 'kantong-amal/donasi/:publicRef/status',
+    title: 'Status Donasi',
     loadComponent: () => import('./pages/payment-status/kantong-amal.payment-status.page').then((m) => m.KantongAmalPaymentStatusPage),
   },
   {
     path: 'kantong-amal/donasi/:publicRef/bukti',
+    title: 'Bukti Donasi',
     loadComponent: () => import('./pages/donation-receipt/kantong-amal.donation-receipt.page').then((m) => m.KantongAmalDonationReceiptPage),
   },
   {
     path: 'kantong-amal/:slug/donasi',
+    title: 'Donasi',
     loadComponent: () => import('./pages/donate/kantong-amal.donate.page').then((m) => m.KantongAmalDonatePage),
   },
   {
     path: 'kantong-amal/:slug',
+    title: 'Detail Campaign',
     loadComponent: () => import('./pages/campaign-detail/kantong-amal.campaign-detail.page').then((m) => m.KantongAmalCampaignDetailPage),
   },
 ];
@@ -56,6 +61,16 @@ export const kantongAmalAdminRoutes: () => Routes = () => [
     loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
   },
   {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan, sama pola dengan Berita/Formulir Dinamis.
+    path: 'kantong-amal/campaigns/:id/view',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.campaign.view', viewOnly: true },
+    title: 'Detail Campaign',
+    loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
+  },
+  {
     path: 'kantong-amal/donasi',
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'kantong_amal.donation.view' },
@@ -74,6 +89,15 @@ export const kantongAmalAdminRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'kantong_amal.donation.update' },
     title: 'Edit Donasi',
+    loadComponent: () => import('./pages/admin-donation-form/kantong-amal.admin-donation-form.page').then((m) => m.KantongAmalAdminDonationFormPage),
+  },
+  {
+    // Donasi dari gateway (bisatopup) tidak bisa diedit — hanya dilihat.
+    // Komponen sama dengan form, dibedakan lewat route data `viewOnly`.
+    path: 'kantong-amal/donasi/:id/view',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'kantong_amal.donation.view', viewOnly: true },
+    title: 'Detail Donasi',
     loadComponent: () => import('./pages/admin-donation-form/kantong-amal.admin-donation-form.page').then((m) => m.KantongAmalAdminDonationFormPage),
   },
   {

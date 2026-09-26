@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
@@ -8,28 +8,111 @@ import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-
 import { Organization } from '../../entities/organization';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
-import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { PhoneInputComponent } from '../../../../shared/phone-input.component';
+import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
+import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { LdkFormValue, OrganizationLdkListPresenter } from './organization.ldk-list.presenter';
 import { OrganizationLdkListView } from './organization.ldk-list.view';
 
 const emptyForm = (): LdkFormValue => ({
-  organizationName: '', organizationCode: '', provinceName: '', cityName: '', contactEmail: '', contactPhone: '', parentOrganizationID: null,
+  organizationName: '', organizationCode: '', provinceName: '', cityName: '', contactEmail: '', contactPhone: '', parentOrganizationID: null, photoURL: '',
 });
+
+/** Config CmsIndexConfig<Organization> — kolom "Puskomda" & filter combobox
+ *  "Puskomda" hanya disertakan di varian nasional (shell cms-puskomnas),
+ *  lihat OrganizationLdkListPage.isNational. Kolom "isActive" (Status) WAJIB
+ *  ada di sini SEKALIPUN badge-nya tampil unconditional di row template —
+ *  <app-cms-index> menghasilkan jumlah <th> dari config.columns (yang
+ *  visible) + satu <th>Aksi</th>; tanpa entri ini header kekurangan satu
+ *  kolom dibanding body (yang selalu merender <td> Status + <td> Aksi),
+ *  menggeser semua sel satu kolom ke kanan (bug yang diperbaiki di sini). */
+function buildLdkIndexConfig(isNational: boolean, presenter: OrganizationLdkListPresenter): CmsIndexConfig<Organization> {
+  return {
+    entityLabel: 'LDK',
+    statusOptions: [
+      { value: 'active', label: 'Aktif' },
+      { value: 'inactive', label: 'Nonaktif' },
+    ],
+    searchTargets: isNational
+      ? [
+          { value: 'search', label: 'Nama/Kode LDK' },
+          { value: 'parentOrganizationID', label: 'Puskomda', mode: 'combobox', loadOptions: () => presenter.puskomdaComboOptions() },
+        ]
+      : [{ value: 'search', label: 'Nama/Kode LDK' }],
+    columns: isNational
+      ? [
+          { key: 'organizationName', label: 'Nama LDK', locked: true },
+          { key: 'organizationCode', label: 'Kode' },
+          { key: 'parentOrganizationName', label: 'Puskomda' },
+          { key: 'cityName', label: 'Kota/Kab' },
+          { key: 'isActive', label: 'Status' },
+        ]
+      : [
+          { key: 'organizationName', label: 'Nama LDK', locked: true },
+          { key: 'organizationCode', label: 'Kode' },
+          { key: 'cityName', label: 'Kota/Kab' },
+          { key: 'isActive', label: 'Status' },
+        ],
+    defaultSort: { sortBy: 'organizationName', sortDir: 'asc' },
+    rowIdKey: 'organizationID',
+    emptyIcon: 'building-2',
+    emptyTitle: 'Belum ada LDK',
+    emptyDescription: 'Tambahkan LDK untuk mulai mengelola datanya.',
+  };
+}
 
 @Component({
   selector: 'app-organization-ldk-list-page',
   standalone: true,
   templateUrl: './organization.ldk-list.page.html',
-  imports: [FormsModule, IconComponent, ModalBackdropDirective, PaginationComponent, SelectComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective, SelectComponent, PhoneInputComponent, CmsIndexComponent],
   providers: [OrganizationLdkListPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(20,23,26,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
-    .modal { background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column; }
-    .modal > h3 { flex-shrink: 0; }
-    .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-right: 8px; }
-    .modal-footer { flex-shrink: 0; padding-top: 20px; }
+
+    /* Selalu di-render (bukan @if) supaya transisi TUTUP juga kelihatan —
+       pola sama persis seperti popup Pengguna (lihat catatan panjang di sana). */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(20,23,26,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear var(--motion-slow);
+    }
+    .modal-backdrop.open {
+      opacity: 1; visibility: visible; pointer-events: auto;
+      transition: opacity var(--motion-slow) var(--ease-out), visibility 0s linear 0s;
+    }
+    /* Buka/tutup modal digerakkan lewat Web Animations API (lihat
+       animateModal()), bukan CSS transition — pola & alasan sama persis
+       seperti popup Pengguna (lihat catatan panjang di sana). */
+    .modal.modal-pop {
+      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column;
+      animation: none; opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25);
+    }
+    .modal.modal-pop.open { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .modal-backdrop { transition: none; } }
+    .modal > h3 { flex-shrink: 0; margin-bottom: 2px; }
+    .modal > p.text-muted { flex-shrink: 0; margin: 0 0 18px; font-size: .85rem; }
+
+    /* Panel abu-abu + inset shadow atas-bawah menandai "area ini scroll
+       tersendiri" — pola sama persis dengan .modal-body user.index.page.ts
+       (Pengguna Portal Admin), diikuti tanpa mengubah warnanya. */
+    .modal-body {
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 18px;
+      border-radius: var(--radius-xs); background: var(--color-bg-alt);
+      box-shadow: inset 0 8px 10px -8px rgba(20,23,26,.14), inset 0 -8px 10px -8px rgba(20,23,26,.14);
+    }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; padding-top: 18px; margin-top: 4px; border-top: 1px solid var(--color-border); }
+
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .72rem;
+      letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .field-card { display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card .form-group { margin-bottom: 0; }
+    .field-card .form-section-label { margin: 0; }
+    .city-select-wrap .form-hint { margin-top: 6px; }
   `],
 })
 export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView {
@@ -39,26 +122,48 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   private route = inject(ActivatedRoute);
   private orgContext = inject(OrgContextService);
 
+  // Dipakai host untuk memanggil refresh() setelah aksi row-level (aktifkan/
+  // nonaktifkan) atau create/update-via-modal berhasil — pola yang sama seperti
+  // onXxxSuccess->load() lama (lihat CmsIndexComponent.refresh()).
+  @ViewChild(CmsIndexComponent) private table?: CmsIndexComponent<Organization>;
+  @ViewChild('modalEl') private modalEl?: ElementRef<HTMLElement>;
+  private modalAnimation: Animation | null = null;
+
   /** organizationID Puskomda yang sedang aktif di org-switcher shell
    *  cms-puskomda — dipakai untuk mengunci Puskomda Induk otomatis saat
    *  membuat LDK dari shell ini (miss-development-prompt-3.md poin 4) DAN
-   *  untuk mempersempit daftar LDK ke Puskomda yang sedang dipilih (sebelumnya
-   *  selalu menampilkan seluruh cascade accessible caller — utuh nasional
-   *  untuk Puskomnas/wildcard — walau org-switcher sudah diganti). */
-  private currentPuskomdaID: number | undefined;
+   *  untuk mempersempit daftar LDK ke Puskomda yang sedang dipilih. Resolusinya
+   *  ASINKRON (lewat OrgContextService.organizationID$), sedangkan
+   *  <app-cms-index> memuat data SEGERA saat di-mount (ngOnInit) — supaya
+   *  request pertama tidak memakai organizationID basi/undefined, komponennya
+   *  BARU dipasang di template setelah puskomdaReady true (lihat
+   *  organization.ldk-list.page.html, gate `@if (isNational() || puskomdaReady())`).
+   *  Untuk shell nasional (cms-puskomnas) gating ini tidak relevan — langsung true. */
+  private currentPuskomdaID = signal<number | undefined>(undefined);
+  puskomdaReady = signal(false);
 
-  organizations = signal<Organization[]>([]);
-  loading = signal(true);
   saving = signal(false);
-  search = '';
-  page = signal(1);
-  count = signal(0);
-  readonly limit = 10;
   showForm = signal(false);
   busy = signal<ReadonlySet<number>>(new Set());
   popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
   puskomdaOptions = signal<SelectOption[]>([]);
+  provinceOptions = signal<SelectOption[]>([]);
+  regencyOptions = signal<SelectOption[]>([]);
+  private provincesLoaded = false;
+  /** Nilai id (bukan nama) yang sedang dipilih di dropdown Provinsi/Kota —
+   *  murni state UI, TIDAK dipersist — nama yang tersimpan ada di
+   *  form.provinceName/cityName (lihat onProvinceChange/onCityChange).
+   *  Data lama (provinceName/cityName bebas teks, mungkin tidak cocok id
+   *  wilayah.id manapun) sengaja DIBIARKAN tidak terpilih saat edit
+   *  (placeholder), bukan dicocokkan otomatis — lihat openEdit(). */
+  selectedProvinceId: string | null = null;
+  selectedCityId: string | null = null;
   form: LdkFormValue = emptyForm();
+
+  editId: number | null = null;
+  // Klik baris (CmsIndexComponent rowClick) membuka popup yang sama dalam
+  // mode baca-saja — pola sama seperti isReadonly di user.index.page.ts.
+  isReadonly = false;
 
   /**
    * "Nasional" ditentukan oleh SHELL yang memuat halaman ini (cms-puskomda
@@ -73,34 +178,132 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   isNational = computed(() => (this.route.snapshot.data['tier'] as string | undefined) === 'PUSKOMNAS');
   pageTitle = computed(() => (this.isNational() ? 'Seluruh LDK Nasional' : 'LDK Wilayah'));
   canCreate = this.auth.hasPermission('organization.create');
+  canUpdate = this.auth.hasPermission('organization.profile.manage');
   canDeactivate = this.auth.hasPermission('organization.deactivate');
+
+  get modalTitle(): string {
+    if (this.isReadonly) return 'Detail LDK';
+    return this.editId ? 'Ubah LDK' : 'Tambah LDK';
+  }
+  get modalSubtitle(): string {
+    if (this.isReadonly) return 'Lihat detail LDK ini.';
+    return this.editId ? 'Perbarui informasi LDK ini.' : 'Isi informasi LDK baru.';
+  }
+
+  readonly config: CmsIndexConfig<Organization> = buildLdkIndexConfig(this.isNational(), this.presenter);
+  dataSource = (params: CmsListParams) => this.presenter.list(params, this.isNational() ? undefined : this.currentPuskomdaID());
 
   ngOnInit(): void {
     this.presenter.attachView(this);
     if (this.isNational()) {
-      this.load();
       this.presenter.loadPuskomdaOptions();
     } else {
       this.orgContext.organizationID$(this.route).subscribe((id) => {
-        this.currentPuskomdaID = id;
-        this.load();
+        this.currentPuskomdaID.set(id);
+        this.puskomdaReady.set(true);
       });
     }
   }
 
-  load(): void { this.loading.set(true); this.presenter.load(this.page(), this.limit, this.search, this.currentPuskomdaID); }
-  applySearch(): void { this.page.set(1); this.load(); }
-  goPage(p: number): void { this.page.set(p); this.load(); }
+  private ensureProvincesLoaded(): void {
+    if (this.provincesLoaded) return;
+    this.provincesLoaded = true;
+    this.presenter.loadProvinces();
+  }
+
+  private resetWilayahSelection(): void {
+    this.selectedProvinceId = null;
+    this.selectedCityId = null;
+    this.regencyOptions.set([]);
+  }
 
   openCreate(event?: Event): void {
     this.popupOrigin.set(popupOriginFromEvent(event));
+    this.isReadonly = false;
+    this.editId = null;
     this.form = emptyForm();
+    this.resetWilayahSelection();
+    this.ensureProvincesLoaded();
     this.showForm.set(true);
+    this.animateModal(true);
   }
-  close(): void { this.showForm.set(false); }
+  openEdit(o: Organization, event?: Event): void {
+    this.popupOrigin.set(popupOriginFromEvent(event));
+    this.isReadonly = false;
+    this.editId = o.organizationID;
+    this.form = {
+      organizationName: o.organizationName, organizationCode: o.organizationCode,
+      provinceName: o.provinceName ?? '', cityName: o.cityName ?? '',
+      contactEmail: o.contactEmail ?? '', contactPhone: o.contactPhone ?? '',
+      parentOrganizationID: o.parentOrganizationID ?? null, photoURL: o.photoURL ?? '',
+    };
+    this.resetWilayahSelection();
+    this.ensureProvincesLoaded();
+    this.showForm.set(true);
+    this.animateModal(true);
+  }
+  // Dipicu klik baris (CmsIndexComponent rowClick emit row, bukan event DOM
+  // — makanya popupOrigin tidak dihitung dari titik klik, cukup center sama
+  // seperti pola openView di user.index.page.ts).
+  openView(o: Organization): void {
+    this.popupOrigin.set(popupOriginFromEvent());
+    this.isReadonly = true;
+    this.editId = o.organizationID;
+    this.form = {
+      organizationName: o.organizationName, organizationCode: o.organizationCode,
+      provinceName: o.provinceName ?? '', cityName: o.cityName ?? '',
+      contactEmail: o.contactEmail ?? '', contactPhone: o.contactPhone ?? '',
+      parentOrganizationID: o.parentOrganizationID ?? null, photoURL: o.photoURL ?? '',
+    };
+    this.resetWilayahSelection();
+    this.showForm.set(true);
+    this.animateModal(true);
+  }
+  close(): void {
+    this.animateModal(false);
+    this.showForm.set(false);
+  }
+
+  /** Buka/tutup modal digerakkan lewat Web Animations API — pola & alasan
+   *  sama persis seperti popup Pengguna (lihat catatan panjang di sana). */
+  private animateModal(opening: boolean): void {
+    const el = this.modalEl?.nativeElement;
+    if (!el) return;
+    this.modalAnimation?.cancel();
+    const { dx, dy } = this.popupOrigin();
+    const closed: Keyframe = { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(0.25)` };
+    const open: Keyframe = { opacity: 1, transform: 'none' };
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const anim = el.animate(opening ? [closed, open] : [open, closed], {
+      duration: reduceMotion ? 1 : 250,
+      easing: 'cubic-bezier(.16, 1, .3, 1)',
+      fill: 'forwards',
+    });
+    this.modalAnimation = anim;
+    anim.onfinish = () => {
+      anim.cancel();
+      if (this.modalAnimation === anim) this.modalAnimation = null;
+    };
+  }
+
   save(): void {
-    if (!this.isNational() && this.currentPuskomdaID) this.form.parentOrganizationID = this.currentPuskomdaID;
-    this.presenter.create(this.form);
+    if (!this.editId && !this.isNational() && this.currentPuskomdaID()) this.form.parentOrganizationID = this.currentPuskomdaID()!;
+    this.presenter.save(this.editId, this.form);
+  }
+
+  onProvinceChange(v: unknown): void {
+    const id = (v as string) || null;
+    this.selectedProvinceId = id;
+    this.selectedCityId = null;
+    this.regencyOptions.set([]);
+    this.form.cityName = '';
+    this.form.provinceName = this.provinceOptions().find((o) => o.value === id)?.label ?? '';
+    if (id) this.presenter.loadRegencies(id);
+  }
+  onCityChange(v: unknown): void {
+    const id = (v as string) || null;
+    this.selectedCityId = id;
+    this.form.cityName = this.regencyOptions().find((o) => o.value === id)?.label ?? '';
   }
 
   isBusy(id: number): boolean { return this.busy().has(id); }
@@ -117,9 +320,10 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
     if (o.isActive) this.presenter.deactivate(o.organizationID); else this.presenter.reactivate(o.organizationID);
   }
 
-  setOrganizations(orgs: Organization[], count: number): void { this.organizations.set(orgs); this.count.set(count); this.loading.set(false); }
   setPuskomdaOptions(options: SelectOption[]): void { this.puskomdaOptions.set(options); }
+  setProvinceOptions(options: SelectOption[]): void { this.provinceOptions.set(options); }
+  setRegencyOptions(options: SelectOption[]): void { this.regencyOptions.set(options); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
-  onSaveSuccess(): void { this.showForm.set(false); this.load(); }
+  onSaveSuccess(): void { this.close(); this.table?.refresh(); }
   onActionSettled(id: number): void { this.clearBusy(id); }
 }

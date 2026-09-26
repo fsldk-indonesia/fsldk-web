@@ -7,27 +7,37 @@
   <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span><span class="skel skel-line" style="width:90%;margin-top:10px"></span></div>
 } @else if (!submission()) {
   <div class="card card-pad">
-    <h3>Belum ada pendataan</h3>
-    <p class="text-muted">Mulai isi form untuk {{ isKaderSubject() ? 'mendaftar sebagai kader' : 'levelisasi LDK Anda' }}.</p>
+    <div class="empty-state empty-state-inline">
+      <span class="icon-badge lg icon-badge-soft"><app-icon name="clipboard-list" [size]="26" /></span>
+      <h4>Belum ada pendataan</h4>
+      <p class="text-muted">Mulai isi form untuk {{ isKaderSubject() ? 'mendaftar sebagai kader' : 'levelisasi LDK Anda' }}.</p>
+    </div>
     @if (isKaderSubject()) {
-      <div class="form-group" style="max-width:360px;margin-top:14px">
+      <div class="form-group" style="max-width:360px;margin:0 auto 14px">
         <label class="form-label">LDK Tujuan</label>
         <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" placeholder="Pilih LDK" />
       </div>
     }
-    <button class="btn btn-primary" style="margin-top:10px" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi</button>
+    <div style="text-align:center">
+      <button class="btn btn-primary" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi</button>
+    </div>
   </div>
 } @else if (submission()!.status === 'CANCELLED') {
   <div class="card card-pad">
-    <h3>Pendataan sebelumnya dibatalkan</h3>
-    <p class="text-muted">Anda dapat mulai isi lagi kapan saja — jawaban sebelumnya tidak dipakai lagi, form dimulai dari awal.</p>
+    <div class="empty-state empty-state-inline">
+      <span class="icon-badge lg icon-badge-ember"><app-icon name="rotate-ccw" [size]="26" /></span>
+      <h4>Pendataan sebelumnya dibatalkan</h4>
+      <p class="text-muted">Anda dapat mulai isi lagi kapan saja — jawaban sebelumnya tidak dipakai lagi, form dimulai dari awal.</p>
+    </div>
     @if (isKaderSubject()) {
-      <div class="form-group" style="max-width:360px;margin-top:14px">
+      <div class="form-group" style="max-width:360px;margin:0 auto 14px">
         <label class="form-label">LDK Tujuan</label>
         <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" placeholder="Pilih LDK" />
       </div>
     }
-    <button class="btn btn-primary" style="margin-top:10px" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi Lagi</button>
+    <div style="text-align:center">
+      <button class="btn btn-primary" (click)="start()" [disabled]="busy() || (isKaderSubject() && !selectedOrgID)">Mulai Isi Lagi</button>
+    </div>
   </div>
 } @else if (!isEditable()) {
   <div class="status-banner" [class.tone-danger]="statusTone(submission()!.status) === 'danger'"
@@ -44,7 +54,7 @@
   </div>
 
   <div class="section-card" style="margin-top:20px">
-    <h3>Jawaban Tersimpan</h3>
+    <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span>Jawaban Tersimpan</p>
     <dl>
       @for (field of allFields(); track field.fieldID) {
         @if (isFieldVisible(field)) {
@@ -59,8 +69,8 @@
 } @else {
   @for (section of version()?.sections ?? []; track section.sectionID) {
     <div class="section-card">
-      <h3>{{ section.sectionLabel }}</h3>
-      @if (section.description) { <p class="text-muted">{{ section.description }}</p> }
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="list-checks" [size]="14" /></span>{{ section.sectionLabel }}</p>
+      @if (section.description) { <p class="text-muted section-desc">{{ section.description }}</p> }
 
       @for (field of section.fields; track field.fieldID) {
         @if (isFieldVisible(field)) {

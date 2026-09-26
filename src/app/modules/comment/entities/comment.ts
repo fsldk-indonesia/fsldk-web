@@ -25,6 +25,9 @@ export interface Comment {
   commentID: number;
   contentType: string;
   contentID: number;
+  /** Judul konten yang dikomentari (mis. judul artikel/berita/event) — cuma
+   *  diisi backend di CMSGet (Comment Control Center), lihat comment_dto.Response. */
+  contentTitle?: string;
   commentText: string;
   mediaURL?: string;
   mediaType?: MediaType;
@@ -32,6 +35,9 @@ export interface Comment {
   isOwner: boolean;
   createdDate: string;
   author: CommentAuthor;
+  /** Email penulis — cuma diisi backend di CMSGet (comment.view), tidak pernah
+   *  dikirim di thread publik. */
+  authorEmail?: string;
   reactions: CommentReactions;
   mentions: CommentAuthor[];
   replies: Comment[];

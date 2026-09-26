@@ -77,6 +77,7 @@ modules/news/
 | `dynamicform` | Formulir Dinamis — form builder ad-hoc generik (beda dari `submission-form`, lihat di bawah), draft-per-sesi, opsional sinkron Google Sheets |
 | `comment` | Komentar — widget publik (`comment-section`/`comment-item`, dipakai lintas modul `article`/`news`/`event`) & CMS moderasi (lihat §9) |
 | `shortlink` | Manajemen shortlink CMS (buat/lihat/ubah/hapus, salin tautan pendek) + halaman publik pengajuan (`shortlink/ajukan`, tanpa login) + antrian moderasi CMS (`shortlink-requests`, approve/reject) |
+| `qrcode` | Manajemen QR Code CMS (buat/lihat/ubah/hapus, editor kustomisasi warna/ikon/caption, generate gambar QR) + halaman publik pengajuan (`qrcode/ajukan`, tanpa login) + antrian moderasi CMS (`qrcoderequest`, approve/reject) + halaman publik detail/unduh QR (`/qr/:id`) — cerminan penuh modul `shortlink` di atas (lihat ARCHITECTURE.md `fsldk-api` §2/§12) |
 | `kantong-amal` | Crowdfunding donasi — **satu** modul frontend memetakan **empat** modul backend (`campaign`/`donation`/`wallet`/`withdrawal`, lihat ARCHITECTURE.md `fsldk-api` §2), plus laporan keuangan. Halaman publik (donasi, status pembayaran, resi) & CMS (kelola campaign, monitoring donasi, penarikan dana, laporan/audit) |
 | `setting` | App Settings CMS (`/cms/settings`) — konfigurasi runtime key-value generik, Superadmin-only |
 | `jobqueue` | Dashboard monitoring antrian pengiriman WhatsApp/email asinkron, Superadmin-only |

@@ -107,6 +107,9 @@ export interface SubmissionResponse {
   formCode: string;
   formVersionID: number;
   organizationID: number;
+  /** Nama LDK — diisi backend lewat LEFT JOIN ms_organization di endpoint
+   *  list (`GET /submissions`), kosong di jalur lain (create/get). */
+  organizationName?: string;
   subjectType: 'ORGANIZATION' | 'KADER';
   status: string;
   version: number;

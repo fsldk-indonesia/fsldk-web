@@ -34,6 +34,7 @@ export class DynamicFormApiService {
   getSubmission(id: number, subId: number): Observable<DynamicFormSubmissionDetail> { return this.api.get(`${this.base}/${id}/submissions/${subId}`); }
   updateSubmission(id: number, subId: number, fd: FormData): Observable<unknown> { return this.api.put(`${this.base}/${id}/submissions/${subId}`, fd); }
   deleteSubmission(id: number, subId: number): Observable<unknown> { return this.api.delete(`${this.base}/${id}/submissions/${subId}`); }
+  bulkDeleteSubmissions(id: number, subIds: number[]): Observable<{ deleted: number[]; skipped: number[] }> { return this.api.post(`${this.base}/${id}/submissions/bulk-delete`, { ids: subIds }); }
   deleteResponses(id: number): Observable<unknown> { return this.api.delete(`${this.base}/${id}/submissions`); }
   analytics(id: number): Observable<DynamicFormAnalytics> { return this.api.get(`${this.base}/${id}/analytics`); }
   exportCsv(id: number): Observable<{ blob: Blob; filename: string }> { return this.api.getBlob(`${this.base}/${id}/responses.csv`); }

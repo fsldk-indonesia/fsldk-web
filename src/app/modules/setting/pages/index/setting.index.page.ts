@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
+import { IconComponent } from '../../../../shared/icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { Setting } from '../../entities/setting';
 import { SettingIndexPresenter } from './setting.index.presenter';
@@ -17,20 +18,42 @@ interface SettingGroup {
 // alih-alih bikin kolom settingType generik di skema untuk satu kasus.
 const BOOLEAN_SETTING_KEYS = new Set(['whatsapp_enabled']);
 
+// Ikon + varian icon-badge per settingGroup (lihat migrations 0008/0019/0029/0032) —
+// murni kosmetik, tidak ada makna bisnis di baliknya. Grup yang belum dikenal
+// (mis. settingGroup baru di masa depan) jatuh ke fallback 'settings'/neutral.
+const GROUP_META: Record<string, { icon: string; variant: string }> = {
+  format_keuangan: { icon: 'file-spreadsheet', variant: 'soft' },
+  layanan: { icon: 'wrench', variant: 'info' },
+  notifikasi: { icon: 'message-circle', variant: 'gold' },
+  kantong_amal: { icon: 'hand-heart', variant: 'ember' },
+};
+const GROUP_LABELS: Record<string, string> = {
+  format_keuangan: 'Format Keuangan',
+  layanan: 'Layanan',
+  notifikasi: 'Notifikasi',
+  kantong_amal: 'Kantong Amal',
+};
+
 @Component({
   selector: 'app-setting-index-page',
   standalone: true,
   templateUrl: './setting.index.page.html',
-  imports: [FormsModule, SelectComponent],
+  imports: [FormsModule, SelectComponent, IconComponent],
   providers: [SettingIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    .group-card { margin-bottom: 20px; }
-    .group-title { font-size: .8rem; font-weight: 700; color: var(--color-text-secondary); margin: 0 0 12px; text-transform: uppercase; letter-spacing: .04em; }
-    .setting-row { padding: 14px 0; border-bottom: 1px solid var(--color-border); }
-    .setting-row:last-child { border-bottom: none; }
+    .settings-list { display: flex; flex-direction: column; gap: 20px; }
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 4px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
+    .group-card > .card-pad { padding-top: 20px; }
+    .setting-row { padding: 16px 0; border-bottom: 1px solid var(--color-border); }
+    .setting-row:last-child { padding-bottom: 4px; border-bottom: none; }
+    .setting-row .form-label { margin-bottom: 8px; }
     .field-input-row { display: flex; align-items: center; gap: 12px; }
-    .field-input-row .form-control, .field-input-row p { flex: 1; margin: 0; }
+    .field-input-row .form-control, .field-input-row p, .field-input-row app-select { flex: 1; margin: 0; }
   `],
 })
 export class SettingIndexPage implements OnInit, SettingIndexView {
@@ -51,6 +74,10 @@ export class SettingIndexPage implements OnInit, SettingIndexView {
   ngOnInit(): void { this.presenter.attachView(this); this.presenter.load(); }
 
   isBoolean(s: Setting): boolean { return BOOLEAN_SETTING_KEYS.has(s.settingKey); }
+
+  groupIcon(name: string): string { return GROUP_META[name]?.icon ?? 'settings'; }
+  groupVariant(name: string): string { return GROUP_META[name]?.variant ?? 'neutral'; }
+  groupLabel(name: string): string { return GROUP_LABELS[name] ?? name; }
 
   groups(): SettingGroup[] {
     const map = new Map<string, Setting[]>();

@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { QrcodeRequestRepository } from '../../repositories/qrcoderequest.repository';
+import { QRCodeRequest } from '../../entities/qrcode-request';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { QRCodeRequestIndexView } from './qrcoderequest.index.view';
 
 @Injectable()
@@ -9,10 +13,17 @@ export class QRCodeRequestIndexPresenter extends BasePresenter<QRCodeRequestInde
   private qrcodeRequestRepo = inject(QrcodeRequestRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, status: string): void {
-    this.qrcodeRequestRepo.cmsList({ page, limit, status }).subscribe({
-      next: (p) => this.view.setRequests(p.data, p.count),
-      error: () => {},
+  /** dataSource untuk <app-cms-index> — status multi-select digabung
+   *  comma-separated (backend parse lewat dto.ParseCSV, lihat
+   *  qrcoderequest_handler_impl.go), search dipetakan ke satu target
+   *  gabungan (requesterName/requesterEmail/destinationURL, lihat
+   *  qrcoderequest_repository_impl.go List()). */
+  list(params: CmsListParams): Observable<Pagination<QRCodeRequest>> {
+    return this.qrcodeRequestRepo.cmsList({
+      page: params.page, limit: params.limit, sort: params.sort,
+      status: params.status.join(','),
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      dateFrom: params.dateFrom, dateTo: params.dateTo,
     });
   }
 

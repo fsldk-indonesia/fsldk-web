@@ -1,8 +1,6 @@
-import { Schedule } from '../../entities/schedule';
-
 export interface ScheduleIndexView {
-  setSchedules(items: Schedule[], count: number): void;
-  onPublishToggleSuccess(): void;
+  onPublishToggleSuccess(wasActive: boolean): void;
   onRemoveSuccess(): void;
+  onBulkDeleteSuccess(): void;
   onActionSettled(id: number): void;
 }

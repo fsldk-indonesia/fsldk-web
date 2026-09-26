@@ -1,8 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../../core/entities/api-response';
+import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import {
   Gallery,
@@ -16,75 +14,67 @@ import {
   ReorderPhotosReq,
 } from '../entities/gallery';
 
-/**
- * HTTP client service for interacting with gallery backend endpoints.
- */
+/** Raw HTTP calls for the gallery module — public & CMS. */
 @Injectable({ providedIn: 'root' })
 export class GalleryApiService {
-  private http = inject(HttpClient);
-  private apiBase = environment.apiBaseUrl;
+  private api = inject(ApiService);
 
   // Public Endpoints
-  listPublic(page = 1, limit = 9, sort = 'newest'): Observable<ApiResponse<{ data: GalleryListItem[]; page: number; limit: number; total: number; totalPages: number }>> {
-    const params = new HttpParams()
-      .set('page', page)
-      .set('limit', limit)
-      .set('sort', sort);
-    return this.http.get<ApiResponse<{ data: GalleryListItem[]; page: number; limit: number; total: number; totalPages: number }>>(
-      `${this.apiBase}/public/galleries`,
-      { params }
-    );
+  listPublic(page = 1, limit = 9, sort = 'newest'): Observable<{ data: GalleryListItem[]; page: number; limit: number; total: number; totalPages: number }> {
+    return this.api.get('/public/galleries', { page, limit, sort });
   }
 
-  getPublic(id: number): Observable<ApiResponse<Gallery>> {
-    return this.http.get<ApiResponse<Gallery>>(`${this.apiBase}/public/galleries/${id}`);
+  getPublic(id: number): Observable<Gallery> {
+    return this.api.get(`/public/galleries/${id}`);
   }
 
-  listPhotosPublic(id: number, page = 1, limit = 12): Observable<ApiResponse<PhotoPage>> {
-    const params = new HttpParams().set('page', page).set('limit', limit);
-    return this.http.get<ApiResponse<PhotoPage>>(`${this.apiBase}/public/galleries/${id}/photos`, { params });
+  listPhotosPublic(id: number, page = 1, limit = 12): Observable<PhotoPage> {
+    return this.api.get(`/public/galleries/${id}/photos`, { page, limit });
   }
 
   // CMS Endpoints
-  listCMS(params: HttpParams): Observable<ApiResponse<Pagination<GalleryListItem>>> {
-    return this.http.get<ApiResponse<Pagination<GalleryListItem>>>(`${this.apiBase}/galleries`, { params });
+  cmsList(q: Record<string, unknown>): Observable<Pagination<GalleryListItem>> {
+    return this.api.get('/galleries', q);
   }
 
-  getCMS(id: number): Observable<ApiResponse<Gallery>> {
-    return this.http.get<ApiResponse<Gallery>>(`${this.apiBase}/galleries/${id}`);
+  getCMS(id: number): Observable<Gallery> {
+    return this.api.get(`/galleries/${id}`);
   }
 
-  create(req: GalleryCreateReq): Observable<ApiResponse<{ galleryID: number }>> {
-    return this.http.post<ApiResponse<{ galleryID: number }>>(`${this.apiBase}/galleries`, req);
+  create(req: GalleryCreateReq): Observable<{ galleryID: number }> {
+    return this.api.post('/galleries', req);
   }
 
-  update(id: number, req: GalleryUpdateReq): Observable<ApiResponse<null>> {
-    return this.http.put<ApiResponse<null>>(`${this.apiBase}/galleries/${id}`, req);
+  update(id: number, req: GalleryUpdateReq): Observable<null> {
+    return this.api.put(`/galleries/${id}`, req);
   }
 
-  delete(id: number): Observable<ApiResponse<null>> {
-    return this.http.delete<ApiResponse<null>>(`${this.apiBase}/galleries/${id}`);
+  remove(id: number): Observable<null> {
+    return this.api.delete(`/galleries/${id}`);
+  }
+
+  bulkDelete(ids: number[]): Observable<null> {
+    return this.api.post('/galleries/bulk-delete', { ids });
   }
 
   // Photo Sub-Endpoints (CMS)
-  listPhotosCMS(id: number, page = 1, limit = 50): Observable<ApiResponse<PhotoPage>> {
-    const params = new HttpParams().set('page', page).set('limit', limit);
-    return this.http.get<ApiResponse<PhotoPage>>(`${this.apiBase}/galleries/${id}/photos`, { params });
+  listPhotosCMS(id: number, page = 1, limit = 50): Observable<PhotoPage> {
+    return this.api.get(`/galleries/${id}/photos`, { page, limit });
   }
 
-  addPhoto(id: number, req: AddPhotoReq): Observable<ApiResponse<GalleryPhoto>> {
-    return this.http.post<ApiResponse<GalleryPhoto>>(`${this.apiBase}/galleries/${id}/photos`, req);
+  addPhoto(id: number, req: AddPhotoReq): Observable<GalleryPhoto> {
+    return this.api.post(`/galleries/${id}/photos`, req);
   }
 
-  updatePhoto(id: number, photoID: number, req: UpdatePhotoReq): Observable<ApiResponse<null>> {
-    return this.http.put<ApiResponse<null>>(`${this.apiBase}/galleries/${id}/photos/${photoID}`, req);
+  updatePhoto(id: number, photoID: number, req: UpdatePhotoReq): Observable<null> {
+    return this.api.put(`/galleries/${id}/photos/${photoID}`, req);
   }
 
-  deletePhoto(id: number, photoID: number): Observable<ApiResponse<null>> {
-    return this.http.delete<ApiResponse<null>>(`${this.apiBase}/galleries/${id}/photos/${photoID}`);
+  deletePhoto(id: number, photoID: number): Observable<null> {
+    return this.api.delete(`/galleries/${id}/photos/${photoID}`);
   }
 
-  reorderPhotos(id: number, req: ReorderPhotosReq): Observable<ApiResponse<null>> {
-    return this.http.post<ApiResponse<null>>(`${this.apiBase}/galleries/${id}/photos/reorder`, req);
+  reorderPhotos(id: number, req: ReorderPhotosReq): Observable<null> {
+    return this.api.post(`/galleries/${id}/photos/reorder`, req);
   }
 }

@@ -3,7 +3,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 
 /** Public finance-format route — mounted as a child of PublicLayoutComponent. */
 export const financeformatPublicRoutes: () => Routes = () => [
-  { path: 'format-keuangan', loadComponent: () => import('./pages/public-index/financeformat.public-index.page').then((m) => m.FinanceFormatPublicIndexPage) },
+  { path: 'format-keuangan', title: 'Format Keuangan', loadComponent: () => import('./pages/public-index/financeformat.public-index.page').then((m) => m.FinanceFormatPublicIndexPage) },
 ];
 
 /** CMS finance-format management routes — mounted as children of CmsLayoutComponent. */
@@ -27,6 +27,17 @@ export const financeformatCmsRoutes: () => Routes = () => [
     canActivate: [verifiedGuard, permissionGuard],
     data: { permission: 'financeformat.update' },
     title: 'Edit Format Keuangan',
+    loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
+  },
+  {
+    // Halaman detail (read-only) — komponen sama dengan form edit, dibedakan
+    // lewat route data `viewOnly` yang membuat semua field disabled dan
+    // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
+    // FinanceFormatIndexPage) — pola sama seperti Berita/Perpustakaan.
+    path: 'finance-formats/view/:id',
+    canActivate: [verifiedGuard, permissionGuard],
+    data: { permission: 'financeformat.view', viewOnly: true },
+    title: 'Detail Format Keuangan',
     loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
   },
 ];

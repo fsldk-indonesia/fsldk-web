@@ -24,6 +24,11 @@ const STATUS_LABELS: Record<string, string> = {
   imports: [RouterLink, DatePipe, UpperCasePipe, IconComponent],
   providers: [KantongAmalWithdrawalDetailPresenter],
   styles: [`
+    .form-section-label {
+      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
+      font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--color-primary-dark);
+    }
     .wd-hero { border-radius: var(--radius-lg); padding: 24px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: #fff; }
     .wd-hero-pending   { background: linear-gradient(135deg, #d97706, #b45309); }
     .wd-hero-success   { background: linear-gradient(135deg, #059669, #047857); }
@@ -57,6 +62,9 @@ const STATUS_LABELS: Record<string, string> = {
     .wd-tl-dot.pending { background: var(--color-bg-alt); color: var(--color-muted); }
     .wd-tl-title { font-weight: 700; font-size: .9rem; color: var(--color-text); }
     .wd-tl-time { font-size: .78rem; color: var(--color-text-secondary); margin-top: 2px; }
+
+    .wd-btn-receipt { display: inline-flex; align-items: center; gap: 8px; background: #059669; color: #fff; border-color: #059669; }
+    .wd-btn-receipt:hover { background: #047857; border-color: #047857; }
   `],
 })
 export class KantongAmalWithdrawalDetailPage implements OnInit, OnDestroy, KantongAmalWithdrawalDetailView {

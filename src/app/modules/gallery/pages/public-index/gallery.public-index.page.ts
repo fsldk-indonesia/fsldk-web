@@ -1,5 +1,4 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -425,13 +424,11 @@ import { environment } from '../../../../../environments/environment';
 })
 export class GalleryPublicIndexPage implements OnInit {
   repo = inject(GalleryRepository);
-  private title = inject(Title);
 
   limit = 9;
   currentSort = signal<'newest' | 'oldest'>('newest');
 
   ngOnInit(): void {
-    this.title.setTitle('Galeri Dokumentasi - FSLDK Indonesia');
     this.loadData();
   }
 

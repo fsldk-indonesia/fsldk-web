@@ -20,6 +20,7 @@ export class ReportRepository {
 
   withdrawals(q: Record<string, unknown>): Observable<{ items: Pagination<WithdrawalReportRow>; statusFunnel: WithdrawalStatusFunnel[] }> { return this.api.withdrawals(q); }
   exportWithdrawals(q: Record<string, unknown>): Observable<{ blob: Blob; filename: string }> { return this.api.exportWithdrawals(q).pipe(tap((r) => this.triggerDownload(r))); }
+  withdrawalFunnel(campaignID?: number): Observable<WithdrawalStatusFunnel[]> { return this.api.withdrawalFunnel(campaignID); }
 
   reconciliation(): Observable<Reconciliation> { return this.api.reconciliation(); }
 

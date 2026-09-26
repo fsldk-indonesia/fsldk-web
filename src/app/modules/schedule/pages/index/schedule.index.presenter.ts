@@ -1,38 +1,28 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ScheduleRepository } from '../../repositories/schedule.repository';
 import { Schedule } from '../../entities/schedule';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { ScheduleIndexView } from './schedule.index.view';
-
-export interface ScheduleIndexFilter {
-  search: string;
-  category: string;
-  month: number;
-  year: number | null;
-  dateFrom: string;
-  dateTo: string;
-}
 
 @Injectable()
 export class ScheduleIndexPresenter extends BasePresenter<ScheduleIndexView> {
   private repo = inject(ScheduleRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, f: ScheduleIndexFilter): void {
-    this.repo.cmsList({
-      page,
-      limit,
-      sort: '-startDate',
-      search: f.search || undefined,
-      category: f.category || undefined,
-      month: f.month || undefined,
-      year: f.year || undefined,
-      dateFrom: f.dateFrom || undefined,
-      dateTo: f.dateTo || undefined,
-    }).subscribe({
-      next: (p) => this.view.setSchedules(p.data, p.count),
-      error: () => {},
+  /** dataSource untuk <app-cms-index> — memetakan CmsListParams generik ke
+   *  query param schedule_dto.Filter (filters['title']/['category'] dipetakan
+   *  ke search/category, params.status ke status aktif/nonaktif, dateFrom/
+   *  dateTo ke jendela overlap tanggal yang sudah didukung backend). */
+  list(params: CmsListParams): Observable<Pagination<Schedule>> {
+    return this.repo.cmsList({
+      page: params.page, limit: params.limit, sort: params.sort, status: params.status.join(','),
+      dateFrom: params.dateFrom, dateTo: params.dateTo,
+      search: (params.filters['title'] ?? [])[0] ?? '',
+      category: (params.filters['category'] ?? [])[0] ?? '',
     });
   }
 
@@ -40,7 +30,7 @@ export class ScheduleIndexPresenter extends BasePresenter<ScheduleIndexView> {
     this.repo.publish(s.scheduleID, !s.isActive).subscribe({
       next: () => {
         this.toast.success(s.isActive ? 'Jadwal dinonaktifkan' : 'Jadwal diaktifkan');
-        this.view.onPublishToggleSuccess();
+        this.view.onPublishToggleSuccess(s.isActive);
         this.view.onActionSettled(s.scheduleID);
       },
       error: () => this.view.onActionSettled(s.scheduleID),
@@ -55,6 +45,13 @@ export class ScheduleIndexPresenter extends BasePresenter<ScheduleIndexView> {
         this.view.onActionSettled(s.scheduleID);
       },
       error: () => this.view.onActionSettled(s.scheduleID),
+    });
+  }
+
+  bulkDelete(ids: number[]): void {
+    this.repo.bulkDelete(ids).subscribe({
+      next: () => { this.toast.success(`${ids.length} jadwal terpilih dihapus`); this.view.onBulkDeleteSuccess(); },
+      error: () => {},
     });
   }
 }

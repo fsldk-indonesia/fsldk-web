@@ -1,8 +1,11 @@
 import { Injectable, inject } from '@angular/core';
+import { Observable } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
 import { DynamicFormRepository } from '../../repositories/dynamic-form.repository';
 import { DynamicForm } from '../../entities/dynamic-form';
+import { Pagination } from '../../../../core/entities/pagination';
+import { CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { DynamicFormIndexView } from './dynamicform.index.view';
 
 @Injectable()
@@ -10,10 +13,17 @@ export class DynamicFormIndexPresenter extends BasePresenter<DynamicFormIndexVie
   private repo = inject(DynamicFormRepository);
   private toast = inject(ToastService);
 
-  load(page: number, limit: number, search: string, status: string, sort: string): void {
-    this.repo.cmsList({ page, limit, search, status: status || undefined, sort }).subscribe({
-      next: (p) => this.view.setForms(p.data, p.count),
-      error: () => {},
+  /** dataSource untuk <app-cms-index> — memetakan CmsListParams generik ke
+   *  query param dynamicform_dto.FormFilter. Status (draft/published/closed)
+   *  genuinely multi-select bermakna (backend pakai klausa IN, lihat
+   *  dynamicform_repository_impl.go) — sama pola dengan Job Queue, beda dari
+   *  status published/draft biner di modul lain. */
+  list(params: CmsListParams): Observable<Pagination<DynamicForm>> {
+    return this.repo.cmsList({
+      page: params.page, limit: params.limit, sort: params.sort,
+      dateFrom: params.dateFrom, dateTo: params.dateTo,
+      search: (params.filters['search'] ?? [])[0] ?? '',
+      status: params.status.join(','),
     });
   }
 
