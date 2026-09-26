@@ -37,7 +37,7 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
     // publicList (bukan featured()) — featured() hanya mengambil berita ber-flag
     // isFeatured=1 (kurasi manual editor), yang bisa saja bukan berita terbaru.
     // publicList default sort backend-nya sudah "-createdDate" (terbaru dulu).
-    this.newsRepo.publicList({ page: 1, limit: 3 }).subscribe({
+    this.newsRepo.publicList({ page: 1, limit: 5 }).subscribe({
       next: (p) => { this.view.setNews(p.data); this.view.setLoading(false); },
       error: () => this.view.setLoading(false),
     });
