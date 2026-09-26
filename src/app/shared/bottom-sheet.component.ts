@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnDestroy, Output, ViewChild, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, ViewChild, signal } from '@angular/core';
 import { ModalBackdropDirective } from './modal-backdrop.directive';
 
 /**
@@ -54,18 +54,33 @@ import { ModalBackdropDirective } from './modal-backdrop.directive';
     .sheet-overlay.active .sheet-panel { transform: translateY(0); }
     .sheet-panel.dragging { transition: none; }
     .sheet-handle { width: 40px; height: 4px; border-radius: var(--radius-full); background: var(--color-border-strong); margin: 0 auto 12px; }
+    /* z-index + shadow (bukan cuma bg solid) — proyeksi konten (foto preview
+       dari home.index.page.ts) full-bleed ke tepi atas panel lewat margin
+       negatif, jadi tombol ini sering duduk DI ATAS foto, bukan cuma di atas
+       putih polos. background pucat var(--color-bg-alt) tanpa shadow nyaris
+       tak kelihatan kalau area foto di baliknya kebetulan terang/putih. */
     .sheet-close {
-      position: absolute; top: 12px; right: 14px; width: 30px; height: 30px; border-radius: 50%;
-      border: none; background: var(--color-bg-alt); color: var(--color-text-secondary); font-size: 1.2rem; line-height: 1;
+      position: absolute; top: 12px; right: 14px; z-index: 1; width: 30px; height: 30px; border-radius: 50%;
+      border: none; background: #fff; color: var(--color-text-secondary); font-size: 1.2rem; line-height: 1;
+      box-shadow: 0 2px 8px rgba(20,23,26,.25);
       cursor: pointer; display: flex; align-items: center; justify-content: center;
     }
     .sheet-close:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     @media (prefers-reduced-motion: reduce) { .sheet-overlay, .sheet-panel { transition: opacity var(--motion-base) ease, visibility var(--motion-base); } .sheet-panel { transform: none !important; } }
   `],
 })
-export class BottomSheetComponent implements AfterViewInit, OnDestroy {
+export class BottomSheetComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() open = false;
   @Output() closed = new EventEmitter<void>();
+
+  // Kunci scroll body selama sheet terbuka — overlay position:fixed sendiri
+  // tidak mencegah halaman di baliknya ikut scroll (area backdrop di luar
+  // sheet-panel masih meneruskan wheel/touch-scroll ke body).
+  ngOnChanges(changes: SimpleChanges): void {
+    if ('open' in changes) {
+      document.body.style.overflow = this.open ? 'hidden' : '';
+    }
+  }
 
   // Dipindah fisik ke document.body — lihat catatan yang sama di
   // PrayerTimeComponent soal kenapa ini tidak bisa lewat @if/CDK Overlay.
@@ -80,6 +95,7 @@ export class BottomSheetComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    document.body.style.overflow = '';
     this.overlayRef?.nativeElement.remove();
   }
 

@@ -311,7 +311,7 @@
 @if (loading() || news().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
+      <div class="reveal" style="margin-bottom:40px; text-align:right">
         <span class="eyebrow">Berita &amp; Kabar Dakwah Kampus</span>
         <h2>Ikuti Cerita Gerakan Dakwah Kampus</h2>
       </div>
@@ -328,44 +328,70 @@
             </div>
           }
         </div>
-      } @else {
-        <div class="berita-spotlight">
-          @if (news()[0]; as featured) {
-            <a class="berita-featured reveal" [routerLink]="['/berita', featured.newsSlug]"
-               (click)="openPreview($event, { chip: featured.categoryName, title: featured.newsTitle, metaLines: [featured.authorName, formatDate(featured.publishedDate)], link: ['/berita', featured.newsSlug], ctaLabel: 'Baca Berita Lengkap' })">
-              <div class="berita-featured-thumb">
-                @if (featured.newsImage) { <img [src]="featured.newsImage" [alt]="featured.newsTitle"> } @else { <span>FOTO BERITA</span> }
-                <span class="chip chip-green berita-featured-chip">{{ featured.categoryName }}</span>
-              </div>
-              <div class="berita-featured-body">
-                <h3>{{ featured.newsTitle }}</h3>
-                @if (featured.newsExcerpt) { <p class="berita-featured-excerpt">{{ featured.newsExcerpt }}</p> }
-                <div class="berita-featured-meta">
-                  <span>{{ featured.authorName }} &middot; {{ formatDate(featured.publishedDate) }}</span>
-                  <span class="berita-view-count"><app-icon name="eye" [size]="13" /> {{ featured.viewCount.toLocaleString('id-ID') }} dibaca</span>
-                </div>
-              </div>
-            </a>
-          }
-          <div class="berita-list">
-            @for (n of news().slice(1); track n.newsID) {
-              <a class="berita-list-item reveal" [routerLink]="['/berita', n.newsSlug]"
-                 (click)="openPreview($event, { chip: n.categoryName, title: n.newsTitle, metaLines: [n.authorName, formatDate(n.publishedDate)], link: ['/berita', n.newsSlug], ctaLabel: 'Baca Berita Lengkap' })">
-                <div class="berita-list-thumb">@if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <app-icon name="newspaper" [size]="18" /> }</div>
-                <div class="berita-list-body">
-                  <span class="chip chip-green">{{ n.categoryName }}</span>
-                  <h4>{{ n.newsTitle }}</h4>
-                  <p class="meta">{{ formatDate(n.publishedDate) }}</p>
-                </div>
-              </a>
-            }
-          </div>
-        </div>
-        <div class="text-center mt-lg">
-          <a [routerLink]="newsPath.publicIndex" class="btn btn-outline">Lihat Semua Berita</a>
-        </div>
       }
     </div>
+    @if (!loading()) {
+      <!-- Carousel intro-panel + track — mengikuti referensi "Berita Terbaru"
+           ala Kemenkeu (panel warna solid + kartu bergeser + panah bulat di
+           tepi), diadaptasi ke palet hijau brand. 5 berita (lihat limit di
+           home.index.presenter.ts). Mobile: panel jadi header di atas,
+           track jadi scroll-snap horizontal tanpa panah (swipe native,
+           pola sama seperti .card-scroller di section lain).
+           SENGAJA DI LUAR .container — kiri align lewat padding-left
+           terhitung (bukan margin negatif dari dalam .container), kanan
+           mentok tepi viewport tanpa perlu utak-atik vw/scrollbar. -->
+        <div class="berita-carousel reveal">
+          <div class="berita-carousel-intro">
+            <span class="berita-carousel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="150" /></span>
+            <span class="berita-carousel-icon"><app-icon name="newspaper" [size]="24" /></span>
+            <p>Informasi terkini seputar dakwah kampus dan kegiatan FSLDK Indonesia se-Nusantara.</p>
+            <a [routerLink]="newsPath.publicIndex" class="berita-carousel-cta">Lihat Berita Lainnya <app-icon name="chevron-right" [size]="13" /></a>
+          </div>
+          <div class="berita-carousel-track-wrap">
+            <button type="button" class="berita-carousel-arrow prev" (click)="scrollNews(-1)" aria-label="Berita sebelumnya">
+              <app-icon name="chevron-left" [size]="16" />
+            </button>
+            <div class="berita-carousel-track" #newsTrack>
+              @for (n of news(); track n.newsID) {
+                <a
+                  class="news-carousel-card"
+                  [routerLink]="isMobilePreview() ? null : ['/berita', n.newsSlug]"
+                  (click)="openPreview($event, {
+                    chip: n.categoryName,
+                    title: n.newsTitle,
+                    metaLines: [],
+                    metaRows: [
+                      { icon: 'user-check', label: 'Penulis', value: n.authorName },
+                      { icon: 'edit', label: 'Editor', value: n.newsEditor || n.authorName },
+                      { icon: 'calendar', label: 'Tanggal', value: formatDate(n.publishedDate) }
+                    ],
+                    link: ['/berita', n.newsSlug],
+                    ctaLabel: 'Baca Berita Lengkap',
+                    image: n.newsImage,
+                    excerpt: n.newsExcerpt
+                  })"
+                >
+                  <div class="news-carousel-media">
+                    @if (n.newsImage) { <img [src]="n.newsImage" [alt]="n.newsTitle"> } @else { <span class="news-carousel-media-fallback">FOTO BERITA</span> }
+                    <span class="news-carousel-scrim" aria-hidden="true"></span>
+                    <div class="news-carousel-overlay">
+                      <h4>{{ n.newsTitle }}</h4>
+                      <div class="news-carousel-meta">
+                        <span>{{ formatDayName(n.publishedDate) }}</span>
+                        <span class="news-carousel-meta-dot"><span></span> {{ formatDate(n.publishedDate) }}</span>
+                        <span class="news-carousel-meta-dot"><span></span> {{ formatTime(n.publishedDate) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              }
+            </div>
+            <button type="button" class="berita-carousel-arrow next" (click)="scrollNews(1)" aria-label="Berita berikutnya">
+              <app-icon name="chevron-right" [size]="16" />
+            </button>
+          </div>
+        </div>
+      }
   </section>
 }
 
@@ -378,7 +404,7 @@
       </div>
       <div class="artikel-grid">
         @for (a of articles(); track a.articleID) {
-          <a class="artikel-card reveal" [routerLink]="['/artikel', a.articleSlug]"
+          <a class="artikel-card reveal" [routerLink]="isMobilePreview() ? null : ['/artikel', a.articleSlug]"
              (click)="openPreview($event, { chip: a.categoryName, title: a.articleTitle, metaLines: [a.articleWriter || a.authorName, formatDate(a.publishedDate)], link: ['/artikel', a.articleSlug], ctaLabel: 'Baca Artikel Lengkap' })">
             <span class="artikel-card-accent" aria-hidden="true"></span>
             <span class="chip chip-gold">{{ a.categoryName }}</span>
@@ -543,7 +569,7 @@
       </div>
       <div class="card-scroller">
         @for (c of campaigns(); track c.campaignID) {
-          <a class="campaign-card2 reveal" [routerLink]="kantongAmalPath.detail(c.slug)"
+          <a class="campaign-card2 reveal" [routerLink]="isMobilePreview() ? null : kantongAmalPath.detail(c.slug)"
              (click)="openPreview($event, { chip: c.categoryName, title: c.title, metaLines: [formatRupiah(c.collectedAmount) + ' terkumpul'], link: kantongAmalPath.detail(c.slug), ctaLabel: 'Lihat Campaign', progress: { percent: progressPercent(c), label: progressPercent(c) + '% tercapai' } })">
             <div class="campaign-card2-media">
               @if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }
@@ -614,11 +640,27 @@
 
 <app-bottom-sheet [open]="!!previewSheet()" (closed)="previewSheet.set(null)">
   @if (previewSheet(); as p) {
+    @if (p.image) { <div class="sheet-image"><img [src]="p.image" [alt]="p.title"></div> }
     <span class="chip chip-green">{{ p.chip }}</span>
     <h3 class="sheet-title">{{ p.title }}</h3>
-    @for (line of p.metaLines; track line) {
-      <p class="meta sheet-meta-line">{{ line }}</p>
+    @if (p.metaRows; as rows) {
+      <div class="sheet-meta-rows">
+        @for (row of rows; track row.label) {
+          <div class="sheet-meta-row">
+            <span class="sheet-meta-icon"><app-icon [name]="row.icon" [size]="13" /></span>
+            <span>
+              <span class="sheet-meta-label">{{ row.label }}</span>
+              <span class="sheet-meta-value">{{ row.value }}</span>
+            </span>
+          </div>
+        }
+      </div>
+    } @else {
+      @for (line of p.metaLines; track line) {
+        <p class="meta sheet-meta-line">{{ line }}</p>
+      }
     }
+    @if (p.excerpt) { <p class="sheet-excerpt">{{ p.excerpt }}</p> }
     @if (p.progress) {
       <div class="progress-track"><div class="progress-fill" [style.width.%]="p.progress.percent"></div></div>
       <p class="progress-meta"><span>{{ p.progress.label }}</span></p>

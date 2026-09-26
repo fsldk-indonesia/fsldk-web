@@ -42,13 +42,27 @@ interface MissionItem {
 /** Data ringkas untuk preview di bottom sheet mobile (lihat openPreview()) —
  *  satu bentuk generik dipakai lintas tipe kartu (berita/artikel/campaign)
  *  supaya markup sheet-nya cukup satu blok, tidak perlu cabang per tipe. */
+interface CardPreviewMetaRow {
+  icon: string;
+  label: string;
+  value: string;
+}
+
 interface CardPreview {
   chip: string;
   title: string;
   metaLines: string[];
+  /** Baris meta beriabel ikon+label+nilai (mis. Penulis/Editor/Tanggal ala
+   *  ldksyahid-app) — opsional, dipakai berita; artikel/campaign tetap pakai
+   *  metaLines polos di atas supaya keduanya tidak perlu diubah. */
+  metaRows?: CardPreviewMetaRow[];
   link: string[] | string;
   ctaLabel: string;
   progress?: { percent: number; label: string };
+  image?: string | null;
+  /** Ringkasan/excerpt — ala ldksyahid-app (news-sheet__excerpt), teks penuh
+   *  tanpa line-clamp (beda dari excerpt di kartu teaser yang diclamp). */
+  excerpt?: string | null;
 }
 
 @Component({
@@ -242,39 +256,152 @@ interface CardPreview {
     .news-body { padding: 20px; } .news-body h3 { margin: 12px 0 8px; font-size: 1.15rem; }
     .meta { color: var(--color-muted); font-size: .85rem; margin: 0; }
 
-    /* ---------- Berita: "sorotan editorial" — satu berita terbaru tampil
-       besar (gambar dominan, excerpt, jumlah dibaca) di kiri, dua berita
-       berikutnya jadi daftar ringkas di kanan. Sengaja beda bentuk dari
-       Artikel di bawahnya (grid kartu teks) supaya kedua section terasa
-       punya identitas visual sendiri-sendiri, bukan pola kartu yang sama
-       diulang-ulang di seluruh beranda. ---------- */
-    .berita-spotlight { display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: stretch; }
-    .berita-featured {
-      display: block; position: relative; background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm);
-      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    /* ---------- Berita: carousel intro-panel + track bergeser — mengikuti
+       referensi "Berita Terbaru" ala Kemenkeu (panel warna solid statis di
+       kiri + kartu bergeser dengan panah bulat di tepi), diadaptasi ke
+       palet hijau brand. Beda bentuk dari Artikel di bawahnya (grid kartu
+       teks) supaya kedua section terasa punya identitas visual sendiri. ---------- */
+    /* Elemen ini SENGAJA dirender di luar .container (lihat template) supaya
+       sisi kanan benar-benar mentok tepi viewport tanpa trik negative-margin
+       vw (gampang meleset beberapa px & rawan scrollbar overflow). Sisi kiri
+       disejajarkan manual ke titik yang sama dengan konten .container lewat
+       margin-left terhitung (BUKAN padding — padding cuma menggeser konten,
+       bukan kotak bayangan/border-radius-nya): max(20px, ...) menjaga gutter
+       minimum 20px (sama seperti .container) begitu viewport lebih sempit
+       dari 1180px.
+       Sudut kanan SENGAJA persegi (bukan var(--radius-lg) di semua sisi) —
+       melengkung di tepi yang mentok layar bakal terlihat aneh. Shadow
+       ditebalkan (dua lapis, bukan --shadow-lg saja) supaya section ini
+       terasa "mengambang" lebih jelas dari kanvas halaman. */
+    .berita-carousel {
+      display: flex; border-radius: var(--radius-lg) 0 0 var(--radius-lg); overflow: hidden;
+      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
+      margin-left: max(20px, calc((100vw - 1140px) / 2));
     }
-    .berita-featured:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); text-decoration: none; }
-    .berita-featured-thumb { position: relative; aspect-ratio: 16/9; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
-    .berita-featured-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .berita-featured-chip { position: absolute; left: 16px; bottom: 16px; box-shadow: var(--shadow-sm); }
-    .berita-featured-body { padding: 24px; }
-    .berita-featured-body h3 { margin: 0 0 10px; font-size: 1.4rem; line-height: 1.3; }
-    .berita-featured-excerpt { margin: 0 0 16px; color: var(--color-text-secondary); font-size: .95rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .berita-featured-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: .82rem; color: var(--color-muted); }
-    .berita-view-count { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; color: var(--color-primary-dark); }
-    .berita-list { display: flex; flex-direction: column; gap: 14px; }
-    .berita-list-item {
-      display: flex; gap: 14px; align-items: flex-start; background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-md); padding: 14px; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease;
+    /* Panel solid hijau (bukan gradient) + siluet ikon koran raksasa transparan
+       di sudut — dipotong oleh overflow:hidden di panel ini sendiri, BUKAN
+       .berita-carousel (supaya tidak ikut memotong bayangan kartu di
+       sebelahnya). Padding vertikal sengaja lebih besar dari tinggi alami
+       kartu foto supaya panelnya terlihat lebih tinggi dari track kartu di
+       sampingnya — align-items:stretch bawaan flex bikin track-wrap ikut
+       setinggi panel, kartu fotonya sendiri dipusatkan vertikal di situ
+       (lihat align-items:center di .berita-carousel-track). */
+    .berita-carousel-intro {
+      position: relative; overflow: hidden;
+      flex: 0 0 420px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 16px; padding: 96px 26px; text-align: center; color: #fff; background: var(--color-primary);
     }
-    .berita-list-item:hover { box-shadow: var(--shadow); transform: translateY(-2px); text-decoration: none; border-color: var(--color-primary-soft); }
-    .berita-list-thumb { flex-shrink: 0; width: 68px; height: 68px; border-radius: 12px; overflow: hidden; background: var(--color-primary-soft); display: grid; place-items: center; color: var(--color-primary); }
-    .berita-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .berita-list-body { min-width: 0; }
-    .berita-list-body .chip { padding: 3px 10px; font-size: .7rem; }
-    .berita-list-body h4 { margin: 6px 0 4px; font-size: .95rem; line-height: 1.35; }
-    @media (max-width: 900px) { .berita-spotlight { grid-template-columns: 1fr; } }
+    .berita-carousel-silhouette {
+      position: absolute; right: -34px; bottom: -34px; z-index: 0; color: rgba(255,255,255,.14);
+      transform: rotate(-12deg); pointer-events: none;
+    }
+    /* max-width lebih sempit dari panel (420px) + margin-right — sengaja
+       menggeser blok teks/tombol ke kiri, menyisakan "zona aman" hijau
+       polos di kanan supaya kartu pertama tetap bisa menumpuk/"menabrak"
+       tepi panel (lihat .berita-carousel-track-wrap) TANPA menutupi teks. */
+    .berita-carousel-icon, .berita-carousel-intro p, .berita-carousel-cta {
+      position: relative; z-index: 1; max-width: 150px; margin-right: 218px;
+    }
+    .berita-carousel-icon { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+    .berita-carousel-intro p { margin-block: 0; font-size: .88rem; line-height: 1.6; opacity: .92; }
+    .berita-carousel-cta {
+      display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
+      color: #fff; padding: 10px 20px; border-radius: var(--radius-full); font-weight: 700; font-size: .76rem;
+      letter-spacing: .04em; text-transform: uppercase;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .berita-carousel-cta:hover { background: #fff; color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); text-decoration: none; }
+    /* Overlap "menabrak" tepi panel hijau — blok teks/tombol di panel sudah
+       digeser ke kiri (lihat max-width+margin-right di atas) supaya ini aman
+       jatuh di zona hijau kosong, bukan di atas teks. padding-left track
+       DIHAPUS (bukan cuma dikurangi) supaya kartu pertama benar-benar mulai
+       tepat di tepi track-wrap yang digeser -230px — sebelumnya padding:20px
+       "memakan" sebagian besar overlap sehingga yang kelihatan cuma kotak
+       putih background, bukan foto kartunya sendiri. background TRANSPARENT
+       (bukan #fff) supaya di zona overlap yang menumpuk ke panel adalah
+       benar-benar kartu foto di atas HIJAU (bukan kartu foto di atas kotak
+       putih tak kasat mata yang kebetulan berdiri di depan hijau) — tanpa
+       ini efeknya cuma kelihatan "panel hijau lebih pendek", bukan "kartu
+       menimpa panel". */
+    .berita-carousel-track-wrap { position: relative; z-index: 2; flex: 1; min-width: 0; margin-left: -230px; background: transparent; }
+    .berita-carousel-track {
+      display: flex; align-items: center; gap: 18px; overflow-x: auto; height: 100%; padding: 20px 20px 20px 0; scroll-behavior: smooth;
+      scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .berita-carousel-track::-webkit-scrollbar { display: none; }
+    /* Panah navigasi — geser track (scrollNews() di .ts) alih-alih anchor
+       biasa, supaya bisa dipakai berulang tanpa perlu scroll native tiap
+       kartu; disembunyikan di mobile (breakpoint di bawah), swipe native
+       cukup di sana, pola sama seperti .card-scroller section lain. */
+    .berita-carousel-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+      width: 40px; height: 40px; border-radius: 50%; border: none; background: #fff; box-shadow: var(--shadow-lg);
+      display: grid; place-items: center; color: var(--color-primary-dark); cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .berita-carousel-arrow:hover { background: var(--color-primary); color: #fff; transform: translateY(-50%) scale(1.08); }
+    .berita-carousel-arrow.prev { left: 10px; }
+    .berita-carousel-arrow.next { right: 10px; }
+    /* Kartu foto full-bleed + scrim gelap + judul/meta di atas foto (bukan
+       lagi thumbnail + body putih terpisah) — mengikuti referensi Berita
+       Terbaru kemenkeu.go.id: hari, tanggal, dan jam tampil sebagai teks
+       putih di atas foto, dipisah titik kuning kecil (--color-gold), bukan
+       lagi disembunyikan di kartu. Dibesarkan lagi (340px) supaya cuma ~3
+       kartu yang kelihatan penuh dalam satu layar (bukan 4), sisanya
+       "nyempil"/kepotong di kanan sebagai penanda masih bisa digeser. */
+    .news-carousel-card {
+      flex: 0 0 340px; scroll-snap-align: start; display: block; border-radius: var(--radius-md);
+      overflow: hidden; box-shadow: none;
+      transition: transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .news-carousel-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); text-decoration: none; }
+      .news-carousel-card:hover .news-carousel-media img { transform: scale(1.08); }
+    }
+    .news-carousel-media { position: relative; aspect-ratio: 3 / 4; background: var(--color-primary-soft); overflow: hidden; }
+    .news-carousel-media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--motion-slow) ease; }
+    .news-carousel-media-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .75rem; letter-spacing: .08em; }
+    .news-carousel-scrim {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(0deg, rgba(6,26,15,.92) 0%, rgba(6,26,15,.55) 40%, transparent 72%);
+    }
+    .news-carousel-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 20px; color: #fff; }
+    /* color:#fff eksplisit — h1..h5 global (styles.scss) menimpa warna
+       putih yang harusnya diwarisi dari .news-carousel-overlay, karena aturan
+       elemen langsung selalu menang atas inheritance. */
+    .news-carousel-overlay h4 { margin: 0 0 14px; font-size: 1.2rem; font-weight: 700; line-height: 1.4; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    /* Baris meta dibesarkan + diberi bobot medium (dulu terlalu kecil/tipis,
+       "kalimat di bawah" yang dikeluhkan) — titik kuning ikut dibesarkan
+       proporsional supaya tetap jadi separator yang jelas, bukan noktah. */
+    .news-carousel-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: .92rem; font-weight: 500; opacity: .95; }
+    .news-carousel-meta-dot { display: inline-flex; align-items: center; gap: 7px; }
+    .news-carousel-meta-dot span { width: 5px; height: 5px; border-radius: 50%; background: var(--color-gold); flex-shrink: 0; }
+    @media (max-width: 720px) {
+      /* Di mobile TIDAK mentok kanan (beda dari desktop) — konsisten dengan
+         .card-scroller section lain yang tetap respect gutter .container di
+         kedua sisi; efek "kepotong sampai tepi layar" murni ide desktop. */
+      .berita-carousel { flex-direction: column; border-radius: var(--radius-lg); margin-right: 20px; }
+      .berita-carousel-intro { flex: none; padding: 24px 20px; }
+      .berita-carousel-icon, .berita-carousel-intro p, .berita-carousel-cta { max-width: none; margin-right: 0; }
+      .berita-carousel-arrow { display: none; }
+      /* Inset kiri/kanan dipindah KE SINI (wrapper statis, BUKAN elemen yang
+         overflow-x:auto di bawahnya) — sudah dicoba lewat padding
+         .berita-carousel-track maupun margin di kartu pertama/terakhir,
+         dua-duanya tidak pernah kepakai: scroll-snap-type:mandatory di
+         Chromium TERUS-MENERUS mengoreksi scrollLeft (bukan cuma sekali pas
+         render) supaya box kartu snap PERTAMA rata pas di awal scrollport —
+         ini berlaku untuk *apapun* yang menggeser kartu itu sendiri
+         (padding container, margin kartu, bahkan elemen spacer di dalam
+         track), karena semuanya masih bagian dari koordinat scroll yang
+         sama. Satu-satunya inset yang selamat dari koreksi itu adalah yang
+         duduk di LUAR elemen scroll — wrapper ini cuma position:relative
+         (bukan overflow-x:auto), jadi paddingnya murni statis, tidak pernah
+         disentuh mekanisme snap sama sekali. */
+      .berita-carousel-track-wrap { margin-left: 0; background: #fff; padding: 0 14px; }
+      .berita-carousel-track { padding: 14px 0; }
+      .news-carousel-card { flex: 0 0 88%; }
+      .news-carousel-media { aspect-ratio: 4 / 5; }
+    }
 
     /* ---------- Artikel: "kartu kajian" — teks-sentris (tanpa foto dominan
        seperti Berita), aksen batang warna emas di kiri + excerpt
@@ -891,9 +1018,39 @@ interface CardPreview {
     }
 
     /* ---------- Preview bottom sheet (mobile) — isi generik lintas tipe kartu. ---------- */
-    .sheet-title { margin: 10px 0 6px; }
+    /* Kotak biasa (bukan full-bleed) — dulu pakai margin negatif buat
+       "menembus" padding .sheet-panel sampai ke tepi, tapi itu ikut menutupi
+       .sheet-handle/.sheet-close yang duduk di zona padding-top yang sama
+       (foto menimpa handle+tombol X). Sengaja TIDAK menyentuh margin-top
+       supaya jarak dari handle/close tetap seperti bawaan .sheet-panel. */
+    .sheet-image { border-radius: 14px; overflow: hidden; margin: 0 0 14px; }
+    .sheet-image img { display: block; width: 100%; height: 190px; object-fit: cover; object-position: center top; }
+    .sheet-title { margin: 0 0 16px; }
     .sheet-meta-line { margin: 0 0 4px; }
-    .sheet-cta { margin-top: 16px; justify-content: center; }
+    /* Baris meta berlabel ikon (Penulis/Editor/Tanggal) — pola sama seperti
+       kartu preview artikel di ldksyahid-app, dipakai lewat metaRows (berita)
+       sebagai alternatif metaLines polos (artikel/campaign, tetap dipakai). */
+    .sheet-meta-rows { margin: 0 0 20px; display: flex; flex-direction: column; gap: 12px; }
+    .sheet-meta-row { display: flex; align-items: flex-start; gap: 10px; }
+    .sheet-meta-icon {
+      flex-shrink: 0; margin-top: 1px; width: 26px; height: 26px; border-radius: 8px;
+      display: grid; place-items: center; background: var(--color-primary-tint); color: var(--color-primary-dark);
+    }
+    .sheet-meta-label { display: block; font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--color-muted); }
+    .sheet-meta-value { display: block; font-size: .88rem; font-weight: 600; color: var(--color-text); }
+    /* Excerpt/ringkasan — ala ldksyahid-app news-sheet__excerpt: teks penuh
+       (tanpa line-clamp), justify, line-height lega supaya tidak berkesan
+       padat/mepet seperti metaRows yang langsung nempel CTA sebelumnya. */
+    .sheet-excerpt { margin: 0 0 20px; font-size: .88rem; line-height: 1.7; text-align: justify; color: var(--color-text-secondary); }
+    /* Pil gradient (bukan lagi .btn-primary kotak) khusus tombol sheet —
+       di-scope lokal ke elemen yang dirender komponen ini sendiri, pola sama
+       seperti override .modal-pop di app-alert-dialog. */
+    .sheet-cta {
+      margin-top: 4px; justify-content: center; border: none; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--color-primary-bright), var(--color-primary-dark)); box-shadow: var(--shadow-sm);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .sheet-cta:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
     /* ---------- Card scroller: pengganti .grid.grid-3 KHUSUS di halaman ini
        untuk daftar kartu (berita/artikel/buku/event/goods/campaign) — di
@@ -920,6 +1077,7 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   @ViewChild('islandPath') private islandPathRef?: ElementRef<SVGPathElement>;
   @ViewChildren('tentangTabBtn') private tentangTabBtnRefs!: QueryList<ElementRef<HTMLButtonElement>>;
+  @ViewChild('newsTrack') private newsTrackRef?: ElementRef<HTMLElement>;
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
@@ -1172,6 +1330,17 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     return d ? (this.datePipe.transform(d, 'd MMM yyyy') ?? '') : '';
   }
 
+  /** Nama hari + jam untuk kartu carousel Berita (mis. "Kamis" / "14.26") —
+   *  formatDate() di atas dipertahankan apa adanya (dipakai luas di tempat
+   *  lain), dua helper ini murni tambahan untuk tampilan carousel baru. */
+  formatDayName(d: string | Date | null | undefined): string {
+    return d ? (this.datePipe.transform(d, 'EEEE') ?? '') : '';
+  }
+
+  formatTime(d: string | Date | null | undefined): string {
+    return d ? (this.datePipe.transform(d, 'HH.mm') ?? '') : '';
+  }
+
   /** Mobile-only preview: klik kartu berita/artikel/campaign membuka bottom
    *  sheet ringkas (bukan langsung pindah halaman) — sesuai revamp-project
    *  prompt poin 9. Desktop tidak diganggu, routerLink jalan seperti biasa. */
@@ -1183,6 +1352,17 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     this.previewSheet.set(preview);
   }
 
+  /** RouterLink.onClick() selalu memanggil router.navigateByUrl() begitu
+   *  urlTree-nya tidak null — TIDAK peduli event.preventDefault() sudah
+   *  dipanggil handler (click) lain di elemen yang sama (lihat openPreview
+   *  di atas). Makanya kartu tetap lompat ke detail meski preventDefault
+   *  jalan. Fix: [routerLink] di-null-kan di mobile supaya RouterLink
+   *  sendiri yang urung navigasi (early-return saat urlTree === null),
+   *  bukan mengandalkan preventDefault dari handler lain. */
+  isMobilePreview(): boolean {
+    return window.innerWidth <= 720;
+  }
+
   goToPreview(): void {
     const link = this.previewSheet()?.link;
     this.previewSheet.set(null);
@@ -1191,8 +1371,34 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     else this.router.navigateByUrl(link);
   }
 
+  /** Panah kiri/kanan carousel Berita (desktop) — geser satu "layar" track
+   *  (80% lebarnya) alih-alih per-kartu, supaya tetap terasa proporsional
+   *  berapa pun lebar kartu hasil resize. scrollBy bawaan browser yang
+   *  menganimasikan (scroll-behavior:smooth di CSS), bukan animasi manual. */
+  scrollNews(direction: 1 | -1): void {
+    const track = this.newsTrackRef?.nativeElement;
+    if (!track) return;
+    track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
+  }
+
   setLoading(loading: boolean): void { this.loading.set(loading); }
-  setNews(news: News[]): void { this.news.set(news); }
+
+  /** Root cause dari "kartu pertama mepet ke panel hijau di mobile" — BUKAN
+   *  soal margin/padding kurang. Chromium punya quirk: scroll container yang
+   *  punya `padding` + child `scroll-snap-align:start` auto-rest scrollLeft
+   *  = padding-left begitu konten pertama kali dirender (snap area
+   *  memasukkan padding, jadi browser "mengoreksi" ke snap point terdekat
+   *  yang kebetulan persis di ujung padding) — visual efeknya persis seperti
+   *  padding-left itu tidak pernah ada. rAF dipakai (bukan setTimeout 0)
+   *  supaya jalan setelah browser selesai layout+auto-snap pasca render
+   *  @for kartu, bukan berlomba dengannya. */
+  setNews(news: News[]): void {
+    this.news.set(news);
+    requestAnimationFrame(() => {
+      const track = this.newsTrackRef?.nativeElement;
+      if (track) track.scrollLeft = 0;
+    });
+  }
   setArticles(articles: Article[]): void { this.articles.set(articles); }
   setCatalogBooks(books: CatalogBook[]): void { this.catalogBooks.set(books); }
   setEvents(events: EventListItem[]): void { this.events.set(events); }
