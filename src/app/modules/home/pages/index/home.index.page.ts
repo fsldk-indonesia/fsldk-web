@@ -119,14 +119,21 @@ interface CardPreview {
        sebelum sampai tepi, DITAMBAH ::after meniru overlay solid-fade milik
        .hero::before — menutup ~70px pertama & terakhir section dengan warna
        tint rata supaya sambungan ke section tetangga selalu mulus apa pun
-       posisi blob-nya. Cuma transform+opacity yang dianimasikan (bukan
-       width/height/padding) supaya tidak memicu layout thrash. ---------- */
+       posisi blob-nya. Dua blob (kanan & kiri) digabung sebagai dua layer
+       radial-gradient dalam SATU ::before (bukan elemen terpisah — pseudo-
+       element cuma ::before/::after, sudah dipakai ::after untuk fade mask)
+       supaya cukup satu animasi transform yang menggerakkan keduanya
+       sekaligus. Siklus dipercepat 24s→12s + jarak geser diperbesar supaya
+       gerakannya lebih terasa. Cuma transform+opacity yang dianimasikan
+       (bukan width/height/padding) supaya tidak memicu layout thrash. ---------- */
     .section-blob-drift { overflow: hidden; }
     .section-blob-drift > .container { position: relative; z-index: 1; }
     .section-blob-drift::before {
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background: radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%);
-      opacity: .75; animation: sectionBlobDrift 24s ease-in-out infinite alternate;
+      background:
+        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
+        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
+      opacity: .8; animation: sectionBlobDrift 12s ease-in-out infinite alternate;
     }
     .section-blob-drift::after {
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
@@ -136,7 +143,7 @@ interface CardPreview {
     }
     @keyframes sectionBlobDrift {
       from { transform: translate(0, 0) scale(1); }
-      to { transform: translate(-3%, 4%) scale(1.12); }
+      to { transform: translate(-4%, 5%) scale(1.15); }
     }
     @media (prefers-reduced-motion: reduce) {
       .section-blob-drift::before { animation: none; }
@@ -1297,9 +1304,17 @@ interface CardPreview {
        section dan aksi utamanya sejajar. */
     .gallery-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
     .gallery-section-head-text { flex: 1; min-width: 0; }
+    /* Duplikat mobile-only (lihat markup setelah .gallery-feature) —
+       disembunyikan di desktop, tombol asli di header yang dipakai. */
+    .gallery-btn-all-bottom { display: none; }
     @media (max-width: 640px) {
       .gallery-section-head { flex-direction: column; align-items: flex-start; }
-      .gallery-section-head .gallery-btn-all { align-self: stretch; justify-content: center; }
+      /* Tombol di header DIHILANGKAN di mobile (bukan cuma pindah posisi) —
+         digantikan .gallery-btn-all-bottom di paling bawah kartu, supaya
+         urutan baca mobile: judul → deskripsi → kartu → CTA, bukan CTA
+         nyempil di antara deskripsi dan kartu. */
+      .gallery-section-head .gallery-btn-all { display: none; }
+      .gallery-btn-all-bottom { display: flex; margin-top: 20px; justify-content: center; }
     }
 
     /* ---------- Galeri: satu kartu "Dokumentasi Kegiatan Terbaru" ala

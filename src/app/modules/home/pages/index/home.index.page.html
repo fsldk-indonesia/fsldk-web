@@ -954,6 +954,13 @@
           }
         </div>
       </article>
+
+      <!-- Duplikat CTA khusus mobile, ditaruh di PALING BAWAH section (setelah
+           kartu galeri) — bukan di atas seperti versi desktop di
+           .gallery-section-head. Ditampilkan/disembunyikan via CSS
+           (.gallery-btn-all-bottom) per breakpoint, bukan @if, supaya tidak
+           perlu duplikasi logic render. -->
+      <a routerLink="/tentang/galeri" class="gallery-btn-all gallery-btn-all-bottom">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
     </div>
   </section>
 
