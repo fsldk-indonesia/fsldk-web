@@ -113,7 +113,7 @@
   </div>
 </section>
 
-<section class="section section-transition" id="tentang">
+<section class="section section-transition section-blob-drift" id="tentang">
   <div class="container">
     <div class="text-center tentang-head reveal">
       <span class="eyebrow">Tentang Kami</span>
@@ -343,9 +343,10 @@
         <div class="berita-carousel reveal">
           <div class="berita-carousel-intro">
             <span class="berita-carousel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="150" /></span>
+            <span class="berita-carousel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="64" /></span>
             <span class="berita-carousel-icon"><app-icon name="newspaper" [size]="24" /></span>
             <p>Informasi terkini seputar dakwah kampus dan kegiatan FSLDK Indonesia se-Nusantara.</p>
-            <a [routerLink]="newsPath.publicIndex" class="berita-carousel-cta">Lihat Berita Lainnya <app-icon name="chevron-right" [size]="13" /></a>
+            <a [routerLink]="newsPath.publicIndex" class="berita-carousel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
           </div>
           <div class="berita-carousel-track-wrap">
             <button type="button" class="berita-carousel-arrow prev" (click)="scrollNews(-1)" aria-label="Berita sebelumnya">
@@ -398,27 +399,76 @@
 @if (!loading() && articles().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Artikel &amp; Kajian</span>
-        <h2>Gagasan &amp; Wawasan Dakwah Kampus</h2>
+      <!-- Redesign ala "Karya Tulis Kita" ldksyahid-app (resources/views/
+           landing-page/home/partials/article) — badge+heading berwarna,
+           "Lihat Semua" sejajar heading, dan kartu dengan 3 warna aksen
+           bergilir (indigo/teal/amber, $cardColors[$key % count] di source
+           aslinya — lihat articleAccent()). Media+scrim+title-overlay pakai
+           ULANG .news-carousel-media & kerabatnya (sama seperti Berita/
+           Pustaka), badge tanggal ala Event (date | 'd' + 'MMM'). -->
+      <div class="artikel-head reveal">
+        <div>
+          <span class="eyebrow">Artikel &amp; Kajian</span>
+          <h2>Karya Tulis Kita</h2>
+          <p class="artikel-subtitle">Gagasan dan wawasan dakwah kampus dari kader FSLDK Indonesia se-Nusantara.</p>
+        </div>
+        <a [routerLink]="articlePath.publicIndex" class="artikel-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
       </div>
       <div class="artikel-grid">
-        @for (a of articles(); track a.articleID) {
-          <a class="artikel-card reveal" [routerLink]="isMobilePreview() ? null : ['/artikel', a.articleSlug]"
-             (click)="openPreview($event, { chip: a.categoryName, title: a.articleTitle, metaLines: [a.articleWriter || a.authorName, formatDate(a.publishedDate)], link: ['/artikel', a.articleSlug], ctaLabel: 'Baca Artikel Lengkap' })">
-            <span class="artikel-card-accent" aria-hidden="true"></span>
-            <span class="chip chip-gold">{{ a.categoryName }}</span>
-            <h3>{{ a.articleTitle }}</h3>
-            @if (a.articleIntro) { <p class="artikel-intro">{{ a.articleIntro }}</p> }
-            <div class="artikel-writer">
-              <span class="artikel-writer-avatar">{{ (a.articleWriter || a.authorName).charAt(0) }}</span>
-              <span>{{ a.articleWriter || a.authorName }} &middot; {{ formatDate(a.publishedDate) }}</span>
-            </div>
-          </a>
+        @for (a of articles(); track a.articleID; let i = $index) {
+          <div class="artikel-card-wrap reveal">
+            <a
+              class="artikel-card"
+              [style.--card-accent]="articleAccent(i)"
+              [routerLink]="isMobilePreview() ? null : ['/artikel', a.articleSlug]"
+              (click)="openPreview($event, {
+                chip: a.categoryName,
+                title: a.articleTitle,
+                metaLines: [],
+                metaRows: [
+                  { icon: 'user-check', label: 'Penulis', value: a.articleWriter || a.authorName },
+                  { icon: 'edit', label: 'Editor', value: a.articleEditor || a.authorName },
+                  { icon: 'calendar', label: 'Tanggal', value: formatDate(a.publishedDate) }
+                ],
+                link: ['/artikel', a.articleSlug],
+                ctaLabel: 'Baca Artikel Lengkap',
+                image: a.articleImage,
+                excerpt: a.articleIntro,
+                accent: articleAccent(i)
+              })"
+            >
+              <div class="news-carousel-media artikel-card-media">
+                @if (a.articleImage) { <img [src]="a.articleImage" [alt]="a.articleTitle"> } @else { <span class="news-carousel-media-fallback">FOTO ARTIKEL</span> }
+                <span class="news-carousel-scrim" aria-hidden="true"></span>
+                @if (a.publishedDate) {
+                  <span class="artikel-card-date">
+                    <span class="artikel-card-date-num">{{ a.publishedDate | date:'d' }}</span>
+                    <span class="artikel-card-date-month">{{ a.publishedDate | date:'MMM' }}</span>
+                  </span>
+                }
+                <div class="news-carousel-overlay"><h4>{{ a.articleTitle }}</h4></div>
+              </div>
+              <div class="artikel-card-body">
+                <span class="artikel-chip">{{ a.categoryName }}</span>
+                <h3 class="artikel-card-title">{{ a.articleTitle }}</h3>
+                <div class="artikel-people">
+                  <div class="artikel-people-row">
+                    <span class="artikel-avatar"><app-icon name="user-check" [size]="12" /></span>
+                    <span class="artikel-people-info"><span class="artikel-people-label">Penulis</span><span class="artikel-people-name">{{ a.articleWriter || a.authorName }}</span></span>
+                  </div>
+                  @if (a.articleEditor) {
+                    <span class="artikel-people-divider" aria-hidden="true"></span>
+                    <div class="artikel-people-row">
+                      <span class="artikel-avatar"><app-icon name="edit" [size]="12" /></span>
+                      <span class="artikel-people-info"><span class="artikel-people-label">Editor</span><span class="artikel-people-name">{{ a.articleEditor }}</span></span>
+                    </div>
+                  }
+                </div>
+                <span class="artikel-card-cta">Baca Selengkapnya <app-icon name="chevron-right" [size]="12" /></span>
+              </div>
+            </a>
+          </div>
         }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="articlePath.publicIndex" class="btn btn-outline">Lihat Semua Artikel</a>
       </div>
     </div>
   </section>
@@ -500,9 +550,10 @@
         </div>
         <div class="pustaka-carousel-intro">
           <span class="pustaka-carousel-silhouette" aria-hidden="true"><app-icon name="book-open" [size]="150" /></span>
+          <span class="pustaka-carousel-silhouette-2" aria-hidden="true"><app-icon name="book-open" [size]="64" /></span>
           <span class="pustaka-carousel-icon"><app-icon name="book-open" [size]="24" /></span>
           <p>Koleksi buku digital seputar dakwah kampus, keislaman, dan pengembangan diri kader FSLDK Indonesia.</p>
-          <a [routerLink]="catalogbookPath.publicIndex" class="pustaka-carousel-cta">Lihat Semua Buku <app-icon name="chevron-right" [size]="13" /></a>
+          <a [routerLink]="catalogbookPath.publicIndex" class="pustaka-carousel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
         </div>
       </div>
     }
@@ -510,15 +561,35 @@
 }
 
 @if (!loading() && events().length > 0) {
+  <!-- Redesign: heading eyebrow+h2 polos di atas (center, konsisten dengan
+       heading section lain), panel hijau full-width DI BAWAHNYA membungkus
+       ikon+deskripsi+"Lihat Semua Event" (gaya pill CTA-nya sama persis
+       dengan .pustaka-carousel-cta, Koleksi Buku Digital) + grid kartu
+       sekaligus — kartu event "duduk" di dalam panel, bukan lagi terpisah
+       di bawahnya. Grid-nya TETAP .card-scroller apa adanya — grid 3 kolom
+       di desktop, geser horizontal (swipe, tanpa panah) di mobile. -->
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:28px">
         <span class="eyebrow">Agenda &amp; Kegiatan</span>
-        <h2>Event Terbaru</h2>
+        <h2>Event Terbaru FSLDK Indonesia</h2>
       </div>
-      <div class="card-scroller">
+      <div class="agenda-panel reveal">
+        <div class="agenda-panel-intro">
+          <span class="agenda-panel-silhouette" aria-hidden="true"><app-icon name="calendar-days" [size]="140" /></span>
+          <span class="agenda-panel-silhouette-2" aria-hidden="true"><app-icon name="calendar-days" [size]="64" /></span>
+          <span class="agenda-panel-icon"><app-icon name="calendar-days" [size]="24" /></span>
+          <p>Ikuti rangkaian musyawarah, pelatihan, dan silaturahmi nasional FSLDK Indonesia dari waktu ke waktu.</p>
+          <a [routerLink]="eventPath.publicIndex" class="agenda-panel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+        </div>
+        <div class="agenda-panel-cards-wrap">
+        <div class="card-scroller agenda-panel-cards">
         @for (e of events(); track e.eventID) {
-          <a class="event-card reveal" [routerLink]="eventPath.publicDetail(e.eventSlug)">
+          <a
+            class="event-card reveal"
+            [routerLink]="isMobilePreview() ? null : eventPath.publicDetail(e.eventSlug)"
+            (click)="openPreview($event, eventPreview(e))"
+          >
             <div class="event-card-media">
               @if (e.eventImage) { <img [src]="e.eventImage" [alt]="e.eventTitle"> } @else { <span>EVENT</span> }
               <span class="event-card-overlay" aria-hidden="true"></span>
@@ -528,169 +599,525 @@
                   <span class="mon">{{ e.startDate | date:'MMM' }}</span>
                 </span>
               }
-              <span class="event-status-chip" [class.ongoing]="e.status === 'ongoing'" [class.past]="e.status === 'past'">
-                {{ e.status === 'ongoing' ? 'Berlangsung' : e.status === 'past' ? 'Selesai' : 'Akan Datang' }}
-              </span>
+              @if (e.status === 'upcoming') {
+                <span class="event-status-chip" [class.open]="e.registOpen" [class.closed]="!e.registOpen">
+                  {{ e.registOpen ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup' }}
+                </span>
+              } @else {
+                <span class="event-status-chip" [class.ongoing]="e.status === 'ongoing'" [class.past]="e.status === 'past'">
+                  {{ e.status === 'ongoing' ? 'Berlangsung' : 'Selesai' }}
+                </span>
+              }
               <div class="event-card-caption">
-                <span class="chip chip-green">{{ e.eventDivision }}</span>
+                <div class="event-card-tags">
+                  <span class="chip chip-green">{{ e.eventDivision }}</span>
+                  @if (e.tag) { <span class="event-tag-pill"><app-icon name="hash" [size]="10" /> {{ e.tag }}</span> }
+                </div>
                 <h3>{{ e.eventTitle }}</h3>
-                @if (e.location) { <p class="event-card-location"><app-icon name="map-pin" [size]="12" /> {{ e.location }}</p> }
+                <p class="event-card-date-range"><app-icon name="calendar" [size]="12" /> {{ eventDateRange(e) }}</p>
+                @if (e.location) { <p class="event-card-location"><app-icon name="map-pin" [size]="12" /> {{ eventLocationText(e) }}</p> }
+                <span class="event-card-hover-cta">Lihat Detail <app-icon name="chevron-right" [size]="11" /></span>
               </div>
             </div>
           </a>
         }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="eventPath.publicIndex" class="btn btn-outline">Lihat Semua Event</a>
+        </div>
+        </div>
       </div>
     </div>
   </section>
 }
 
 @if (!loading() && goods().length > 0) {
+  <!-- Redesign: heading eyebrow+h2 polos di atas (pola sama seperti Agenda &
+       Kegiatan), panel hijau full-width di bawahnya membungkus ikon+
+       deskripsi+CTA "Lihat Semua" SEKALIGUS carousel kartu produk (bukan
+       grid statis seperti Agenda — di sini tetap carousel geser dengan
+       panah, karena jumlah produk cenderung lebih banyak dari yang muat
+       sekali layar). Kartu .goods-card2 TIDAK diubah strukturnya (foto+
+       overlay hover+body kategori/nama/harga) — cuma ditambah strip
+       thumbnail .goods-card2-gallery (previewImages, maks 3) yang
+       ditumpuk di dalam foto utama, ala shop.app (referensi user). -->
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Layanan</span>
-        <h2>FSLDK Goods</h2>
+      <div class="reveal" style="margin-bottom:28px">
+        <span class="eyebrow">FSLDK Goods</span>
+        <h2>Merchandise Resmi FSLDK Indonesia</h2>
       </div>
-      <div class="card-scroller">
-        @for (g of goods(); track g.goodsID) {
-          <a class="goods-card2 reveal" [routerLink]="goodsPath.publicDetail(g.goodsSlug)">
-            <div class="goods-card2-media">
-              @if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }
-              @if (g.isFeatured) { <span class="goods-featured-ribbon">Unggulan</span> }
-              @if (g.availabilityStatus !== 'available') {
-                <span class="goods-unavailable-badge">{{ g.availabilityStatus === 'out_of_stock' ? 'Stok Habis' : 'Segera Hadir' }}</span>
+      <div class="goods-panel reveal">
+        <div class="goods-panel-intro">
+          <span class="goods-panel-silhouette" aria-hidden="true"><app-icon name="shopping-bag" [size]="140" /></span>
+          <span class="goods-panel-silhouette-2" aria-hidden="true"><app-icon name="shopping-bag" [size]="64" /></span>
+          <span class="goods-panel-icon"><app-icon name="shopping-bag" [size]="24" /></span>
+          <p>Dukung dakwah kampus sambil membawa pulang merchandise resmi FSLDK Indonesia — kaos, aksesoris, dan cendera mata pilihan.</p>
+          <a [routerLink]="goodsPath.publicIndex" class="goods-panel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+        </div>
+        <div class="goods-panel-cards-wrap">
+          <div class="goods-panel-track-wrap">
+            <button type="button" class="goods-panel-arrow prev" (click)="scrollGoods(-1)" aria-label="Produk sebelumnya">
+              <app-icon name="chevron-left" [size]="16" />
+            </button>
+            <div class="goods-panel-track" #goodsTrack>
+              @for (g of goods(); track g.goodsID) {
+                <a
+                  class="goods-card2 reveal"
+                  [routerLink]="isMobilePreview() ? null : goodsPath.publicDetail(g.goodsSlug)"
+                  (click)="openPreview($event, goodsPreview(g))"
+                >
+                  <div class="goods-card2-media">
+                    @if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }
+                    @if (g.isFeatured) { <span class="goods-featured-ribbon">Unggulan</span> }
+                    @if (g.availabilityStatus !== 'available') {
+                      <span class="goods-unavailable-badge">{{ g.availabilityStatus === 'out_of_stock' ? 'Stok Habis' : 'Segera Hadir' }}</span>
+                    }
+                    <span class="goods-card2-scrim" aria-hidden="true"></span>
+                    <span class="goods-card2-name-overlay">{{ g.goodsName }}</span>
+                    @if (g.previewImages; as previews) {
+                      @if (previews.length > 0) {
+                        <div class="goods-card2-gallery">
+                          @for (img of previews; track img) { <span class="goods-card2-gallery-thumb"><img [src]="img" [alt]="g.goodsName"></span> }
+                        </div>
+                      }
+                    }
+                  </div>
+                  <div class="news-body">
+                    <span class="chip chip-green">{{ g.categoryName }}</span>
+                    <h3>{{ g.goodsName }}</h3>
+                    <span class="goods-card2-price">{{ formatRupiah(g.price) }}</span>
+                  </div>
+                </a>
               }
-              <div class="goods-card2-overlay">
-                @if (g.shortDescription) { <p>{{ g.shortDescription }}</p> }
-                <span class="goods-card2-cta">Lihat Produk <app-icon name="chevron-right" [size]="12" /></span>
-              </div>
             </div>
-            <div class="news-body">
-              <span class="chip chip-green">{{ g.categoryName }}</span>
-              <h3>{{ g.goodsName }}</h3>
-              <span class="goods-card2-price">{{ formatRupiah(g.price) }}</span>
-            </div>
-          </a>
-        }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="goodsPath.publicIndex" class="btn btn-outline">Lihat Semua Produk</a>
-      </div>
-    </div>
-  </section>
-}
-
-@if (!loading() && schedules().length > 0) {
-  <section class="section">
-    <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Jadwal</span>
-        <h2>Agenda Kegiatan Terdekat</h2>
-      </div>
-      <div class="agenda-mini-list">
-        @for (s of schedules(); track s.scheduleID) {
-          <div class="agenda-mini-item reveal">
-            <div class="agenda-mini-date">
-              <span class="day">{{ s.startDate | date:'d' }}</span>
-              <span class="mon">{{ s.startDate | date:'MMM' }}</span>
-            </div>
-            <div class="agenda-mini-body">
-              <span class="chip chip-green">{{ s.category }}</span>
-              <h3>{{ s.title }}</h3>
-              <p class="meta">
-                @if (!s.isAllDay && s.startTime) { {{ s.startTime }} · }
-                @if (s.location) { {{ s.location }} }
-              </p>
-            </div>
+            <button type="button" class="goods-panel-arrow next" (click)="scrollGoods(1)" aria-label="Produk berikutnya">
+              <app-icon name="chevron-right" [size]="16" />
+            </button>
           </div>
-        }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="schedulePath.publicIndex" class="btn btn-outline">Lihat Semua Jadwal</a>
+        </div>
       </div>
     </div>
   </section>
 }
 
 @if (!loading() && campaigns().length > 0) {
-  <section class="section">
+  <section class="section section-blob-drift">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Kantong Amal</span>
-        <h2>Salurkan Kebaikan, Bantu Sesama</h2>
-      </div>
-      <div class="card-scroller">
-        @for (c of campaigns(); track c.campaignID) {
-          <a class="campaign-card2 reveal" [routerLink]="isMobilePreview() ? null : kantongAmalPath.detail(c.slug)"
-             (click)="openPreview($event, { chip: c.categoryName, title: c.title, metaLines: [formatRupiah(c.collectedAmount) + ' terkumpul'], link: kantongAmalPath.detail(c.slug), ctaLabel: 'Lihat Campaign', progress: { percent: progressPercent(c), label: progressPercent(c) + '% tercapai' } })">
-            <div class="campaign-card2-media">
-              @if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }
-            </div>
-            <div class="news-body campaign-card2-body">
-              <div class="campaign-ring" [style.--pct]="progressPercent(c)"><span>{{ progressPercent(c) }}%</span></div>
-              <div class="campaign-card2-info">
-                <span class="chip chip-green">{{ c.categoryName }}</span>
-                <h3>{{ c.title }}</h3>
-                <p class="meta"><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</p>
+      <div class="kantong-panel reveal">
+        <!-- Sidebar dulu di markup (bukan grid) supaya di mobile tampil DI
+             ATAS sebagai "intro" sebelum kartu campaign — persis urutan
+             ldksyahid-app (testimony-sidebar order-1 di mobile). Desktop
+             posisinya digeser ke kanan lewat CSS `order`, lihat .kantong-*. -->
+        <aside class="kantong-sidebar">
+          <span class="eyebrow">Kantong Amal</span>
+          <h2>Salurkan Kebaikan, Bantu Sesama</h2>
+          <p class="text-muted">Setiap donasi yang tersalurkan lewat Kantong Amal membantu mahasiswa dan kegiatan dakwah kampus LDK se-Indonesia yang membutuhkan.</p>
+
+          @if (campaignStats(); as stats) {
+            <div class="kantong-stats">
+              <div class="kantong-stat-card">
+                <span class="kantong-stat-icon"><app-icon name="users" [size]="22" /></span>
+                <div class="kantong-stat-content">
+                  <span class="kantong-stat-number">{{ stats.totalDonors }}</span>
+                  <span class="kantong-stat-label">Total Donatur</span>
+                </div>
+              </div>
+              <div class="kantong-stat-card">
+                <span class="kantong-stat-icon"><app-icon name="hand-heart" [size]="22" /></span>
+                <div class="kantong-stat-content">
+                  <span class="kantong-stat-number">{{ formatCompactRupiah(stats.totalCollected) }}</span>
+                  <span class="kantong-stat-label">Dana Tersalurkan</span>
+                </div>
               </div>
             </div>
-          </a>
-        }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="kantongAmalPath.list" class="btn btn-outline">Lihat Semua Campaign</a>
+          }
+
+          <a [routerLink]="kantongAmalPath.list" class="campaign-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+        </aside>
+
+        <div class="kantong-grid">
+          @for (c of campaigns(); track c.campaignID) {
+            <!-- .reveal di WRAPPER, transform hover di .campaign-card2 —
+                 kalau digabung satu elemen, CSS Animation (.reveal, pakai
+                 transform keyframes) menang atas transform :hover biasa di
+                 cascade dan hover-nya tidak akan pernah kelihatan jalan
+                 (pola sama seperti .artikel-card-wrap/.artikel-card). -->
+            <div class="campaign-card2-wrap reveal">
+              <a class="campaign-card2" [routerLink]="isMobilePreview() ? null : kantongAmalPath.detail(c.slug)"
+                 (click)="openPreview($event, {
+                   chip: c.categoryName, title: c.title, metaLines: [],
+                   metaRows: [
+                     { icon: 'coins', label: 'Terkumpul', value: formatRupiah(c.collectedAmount) },
+                     { icon: 'flag', label: 'Target', value: formatRupiah(c.targetAmount) }
+                   ],
+                   link: kantongAmalPath.detail(c.slug), ctaLabel: 'Lihat Campaign',
+                   progress: { percent: progressPercent(c), label: progressPercent(c) + '% tercapai' },
+                   image: c.coverImageUrl
+                 })">
+                <div class="campaign-card2-media">
+                  @if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }
+                  <span class="chip chip-green campaign-card2-chip">{{ c.categoryName }}</span>
+                  @if (progressPercent(c) >= 90) { <span class="campaign-card2-badge">Hampir Tercapai!</span> }
+                </div>
+                <div class="campaign-card2-body">
+                  <h3>{{ c.title }}</h3>
+                  <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent(c)"></div></div>
+                  <p class="progress-meta"><span>{{ progressPercent(c) }}% tercapai</span></p>
+                  <div class="campaign-card2-amounts">
+                    <div class="campaign-card2-amount">
+                      <strong>{{ formatRupiah(c.collectedAmount) }}</strong>
+                      <span>terkumpul</span>
+                    </div>
+                    <div class="campaign-card2-amount campaign-card2-amount-target">
+                      <strong>{{ formatRupiah(c.targetAmount) }}</strong>
+                      <span>target</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          }
+        </div>
       </div>
     </div>
   </section>
 }
 
-<section class="section">
+@if (!loading()) {
+  <!-- Redesign: kalender bulan berjalan (statis, tanpa navigasi bulan —
+       beda dari /jadwal index yang bisa prev/next) + daftar "Agenda
+       {bulan}" di bawahnya, gaya kartu PERSIS seperti di /jadwal index
+       (tanggal, chip kategori, judul, deskripsi, meta) — cuma limit 5 item
+       + CTA "Lihat Semua Jadwal" ke index untuk navigasi bulan lain.
+       Logic grid/agenda-nya dari buildMonthView() (schedule.constants.ts),
+       dipakai bareng oleh index page supaya tidak duplikasi. Desktop: hover
+       tanggal munculkan popup ringkas (reuse pola .cal-pop index). Mobile:
+       grid disederhanakan (cuma titik kategori, bukan chip judul), tap
+       tanggal buka bottom sheet daftar kegiatan hari itu (lihat
+       app-bottom-sheet kedua di bawah, terpisah dari previewSheet kartu
+       karena isinya list bukan single-card). -->
+  <section class="section">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:28px">
+        <span class="eyebrow">Jadwal</span>
+        <h2>Kalender Kegiatan Bulan Ini</h2>
+        <p class="text-muted">Ikuti agenda musyawarah, kajian, dan kegiatan dakwah kampus LDK se-Indonesia setiap bulannya.</p>
+      </div>
+
+      @if (scheduleWeeks().length > 0) {
+        <div class="jadwal-cal-wrap reveal">
+          <p class="jadwal-cal-period">{{ schedulePeriodLabel() }}</p>
+          <div class="jadwal-cal-grid">
+            @for (d of scheduleDow; track d) { <div class="jadwal-cal-dow-cell">{{ d }}</div> }
+          </div>
+          @for (week of scheduleWeeks(); track $index) {
+            <div class="jadwal-cal-grid">
+              @for (cell of week; track cell.iso) {
+                <div
+                  class="jadwal-cal-cell" [class.out]="!cell.inMonth" [class.today]="cell.isToday" [class.has]="cell.items.length"
+                  [attr.tabindex]="cell.items.length ? 0 : null"
+                  (mouseenter)="openSchedulePopup(cell.iso)" (mouseleave)="closeSchedulePopup()"
+                  (focus)="openSchedulePopup(cell.iso)" (blur)="closeSchedulePopup()"
+                  (click)="onScheduleCellClick(cell)"
+                >
+                  <span class="jadwal-cal-date">{{ cell.day }}</span>
+                  <div class="jadwal-cal-dots">
+                    @for (it of cell.items.slice(0, 4); track it.scheduleID) {
+                      <span class="jadwal-cal-dot" [style.background]="scheduleCategoryMeta(it.category).color"></span>
+                    }
+                  </div>
+                  <div class="jadwal-cal-chips">
+                    @for (it of cell.items.slice(0, 2); track it.scheduleID) {
+                      <span class="jadwal-cal-chip"><span class="dot" [style.background]="scheduleCategoryMeta(it.category).color"></span>{{ it.title }}</span>
+                    }
+                    @if (cell.items.length > 2) { <span class="jadwal-cal-more">+{{ cell.items.length - 2 }} lainnya</span> }
+                  </div>
+
+                  @if (schedulePopupIso() === cell.iso && cell.items.length) {
+                    <div class="jadwal-cal-pop" role="tooltip" (click)="$event.stopPropagation()">
+                      <span class="jadwal-cal-pop-arrow" aria-hidden="true"></span>
+                      <div class="jadwal-cal-pop-head">
+                        <app-icon name="calendar-days" [size]="13" />
+                        <p class="jadwal-cal-pop-date">{{ scheduleLongDate(cell.date) }}</p>
+                      </div>
+                      <ul>
+                        @for (it of cell.items; track it.scheduleID) {
+                          <li [style.--jadwal-pop-accent]="scheduleCategoryMeta(it.category).color">
+                            <span class="jadwal-cal-pop-dot" [style.background]="scheduleCategoryMeta(it.category).color"></span>
+                            <div class="jadwal-cal-pop-body">
+                              <span class="jadwal-cal-pop-title">{{ it.title }}</span>
+                              <span class="jadwal-cal-pop-meta">
+                                <span class="jadwal-cal-pop-time">{{ scheduleTimeRange(it) }}</span>
+                                <span class="jadwal-cat-badge" [style.background]="scheduleCategoryMeta(it.category).color + '1f'" [style.color]="scheduleCategoryMeta(it.category).color">{{ scheduleCategoryMeta(it.category).label }}</span>
+                              </span>
+                              @if (it.organizer) {
+                                <span class="jadwal-cal-pop-organizer"><app-icon name="users" [size]="11" /> {{ it.organizer }}</span>
+                              }
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <div class="text-center mt-lg">
+        <a [routerLink]="schedulePath.publicIndex" class="jadwal-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+      </div>
+    </div>
+  </section>
+}
+
+<!-- Sheet mobile-only: tap satu tanggal di grid kalender Jadwal membuka ini
+     (lihat onScheduleCellClick) — instance TERPISAH dari previewSheet kartu
+     karena isinya daftar (bisa >1 kegiatan/hari), bukan satu kartu. -->
+<app-bottom-sheet [open]="!!daySheet()" (closed)="daySheet.set(null)">
+  @if (daySheet(); as cell) {
+    <h3 class="sheet-title">{{ scheduleLongDate(cell.date) }}</h3>
+    <div class="jadwal-daysheet-list">
+      @for (it of cell.items; track it.scheduleID) {
+        <div class="jadwal-daysheet-item">
+          <span class="jadwal-cat-badge" [style.background]="scheduleCategoryMeta(it.category).color + '1f'" [style.color]="scheduleCategoryMeta(it.category).color">{{ scheduleCategoryMeta(it.category).label }}</span>
+          <h4>{{ it.title }}</h4>
+          <p class="jadwal-daysheet-meta">
+            <span><app-icon name="clock" [size]="12" /> {{ scheduleTimeRange(it) }}</span>
+            @if (it.location) { <span><app-icon name="building" [size]="12" /> {{ it.location }}</span> }
+            @if (it.organizer) { <span><app-icon name="users" [size]="12" /> {{ it.organizer }}</span> }
+          </p>
+          @if (it.description) { <p class="jadwal-daysheet-desc">{{ it.description }}</p> }
+        </div>
+      }
+    </div>
+  }
+</app-bottom-sheet>
+
+@if (!loading() && galleryFeature(); as feature) {
+  <section class="section">
+    <div class="container">
+      <div class="gallery-section-head reveal" style="margin-bottom:28px">
+        <div class="gallery-section-head-text">
+          <span class="eyebrow">Galeri</span>
+          <h2>Dokumentasi Kegiatan Terbaru</h2>
+          <p class="text-muted">Telusuri jejak dokumentasi musyawarah, kajian, dan momen kebersamaan dakwah kampus LDK se-Indonesia dari waktu ke waktu.</p>
+        </div>
+        <a routerLink="/tentang/galeri" class="gallery-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+      </div>
+
+      <article class="gallery-feature reveal">
+        <header class="gallery-feature-head">
+          <span class="gallery-feature-name">{{ feature.gallery.eventName }}</span>
+          <span class="gallery-feature-badges">
+            @if (feature.gallery.youtubeVideoID) {
+              <span class="gallery-feature-badge gallery-feature-badge-video"><app-icon name="youtube" [size]="12" /> Video</span>
+            }
+            @if (feature.gallery.totalPhotos > 0) {
+              <span class="gallery-feature-badge"><app-icon name="images" [size]="12" /> {{ feature.gallery.totalPhotos }} Foto</span>
+            }
+          </span>
+        </header>
+
+        <div class="gallery-feature-body">
+          <h3 class="gallery-feature-title">{{ feature.gallery.eventTheme }}</h3>
+          @if (feature.gallery.eventDescription) {
+            <div class="gallery-feature-desc" [innerHTML]="sanitizeGalleryDescription(feature.gallery.eventDescription)"></div>
+          }
+
+          @if (feature.photos.length > 0) {
+            <div class="gallery-feature-grid">
+              @for (photo of feature.photos; track photo.photoID; let i = $index) {
+                <div class="gallery-feature-grid-item" (click)="openGalleryZoom(i)">
+                  <img [src]="galleryImgUrl(photo.imagePath)" [alt]="photo.caption || feature.gallery.eventTheme" loading="lazy">
+                </div>
+              }
+            </div>
+          }
+
+          @if (feature.gallery.youtubeVideoID; as vid) {
+            <div class="gallery-feature-video">
+              <span class="gallery-feature-video-label"><app-icon name="youtube" [size]="13" /> Video Dokumentasi</span>
+              <div class="gallery-feature-video-thumb" (click)="openGalleryVideo()">
+                <img [src]="'https://img.youtube.com/vi/' + vid + '/maxresdefault.jpg'" [alt]="'Video dokumentasi ' + feature.gallery.eventName" loading="lazy">
+                <span class="gallery-feature-play"><app-icon name="play" [size]="20" /></span>
+              </div>
+            </div>
+          }
+
+          @if (feature.gallery.documentLink; as docLink) {
+            <div class="gallery-feature-footer">
+              <a [href]="docLink" target="_blank" rel="noopener" class="gallery-feature-doc">
+                <app-icon name="external-link" [size]="14" /> Dokumentasi Lengkap
+              </a>
+            </div>
+          }
+        </div>
+      </article>
+
+      <!-- Duplikat CTA khusus mobile, ditaruh di PALING BAWAH section (setelah
+           kartu galeri) — bukan di atas seperti versi desktop di
+           .gallery-section-head. Ditampilkan/disembunyikan via CSS
+           (.gallery-btn-all-bottom) per breakpoint, bukan @if, supaya tidak
+           perlu duplikasi logic render. -->
+      <a routerLink="/tentang/galeri" class="gallery-btn-all gallery-btn-all-bottom">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+    </div>
+  </section>
+
+  <app-gallery-lightbox
+    [photos]="feature.photos"
+    [initialIndex]="galleryZoomIndex()"
+    [isOpen]="galleryZoomOpen()"
+    [galleryTitle]="feature.gallery.eventTheme"
+    (close)="closeGalleryZoom()"
+  />
+
+  @if (feature.gallery.youtubeVideoID; as vid) {
+    <div class="gallery-video-overlay" [class.active]="galleryVideoOpen()" (click)="closeGalleryVideo()">
+      <div class="gallery-video-wrap" (click)="$event.stopPropagation()">
+        @if (galleryVideoOpen()) {
+          <iframe
+            [src]="safeGalleryVideoUrl(vid)"
+            title="Video Dokumentasi {{ feature.gallery.eventName }}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        }
+      </div>
+      <button type="button" class="gallery-video-close" (click)="closeGalleryVideo()" aria-label="Tutup video">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+  }
+}
+
+<section class="section section-blob-drift">
   <div class="container">
-    <div class="contact-cta-inner reveal">
+    <div class="text-center reveal" style="margin-bottom:40px">
       <span class="eyebrow">Hubungi Kami</span>
-      <h2>Ada Pertanyaan atau Ingin Berkolaborasi?</h2>
-      <p class="text-muted">Sampaikan pertanyaan, aspirasi, atau ajakan kolaborasi dakwah kampus kepada kami — tim sekretariat FSLDK Indonesia siap menindaklanjuti.</p>
-      <a [routerLink]="contactPath.public" class="btn btn-primary">Kirim Pesan</a>
+      <h2>Ada Pertanyaan?</h2>
+      <p class="text-muted">Jika kamu memiliki pertanyaan, kritik, atau saran mengenai dakwah kampus, jangan ragu untuk menghubungi kami ya!</p>
+    </div>
+
+    <div class="contact-panel reveal">
+      <div class="contact-panel-info">
+        <div class="contact-quote-card">
+          <span class="contact-quote-silhouette" aria-hidden="true"><app-icon name="quote-left" [size]="96" /></span>
+          <span class="contact-quote-icon"><app-icon name="book-open" [size]="26" /></span>
+          <p class="contact-quote-text">"Dan Kami tidak mengutus sebelum engkau (Muhammad), melainkan orang laki-laki yang Kami beri wahyu kepada mereka; maka bertanyalah kepada orang yang mempunyai pengetahuan jika kamu tidak mengetahui,"</p>
+          <span class="contact-quote-source"><app-icon name="sparkles" [size]="13" /> QS. An-Nahl 16: Ayat 43</span>
+        </div>
+
+        <div class="contact-method-list">
+          <div class="contact-method-item">
+            <span class="contact-method-icon"><app-icon name="mail" [size]="18" /></span>
+            <div class="contact-method-body">
+              <span class="contact-method-label">Email</span>
+              <a [href]="'mailto:' + contactEmail()" class="contact-method-value">{{ contactEmail() }}</a>
+            </div>
+          </div>
+          <div class="contact-method-item">
+            <span class="contact-method-icon"><app-icon name="map-pin" [size]="18" /></span>
+            <div class="contact-method-body">
+              <span class="contact-method-label">Lokasi</span>
+              <span class="contact-method-value">Plaza Aminta Lantai 5/504, Jl. TB Simatupang Kav. 10 – Pondok Pinang, Kebayoran Lama, Jakarta Selatan 12310, Indonesia</span>
+            </div>
+          </div>
+          <div class="contact-method-item">
+            <span class="contact-method-icon"><app-icon name="whatsapp" [size]="18" /></span>
+            <div class="contact-method-body">
+              <span class="contact-method-label">WhatsApp</span>
+              <a [href]="'https://wa.me/' + contactWhatsappDigits()" target="_blank" rel="noopener noreferrer" class="contact-method-value">{{ contactWhatsapp() }}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-panel-form">
+        @if (contactSubmitted()) {
+          <div class="contact-success">
+            <span class="contact-success-icon"><app-icon name="check-circle" [size]="44" /></span>
+            <h3>Pesan Berhasil Terkirim!</h3>
+            <p>Jazakumullah khairan katsiran. Tim sekretariat FSLDK Indonesia akan meninjau dan merespon pesanmu secepatnya.</p>
+            <button type="button" class="btn btn-outline" (click)="resetContactForm()">
+              <app-icon name="plus" [size]="14" /> Kirim Pesan Lainnya
+            </button>
+          </div>
+        } @else {
+          <div class="contact-form-head">
+            <span class="contact-form-icon"><app-icon name="send" [size]="22" /></span>
+            <h3>Kirim Pesan</h3>
+            <p>Kami akan segera membalas pesanmu!</p>
+          </div>
+
+          @if (contactRateLimited()) {
+            <div class="contact-form-alert"><app-icon name="alert-triangle" [size]="16" /> Terlalu banyak permintaan pengiriman pesan. Coba lagi beberapa saat lagi.</div>
+          }
+
+          <form [formGroup]="contactForm" (ngSubmit)="onContactSubmit()">
+            <div class="contact-form-row">
+              <div class="contact-form-group">
+                <label for="home-ct-name"><app-icon name="user-circle" [size]="14" /> Nama Kamu <span class="req">*</span></label>
+                <input id="home-ct-name" type="text" [class.is-invalid]="contactHasError('senderName')" formControlName="senderName" placeholder="Masukkan namamu" maxlength="100">
+                @if (contactHasError('senderName')) { <span class="contact-form-error">Nama wajib diisi (minimal 3 karakter).</span> }
+              </div>
+              <div class="contact-form-group">
+                <label for="home-ct-email"><app-icon name="envelope" [size]="14" /> Email Kamu <span class="req">*</span></label>
+                <input id="home-ct-email" type="email" [class.is-invalid]="contactHasError('email')" formControlName="email" placeholder="Masukkan emailmu" maxlength="255">
+                @if (contactHasError('email')) { <span class="contact-form-error">Email tidak valid.</span> }
+              </div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="home-ct-subject"><app-icon name="tags" [size]="14" /> Subjek <span class="req">*</span></label>
+              <input id="home-ct-subject" type="text" [class.is-invalid]="contactHasError('subject')" formControlName="subject" placeholder="Tentang apa pesanmu?" maxlength="200">
+              @if (contactHasError('subject')) { <span class="contact-form-error">Subjek wajib diisi (minimal 5 karakter).</span> }
+            </div>
+
+            <div class="contact-form-group">
+              <label for="home-ct-message"><app-icon name="message-circle" [size]="14" /> Pesan <span class="req">*</span></label>
+              <textarea id="home-ct-message" rows="4" [class.is-invalid]="contactHasError('message')" formControlName="message" placeholder="Tulis pesanmu di sini..." maxlength="1000"></textarea>
+              @if (contactHasError('message')) { <span class="contact-form-error">Pesan wajib diisi (minimal 10 karakter).</span> }
+            </div>
+
+            <button type="submit" class="contact-form-submit" [disabled]="contactRepo.submitting() || contactRateLimited()">
+              @if (contactRepo.submitting()) {
+                <div class="spinner spinner-sm"></div> Mengirim...
+              } @else {
+                <app-icon name="send" [size]="15" /> Kirim Pesan
+              }
+            </button>
+          </form>
+        }
+      </div>
     </div>
   </div>
 </section>
 
-@if (!loading() && latestGallery(); as gallery) {
-  <section class="section">
-    <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Galeri</span>
-        <h2>Dokumentasi Kegiatan Terbaru</h2>
-      </div>
-      <a class="gallery-card reveal" [routerLink]="['/tentang/galeri', gallery.galleryID]">
-        <div class="gallery-thumb">@if (gallery.coverImage) { <img [src]="gallery.coverImage" [alt]="gallery.eventName"> } @else { <span>GALERI</span> }</div>
-        <div class="gallery-body">
-          <span class="chip chip-green">{{ gallery.eventTheme }}</span>
-          <h3>{{ gallery.eventName }}</h3>
-          <p class="meta">{{ (gallery.eventDate ?? gallery.createdDate) | date:'d MMM yyyy' }}</p>
-          <span class="gallery-count"><app-icon name="images" [size]="14" /> {{ gallery.totalPhotos }} foto</span>
-        </div>
-      </a>
-      <div class="text-center mt-lg">
-        <a routerLink="/tentang/galeri" class="btn btn-outline">Lihat Semua Galeri</a>
-      </div>
-    </div>
-  </section>
-}
-
-<app-bottom-sheet [open]="!!previewSheet()" (closed)="previewSheet.set(null)">
+<app-bottom-sheet
+  [open]="!!previewSheet()"
+  (closed)="previewSheet.set(null)"
+  [ctaLabel]="previewSheet()?.ctaLabel"
+  [ctaAccent]="previewSheet()?.accent"
+  (ctaClick)="goToPreview()"
+>
   @if (previewSheet(); as p) {
     @if (p.image) { <div class="sheet-image"><img [src]="p.image" [alt]="p.title"></div> }
-    <span class="chip chip-green">{{ p.chip }}</span>
+    @if (p.gallery; as gallery) {
+      @if (gallery.length > 0) {
+        <div class="sheet-gallery">
+          @for (img of gallery; track img) { <img [src]="img" [alt]="p.title" class="sheet-gallery-thumb"> }
+        </div>
+      }
+    }
+    <span class="chip chip-green" [style.background]="p.accent ? 'color-mix(in srgb, ' + p.accent + ' 12%, white)' : null" [style.color]="p.accent || null">{{ p.chip }}</span>
     <h3 class="sheet-title">{{ p.title }}</h3>
     @if (p.metaRows; as rows) {
       <div class="sheet-meta-rows">
         @for (row of rows; track row.label) {
           <div class="sheet-meta-row">
-            <span class="sheet-meta-icon"><app-icon [name]="row.icon" [size]="13" /></span>
+            <span class="sheet-meta-icon" [style.background]="p.accent ? 'color-mix(in srgb, ' + p.accent + ' 16%, white)' : null" [style.color]="p.accent || null"><app-icon [name]="row.icon" [size]="13" /></span>
             <span>
               <span class="sheet-meta-label">{{ row.label }}</span>
               <span class="sheet-meta-value">{{ row.value }}</span>
@@ -708,7 +1135,6 @@
       <div class="progress-track"><div class="progress-fill" [style.width.%]="p.progress.percent"></div></div>
       <p class="progress-meta"><span>{{ p.progress.label }}</span></p>
     }
-    <button type="button" class="btn btn-primary btn-block sheet-cta" (click)="goToPreview()">{{ p.ctaLabel }} <app-icon name="chevron-right" [size]="14" /></button>
   }
 </app-bottom-sheet>
 

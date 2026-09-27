@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ContactRepository } from '../../repositories/contact.repository';
 import { ToastService } from '../../../../core/services/toast.service';
+import { SettingApiService } from '../../../setting/services/setting-api.service';
 import { IconComponent } from '../../../../shared/icon.component';
 import { NewsletterFormComponent } from '../../../../shared/newsletter-form.component';
 
@@ -41,7 +42,7 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
                   <span class="item-icon"><app-icon name="envelope" [size]="18" /></span>
                   <div class="item-content">
                     <span class="item-label">Email Resmi</span>
-                    <a href="mailto:info@fsldkindonesia.org" class="item-link">info&#64;fsldkindonesia.org</a>
+                    <a [href]="'mailto:' + contactEmail()" class="item-link">{{ contactEmail() }}</a>
                   </div>
                 </div>
 
@@ -300,7 +301,7 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
 
     .info-items { display: flex; flex-direction: column; gap: 20px; }
     .info-item { display: flex; align-items: flex-start; gap: 14px; }
-    
+
     .item-icon {
       width: 36px;
       height: 36px;
@@ -391,7 +392,7 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
 
     .form-group { margin-bottom: 20px; }
     .form-label { display: block; font-weight: 700; font-size: 0.88rem; margin-bottom: 8px; color: var(--color-text); }
-    
+
     .form-control {
       width: 100%;
       padding: 11px 14px;
@@ -487,6 +488,11 @@ export class ContactPublicIndexPage {
   private fb = inject(FormBuilder);
   repo = inject(ContactRepository);
   private toast = inject(ToastService);
+  private settingApi = inject(SettingApiService);
+
+  /** Default sama dengan migration 0041_contact_email_setting — dipakai
+   *  selagi menunggu GET /public/settings/contact-email. */
+  contactEmail = signal('fsldkindonesia29@gmail.com');
 
   submittedSuccess = signal<boolean>(false);
   rateLimited = signal<boolean>(false);
@@ -498,6 +504,13 @@ export class ContactPublicIndexPage {
     subject: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
     message: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
   });
+
+  constructor() {
+    this.settingApi.getPublicContactEmail().subscribe({
+      next: (res) => { if (res.email) this.contactEmail.set(res.email); },
+      error: () => {},
+    });
+  }
 
   charCount(): number {
     return (this.form.value.message || '').length;

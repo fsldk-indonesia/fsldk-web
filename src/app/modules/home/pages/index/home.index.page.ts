@@ -1,19 +1,28 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IconComponent } from '../../../../shared/icon.component';
 import { WelcomePopupComponent } from '../../components/welcome-popup.component';
 import { BottomSheetComponent } from '../../../../shared/bottom-sheet.component';
 import { PopupModalComponent } from '../../../../shared/popup-modal.component';
+import { GalleryLightboxComponent } from '../../../gallery/components/gallery-lightbox/gallery-lightbox.component';
+import { ContactRepository } from '../../../contact/repositories/contact.repository';
+import { ToastService } from '../../../../core/services/toast.service';
+import { environment } from '../../../../../environments/environment';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
 import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
 import { EventListItem } from '../../../event/entities/event';
 import { Goods } from '../../../goods/entities/goods';
-import { Schedule } from '../../../schedule/entities/schedule';
-import { Campaign } from '../../../kantong-amal/entities/campaign';
-import { GalleryListItem } from '../../../gallery/entities/gallery';
-import { contactPath } from '../../../contact/contact.path';
+import { CalendarCell } from '../../../schedule/entities/schedule';
+import {
+  DAYS_ID_SHORT, categoryMeta as scheduleCategoryMeta,
+  formatLongDate as scheduleLongDate, formatTimeRange as scheduleTimeRange,
+} from '../../../schedule/schedule.constants';
+import { Campaign, CampaignPublicStats } from '../../../kantong-amal/entities/campaign';
+import { GalleryFeature } from '../../../gallery/entities/gallery';
 import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
 import { eventPath } from '../../../event/event.path';
 import { goodsPath } from '../../../goods/goods.path';
@@ -63,13 +72,21 @@ interface CardPreview {
   /** Ringkasan/excerpt — ala ldksyahid-app (news-sheet__excerpt), teks penuh
    *  tanpa line-clamp (beda dari excerpt di kartu teaser yang diclamp). */
   excerpt?: string | null;
+  /** Warna aksen per-kartu (redesign "Karya Tulis Kita" ala ldksyahid-app —
+   *  lihat articleAccent()) — override chip/ikon-meta/CTA hijau default di
+   *  sheet supaya konsisten dengan warna kartu artikel yang di-tap. */
+  accent?: string;
+  /** Cuplikan gambar tambahan (mis. Goods.previewImages) — strip thumbnail
+   *  kecil di bawah foto utama sheet, opsional, cuma dipakai kartu yang
+   *  punya gallery. */
+  gallery?: string[];
 }
 
 @Component({
   selector: 'app-home-index-page',
   standalone: true,
   templateUrl: './home.index.page.html',
-  imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent, BottomSheetComponent, PopupModalComponent],
+  imports: [RouterLink, DatePipe, ReactiveFormsModule, IconComponent, WelcomePopupComponent, BottomSheetComponent, PopupModalComponent, GalleryLightboxComponent],
   providers: [HomeIndexPresenter],
   styles: [`
     /* ---------- Kanvas: putih campur sedikit hijau (var(--color-primary-tint))
@@ -80,6 +97,57 @@ interface CardPreview {
        kontennya konsisten satu warna dari ujung ke ujung, dot-dot glow-nya
        dihapus (class section-glow juga sudah dilepas dari template). ---------- */
     .section { background: var(--color-primary-tint); position: relative; }
+    /* ---------- Blob gradient bergerak pelan — dipakai SANGAT selektif, cuma
+       di 3 section (Tentang Kami, Kantong Amal, Kontak — disebar dari awal,
+       tengah, sampai akhir halaman, bukan menumpuk) supaya beranda tidak
+       terasa flat statis dari ujung ke ujung tanpa mengulang .section-glow
+       lama (dot-dot radial, sudah sengaja dilepas di atas demi konsistensi
+       kanvas). Teknik
+       & token warnanya SAMA PERSIS dengan glow di .hero::after (inset:0 +
+       radial-gradient ellipse, BUKAN lingkaran ukuran tetap yang digeser
+       pakai top/right negatif) — percobaan pertama pakai offset negatif
+       kepotong rata oleh overflow:hidden section karena garis potongnya
+       jatuh di tengah gradient yang masih pekat, bukan di bagian yang sudah
+       transparan. inset:0 menghitung fade relatif terhadap kotak section itu
+       sendiri jadi tidak ada seam di lingkaran-nya sendiri — TAPI titik pusat
+       (at 88% 8%) ternyata masih terlalu dekat ke tepi atas section, jadi
+       tepi ATAS section itu sendiri mulai dengan warna blob yang masih
+       pekat, dan lompat tajam terhadap section SEBELUMNYA yang berakhir
+       polos tint — makanya tetap kelihatan "kepotong" sebagai garis di
+       BATAS ANTAR SECTION, bukan lagi di dalam bentuk blob-nya. Pusat
+       digeser lebih ke tengah (88% 42%) supaya radiusnya sempat pudar dulu
+       sebelum sampai tepi, DITAMBAH ::after meniru overlay solid-fade milik
+       .hero::before — menutup ~70px pertama & terakhir section dengan warna
+       tint rata supaya sambungan ke section tetangga selalu mulus apa pun
+       posisi blob-nya. Dua blob (kanan & kiri) digabung sebagai dua layer
+       radial-gradient dalam SATU ::before (bukan elemen terpisah — pseudo-
+       element cuma ::before/::after, sudah dipakai ::after untuk fade mask)
+       supaya cukup satu animasi transform yang menggerakkan keduanya
+       sekaligus. Siklus dipercepat 24s→12s + jarak geser diperbesar supaya
+       gerakannya lebih terasa. Cuma transform+opacity yang dianimasikan
+       (bukan width/height/padding) supaya tidak memicu layout thrash. ---------- */
+    .section-blob-drift { overflow: hidden; }
+    .section-blob-drift > .container { position: relative; z-index: 1; }
+    .section-blob-drift::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
+        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
+      opacity: .8; animation: sectionBlobDrift 12s ease-in-out infinite alternate;
+    }
+    .section-blob-drift::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom,
+        var(--color-primary-tint) 0, transparent 70px,
+        transparent calc(100% - 70px), var(--color-primary-tint) 100%);
+    }
+    @keyframes sectionBlobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-4%, 5%) scale(1.15); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .section-blob-drift::before { animation: none; }
+    }
 
     /* padding-top diperkecil dari default .section (72px) — supaya jarak
        kosong antara kartu kutipan di hero dan heading "Tentang Kami" tidak
@@ -295,6 +363,13 @@ interface CardPreview {
       position: absolute; right: -34px; bottom: -34px; z-index: 0; color: rgba(255,255,255,.14);
       transform: rotate(-12deg); pointer-events: none;
     }
+    /* Siluet kedua, lebih kecil, sudut berlawanan — menambah tekstur tanpa
+       mengganggu blok teks (tetap z-index:0, di bawah .berita-carousel-icon/
+       p/cta yang punya z-index:1). */
+    .berita-carousel-silhouette-2 {
+      position: absolute; left: -18px; top: -18px; z-index: 0; color: rgba(255,255,255,.10);
+      transform: rotate(18deg); pointer-events: none;
+    }
     /* max-width lebih sempit dari panel (420px) + margin-right — sengaja
        menggeser blok teks/tombol ke kiri, menyisakan "zona aman" hijau
        polos di kanan supaya kartu pertama tetap bisa menumpuk/"menabrak"
@@ -306,7 +381,7 @@ interface CardPreview {
     .berita-carousel-intro p { margin-block: 0; font-size: .88rem; line-height: 1.6; opacity: .92; }
     .berita-carousel-cta {
       display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
-      color: #fff; padding: 10px 20px; border-radius: var(--radius-full); font-weight: 700; font-size: .76rem;
+      color: #fff; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
       letter-spacing: .04em; text-transform: uppercase;
       transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
     }
@@ -425,6 +500,12 @@ interface CardPreview {
       position: absolute; left: -34px; bottom: -34px; z-index: 0; color: rgba(255,255,255,.14);
       transform: rotate(12deg); pointer-events: none;
     }
+    /* Siluet kedua, lebih kecil, sudut berlawanan — mirror .berita-carousel-
+       silhouette-2, konsisten menambah tekstur di panel kanan ini juga. */
+    .pustaka-carousel-silhouette-2 {
+      position: absolute; right: -18px; top: -18px; z-index: 0; color: rgba(255,255,255,.10);
+      transform: rotate(-18deg); pointer-events: none;
+    }
     /* margin-LEFT (bukan margin-right seperti Berita) — zona aman hijau
        polos sekarang ada di KIRI panel (sisi yang ditumpuk kartu terakhir),
        jadi teks/tombol digeser ke KANAN. */
@@ -435,7 +516,7 @@ interface CardPreview {
     .pustaka-carousel-intro p { margin-block: 0; font-size: .88rem; line-height: 1.6; opacity: .92; }
     .pustaka-carousel-cta {
       display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
-      color: #fff; padding: 10px 20px; border-radius: var(--radius-full); font-weight: 700; font-size: .76rem;
+      color: #fff; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
       letter-spacing: .04em; text-transform: uppercase;
       transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
     }
@@ -472,24 +553,136 @@ interface CardPreview {
       .pustaka-carousel-track { padding: 14px 0; }
     }
 
-    /* ---------- Artikel: "kartu kajian" — teks-sentris (tanpa foto dominan
-       seperti Berita), aksen batang warna emas di kiri + excerpt
-       (articleIntro) + identitas penulis, kesan lebih tenang/reflektif
-       dibanding sorotan berita yang bergambar. ---------- */
-    .artikel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .artikel-card {
-      position: relative; display: block; background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: 26px 24px 22px 28px; overflow: hidden;
-      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease;
+    /* ---------- Artikel: redesign "Karya Tulis Kita" ala ldksyahid-app —
+       header-nya SENGAJA dikembalikan ke pola eyebrow+h2 polos yang sama
+       dipakai section lain (Berita/Pustaka/Event/dst), cuma layoutnya yang
+       beda (heading+subtitle kiri, "Lihat Semua" sejajar di kanan, bukan
+       di bawah grid) — badge pill+heading berwarna+sparkle ala referensi
+       dicoba lalu di-drop lagi karena tidak konsisten dengan gaya heading
+       section lain di halaman ini. Kartu foto full-bleed (media/scrim/
+       overlay pakai ULANG .news-carousel-media dkk, sama seperti Berita/
+       Pustaka) + badge tanggal ala Event tetap dipertahankan, ditutup chip
+       kategori/judul/Penulis-Editor/CTA yang semuanya mengikuti SATU warna
+       aksen per-kartu (--card-accent, 3 warna bergilir — lihat
+       articleAccent() di .ts) via color-mix(), bukan lagi batang emas
+       tunggal seperti sebelumnya. ---------- */
+    .artikel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+    .artikel-subtitle { margin: 8px 0 0; color: var(--color-text-secondary); font-size: 1rem; max-width: 46ch; }
+    /* Pil gradient hijau brand, border-radius+teknik hover disamakan PERSIS
+       dengan .account-chip navbar (site-header.component.ts): radius
+       var(--radius-sm) (diwarisi .btn-sm di sana, bukan var(--radius-full)
+       seperti CTA gradient lain), dan swap gradient hover lewat ::before
+       terpisah yang di-crossfade via opacity — background-image (gradient)
+       tidak bisa ditransisikan mulus (properti "discrete"), jadi gradient
+       hover-nya loncat instan kalau ditransisi langsung di background. */
+    .artikel-btn-all {
+      position: relative; flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
     }
-    .artikel-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; border-color: var(--color-gold-soft); }
-    .artikel-card-accent { position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: linear-gradient(var(--color-gold), var(--color-gold-dark)); }
-    .artikel-card h3 { margin: 12px 0 10px; font-size: 1.1rem; line-height: 1.35; }
-    .artikel-intro { margin: 0 0 18px; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .artikel-writer { display: flex; align-items: center; gap: 10px; font-size: .8rem; color: var(--color-muted); font-weight: 600; }
-    .artikel-writer-avatar { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--color-gold-soft); color: var(--color-gold-dark); font-weight: 800; font-size: .8rem; }
+    .artikel-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .artikel-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .artikel-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .artikel-btn-all:hover::before { opacity: 1; }
+    .artikel-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .artikel-btn-all::before { transition: none; } }
+
+    .artikel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+    /* .reveal (scroll entrance animation) DIPINDAH ke wrapper ini, TERPISAH
+       dari .artikel-card — .reveal pakai animation-timeline:view() yang
+       terus-menerus "memegang" properti transform (reveal-in keyframe:
+       translateY(16px)->0, fill:both). CSS Animations menang atas normal
+       author rule di cascade TERLEPAS dari specificity/:hover, jadi kalau
+       .reveal dan hover-transform ada di ELEMEN YANG SAMA, transform hover
+       tidak akan pernah benar-benar berjalan smooth — sekalipun dipaksa
+       !important (menang di nilai akhir), TRANSISI-nya tetap gagal jalan
+       karena transition disuppress selama propertinya masih "dimiliki"
+       animasi aktif (dibuktikan: matrix hover instan tanpa interpolasi sama
+       sekali di getComputedStyle, walau sudah !important). Wrapper ini
+       murni utilitas layout (mengambil alih sizing grid/flex dari
+       .artikel-card, lihat @media mobile di bawah) supaya .artikel-card
+       sendiri bebas transform tanpa kompetisi. */
+    .artikel-card-wrap { height: 100%; }
+    .artikel-card {
+      --card-accent: var(--color-gold-dark);
+      position: relative; height: 100%; display: flex; flex-direction: column; background: #fff;
+      border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(6,26,15,.06);
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    .artikel-card:hover {
+      transform: translateY(-6px) scale(1.03); text-decoration: none;
+      box-shadow: 0 20px 40px rgba(6,26,15,.08), 0 4px 20px color-mix(in srgb, var(--card-accent) 25%, transparent);
+    }
+    .artikel-card-media { aspect-ratio: 4 / 5; }
+    /* Badge tanggal — pola sama seperti .event-date-badge, ditempel di kartu
+       artikel alih-alih di kartu event. */
+    .artikel-card-date {
+      position: absolute; top: 12px; left: 12px; z-index: 1; background: rgba(255,255,255,.95);
+      border-radius: 14px; padding: 6px 11px; text-align: center; line-height: 1; box-shadow: var(--shadow-sm);
+      transition: transform var(--motion-fast) var(--ease-out);
+    }
+    .artikel-card:hover .artikel-card-date { transform: rotate(-3deg) scale(1.05); }
+    .artikel-card-date-num { display: block; font-size: 1.05rem; font-weight: 800; color: var(--card-accent); }
+    .artikel-card-date-month { display: block; font-size: .6rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .artikel-card-body { padding: 18px 20px 20px; flex: 1; display: flex; flex-direction: column; }
+    .artikel-chip {
+      align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px;
+      background: color-mix(in srgb, var(--card-accent) 12%, white); color: var(--card-accent);
+      padding: 5px 14px 5px 10px; border-radius: 10px; font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .artikel-chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--card-accent); flex-shrink: 0; }
+    .artikel-card:hover .artikel-chip { background: var(--card-accent); color: #fff; }
+    .artikel-card:hover .artikel-chip::before { background: #fff; }
+    .artikel-card-title {
+      margin: 0 0 14px; font-size: .98rem; line-height: 1.45; font-weight: 700; color: var(--color-text);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      background-image: linear-gradient(var(--card-accent), var(--card-accent)); background-size: 0 2px; background-repeat: no-repeat; background-position: left bottom;
+      transition: background-size var(--motion-fast) ease, color var(--motion-fast) ease; padding-bottom: 2px; flex: 1;
+    }
+    .artikel-card:hover .artikel-card-title { background-size: 100% 2px; color: var(--card-accent); }
+    .artikel-people {
+      display: flex; flex-direction: column; background: color-mix(in srgb, var(--card-accent) 5%, var(--color-bg-alt));
+      border-radius: 14px; padding: 11px 13px; margin-bottom: 14px;
+    }
+    .artikel-people-row { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .artikel-people-divider { height: 1px; background: color-mix(in srgb, var(--card-accent) 14%, transparent); margin: 8px 0; border-radius: 1px; }
+    .artikel-avatar {
+      flex-shrink: 0; width: 27px; height: 27px; border-radius: 9px; display: grid; place-items: center;
+      background: color-mix(in srgb, var(--card-accent) 16%, white); color: var(--card-accent);
+    }
+    .artikel-people-info { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+    .artikel-people-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
+    .artikel-people-name { font-size: .82rem; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .artikel-card-cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto;
+      color: var(--card-accent); background: color-mix(in srgb, var(--card-accent) 8%, transparent);
+      font-weight: 700; font-size: .82rem; padding: 10px 18px; border-radius: 14px;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .artikel-card-cta app-icon { transition: transform var(--motion-fast) ease; }
+    .artikel-card:hover .artikel-card-cta { background: var(--card-accent); color: #fff; }
+    .artikel-card:hover .artikel-card-cta app-icon { transform: translateX(4px); }
     @media (max-width: 900px) { .artikel-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .artikel-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) {
+      .artikel-head { flex-direction: column; }
+      .artikel-btn-all { align-self: stretch; justify-content: center; }
+      /* Carousel horizontal scroll-snap di mobile (bukan grid stack) —
+         konsisten dengan pola .card-scroller section lain, kartu kajian
+         sekarang cukup berat (foto+chip+people+CTA) untuk pantas discroll
+         alih-alih ditumpuk vertikal penuh. */
+      .artikel-grid { display: flex; grid-template-columns: none; overflow-x: auto; gap: 16px; padding: 4px 4px 12px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+      .artikel-grid::-webkit-scrollbar { display: none; }
+      .artikel-card-wrap { flex: 0 0 84%; scroll-snap-align: start; }
+    }
 
     /* ---------- Book card: siluet rak buku (thumb potret, bukan 16:10 seperti
        kartu berita), rating disematkan sebagai ribbon di sudut sampul. ---------- */
@@ -507,20 +700,81 @@ interface CardPreview {
       font-size: .72rem; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-full);
     }
 
+    /* ---------- Agenda & Kegiatan: heading eyebrow+h2 dikembalikan polos di
+       LUAR panel (center, di atas — konsisten dengan heading section lain),
+       panel hijau full-width di bawahnya membungkus ikon+deskripsi+CTA pill
+       ("Lihat Semua Event", gayanya SENGAJA identik dengan
+       .pustaka-carousel-cta / Koleksi Buku Digital) SEKALIGUS grid kartu
+       event — kartu "duduk" di dalam panel (bukan section terpisah di
+       bawahnya), makanya padding dipecah dua wrapper (-intro untuk teks,
+       -cards untuk grid) alih-alih satu padding di .agenda-panel sendiri. ---------- */
+    .agenda-panel {
+      position: relative; overflow: hidden; margin-bottom: 40px;
+      background: var(--color-primary); color: #fff; border-radius: var(--radius-lg);
+      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
+    }
+    .agenda-panel-intro {
+      position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 12px; text-align: center; padding: 40px 24px 28px;
+    }
+    /* Siluet dipindah jadi ANAK .agenda-panel-intro (dulu sibling-nya, child
+       langsung .agenda-panel) — panel ini sekarang membungkus grid kartu
+       juga (lihat .agenda-panel-cards di bawah), jadi kalau posisinya masih
+       relatif ke .agenda-panel yang tinggi penuh, "bottom:-30px" jatuh di
+       balik baris kartu terakhir dan nyaris tak kelihatan. Di dalam intro
+       (pendek, cuma area teks), posisinya selalu tetap terlihat di sekitar
+       teks. z-index NEGATIF (bukan 0 seperti Berita/Pustaka) karena
+       .agenda-panel-icon/p/cta di sini TIDAK diberi z-index:1 eksplisit —
+       negatif memastikan siluet tetap di belakang konten in-flow tanpa
+       perlu mengubah elemen lain. */
+    .agenda-panel-silhouette {
+      position: absolute; right: -30px; bottom: -30px; z-index: -1; color: rgba(255,255,255,.14);
+      transform: rotate(-12deg); pointer-events: none;
+    }
+    .agenda-panel-silhouette-2 {
+      position: absolute; left: -16px; top: -16px; z-index: -1; color: rgba(255,255,255,.10);
+      transform: rotate(16deg); pointer-events: none;
+    }
+    .agenda-panel-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+    .agenda-panel-intro p { max-width: 540px; margin: 0; font-size: .92rem; line-height: 1.65; opacity: .92; }
+    .agenda-panel-cta {
+      display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
+      color: #fff; padding: 10px 22px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
+      letter-spacing: .04em; text-transform: uppercase; margin-top: 2px;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .agenda-panel-cta:hover { background: #fff; color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); text-decoration: none; }
+    /* Grid kartu di DALAM panel — .card-scroller (grid 3 kolom/geser mobile)
+       dipakai apa adanya. Inset horizontal SENGAJA dipecah dua: wrapper
+       statis (.agenda-panel-cards-wrap) yang pegang padding kiri/kanan +
+       z-index, .card-scroller sendiri cuma padding atas/bawah. Di mobile,
+       .card-scroller jadi elemen yang overflow-x:auto+scroll-snap — padding
+       kiri/kanan DI ELEMEN YANG SCROLL ITU SENDIRI selalu dikoreksi/
+       dihapus browser (scroll-snap-type:mandatory terus membetulkan
+       scrollLeft supaya kartu snap PERTAMA rata pas di awal scrollport),
+       persis masalah yang sama seperti .berita-carousel-track-wrap —
+       makanya inset kiri/kanan mobile-nya dipindah ke wrapper yang statis
+       (tidak ikut scroll), bukan ke .card-scroller. */
+    .agenda-panel-cards-wrap { position: relative; z-index: 1; }
+    .agenda-panel-cards { padding: 4px 24px 36px; margin: 0; }
+
     /* ---------- Event card: "poster" — foto penuh + overlay gradasi bawah
-       menampung judul/lokasi (bukan lagi thumb+body terpisah seperti kartu
-       lain), badge tanggal mengambang gaya agenda-mini-date, chip status
-       (Akan Datang/Berlangsung/Selesai) di sudut kanan. ---------- */
+       menampung judul/lokasi/tanggal (bukan lagi thumb+body terpisah seperti
+       kartu lain), badge tanggal mengambang gaya agenda-mini-date, chip
+       status detail (Pendaftaran Dibuka/Ditutup untuk event akan datang,
+       Berlangsung/Selesai untuk sisanya — bukan lagi "Akan Datang" generik
+       yang tidak bilang apa-apa soal bisa/tidaknya masih daftar). ---------- */
     .event-card {
       position: relative; display: block; aspect-ratio: 3/4; border-radius: var(--radius-lg); overflow: hidden;
       box-shadow: var(--shadow-sm); transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
     }
     .event-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
     .event-card-media { position: relative; width: 100%; height: 100%; background: var(--color-primary-soft); }
-    .event-card-media img { width: 100%; height: 100%; object-fit: cover; }
+    .event-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--motion-slow) ease; }
+    @media (hover: hover) and (pointer: fine) { .event-card:hover .event-card-media img { transform: scale(1.06); } }
     .event-card-overlay {
       position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(4,20,10,.88) 0%, rgba(4,20,10,.2) 55%, transparent 75%);
+      background: linear-gradient(to top, rgba(4,20,10,.9) 0%, rgba(4,20,10,.3) 58%, transparent 78%);
     }
     .event-date-badge {
       position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; align-items: center;
@@ -529,20 +783,114 @@ interface CardPreview {
     .event-date-badge .day { font-family: var(--font-heading); font-weight: 800; font-size: 1.2rem; color: var(--color-primary-dark); }
     .event-date-badge .mon { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
     .event-status-chip {
-      position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.92); color: var(--color-primary-dark);
-      font-size: .7rem; font-weight: 800; padding: 4px 10px; border-radius: var(--radius-full);
+      position: absolute; top: 14px; right: 14px; max-width: calc(100% - 90px); background: rgba(255,255,255,.92); color: var(--color-primary-dark);
+      font-size: .68rem; font-weight: 800; padding: 4px 10px; border-radius: var(--radius-full); text-align: right;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .event-status-chip.open { background: var(--color-gold); color: #fff; }
+    .event-status-chip.closed { background: rgba(255,255,255,.7); color: var(--color-muted); }
     .event-status-chip.ongoing { background: var(--color-gold); color: #fff; }
     .event-status-chip.past { background: rgba(255,255,255,.7); color: var(--color-muted); }
     .event-card-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; color: #fff; }
-    .event-card-caption .chip { margin-bottom: 8px; }
-    .event-card-caption h3 { color: #fff; margin: 0 0 6px; font-size: 1.05rem; line-height: 1.3; }
-    .event-card-location { display: flex; align-items: center; gap: 5px; margin: 0; font-size: .78rem; color: rgba(255,255,255,.85); }
+    .event-card-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .event-card-tags .chip { margin-bottom: 0; }
+    .event-tag-pill {
+      display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,.16); color: #fff;
+      font-size: .7rem; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-full);
+    }
+    .event-card-caption h3 { color: #fff; margin: 0 0 8px; font-size: 1.05rem; line-height: 1.3; }
+    .event-card-date-range, .event-card-location {
+      display: flex; align-items: center; gap: 5px; margin: 0 0 4px; font-size: .78rem; color: rgba(255,255,255,.85);
+    }
+    .event-card-location:last-of-type { margin-bottom: 0; }
+    /* CTA halus yang muncul saat hover (desktop saja) — penegas afordansi
+       klik, pola sama seperti .artikel-card-cta tapi tanpa background pill
+       (sudah ada overlay gelap di baliknya) supaya tidak menumpuk elemen. */
+    .event-card-hover-cta {
+      display: flex; align-items: center; gap: 4px; margin-top: 10px; font-size: .78rem; font-weight: 700;
+      color: #fff; opacity: 0; transform: translateY(4px);
+      transition: opacity var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .event-card:hover .event-card-hover-cta { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 720px) {
+      .agenda-panel { margin-bottom: 24px; }
+      .agenda-panel-intro { padding: 28px 20px 22px; }
+      .agenda-panel-cards-wrap { padding: 0 16px 24px; }
+      .agenda-panel-cards { padding: 0; }
+      .event-card-hover-cta { display: none; }
+    }
+
+    /* ---------- FSLDK Goods: panel hijau full-width membungkus ikon+
+       deskripsi+CTA "Lihat Semua" SEKALIGUS carousel kartu produk — shell-nya
+       (silhouette/intro/cards-wrap) copy-paste PERSIS pola .agenda-panel*,
+       cuma nama kelas beda supaya kedua section independen (tidak saling
+       pengaruh kalau salah satu diubah lagi nanti). Bedanya dengan Agenda:
+       kontennya CAROUSEL (track+panah), bukan grid statis — produk cenderung
+       lebih banyak dari yang muat sekali layar. */
+    .goods-panel {
+      position: relative; overflow: hidden; margin-bottom: 40px;
+      background: var(--color-primary); color: #fff; border-radius: var(--radius-lg);
+      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
+    }
+    .goods-panel-intro {
+      position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 12px; text-align: center; padding: 40px 24px 28px;
+    }
+    .goods-panel-silhouette {
+      position: absolute; right: -30px; bottom: -30px; z-index: -1; color: rgba(255,255,255,.14);
+      transform: rotate(-12deg); pointer-events: none;
+    }
+    .goods-panel-silhouette-2 {
+      position: absolute; left: -16px; top: -16px; z-index: -1; color: rgba(255,255,255,.10);
+      transform: rotate(16deg); pointer-events: none;
+    }
+    .goods-panel-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+    .goods-panel-intro p { max-width: 540px; margin: 0; font-size: .92rem; line-height: 1.65; opacity: .92; }
+    .goods-panel-cta {
+      display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
+      color: #fff; padding: 10px 22px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
+      letter-spacing: .04em; text-transform: uppercase; margin-top: 2px;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .goods-panel-cta:hover { background: #fff; color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); text-decoration: none; }
+    /* Wrapper statis pemegang inset (pola sama seperti .agenda-panel-cards-
+       wrap — lihat catatan panjang di sana soal kenapa padding kiri/kanan
+       TIDAK boleh taruh di elemen yang scroll). */
+    .goods-panel-cards-wrap { position: relative; z-index: 1; padding: 4px 24px 36px; }
+    .goods-panel-track-wrap { position: relative; }
+    .goods-panel-track {
+      display: flex; gap: 20px; overflow-x: auto; scroll-behavior: smooth;
+      scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .goods-panel-track::-webkit-scrollbar { display: none; }
+    .goods-panel-track .goods-card2 { flex: 0 0 250px; scroll-snap-align: start; }
+    .goods-panel-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+      width: 40px; height: 40px; border-radius: 50%; border: none; background: #fff; box-shadow: var(--shadow-lg);
+      display: grid; place-items: center; color: var(--color-primary-dark); cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .goods-panel-arrow:hover { background: var(--color-primary); color: #fff; transform: translateY(-50%) scale(1.08); }
+    .goods-panel-arrow.prev { left: -14px; }
+    .goods-panel-arrow.next { right: -14px; }
+    @media (max-width: 900px) { .goods-panel-arrow { display: none; } }
+    @media (max-width: 720px) {
+      .goods-panel { margin-bottom: 24px; }
+      .goods-panel-intro { padding: 28px 20px 22px; }
+      .goods-panel-cards-wrap { padding: 0 16px 24px; }
+      .goods-panel-track { padding: 0; }
+      .goods-panel-track .goods-card2 { flex-basis: 78%; }
+    }
 
     /* ---------- Goods card: overlay hover berisi shortDescription + CTA
        (data yang tadinya tidak dipakai sama sekali di kartu ringkas
        beranda), ribbon "Unggulan" diagonal untuk isFeatured, badge stok
-       untuk availabilityStatus selain 'available'. ---------- */
+       untuk availabilityStatus selain 'available'. Strip thumbnail
+       .goods-card2-gallery (previewImages, maks 3) ditumpuk di sudut
+       kiri-bawah foto utama — ala shop.app (referensi user), gambar
+       tambahan produk masuk ke DALAM foto utama, bukan galeri terpisah. ---------- */
     .goods-card2 { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
     .goods-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
     .goods-card2-media { position: relative; aspect-ratio: 1/1; background: var(--color-primary-soft); overflow: hidden; }
@@ -556,56 +904,546 @@ interface CardPreview {
       position: absolute; top: 10px; right: 10px; background: rgba(22,33,28,.72); color: #fff;
       font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full);
     }
-    .goods-card2-overlay {
-      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; padding: 16px;
-      background: linear-gradient(to top, rgba(4,55,26,.92) 0%, transparent 62%); color: #fff;
-      opacity: 0; transform: translateY(8px); transition: opacity var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    /* Scrim hijau + nama produk di TENGAH foto — dua-duanya HOVER-ONLY
+       (opacity 0 -> 1), balik ke pola transisi yang sudah ada sebelumnya
+       (dulu .goods-card2-overlay), cuma teksnya sekarang nama produk
+       ditengah (bukan shortDescription di bawah) dan scrim-nya menutup
+       seluruh foto (bukan cuma gradient bawah) supaya kontras teks putih
+       terjamin di mana pun namanya jatuh. */
+    .goods-card2-scrim {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(to top, rgba(4,55,26,.88) 0%, rgba(4,55,26,.5) 55%, rgba(4,55,26,.22) 100%);
+      opacity: 0; transition: opacity var(--motion-base) ease;
     }
-    @media (hover: hover) and (pointer: fine) { .goods-card2:hover .goods-card2-overlay { opacity: 1; transform: translateY(0); } }
-    .goods-card2-overlay p { margin: 0; font-size: .8rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .goods-card2-cta { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 800; }
+    @media (hover: hover) and (pointer: fine) { .goods-card2:hover .goods-card2-scrim { opacity: 1; } }
+    .goods-card2-name-overlay {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, calc(-50% + 6px)); z-index: 2;
+      max-width: calc(100% - 32px); padding: 0 16px; color: #fff; text-align: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .goods-card2:hover .goods-card2-name-overlay { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    /* Strip gambar tambahan — SELALU tampak (tidak ikut hover), z-index
+       paling atas supaya tidak ketutup scrim/nama produk. */
+    .goods-card2-gallery { position: absolute; left: 10px; bottom: 10px; z-index: 3; display: flex; gap: 6px; }
+    .goods-card2-gallery-thumb {
+      display: block; width: 54px; height: 54px; border-radius: 10px; overflow: hidden;
+      border: 2.5px solid #fff; box-shadow: var(--shadow-md, var(--shadow-sm)); background: #fff;
+    }
+    .goods-card2-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .goods-card2-price { display: block; margin-top: 10px; font-weight: 800; color: var(--color-primary-dark); font-size: 1.05rem; }
 
-    /* ---------- Campaign card: cincin progres melingkar (conic-gradient,
-       tanpa chart lib) menggantikan bar linear + badge persen — progres jadi
-       elemen visual utama yang lebih kuat, bar linear (.progress-track/
-       .progress-fill/.progress-meta) tetap dipakai TERPISAH di bottom sheet
-       preview mobile (openPreview), tidak dihapus. ---------- */
-    .campaign-card2 { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
-    .campaign-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
-    .campaign-card2-media { aspect-ratio: 16/10; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
-    .campaign-card2-media img { width: 100%; height: 100%; object-fit: cover; }
-    .campaign-card2-body { display: flex; align-items: center; gap: 16px; }
-    .campaign-ring {
-      --pct: 0; flex-shrink: 0; position: relative; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
-      background: conic-gradient(var(--color-gold) calc(var(--pct) * 1%), var(--color-primary-soft) 0);
+    /* Bar progres generik (.progress-track/.progress-fill/.progress-meta) —
+       dipakai kartu campaign DAN bottom sheet preview (openPreview). Sebelum
+       ini classnya dipakai di markup (sheet) tapi TIDAK PERNAH didefinisikan
+       di sini — bar-nya render tanpa tinggi/warna (invisible bug). */
+    .progress-track { height: 9px; border-radius: var(--radius-full); background: var(--color-bg-alt); overflow: hidden; margin-top: 10px; }
+    .progress-fill { height: 100%; border-radius: var(--radius-full); background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark)); transition: width var(--motion-base) var(--ease-out); }
+    .progress-meta { display: flex; justify-content: flex-end; margin: 6px 0 0; font-size: .78rem; font-weight: 700; color: var(--color-primary-dark); }
+
+    /* ---------- Kantong Amal: redesign ala ldksyahid-app (home partial
+       testimony) — grid kartu campaign + sidebar (badge/heading/deskripsi +
+       2 stat card dampak nyata dari GET /public/campaigns/stats). Sidebar
+       duluan di markup supaya tampil di ATAS di mobile, digeser ke kanan
+       via properti CSS order di desktop (lihat .kantong-*). ---------- */
+    .kantong-panel { display: grid; grid-template-columns: 1fr; gap: 28px; }
+    .kantong-sidebar { order: 1; }
+    .kantong-grid { order: 2; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    @media (min-width: 993px) {
+      .kantong-panel { grid-template-columns: 1.6fr 1fr; align-items: start; }
+      .kantong-grid { order: 1; }
+      /* position:sticky SENGAJA DILEPAS (percobaan sebelumnya pakai
+         position:sticky dengan top:100px) — sticky punya jarak minimum 100px
+         dari atas viewport begitu section ini terlihat, sedangkan
+         .kantong-grid di sebelahnya (TIDAK sticky) natural position-nya bisa
+         lebih dekat ke atas viewport. Selisih itu yang bikin sidebar
+         kelihatan lebih rendah/"di tengah" dibanding baris pertama kartu,
+         bukan soal align-items yang salah. Tanpa sticky, align-self:start
+         menjamin sidebar rata PERSIS dengan atas grid, tidak ada syarat
+         jarak minimum apa pun. */
+      .kantong-sidebar { order: 2; align-self: start; }
     }
-    .campaign-ring::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
-    .campaign-ring span { position: relative; z-index: 1; font-family: var(--font-heading); font-weight: 800; font-size: .82rem; color: var(--color-primary-dark); }
-    .campaign-card2-info { min-width: 0; }
-    .campaign-card2-info h3 { margin: 6px 0 4px; font-size: 1rem; }
-
-    .agenda-mini-list { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin: 0 auto; }
-    .agenda-mini-item { display: flex; gap: 18px; align-items: flex-start; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; }
-    .agenda-mini-date { flex-shrink: 0; width: 56px; text-align: center; border-right: 1px solid var(--color-border); padding-right: 16px; }
-    .agenda-mini-date .day { display: block; font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--color-primary-dark); }
-    .agenda-mini-date .mon { display: block; font-size: .75rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: .05em; }
-    .agenda-mini-body h3 { margin: 6px 0 4px; font-size: 1.05rem; }
-
-    .contact-cta-inner {
-      max-width: 640px; margin: 0 auto; text-align: center; background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: 40px 36px; box-shadow: var(--shadow-sm);
+    .kantong-sidebar h2 { margin: 8px 0 10px; }
+    .kantong-stats { display: flex; flex-direction: column; gap: 12px; margin: 20px 0 24px; }
+    .kantong-stat-card {
+      display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 18px 20px; box-shadow: var(--shadow-sm);
+      transition: all var(--motion-fast) ease;
     }
-    .contact-cta-inner p { max-width: 46ch; margin: 8px auto 20px; }
+    .kantong-stat-card:hover { border-color: var(--color-primary-soft); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .kantong-stat-icon {
+      flex-shrink: 0; width: 46px; height: 46px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--color-primary-tint), var(--color-primary-soft));
+      color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center;
+    }
+    .kantong-stat-content { display: flex; flex-direction: column; min-width: 0; }
+    .kantong-stat-number { font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem; color: var(--color-primary-dark); line-height: 1.15; }
+    .kantong-stat-label { font-size: .8rem; color: var(--color-text-secondary); font-weight: 600; }
 
-    .gallery-card { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0; max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
-    .gallery-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); text-decoration: none; }
-    .gallery-thumb { aspect-ratio: 4/3; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
-    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .gallery-body { padding: 28px; display: flex; flex-direction: column; justify-content: center; }
-    .gallery-body h3 { margin: 12px 0 8px; font-size: 1.3rem; }
-    .gallery-count { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .85rem; margin-top: 10px; }
-    @media (max-width: 640px) { .gallery-card { grid-template-columns: 1fr; } }
+    /* ---------- Campaign card: badge/chip di atas foto, judul, bar progres
+       linear + persen, lalu terkumpul/target berdampingan. ---------- */
+    .campaign-card2-wrap { height: 100%; }
+    .campaign-card2 { height: 100%; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
+    .campaign-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-6px) scale(1.03); text-decoration: none; z-index: 1; }
+    /* height tetap (bukan aspect-ratio) + flex-shrink:0 — supaya SEMUA
+       kartu (foto landscape, sertifikat putih, dst.) tampil dengan tinggi
+       gambar yang sama persis, tidak ikut mengecil/membesar mengikuti
+       panjang judul di bawahnya seperti sebelumnya. */
+    .campaign-card2-media { position: relative; flex-shrink: 0; height: 190px; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
+    .campaign-card2-media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--motion-base) ease; }
+    .campaign-card2:hover .campaign-card2-media img { transform: scale(1.06); }
+    .campaign-card2-chip { position: absolute; left: 12px; top: 12px; }
+    .campaign-card2-badge {
+      position: absolute; right: 12px; top: 12px; background: var(--color-gold); color: var(--color-gold-dark, #5c4400);
+      font-size: .7rem; font-weight: 800; padding: 4px 10px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
+    }
+    .campaign-card2-body { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
+    .campaign-card2-body h3 { margin: 0; font-size: 1rem; line-height: 1.35; }
+    .campaign-card2-amounts { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+    .campaign-card2-amount { display: flex; flex-direction: column; gap: 2px; }
+    .campaign-card2-amount strong { font-size: .92rem; color: var(--color-text); }
+    .campaign-card2-amount span { font-size: .74rem; color: var(--color-muted); }
+    .campaign-card2-amount-target { margin-left: auto; text-align: right; }
+
+    /* CTA "Lihat Semua" — style copy dari .gallery-btn-all/.jadwal-btn-all
+       (pil gradient + swap gradient hover via ::before) supaya konsisten,
+       sebelumnya .btn.btn-outline polos. */
+    .campaign-btn-all {
+      position: relative; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .campaign-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .campaign-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .campaign-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .campaign-btn-all:hover::before { opacity: 1; }
+    .campaign-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .campaign-btn-all::before { transition: none; } }
+
+    /* Mobile: bukan carousel horizontal seperti section lain — daftar
+       kartu horizontal (thumb kiri + info kanan) ditumpuk vertikal, sesuai
+       referensi user (mirip list donasi ala kitabisa/benihbaik). */
+    @media (max-width: 640px) {
+      .kantong-grid { display: flex; flex-direction: column; gap: 14px; }
+      .campaign-card2-wrap { height: auto; }
+      .campaign-card2 { flex-direction: row; height: auto; }
+      .campaign-card2-media { width: 112px; height: auto; flex-shrink: 0; }
+      .campaign-card2-chip { font-size: .62rem; padding: 3px 8px; left: 8px; top: 8px; }
+      .campaign-card2-badge { font-size: .58rem; padding: 3px 7px; right: 8px; top: 8px; }
+      .campaign-card2-body { padding: 10px 14px; gap: 0; }
+      .campaign-card2-body h3 { font-size: .88rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .progress-track { margin-top: 8px; }
+      .campaign-card2-amounts { border-top: none; margin-top: 6px; padding-top: 0; }
+      .campaign-card2-amount-target { display: none; }
+    }
+
+    /* ---------- Jadwal: kalender bulan berjalan (statis, tanpa toolbar
+       prev/next — beda dari /jadwal index) + daftar agenda di bawahnya.
+       Class & nilai visual sengaja MIRIP .cal- dan .agenda- di
+       schedule.public-index.page.ts (styles komponen tidak lintas-komponen
+       di Angular, jadi didefinisikan ulang di sini, bukan cuma reuse) —
+       cuma dipersempit/dipadatkan supaya pas jadi satu section teaser di
+       Beranda, bukan halaman penuh. ---------- */
+    .jadwal-cal-wrap {
+      max-width: 980px; margin: 0 auto 40px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-sm);
+    }
+    .jadwal-cal-period {
+      margin: 0 0 18px; text-align: center; font-family: var(--font-heading); font-weight: 700; font-size: 1.3rem;
+      color: var(--color-primary-dark);
+    }
+    .jadwal-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .jadwal-cal-dow-cell { padding: 8px 6px; text-align: center; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--color-muted); }
+    .jadwal-cal-cell {
+      position: relative; min-height: 108px; padding: 8px; border: 1px solid var(--color-border);
+      margin: -0.5px; display: flex; flex-direction: column; gap: 4px; background: #fff;
+      transition: background var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .jadwal-cal-cell.out { background: var(--color-bg-alt); }
+    .jadwal-cal-cell.out .jadwal-cal-date { color: var(--color-muted); }
+    .jadwal-cal-cell.has { cursor: pointer; }
+    .jadwal-cal-cell:hover, .jadwal-cal-cell:focus-within, .jadwal-cal-cell:focus { z-index: 30; outline: none; }
+    /* Hover tanggal: naik+membesar tipis, latar tint hijau, ring dalam +
+       shadow — bukan cuma inset box-shadow instan seperti sebelumnya. */
+    .jadwal-cal-cell.has:hover {
+      transform: translateY(-2px) scale(1.04); background: var(--color-primary-tint);
+      box-shadow: inset 0 0 0 2px var(--color-primary), var(--shadow-md, var(--shadow-sm));
+    }
+    .jadwal-cal-cell.has:hover .jadwal-cal-date { color: var(--color-primary-dark); }
+    .jadwal-cal-date { font-size: .92rem; font-weight: 600; color: var(--color-text-secondary); transition: color var(--motion-fast) ease; }
+    .jadwal-cal-cell.today .jadwal-cal-date {
+      background: var(--color-primary); color: #fff; border-radius: var(--radius-full);
+      width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    }
+    @media (prefers-reduced-motion: reduce) { .jadwal-cal-cell, .jadwal-cal-date { transition: none; } }
+    .jadwal-cal-chips { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+    .jadwal-cal-chip { display: flex; align-items: center; gap: 5px; font-size: .76rem; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text); }
+    .jadwal-cal-chip .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .jadwal-cal-more { font-size: .7rem; color: var(--color-muted); }
+    /* Titik kategori mobile-only (lihat media query di bawah) — pengganti
+       .jadwal-cal-chips yang kepanjangan buat sel sesempit layar HP. */
+    .jadwal-cal-dots { display: none; flex-wrap: wrap; gap: 3px; }
+    .jadwal-cal-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Popup muncul dengan fade+turun halus (bukan langsung nongol) — element
+       baru yang Angular mount otomatis menjalankan animation-nya begitu
+       masuk DOM, tidak perlu toggle class terpisah. Redesign: header jadi
+       band hijau-tint dengan ikon (bukan teks polos), tiap kegiatan jadi
+       baris kartu dengan titik kategori + accent kiri saat hover (bukan
+       flex-wrap datar yang bikin badge kategori jatuh ke baris sendiri
+       seperti sebelumnya) — accent-nya diambil dari warna kategori via
+       custom property --jadwal-pop-accent per <li> (lihat [style.--...]
+       di template), satu-satunya cara CSS baca warna dinamis per-item. */
+    @keyframes jadwal-pop-in { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    /* Jarak ke sel dinaikkan (100%-2px -> 100%+14px) supaya popup tidak
+       "nempel" langsung ke ring hijau sel yang di-hover (kelihatan sempit/
+       jelek kalau ketemu langsung) — arrow di bawah ini yang menjaga
+       hubungan visualnya tetap jelas walau ada jarak. overflow:hidden
+       DIPINDAH ke belakang (dihapus dari sini) karena arrow (posisi negatif,
+       nongol di ATAS kotak) butuh keluar dari box ini — radius sudut atas
+       dipindah ke .jadwal-cal-pop-head sendiri sebagai gantinya. */
+    .jadwal-cal-pop {
+      position: absolute; top: calc(100% + 14px); left: -1px; width: 300px; max-width: 82vw; z-index: 40;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg); text-align: left; cursor: default;
+      animation: jadwal-pop-in .18s var(--ease-out) both;
+    }
+    .jadwal-cal-cell:nth-child(7n) .jadwal-cal-pop, .jadwal-cal-cell:nth-child(7n-1) .jadwal-cal-pop { left: auto; right: -1px; }
+    /* Panah kecil menghubungkan popup ke sel tanggal di atasnya — kotak
+       diputar 45° dengan cuma sisi kiri+atas berwarna (2 border), meniru
+       tampilan segitiga tooltip standar. */
+    .jadwal-cal-pop-arrow {
+      position: absolute; top: -7px; left: 24px; width: 13px; height: 13px; z-index: 1;
+      background: var(--color-primary-tint); border-left: 1px solid var(--color-border); border-top: 1px solid var(--color-border);
+      transform: rotate(45deg); border-radius: 3px 0 0 0;
+    }
+    .jadwal-cal-cell:nth-child(7n) .jadwal-cal-pop-arrow, .jadwal-cal-cell:nth-child(7n-1) .jadwal-cal-pop-arrow { left: auto; right: 24px; }
+    .jadwal-cal-pop-head {
+      position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      background: var(--color-primary-tint); color: var(--color-primary-dark); border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+    .jadwal-cal-pop-date { margin: 0; font-weight: 700; font-size: .84rem; }
+    .jadwal-cal-pop ul { list-style: none; margin: 0; padding: 6px 0; display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; }
+    .jadwal-cal-pop li {
+      position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px;
+      transition: background var(--motion-fast) ease;
+    }
+    .jadwal-cal-pop li::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: var(--radius-full);
+      background: var(--jadwal-pop-accent, var(--color-primary)); opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .jadwal-cal-pop li:hover { background: var(--color-bg-alt); }
+    .jadwal-cal-pop li:hover::before { opacity: 1; }
+    .jadwal-cal-pop li:last-child:hover { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+    .jadwal-cal-pop-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; }
+    .jadwal-cal-pop-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .jadwal-cal-pop-title { font-weight: 700; font-size: .84rem; line-height: 1.35; color: var(--color-text); }
+    .jadwal-cal-pop-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .jadwal-cal-pop-time { font-variant-numeric: tabular-nums; color: var(--color-muted); font-size: .74rem; font-weight: 600; }
+    /* Penanggung jawab/panitia (Schedule.organizer) — baris terpisah di
+       bawah waktu+kategori, bukan digabung ke .jadwal-cal-pop-meta supaya
+       tidak ikut wrap berdesakan dengan badge kategori. */
+    .jadwal-cal-pop-organizer { display: flex; align-items: center; gap: 5px; color: var(--color-muted); font-size: .74rem; }
+    .jadwal-cat-badge { display: inline-block; padding: 1px 8px; border-radius: var(--radius-full); font-size: .68rem; font-weight: 700; }
+    @media (prefers-reduced-motion: reduce) { .jadwal-cal-pop { animation: none; } }
+
+    /* CTA "Lihat Semua" — style copy dari .artikel-btn-all (pil gradient +
+       swap gradient hover via ::before, lihat catatan di sana) supaya
+       konsisten dengan tombol "Lihat Semua" section lain. */
+    .jadwal-btn-all {
+      position: relative; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .jadwal-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .jadwal-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .jadwal-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .jadwal-btn-all:hover::before { opacity: 1; }
+    .jadwal-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .jadwal-btn-all::before { transition: none; } }
+
+    /* Sheet mobile tap-tanggal (lihat daySheet/onScheduleCellClick di .ts). */
+    .jadwal-daysheet-list { display: flex; flex-direction: column; gap: 16px; }
+    .jadwal-daysheet-item { padding-top: 14px; border-top: 1px solid var(--color-border); }
+    .jadwal-daysheet-item:first-child { padding-top: 0; border-top: none; }
+    .jadwal-daysheet-item h4 { margin: 8px 0 4px; font-size: .98rem; }
+    .jadwal-daysheet-meta { display: flex; flex-wrap: wrap; gap: 12px; color: var(--color-muted); font-size: .8rem; margin: 0 0 4px; }
+    .jadwal-daysheet-meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .jadwal-daysheet-desc { color: var(--color-text-secondary); font-size: .86rem; margin: 4px 0 0; white-space: pre-line; }
+
+    @media (max-width: 640px) {
+      .jadwal-cal-cell { min-height: 44px; gap: 2px; }
+      .jadwal-cal-chips { display: none; }
+      .jadwal-cal-dots { display: flex; }
+      .jadwal-cal-pop { display: none; }
+    }
+
+    /* ---------- Hubungi Kami: redesign ala ldksyahid-app (home partial
+       contact-us) — panel kiri kutipan Al-Qur'an + info kontak resmi FSLDK
+       (data sama dengan ContactPublicIndexPage, /tentang/kontak), panel
+       kanan FORM interaktif terpasang langsung (bukan cuma tombol CTA ke
+       halaman lain seperti sebelumnya). Validator & alur submit sama
+       persis dengan halaman penuh (ContactRepository.sendPublic) supaya
+       perilaku kedua form konsisten. ---------- */
+    .contact-panel { display: grid; grid-template-columns: .82fr 1fr; gap: 28px; align-items: stretch; }
+    .contact-panel-info { display: flex; flex-direction: column; gap: 20px; }
+    .contact-quote-card {
+      position: relative; overflow: hidden;
+      background: #fff; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px;
+      box-shadow: var(--shadow);
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    .contact-quote-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); }
+    /* Motif siluet raksasa transparan — pola sama seperti panel hijau
+       Berita/Perpustakaan/Agenda/Goods lainnya di beranda ini. */
+    .contact-quote-silhouette {
+      position: absolute; right: -14px; bottom: -18px; z-index: 0; color: var(--color-primary);
+      opacity: .08; transform: rotate(8deg); pointer-events: none;
+    }
+    .contact-quote-icon {
+      position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center;
+      width: 48px; height: 48px; border-radius: var(--radius-full); color: var(--color-primary-dark);
+      background: linear-gradient(135deg, var(--color-primary-tint), var(--color-primary-soft));
+      margin-bottom: 16px;
+    }
+    .contact-quote-text { position: relative; z-index: 1; font-style: italic; color: var(--color-text); font-size: .92rem; line-height: 1.8; margin: 0 0 16px; }
+    .contact-quote-source {
+      position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 7px 16px; border-radius: var(--radius-sm); font-size: .8rem; font-weight: 700;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary-dark) 30%, transparent);
+    }
+    .contact-method-list { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+    .contact-method-item {
+      display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 16px 18px; box-shadow: var(--shadow-sm);
+      transition: all var(--motion-fast) ease;
+    }
+    .contact-method-item:hover { border-color: var(--color-primary-soft); box-shadow: var(--shadow); transform: translateY(-2px) translateX(2px); }
+    .contact-method-icon {
+      flex-shrink: 0; width: 42px; height: 42px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--color-primary-tint), var(--color-primary-soft));
+      color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center;
+      transition: transform var(--motion-fast) var(--ease-out);
+    }
+    .contact-method-item:hover .contact-method-icon { transform: scale(1.08) rotate(-4deg); }
+    .contact-method-body { display: flex; flex-direction: column; gap: 3px; }
+    .contact-method-label { font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--color-muted); }
+    .contact-method-value { font-size: .92rem; font-weight: 600; color: var(--color-text); text-decoration: none; }
+    a.contact-method-value:hover { color: var(--color-primary); text-decoration: underline; }
+
+    .contact-panel-form {
+      background: #fff; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg);
+      padding: 32px; box-shadow: var(--shadow);
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    .contact-panel-form:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .contact-form-head { text-align: center; margin-bottom: 24px; }
+    .contact-form-icon {
+      display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px;
+      border-radius: var(--radius-full); color: #fff; margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary-dark) 35%, transparent);
+    }
+    .contact-form-head h3 { margin: 0 0 4px; font-size: 1.25rem; }
+    .contact-form-head p { margin: 0; font-size: .88rem; color: var(--color-text-secondary); }
+    .contact-form-alert {
+      display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+      padding: 10px 14px; border-radius: var(--radius-sm); font-size: .82rem; margin-bottom: 18px;
+    }
+    .contact-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .contact-form-group { margin-bottom: 16px; }
+    .contact-form-group label { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: .84rem; color: var(--color-text); margin-bottom: 7px; }
+    .contact-form-group .req { color: var(--color-danger); }
+    .contact-form-group input, .contact-form-group textarea {
+      width: 100%; padding: 12px 15px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      font-size: .92rem; font-family: inherit; color: var(--color-text); background: #fff;
+      transition: border-color var(--motion-fast), box-shadow var(--motion-fast); box-sizing: border-box;
+    }
+    .contact-form-group input:hover, .contact-form-group textarea:hover { border-color: var(--color-primary-soft); }
+    .contact-form-group input:focus, .contact-form-group textarea:focus {
+      outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 4px var(--color-primary-tint);
+    }
+    .contact-form-group input.is-invalid, .contact-form-group textarea.is-invalid { border-color: var(--color-danger); background: #fffbfa; }
+    .contact-form-group textarea { resize: vertical; min-height: 110px; }
+    .contact-form-error { display: block; margin-top: 5px; font-size: .78rem; color: var(--color-danger); font-weight: 500; }
+    .contact-form-submit {
+      width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff; border: none;
+      padding: 13px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: .95rem; cursor: pointer;
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .contact-form-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 30px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); }
+    .contact-form-submit:disabled { opacity: .7; cursor: not-allowed; }
+    .contact-success { text-align: center; padding: 30px 10px; }
+    .contact-success-icon { display: inline-flex; color: #16a34a; margin-bottom: 12px; }
+    .contact-success h3 { margin: 0 0 8px; font-size: 1.2rem; }
+    .contact-success p { margin: 0 0 20px; color: var(--color-text-secondary); font-size: .9rem; line-height: 1.55; }
+    @media (max-width: 900px) {
+      .contact-panel { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .contact-panel-form { padding: 22px; }
+      .contact-form-row { grid-template-columns: 1fr; gap: 0; }
+    }
+
+    /* Heading kiri + CTA "Lihat Semua" sebaris di kanan (bukan dipusatkan
+       di bawah kartu seperti draft awal) — mirror pola shop.app: judul
+       section dan aksi utamanya sejajar. */
+    .gallery-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+    .gallery-section-head-text { flex: 1; min-width: 0; }
+    /* Duplikat mobile-only (lihat markup setelah .gallery-feature) —
+       disembunyikan di desktop, tombol asli di header yang dipakai. Selector
+       DIGABUNG dua class (.gallery-btn-all.gallery-btn-all-bottom), bukan
+       cuma .gallery-btn-all-bottom sendiri — kalau cuma satu class, rule
+       .gallery-btn-all {display:inline-flex} yang letaknya lebih bawah di
+       file ini (spesifisitas sama, menang karena urutan source) bakal
+       nimpa display:none ini, bikin tombolnya tetap kelihatan di desktop. */
+    .gallery-btn-all.gallery-btn-all-bottom { display: none; }
+    @media (max-width: 640px) {
+      .gallery-section-head { flex-direction: column; align-items: flex-start; }
+      /* Tombol di header DIHILANGKAN di mobile (bukan cuma pindah posisi) —
+         digantikan .gallery-btn-all-bottom di paling bawah kartu, supaya
+         urutan baca mobile: judul → deskripsi → kartu → CTA, bukan CTA
+         nyempil di antara deskripsi dan kartu. */
+      .gallery-section-head .gallery-btn-all { display: none; }
+      .gallery-btn-all.gallery-btn-all-bottom { display: flex; margin-top: 20px; justify-content: center; }
+    }
+
+    /* ---------- Galeri: satu kartu "Dokumentasi Kegiatan Terbaru" ala
+       ldksyahid-app (home partial gallery) — header gradient + badge foto/
+       video, judul beraksen, deskripsi, mosaic foto (foto pertama full-
+       width), thumbnail video YouTube (buka lightbox), link dokumentasi.
+       Foto & video sama-sama bisa di-zoom/diputar di desktop MAUPUN mobile
+       (responsif lewat media query grid, bukan kartu berbeda + bottom
+       sheet terpisah seperti reference — di sini cuma SATU item, bukan
+       daftar, jadi tap-untuk-buka-sheet tidak perlu). ---------- */
+    .gallery-feature { background: #fff; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
+    .gallery-feature:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .gallery-feature-head {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .gallery-feature-name { color: rgba(255,255,255,.9); font-size: .85rem; font-weight: 700; letter-spacing: .2px; }
+    .gallery-feature-badges { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    /* Solid (bukan ghost translucent) supaya bobot visualnya setara dengan
+       badge Video yang sudah solid merah — sebelumnya badge Foto pakai
+       background putih transparan tipis, kelihatan lemah/pudar di sebelah
+       badge Video yang tegas. */
+    .gallery-feature-badge {
+      display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--color-primary-dark);
+      border-radius: var(--radius-full); padding: 5px 12px; font-size: .74rem; font-weight: 800;
+      box-shadow: 0 3px 10px rgba(0,0,0,.15);
+    }
+    .gallery-feature-badge-video {
+      background: linear-gradient(135deg, #ff5757, #dc2626); color: #fff;
+      box-shadow: 0 3px 10px rgba(220,38,38,.4);
+    }
+    .gallery-feature-body { padding: 28px 28px 30px; }
+    .gallery-feature-title { position: relative; margin: 0 0 10px; padding-left: 16px; font-size: 1.4rem; line-height: 1.35; }
+    .gallery-feature-title::before {
+      content: ''; position: absolute; left: 0; top: .15em; bottom: .1em; width: 4px; border-radius: 2px;
+      background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-dark));
+    }
+    .gallery-feature-desc { color: var(--color-text-secondary); font-size: .92rem; line-height: 1.7; margin: 0 0 20px; }
+    /* eventDescription sekarang dirender via [innerHTML] (rich text, lihat
+       sanitizeGalleryDescription()) — isinya biasanya cuma satu <p> dari
+       editor, reset margin bawaan browser-nya supaya card tetap sepadat
+       sebelumnya (dulu elemen ini sendiri yang <p>, bukan pembungkus). */
+    .gallery-feature-desc p { margin: 0; }
+    .gallery-feature-desc p + p { margin-top: 10px; }
+    .gallery-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .gallery-feature-grid-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
+    .gallery-feature-grid-item:first-child { grid-column: 1 / -1; aspect-ratio: 21/7; }
+    .gallery-feature-grid-item:hover { transform: scale(1.02); box-shadow: var(--shadow); }
+    .gallery-feature-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-feature-video { margin-bottom: 20px; }
+    .gallery-feature-video-label { display: flex; align-items: center; gap: 6px; color: var(--color-text-secondary); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+    .gallery-feature-video-label app-icon { color: #ef4444; }
+    .gallery-feature-video-thumb { position: relative; aspect-ratio: 16/7; border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
+    .gallery-feature-video-thumb:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .gallery-feature-video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-feature-play {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(239,68,68,.88); color: #fff; display: flex; align-items: center; justify-content: center;
+      transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .gallery-feature-video-thumb:hover .gallery-feature-play { background: #ef4444; transform: translate(-50%,-50%) scale(1.08); }
+    .gallery-feature-footer { padding-top: 18px; border-top: 1px solid var(--color-border); }
+    .gallery-feature-doc {
+      display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-secondary); font-size: .84rem; font-weight: 600;
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-full); padding: 8px 16px; transition: all var(--motion-fast) ease;
+    }
+    .gallery-feature-doc:hover { color: var(--color-primary); border-color: var(--color-primary-soft); background: var(--color-primary-tint); text-decoration: none; }
+    @media (max-width: 640px) {
+      .gallery-feature-body { padding: 22px 18px 24px; }
+      .gallery-feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .gallery-feature-grid-item:first-child { aspect-ratio: 16/7; }
+    }
+
+    /* CTA "Lihat Semua" — style copy dari .jadwal-btn-all/.artikel-btn-all
+       (pil gradient + swap gradient hover via ::before) supaya konsisten
+       dengan tombol "Lihat Semua" section lain (sebelumnya beda gaya:
+       .btn.btn-outline polos). */
+    .gallery-btn-all {
+      position: relative; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .gallery-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .gallery-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .gallery-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .gallery-btn-all:hover::before { opacity: 1; }
+    .gallery-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .gallery-btn-all::before { transition: none; } }
+
+    /* Lightbox video YouTube (overlay fixed, selalu di DOM supaya transisi
+       opacity mulus — mirip .gl-video-overlay ldksyahid-app; iframe cuma
+       dirender saat aktif supaya video berhenti begitu ditutup). */
+    .gallery-video-overlay {
+      position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.88);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity var(--motion-base) ease;
+    }
+    .gallery-video-overlay.active { opacity: 1; pointer-events: all; }
+    .gallery-video-wrap { width: min(90vw, 960px); aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.5); background: #000; }
+    .gallery-video-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+    .gallery-video-close {
+      position: absolute; top: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: background var(--motion-fast) ease, transform var(--motion-fast) ease;
+    }
+    .gallery-video-close:hover { background: rgba(255,255,255,.28); transform: rotate(90deg); }
 
     /* font-body polos (bukan font-accent italic) + warna secondary yang lebih
        lembut — sama seperti perbaikan sebelumnya di kartu kutipan hero. */
@@ -1092,8 +1930,18 @@ interface CardPreview {
        .sheet-handle/.sheet-close yang duduk di zona padding-top yang sama
        (foto menimpa handle+tombol X). Sengaja TIDAK menyentuh margin-top
        supaya jarak dari handle/close tetap seperti bawaan .sheet-panel. */
-    .sheet-image { border-radius: 14px; overflow: hidden; margin: 0 0 14px; }
-    .sheet-image img { display: block; width: 100%; height: 190px; object-fit: cover; object-position: center top; }
+    /* Kotak mengambang di dalam padding panel (bukan full-bleed ke tepi) —
+       radius bulat di keempat sisi seperti versi sebelumnya, cuma tingginya
+       yang dibesarkan (190->300px) supaya kelihatan "gambar utama", bukan
+       thumbnail kecil di atas judul. */
+    .sheet-image { position: relative; margin: 0 0 14px; border-radius: 14px; overflow: hidden; }
+    .sheet-image img { display: block; width: 100%; height: 300px; object-fit: cover; object-position: center top; }
+    /* Strip thumbnail gambar tambahan (mis. Goods.previewImages) — baris
+       kecil di bawah foto utama sheet, bukan overlay di atas foto (beda dari
+       versi kartu .goods-card2-gallery) supaya tidak menumpuk di ruang
+       sheet yang sempit dan sudah vertikal-scroll. */
+    .sheet-gallery { display: flex; gap: 8px; margin: 0 0 16px; }
+    .sheet-gallery-thumb { width: 64px; height: 64px; flex-shrink: 0; border-radius: 10px; object-fit: cover; box-shadow: var(--shadow-sm); }
     .sheet-title { margin: 0 0 16px; }
     .sheet-meta-line { margin: 0 0 4px; }
     /* Baris meta berlabel ikon (Penulis/Editor/Tanggal) — pola sama seperti
@@ -1111,15 +1959,10 @@ interface CardPreview {
        (tanpa line-clamp), justify, line-height lega supaya tidak berkesan
        padat/mepet seperti metaRows yang langsung nempel CTA sebelumnya. */
     .sheet-excerpt { margin: 0 0 20px; font-size: .88rem; line-height: 1.7; text-align: justify; color: var(--color-text-secondary); }
-    /* Pil gradient (bukan lagi .btn-primary kotak) khusus tombol sheet —
-       di-scope lokal ke elemen yang dirender komponen ini sendiri, pola sama
-       seperti override .modal-pop di app-alert-dialog. */
-    .sheet-cta {
-      margin-top: 4px; justify-content: center; border: none; border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--color-primary-bright), var(--color-primary-dark)); box-shadow: var(--shadow-sm);
-      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
-    }
-    .sheet-cta:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    /* Tombol CTA sheet (pil gradient + warna aksen per-kartu) sekarang
+       di-render langsung oleh app-bottom-sheet lewat [ctaLabel]/[ctaAccent]/
+       (ctaClick) — bukan lagi di sini. Lihat bottom-sheet.component.ts
+       untuk alasan content projection ditinggalkan untuk footer ini. */
 
     /* ---------- Card scroller: pengganti .grid.grid-3 KHUSUS di halaman ini
        untuk daftar kartu (berita/artikel/buku/event/goods/campaign) — di
@@ -1142,12 +1985,17 @@ interface CardPreview {
 export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   private presenter = inject(HomeIndexPresenter);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
+  private fb = inject(FormBuilder);
+  private toast = inject(ToastService);
+  contactRepo = inject(ContactRepository);
   private datePipe = new DatePipe('id-ID');
 
   @ViewChild('islandPath') private islandPathRef?: ElementRef<SVGPathElement>;
   @ViewChildren('tentangTabBtn') private tentangTabBtnRefs!: QueryList<ElementRef<HTMLButtonElement>>;
   @ViewChild('newsTrack') private newsTrackRef?: ElementRef<HTMLElement>;
   @ViewChild('booksTrack') private booksTrackRef?: ElementRef<HTMLElement>;
+  @ViewChild('goodsTrack') private goodsTrackRef?: ElementRef<HTMLElement>;
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
@@ -1162,9 +2010,47 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   catalogBooksForCarousel = computed(() => [...this.catalogBooks()].reverse());
   events = signal<EventListItem[]>([]);
   goods = signal<Goods[]>([]);
-  schedules = signal<Schedule[]>([]);
+  schedulePeriodLabel = signal('');
+  scheduleWeeks = signal<CalendarCell[][]>([]);
+  /** Popup hover desktop (pola sama seperti previewIso di /jadwal index). */
+  schedulePopupIso = signal<string | null>(null);
+  /** Sheet mobile-only, tap tanggal kalender (lihat onScheduleCellClick()). */
+  daySheet = signal<CalendarCell | null>(null);
   campaigns = signal<Campaign[]>([]);
-  latestGallery = signal<GalleryListItem | null>(null);
+  campaignStats = signal<CampaignPublicStats | null>(null);
+  galleryFeature = signal<GalleryFeature | null>(null);
+  /** Overlay zoom foto (app-gallery-lightbox, dipakai ulang dari halaman
+   *  detail galeri) dan lightbox video YouTube — keduanya di-drive langsung
+   *  dari kartu "Dokumentasi Kegiatan Terbaru", tidak lewat previewSheet
+   *  generik karena kontennya (mosaic foto + video) jauh lebih kaya dari
+   *  bentuk CardPreview lintas-modul. */
+  galleryZoomOpen = signal(false);
+  galleryZoomIndex = signal(0);
+  galleryVideoOpen = signal(false);
+
+  /** Form "Hubungi Kami" terpasang langsung di beranda (ala ldksyahid-app
+   *  home partial contact-us) — logic/validator SAMA PERSIS dengan
+   *  ContactPublicIndexPage (/tentang/kontak) supaya perilaku kedua form
+   *  konsisten, cuma tanpa notice-card/newsletter/social-links di sini
+   *  (di luar scope kartu ringkas beranda, sudah ada di halaman penuh). */
+  contactForm = this.fb.group({
+    senderName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+    subject: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
+    message: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
+  });
+  contactSubmitted = signal(false);
+  contactRateLimited = signal(false);
+  contactSubmitTried = signal(false);
+  /** Diinisialisasi ke default migration (0041_contact_email_setting) —
+   *  supaya tidak sempat kosong sebelum GET /public/settings/contact-email
+   *  selesai, lihat setContactEmail(). */
+  contactEmail = signal('fsldkindonesia29@gmail.com');
+  /** Sama pola dengan contactEmail — default migration (0042_contact_whatsapp_setting),
+   *  lihat setContactWhatsapp(). Dipakai section "Hubungi Kami" (bukan
+   *  floating button, itu punya fetch sendiri di app-whatsapp-fab). */
+  contactWhatsapp = signal('+62 851-1133-2861');
+
   loading = signal(true);
 
   readonly catalogbookPath = catalogbookPath;
@@ -1172,11 +2058,14 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   readonly goodsPath = goodsPath;
   readonly schedulePath = schedulePath;
   readonly kantongAmalPath = kantongAmalPath;
-  readonly contactPath = contactPath;
   readonly newsPath = newsPath;
   readonly articlePath = articlePath;
   readonly statisticPath = statisticPath;
   readonly formatRupiah = formatRupiah;
+  readonly scheduleDow = DAYS_ID_SHORT;
+  readonly scheduleCategoryMeta = scheduleCategoryMeta;
+  readonly scheduleTimeRange = scheduleTimeRange;
+  readonly scheduleLongDate = scheduleLongDate;
 
   readonly missionList: MissionItem[] = [
     { no: '01', icon: 'fingerprint', text: 'Membangkitkan kembali identitas Islam pada mahasiswa muslim dan masyarakat.' },
@@ -1404,6 +2293,17 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     return c.targetAmount > 0 ? Math.min(100, Math.round((c.collectedAmount / c.targetAmount) * 100)) : 0;
   }
 
+  /** Rotasi 3 warna aksen per-kartu — redesign "Karya Tulis Kita" ala
+   *  ldksyahid-app (resources/views/landing-page/home/partials/article,
+   *  $cardColors di-index dengan $key % count). Diganti dari trio generic
+   *  (indigo/teal/amber) ke trio warna base brand yang sama dipakai
+   *  chip-green/chip-ember/chip-gold & node peta hero (styles.scss) —
+   *  tetap 3 warna berbeda per-kartu, tapi konsisten dengan palet FSLDK. */
+  private readonly articleAccents = ['var(--color-primary)', 'var(--color-ember)', 'var(--color-gold)'];
+  articleAccent(index: number): string {
+    return this.articleAccents[index % this.articleAccents.length];
+  }
+
   formatDate(d: string | Date | null | undefined): string {
     return d ? (this.datePipe.transform(d, 'd MMM yyyy') ?? '') : '';
   }
@@ -1417,6 +2317,64 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   formatTime(d: string | Date | null | undefined): string {
     return d ? (this.datePipe.transform(d, 'HH.mm') ?? '') : '';
+  }
+
+  /** Rentang tanggal kartu Event — "23 Nov 2026" untuk event sehari, atau
+   *  "23 – 25 Nov 2026" kalau startDate/endDate beda hari (event multi-hari),
+   *  data yang tadinya tidak dipakai sama sekali di kartu ringkas. */
+  eventDateRange(e: EventListItem): string {
+    if (!e.startDate) return '';
+    if (!e.endDate || new Date(e.startDate).toDateString() === new Date(e.endDate).toDateString()) {
+      return this.formatDate(e.startDate);
+    }
+    const start = this.datePipe.transform(e.startDate, 'd MMM') ?? '';
+    const end = this.datePipe.transform(e.endDate, 'd MMM yyyy') ?? '';
+    return `${start} – ${end}`;
+  }
+
+  /** Kota + venue digabung — pola sama seperti event.public-detail.page.html
+   *  ("Yogyakarta — Hotel Grand Keisha…"). */
+  eventLocationText(e: EventListItem): string {
+    if (e.location && e.place) return `${e.location} — ${e.place}`;
+    return e.location || e.place || '';
+  }
+
+  /** Label status pendaftaran yang lebih detail (dipakai di sheet mobile,
+   *  lihat eventPreview()) — chip di kartu sendiri tetap versi singkatnya
+   *  (lihat template, langsung inline karena cuma dua kata). */
+  eventRegistLabel(e: EventListItem): string {
+    if (e.status === 'upcoming') {
+      if (e.registOpen) {
+        return e.closeRegistDate ? `Dibuka hingga ${this.formatDate(e.closeRegistDate)}` : 'Pendaftaran Dibuka';
+      }
+      return 'Pendaftaran Ditutup';
+    }
+    return e.status === 'ongoing' ? 'Sedang Berlangsung' : 'Sudah Selesai';
+  }
+
+  /** Bentuk CardPreview generik (lihat definisi interface di atas) untuk
+   *  kartu Event — dipakai openPreview() supaya tap kartu di mobile membuka
+   *  bottom sheet konsisten dengan Berita/Artikel/Buku, bukan langsung
+   *  pindah halaman. */
+  eventPreview(e: EventListItem): CardPreview {
+    const metaRows: CardPreviewMetaRow[] = [{ icon: 'calendar', label: 'Tanggal', value: this.eventDateRange(e) }];
+    const locationText = this.eventLocationText(e);
+    if (locationText) metaRows.push({ icon: 'map-pin', label: 'Lokasi', value: locationText });
+    metaRows.push({
+      icon: e.status === 'upcoming' ? (e.registOpen ? 'check-circle' : 'x-circle') : 'clock',
+      label: 'Status',
+      value: this.eventRegistLabel(e),
+    });
+    if (e.tag) metaRows.push({ icon: 'hash', label: 'Kategori', value: e.tag });
+    return {
+      chip: e.eventDivision,
+      title: e.eventTitle,
+      metaLines: [],
+      metaRows,
+      link: eventPath.publicDetail(e.eventSlug),
+      ctaLabel: 'Lihat Detail Event',
+      image: e.eventImage,
+    };
   }
 
   /** Mobile-only preview: klik kartu berita/artikel/campaign membuka bottom
@@ -1467,6 +2425,38 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
   }
 
+  /** Sama seperti scrollNews()/scrollBooks() — carousel FSLDK Goods. */
+  scrollGoods(direction: 1 | -1): void {
+    const track = this.goodsTrackRef?.nativeElement;
+    if (!track) return;
+    track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
+  }
+
+  /** Bentuk CardPreview untuk kartu Goods — sheet mobile-nya ikut
+   *  menampilkan harga, status ketersediaan, dan strip previewImages
+   *  (lihat p.gallery di template sheet). */
+  goodsPreview(g: Goods): CardPreview {
+    const metaRows: CardPreviewMetaRow[] = [{ icon: 'coins', label: 'Harga', value: this.formatRupiah(g.price) }];
+    if (g.availabilityStatus !== 'available') {
+      metaRows.push({
+        icon: g.availabilityStatus === 'out_of_stock' ? 'x-circle' : 'clock',
+        label: 'Ketersediaan',
+        value: g.availabilityStatus === 'out_of_stock' ? 'Stok Habis' : 'Segera Hadir',
+      });
+    }
+    return {
+      chip: g.categoryName,
+      title: g.goodsName,
+      metaLines: [],
+      metaRows,
+      link: goodsPath.publicDetail(g.goodsSlug),
+      ctaLabel: 'Lihat Produk',
+      image: g.mainImageUrl,
+      excerpt: g.shortDescription,
+      gallery: g.previewImages,
+    };
+  }
+
   setLoading(loading: boolean): void { this.loading.set(loading); }
 
   /** Root cause dari "kartu pertama mepet ke panel hijau di mobile" — BUKAN
@@ -1501,7 +2491,112 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   }
   setEvents(events: EventListItem[]): void { this.events.set(events); }
   setGoods(goods: Goods[]): void { this.goods.set(goods); }
-  setSchedules(schedules: Schedule[]): void { this.schedules.set(schedules); }
+  setSchedulePeriodLabel(label: string): void { this.schedulePeriodLabel.set(label); }
+  setScheduleWeeks(weeks: CalendarCell[][]): void { this.scheduleWeeks.set(weeks); }
+
+  openSchedulePopup(iso: string): void { this.schedulePopupIso.set(iso); }
+  closeSchedulePopup(): void { this.schedulePopupIso.set(null); }
+
+  /** Klik tanggal kalender Jadwal — mobile buka bottom sheet (tidak ada
+   *  hover di touch device). Desktop SENGAJA cuma "pastikan terbuka", BUKAN
+   *  toggle — hover (mouseenter/mouseleave) sudah pegang buka/tutupnya;
+   *  kalau klik juga toggle, klik di kartu yang popup-nya lagi kebuka via
+   *  hover malah langsung MENUTUPNYA (bug yang dilaporkan user). */
+  onScheduleCellClick(cell: CalendarCell): void {
+    if (!cell.items.length) return;
+    if (this.isMobilePreview()) { this.daySheet.set(cell); return; }
+    this.schedulePopupIso.set(cell.iso);
+  }
+
   setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
-  setLatestGallery(gallery: GalleryListItem | null): void { this.latestGallery.set(gallery); }
+  setCampaignStats(stats: CampaignPublicStats | null): void { this.campaignStats.set(stats); }
+
+  /** Angka besar di stat card ("Rp 12,5 Jt") — beda dari formatRupiah()
+   *  (dipakai kartu campaign, butuh nominal presisi penuh), stat card
+   *  butuh angka ringkas ala "1000+ Anggota Aktif" di ldksyahid-app. */
+  formatCompactRupiah(amount: number): string {
+    if (amount >= 1_000_000_000) return `Rp ${(amount / 1_000_000_000).toFixed(1).replace(/\.0$/, '').replace('.', ',')} M`;
+    if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '').replace('.', ',')} Jt`;
+    return formatRupiah(amount);
+  }
+  setGalleryFeature(feature: GalleryFeature | null): void { this.galleryFeature.set(feature); }
+  setContactEmail(email: string): void { this.contactEmail.set(email); }
+  setContactWhatsapp(number: string): void { this.contactWhatsapp.set(number); }
+
+  /** Digit saja (buang "+"/spasi/strip) — dipakai link wa.me di
+   *  contact-method-item, sama teknik dengan app-whatsapp-fab. */
+  contactWhatsappDigits(): string { return this.contactWhatsapp().replace(/\D/g, ''); }
+
+  openGalleryZoom(index: number): void {
+    this.galleryZoomIndex.set(index);
+    this.galleryZoomOpen.set(true);
+  }
+  closeGalleryZoom(): void { this.galleryZoomOpen.set(false); }
+
+  openGalleryVideo(): void { this.galleryVideoOpen.set(true); }
+  closeGalleryVideo(): void { this.galleryVideoOpen.set(false); }
+
+  safeGalleryVideoUrl(videoID: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoID}?autoplay=1&rel=0`);
+  }
+
+  /** eventDescription diisi lewat app-rich-text-editor di CMS (lihat
+   * gallery.form.page.html) — jadi legitimately berisi tag HTML, sama seperti
+   * di gallery.public-detail.page.ts. Interpolasi biasa {{ }} akan meng-escape
+   * tag-nya jadi teks mentah, makanya butuh innerHTML + sanitizer di sini. */
+  sanitizeGalleryDescription(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  /** Sama seperti imgUrl() di gallery.public-index/detail.page.ts — path foto
+   *  galeri disimpan relatif (butuh di-prefix apiBaseUrl), beda dari gambar
+   *  modul lain di beranda ini yang sudah dikirim backend sebagai URL utuh. */
+  galleryImgUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    const base = environment.apiBaseUrl.replace('/api/v1', '');
+    return path.startsWith('/') ? `${base}${path}` : `${base}/uploads/${path}`;
+  }
+
+  contactHasError(field: 'senderName' | 'email' | 'subject' | 'message'): boolean {
+    const control = this.contactForm.get(field);
+    return !!(control && control.invalid && (control.touched || this.contactSubmitTried()));
+  }
+
+  onContactSubmit(): void {
+    this.contactSubmitTried.set(true);
+    if (this.contactForm.invalid) {
+      this.toast.error('Mohon lengkapi seluruh field dengan benar.');
+      return;
+    }
+
+    const payload = {
+      senderName: this.contactForm.value.senderName!.trim(),
+      email: this.contactForm.value.email!.trim(),
+      subject: this.contactForm.value.subject!.trim(),
+      message: this.contactForm.value.message!.trim(),
+    };
+
+    this.contactRepo.sendPublic(payload).subscribe({
+      next: () => {
+        this.contactSubmitted.set(true);
+        this.contactRateLimited.set(false);
+        this.toast.success('Pesan Anda berhasil dikirim!');
+      },
+      error: (err) => {
+        if (err.status === 429) {
+          this.contactRateLimited.set(true);
+          this.toast.warning('Terlalu banyak permintaan pengiriman pesan. Coba lagi beberapa saat lagi.');
+        } else {
+          this.toast.error(err.error?.message || 'Gagal mengirim pesan. Silakan coba kembali.');
+        }
+      },
+    });
+  }
+
+  resetContactForm(): void {
+    this.contactForm.reset();
+    this.contactSubmitTried.set(false);
+    this.contactSubmitted.set(false);
+  }
 }

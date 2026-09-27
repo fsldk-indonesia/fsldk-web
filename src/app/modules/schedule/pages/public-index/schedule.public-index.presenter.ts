@@ -2,8 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ScheduleRepository } from '../../repositories/schedule.repository';
 import { Schedule } from '../../entities/schedule';
-import { buildCalendarGrid, sameDate, schedulesOnDate, toISODate, touchesMonth } from '../../schedule.constants';
-import { CalendarCell, SchedulePublicIndexView } from './schedule.public-index.view';
+import { buildCalendarGrid, buildMonthView, toISODate } from '../../schedule.constants';
+import { SchedulePublicIndexView } from './schedule.public-index.view';
 
 @Injectable()
 export class SchedulePublicIndexPresenter extends BasePresenter<SchedulePublicIndexView> {
@@ -52,25 +52,8 @@ export class SchedulePublicIndexPresenter extends BasePresenter<SchedulePublicIn
   }
 
   private render(rows: Schedule[]): void {
-    const today = new Date();
-    const cells: CalendarCell[] = buildCalendarGrid(this.viewYear, this.viewMonth).map((date) => ({
-      date,
-      iso: toISODate(date),
-      day: date.getDate(),
-      inMonth: date.getMonth() + 1 === this.viewMonth,
-      isToday: sameDate(date, today),
-      items: schedulesOnDate(rows, date),
-    }));
-
-    const weeks: CalendarCell[][] = [];
-    for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+    const { weeks, agenda } = buildMonthView(this.viewYear, this.viewMonth, rows);
     this.view.setCalendar(weeks);
-
-    const agenda = rows
-      .filter((s) => touchesMonth(s, this.viewYear, this.viewMonth))
-      .sort((a, b) => (a.startDate === b.startDate
-        ? (a.startTime ?? '').localeCompare(b.startTime ?? '')
-        : a.startDate.localeCompare(b.startDate)));
     this.view.setAgenda(agenda);
   }
 }

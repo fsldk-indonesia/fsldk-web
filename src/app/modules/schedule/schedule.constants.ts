@@ -1,4 +1,4 @@
-import { Schedule } from './entities/schedule';
+import { CalendarCell, Schedule } from './entities/schedule';
 
 /** Month names, index 0 = Januari. Use monthName(1..12) to read them. */
 export const MONTHS_ID = [
@@ -87,6 +87,37 @@ export function touchesMonth(s: Schedule, year: number, month1to12: number): boo
   const monthStart = toISODate(new Date(year, month1to12 - 1, 1));
   const monthEnd = toISODate(new Date(year, month1to12, 0));
   return s.startDate <= monthEnd && (s.endDate ?? s.startDate) >= monthStart;
+}
+
+/** Builds the 6-week calendar grid + the sorted "this month" agenda list for
+ *  `year`/`month1to12`, given all schedules already fetched for that grid's
+ *  full date span (see buildCalendarGrid) — shared by the full /jadwal index
+ *  page and the Beranda mini-calendar so both stay in sync. */
+export function buildMonthView(
+  year: number,
+  month1to12: number,
+  rows: Schedule[],
+): { weeks: CalendarCell[][]; agenda: Schedule[] } {
+  const today = new Date();
+  const cells: CalendarCell[] = buildCalendarGrid(year, month1to12).map((date) => ({
+    date,
+    iso: toISODate(date),
+    day: date.getDate(),
+    inMonth: date.getMonth() + 1 === month1to12,
+    isToday: sameDate(date, today),
+    items: schedulesOnDate(rows, date),
+  }));
+
+  const weeks: CalendarCell[][] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+
+  const agenda = rows
+    .filter((s) => touchesMonth(s, year, month1to12))
+    .sort((a, b) => (a.startDate === b.startDate
+      ? (a.startTime ?? '').localeCompare(b.startTime ?? '')
+      : a.startDate.localeCompare(b.startDate)));
+
+  return { weeks, agenda };
 }
 
 export function formatTimeRange(s: Schedule): string {

@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { CampaignApiService } from '../services/campaign-api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { Campaign, CampaignCategory, CampaignDetail, CampaignLite, CreateCampaignRequest, UpdateCampaignRequest } from '../entities/campaign';
+import { Campaign, CampaignCategory, CampaignDetail, CampaignLite, CampaignPublicStats, CreateCampaignRequest, UpdateCampaignRequest } from '../entities/campaign';
 
 @Injectable({ providedIn: 'root' })
 export class CampaignRepository {
@@ -11,6 +11,7 @@ export class CampaignRepository {
   publicList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.publicList(q); }
   publicDetail(slug: string): Observable<CampaignDetail> { return this.api.publicDetail(slug); }
   categories(): Observable<CampaignCategory[]> { return this.api.categories(); }
+  publicStats(): Observable<CampaignPublicStats> { return this.api.publicStats(); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.cmsList(q); }
   cmsLite(): Observable<CampaignLite[]> { return this.api.cmsLite(); }

@@ -1,14 +1,6 @@
-import { Schedule } from '../../entities/schedule';
+import { CalendarCell, Schedule } from '../../entities/schedule';
 
-/** One day cell in the 6×7 calendar grid. */
-export interface CalendarCell {
-  date: Date;
-  iso: string;
-  day: number;
-  inMonth: boolean;
-  isToday: boolean;
-  items: Schedule[];
-}
+export type { CalendarCell };
 
 export interface SchedulePublicIndexView {
   setLoading(loading: boolean): void;

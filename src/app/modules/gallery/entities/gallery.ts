@@ -36,6 +36,14 @@ export interface Gallery extends GalleryListItem {
   documentLink: string | null;
 }
 
+/** Galeri terbaru + halaman foto pertamanya — dipakai kartu "Dokumentasi
+ *  Kegiatan Terbaru" di beranda (lihat home.index.page.ts), butuh detail
+ *  (eventDescription/documentLink) dan foto yang tidak ada di GalleryListItem. */
+export interface GalleryFeature {
+  gallery: Gallery;
+  photos: GalleryPhoto[];
+}
+
 export interface CreatePhotoItemReq {
   imagePath: string;
   caption?: string | null;

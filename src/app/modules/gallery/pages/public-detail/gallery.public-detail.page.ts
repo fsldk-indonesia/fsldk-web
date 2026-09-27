@@ -135,7 +135,7 @@ import { environment } from '../../../../../environments/environment';
                           (keydown.enter)="openLightbox(idx)"
                         >
                           <img
-                            [src]="imgUrl(photo.imagePath)"
+                            [src]="thumbUrl(photo.imagePath)"
                             [alt]="photo.caption || 'Foto dokumentasi ' + (idx + 1)"
                             class="photo-thumbnail"
                             loading="lazy"
@@ -651,5 +651,16 @@ export class GalleryPublicDetailPage implements OnInit {
       return `${base}${path}`;
     }
     return `${base}/uploads/${path}`;
+  }
+
+  /** Varian thumbnail untuk grid foto (lihat gallery.public-index.page.ts
+   *  untuk penjelasan konvensi "_thumb"). Lightbox tetap pakai imgUrl() —
+   *  cuma satu foto ditampilkan sekaligus di sana, jadi resolusi penuh aman. */
+  thumbUrl(path: string): string {
+    const full = this.imgUrl(path);
+    if (!full) return '';
+    const dot = full.lastIndexOf('.');
+    if (dot === -1) return full;
+    return `${full.slice(0, dot)}_thumb${full.slice(dot)}`;
   }
 }

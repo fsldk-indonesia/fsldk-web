@@ -201,10 +201,9 @@ function canvasSilhouetteUrl(hex: string): string {
                 @for (t of auth.accessibleCmsTiers(); track t) {
                   <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"
                      class="portal-item" [class.active]="tier() === t"
-                     [style.background]="tier() === t ? tierTintOf(t) : null">
-                    <span class="icon-badge sm" [class.icon-badge-soft]="tier() !== t"
-                          [style.background]="tier() === t ? tierColorOf(t) : null"
-                          [style.color]="tier() === t ? '#fff' : null">
+                     [style.background]="tier() === t ? tierTintOf(t) : null"
+                     [style.--tier-color]="tierColorOf(t)" [style.--tier-soft]="tierTintOf(t)">
+                    <span class="icon-badge sm" [style.background]="tierColorOf(t)" style="color:#fff">
                       <app-icon [name]="shellIconOf(t)" [size]="15" />
                     </span>
                     <span class="dropdown-item-text">
@@ -213,7 +212,7 @@ function canvasSilhouetteUrl(hex: string): string {
                     </span>
                   </a>
                 }
-                <a routerLink="/akun/profil" (click)="closeAllDropdowns()">
+                <a routerLink="/akun/profil" routerLinkActive="active" (click)="closeAllDropdowns()">
                   <span class="icon-badge sm icon-badge-solid"><app-icon name="user-circle" [size]="15" /></span>
                   <span class="dropdown-item-text">
                     <span class="dropdown-item-title">Profil Saya</span>
@@ -421,6 +420,23 @@ function canvasSilhouetteUrl(hex: string): string {
     @media (prefers-reduced-motion: reduce) { .dropdown-panel { animation: none; } }
     .dropdown-panel a, .dropdown-panel button { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; padding: 8px 12px; border-radius: var(--radius-xs); border: 1.5px solid transparent; background: none; cursor: pointer; font-family: var(--font-body); font-size: .9rem; font-weight: 600; color: var(--color-text); transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
     .dropdown-panel a:hover, .dropdown-panel button:hover { background: var(--color-bg-warm); text-decoration: none; }
+    /* Dropdown akun navbar (portal/profil/keluar) disamakan dengan
+       .dropdown-fun-item di site-header.component.ts (navbar publik) —
+       hover tint hijau/primary (bukan abu-abu netral bawaan di atas, yang
+       tetap dipakai dropdown org-switcher), judul ikut menggelap saat
+       di-hover. Digerbang .user-dropdown supaya org-switcher tidak ikut
+       berubah (tidak diminta). */
+    /* :not(.portal-item) di sini BUKAN cuma soal kerapian — tanpa ini, rule
+       generik ini (hijau tema aktif) rawan menang cascade atas rule
+       .portal-item:hover per-tier di bawah tergantung urutan/spesifisitas,
+       yang persis bikin hover Portal Puskomnas dkk ikut hijau (dilaporkan).
+       Mengecualikan portal-item di sini membuat keduanya tidak pernah
+       tabrakan sama sekali, bukan cuma menang lewat spesifisitas lebih
+       tinggi. */
+    .user-dropdown .dropdown-panel a:not(.portal-item):hover,
+    .user-dropdown .dropdown-panel button:hover { background: var(--color-primary-soft); }
+    .user-dropdown .dropdown-panel a:not(.portal-item):hover .dropdown-item-title,
+    .user-dropdown .dropdown-panel button:hover .dropdown-item-title { color: var(--color-primary-dark); }
     /* Ini yang sebenarnya bikin "outline hitam" yang dilaporkan — bukan
        border tier-color-nya, tapi outline FOKUS bawaan browser (muncul di
        link/tombol manapun yang baru diklik/di-tab), yang sebelumnya tidak
@@ -432,6 +448,18 @@ function canvasSilhouetteUrl(hex: string): string {
     .dropdown-item-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
     .dropdown-item-title { font-weight: 700; color: var(--color-text); font-size: .9rem; }
     .dropdown-item-caption { font-size: .76rem; color: var(--color-muted); font-weight: 500; line-height: 1.3; }
+    /* Profil Saya: sorotan halaman-aktif solid+teks putih, SAMA PERSIS
+       .dropdown-fun-item.active di site-header.component.ts (navbar publik)
+       — beda semantik dari .portal-item.active di bawah (itu penanda "tier
+       yang sedang dibuka", bukan "halaman yang sedang dibuka", jadi tidak
+       ikut diseragamkan ke sini, tetap tint). */
+    .user-dropdown .dropdown-panel a.active:not(.portal-item) {
+      background: var(--color-primary); box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 35%, transparent);
+    }
+    .user-dropdown .dropdown-panel a.active:not(.portal-item) .dropdown-item-title { color: #fff; }
+    .user-dropdown .dropdown-panel a.active:not(.portal-item) .dropdown-item-caption { color: rgba(255,255,255,.8); }
+    .user-dropdown .dropdown-panel a.active:not(.portal-item) .icon-badge { background: rgba(255,255,255,.25); color: #fff; }
+    .user-dropdown .dropdown-panel a.active:not(.portal-item):hover { background: var(--color-primary-dark); }
     /* Item aktif: latar putih dicampur warna tier (color-mix, lihat
        tierTintOf) — bukan outline (dihilangkan lagi atas permintaan) dan
        bukan solid+teks putih (diganti tint lembut+teks berwarna, senada
@@ -439,13 +467,16 @@ function canvasSilhouetteUrl(hex: string): string {
        LANGSUNG lewat [style.background]/[style.color] di template, bukan
        custom property var() — custom property sempat dicoba lebih dulu
        untuk versi outline, background-nya gagal ke-resolve dengan CSS var(). */
-    /* Hover ikut warna tier yang SEDANG dibuka (var(--color-primary-soft/-dark),
-       di-override per .cms.tier-* di bawah) — bukan warna tier target yang
-       di-hover. Jadi kalau lagi di Portal Puskomnas, hover ke item Portal
-       Admin manapun tetap keluar ungu (warna Puskomnas), konsisten dengan
-       hover sidebar/topbar lain di shell yang sama. */
-    .portal-item:not(.active):hover { background: var(--color-primary-soft); }
-    .portal-item:not(.active):hover .dropdown-item-title { color: var(--color-primary-dark); }
+    /* Hover portal item kini pakai custom property --tier-color/--tier-soft
+       per-baris (di-set inline di template, SAMA PERSIS pola .portal-item di
+       site-header.component.ts) — Portal LDK selalu hover biru, Puskomnas
+       selalu ungu, dst., apa pun tier yang sedang dibuka. Sebelumnya hover
+       ikut warna tier AKTIF SAAT INI (var(--color-primary-soft)) untuk semua
+       baris, jadi hover ke Portal LDK saat sedang di Portal Admin ikut keluar
+       hijau alih-alih biru — itu yang bikin dropdown ini terasa beda dari
+       navbar publik. */
+    .user-dropdown .portal-item:not(.active):hover { background: var(--tier-soft, var(--color-primary-soft)); }
+    .user-dropdown .portal-item:not(.active):hover .dropdown-item-title { color: var(--tier-color, var(--color-primary-dark)); }
     /* Garis pemisah sebelum "Keluar" — dipisah dari aksi navigasi portal/
        profil di atasnya karena ini aksi destruktif (keluar akun). */
     .dropdown-panel .dropdown-divider-top { border-top: 1px solid var(--color-border); margin-top: 5px; padding-top: 14px; }

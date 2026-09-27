@@ -32,8 +32,10 @@ import { IconComponent } from './icon.component';
   styles: [`
     :host { display: contents; }
     .newsletter-form { display: flex; gap: 8px; flex-wrap: wrap; }
-    .newsletter-form .form-control { flex: 1; min-width: 200px; }
-    .newsletter-form .btn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+    /* border-radius disamakan dengan tombol "Lihat Semua" (var(--radius-sm))
+       — sebelumnya lebih bulat (pil) daripada elemen form lain di beranda. */
+    .newsletter-form .form-control { flex: 1; min-width: 200px; border-radius: var(--radius-sm); }
+    .newsletter-form .btn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; border-radius: var(--radius-sm); }
   `],
 })
 export class NewsletterFormComponent {

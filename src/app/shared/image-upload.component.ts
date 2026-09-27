@@ -4,7 +4,6 @@ import { ToastService } from '../core/services/toast.service';
 import { IconComponent } from './icon.component';
 import { ModalBackdropDirective } from './modal-backdrop.directive';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 /**
@@ -39,7 +38,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
         } @else {
           <span class="dropzone-icon">&#8593;</span>
           <span>Klik untuk unggah gambar</span>
-          <small>JPG, PNG, WEBP, atau GIF — maks. 5MB</small>
+          <small>JPG, PNG, WEBP, atau GIF — maks. {{ maxSizeMB }}MB</small>
         }
       </button>
     }
@@ -98,6 +97,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 export class ImageUploadComponent {
   @Input() value: string | null = null;
   @Input() disabled = false;
+  @Input() maxSizeMB = 5;
   readonly valueChange = output<string>();
 
   private uploadService = inject(UploadService);
@@ -119,8 +119,8 @@ export class ImageUploadComponent {
       this.toast.error('Format berkas tidak didukung (hanya JPG, PNG, WEBP, GIF)');
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      this.toast.error('Ukuran berkas melebihi 5MB');
+    if (file.size > this.maxSizeMB * 1024 * 1024) {
+      this.toast.error(`Ukuran berkas melebihi ${this.maxSizeMB}MB`);
       return;
     }
 

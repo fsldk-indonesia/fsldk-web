@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { NewsRepository } from '../../../news/repositories/news.repository';
 import { ArticleRepository } from '../../../article/repositories/article.repository';
@@ -6,16 +7,11 @@ import { CatalogBookRepository } from '../../../catalogbook/repositories/catalog
 import { EventRepository } from '../../../event/repositories/event.repository';
 import { GoodsRepository } from '../../../goods/repositories/goods.repository';
 import { ScheduleRepository } from '../../../schedule/repositories/schedule.repository';
+import { buildCalendarGrid, buildMonthView, monthName, toISODate } from '../../../schedule/schedule.constants';
 import { CampaignRepository } from '../../../kantong-amal/repositories/campaign.repository';
 import { GalleryApiService } from '../../../gallery/services/gallery-api.service';
+import { SettingApiService } from '../../../setting/services/setting-api.service';
 import { HomeIndexView } from './home.index.view';
-
-/** "YYYY-MM-DD" for a date offset by the given number of days from today. */
-function isoDate(daysFromNow: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + daysFromNow);
-  return d.toISOString().slice(0, 10);
-}
 
 @Injectable()
 export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
@@ -31,6 +27,7 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
   // dipakai halaman daftar galeri penuh; memanggil loadPublic() dari sini
   // akan menimpa state itu dan bikin flash data 1 item saat pindah halaman.
   private galleryApi = inject(GalleryApiService);
+  private settingApi = inject(SettingApiService);
 
   load(): void {
     this.view.setLoading(true);
@@ -49,7 +46,7 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
       next: (p) => this.view.setCatalogBooks(p.data),
       error: () => this.view.setCatalogBooks([]),
     });
-    this.eventRepo.publicList({ page: 1, limit: 5 }).subscribe({
+    this.eventRepo.publicList({ page: 1, limit: 6 }).subscribe({
       next: (p) => this.view.setEvents(p.data),
       error: () => this.view.setEvents([]),
     });
@@ -57,17 +54,52 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
       next: (p) => this.view.setGoods(p.data),
       error: () => this.view.setGoods([]),
     });
-    this.scheduleRepo.publicRange(isoDate(0), isoDate(60)).subscribe({
-      next: (schedules) => this.view.setSchedules(schedules.slice(0, 5)),
-      error: () => this.view.setSchedules([]),
+    // Bulan berjalan (bukan lagi "60 hari ke depan, ambil 5") — supaya
+    // kalender mini di Beranda menampilkan bulan ini persis seperti /jadwal
+    // index, cuma tanpa navigasi prev/next (lihat buildMonthView()).
+    const now = new Date();
+    const scheduleYear = now.getFullYear();
+    const scheduleMonth = now.getMonth() + 1;
+    this.view.setSchedulePeriodLabel(`${monthName(scheduleMonth)} ${scheduleYear}`);
+    const scheduleGrid = buildCalendarGrid(scheduleYear, scheduleMonth);
+    this.scheduleRepo.publicRange(toISODate(scheduleGrid[0]), toISODate(scheduleGrid[scheduleGrid.length - 1])).subscribe({
+      next: (rows) => this.view.setScheduleWeeks(buildMonthView(scheduleYear, scheduleMonth, rows ?? []).weeks),
+      error: () => this.view.setScheduleWeeks([]),
     });
-    this.campaignRepo.publicList({ page: 1, limit: 5 }).subscribe({
+    this.campaignRepo.publicList({ page: 1, limit: 4 }).subscribe({
       next: (p) => this.view.setCampaigns(p.data),
       error: () => this.view.setCampaigns([]),
     });
+    this.campaignRepo.publicStats().subscribe({
+      next: (stats) => this.view.setCampaignStats(stats),
+      error: () => this.view.setCampaignStats(null),
+    });
+    // Cuma galeri paling baru (limit 1) — tapi list item-nya tidak bawa
+    // eventDescription/documentLink/foto, jadi begitu dapat ID-nya susul
+    // dengan detail + halaman foto pertama (7, sama seperti photosLimit di
+    // gallery.public-detail.page.ts) supaya kartu di beranda bisa tampilkan
+    // mosaic foto + video + link dokumentasi, bukan cuma cover.
     this.galleryApi.listPublic(1, 1, 'newest').subscribe({
-      next: (res) => this.view.setLatestGallery(res.data[0] ?? null),
-      error: () => this.view.setLatestGallery(null),
+      next: (res) => {
+        const latest = res.data[0];
+        if (!latest) { this.view.setGalleryFeature(null); return; }
+        forkJoin({
+          gallery: this.galleryApi.getPublic(latest.galleryID),
+          photos: this.galleryApi.listPhotosPublic(latest.galleryID, 1, 7),
+        }).subscribe({
+          next: ({ gallery, photos }) => this.view.setGalleryFeature({ gallery, photos: photos.data }),
+          error: () => this.view.setGalleryFeature(null),
+        });
+      },
+      error: () => this.view.setGalleryFeature(null),
+    });
+    this.settingApi.getPublicContactEmail().subscribe({
+      next: (res) => { if (res.email) this.view.setContactEmail(res.email); },
+      error: () => {},
+    });
+    this.settingApi.getPublicContactWhatsapp().subscribe({
+      next: (res) => { if (res.whatsappNumber) this.view.setContactWhatsapp(res.whatsappNumber); },
+      error: () => {},
     });
   }
 }
