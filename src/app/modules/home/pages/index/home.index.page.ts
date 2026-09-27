@@ -67,6 +67,10 @@ interface CardPreview {
    *  lihat articleAccent()) — override chip/ikon-meta/CTA hijau default di
    *  sheet supaya konsisten dengan warna kartu artikel yang di-tap. */
   accent?: string;
+  /** Cuplikan gambar tambahan (mis. Goods.previewImages) — strip thumbnail
+   *  kecil di bawah foto utama sheet, opsional, cuma dipakai kartu yang
+   *  punya gallery. */
+  gallery?: string[];
 }
 
 @Component({
@@ -299,6 +303,13 @@ interface CardPreview {
       position: absolute; right: -34px; bottom: -34px; z-index: 0; color: rgba(255,255,255,.14);
       transform: rotate(-12deg); pointer-events: none;
     }
+    /* Siluet kedua, lebih kecil, sudut berlawanan — menambah tekstur tanpa
+       mengganggu blok teks (tetap z-index:0, di bawah .berita-carousel-icon/
+       p/cta yang punya z-index:1). */
+    .berita-carousel-silhouette-2 {
+      position: absolute; left: -18px; top: -18px; z-index: 0; color: rgba(255,255,255,.10);
+      transform: rotate(18deg); pointer-events: none;
+    }
     /* max-width lebih sempit dari panel (420px) + margin-right — sengaja
        menggeser blok teks/tombol ke kiri, menyisakan "zona aman" hijau
        polos di kanan supaya kartu pertama tetap bisa menumpuk/"menabrak"
@@ -428,6 +439,12 @@ interface CardPreview {
     .pustaka-carousel-silhouette {
       position: absolute; left: -34px; bottom: -34px; z-index: 0; color: rgba(255,255,255,.14);
       transform: rotate(12deg); pointer-events: none;
+    }
+    /* Siluet kedua, lebih kecil, sudut berlawanan — mirror .berita-carousel-
+       silhouette-2, konsisten menambah tekstur di panel kanan ini juga. */
+    .pustaka-carousel-silhouette-2 {
+      position: absolute; right: -18px; top: -18px; z-index: 0; color: rgba(255,255,255,.10);
+      transform: rotate(-18deg); pointer-events: none;
     }
     /* margin-LEFT (bukan margin-right seperti Berita) — zona aman hijau
        polos sekarang ada di KIRI panel (sisi yang ditumpuk kartu terakhir),
@@ -636,13 +653,27 @@ interface CardPreview {
       background: var(--color-primary); color: #fff; border-radius: var(--radius-lg);
       box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
     }
-    .agenda-panel-silhouette {
-      position: absolute; right: -30px; bottom: -30px; z-index: 0; color: rgba(255,255,255,.14);
-      transform: rotate(-12deg); pointer-events: none;
-    }
     .agenda-panel-intro {
       position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
       gap: 12px; text-align: center; padding: 40px 24px 28px;
+    }
+    /* Siluet dipindah jadi ANAK .agenda-panel-intro (dulu sibling-nya, child
+       langsung .agenda-panel) — panel ini sekarang membungkus grid kartu
+       juga (lihat .agenda-panel-cards di bawah), jadi kalau posisinya masih
+       relatif ke .agenda-panel yang tinggi penuh, "bottom:-30px" jatuh di
+       balik baris kartu terakhir dan nyaris tak kelihatan. Di dalam intro
+       (pendek, cuma area teks), posisinya selalu tetap terlihat di sekitar
+       teks. z-index NEGATIF (bukan 0 seperti Berita/Pustaka) karena
+       .agenda-panel-icon/p/cta di sini TIDAK diberi z-index:1 eksplisit —
+       negatif memastikan siluet tetap di belakang konten in-flow tanpa
+       perlu mengubah elemen lain. */
+    .agenda-panel-silhouette {
+      position: absolute; right: -30px; bottom: -30px; z-index: -1; color: rgba(255,255,255,.14);
+      transform: rotate(-12deg); pointer-events: none;
+    }
+    .agenda-panel-silhouette-2 {
+      position: absolute; left: -16px; top: -16px; z-index: -1; color: rgba(255,255,255,.10);
+      transform: rotate(16deg); pointer-events: none;
     }
     .agenda-panel-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); }
     .agenda-panel-intro p { max-width: 540px; margin: 0; font-size: .92rem; line-height: 1.65; opacity: .92; }
@@ -731,10 +762,75 @@ interface CardPreview {
       .event-card-hover-cta { display: none; }
     }
 
+    /* ---------- FSLDK Goods: panel hijau full-width membungkus ikon+
+       deskripsi+CTA "Lihat Semua" SEKALIGUS carousel kartu produk — shell-nya
+       (silhouette/intro/cards-wrap) copy-paste PERSIS pola .agenda-panel*,
+       cuma nama kelas beda supaya kedua section independen (tidak saling
+       pengaruh kalau salah satu diubah lagi nanti). Bedanya dengan Agenda:
+       kontennya CAROUSEL (track+panah), bukan grid statis — produk cenderung
+       lebih banyak dari yang muat sekali layar. */
+    .goods-panel {
+      position: relative; overflow: hidden; margin-bottom: 40px;
+      background: var(--color-primary); color: #fff; border-radius: var(--radius-lg);
+      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
+    }
+    .goods-panel-intro {
+      position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 12px; text-align: center; padding: 40px 24px 28px;
+    }
+    .goods-panel-silhouette {
+      position: absolute; right: -30px; bottom: -30px; z-index: -1; color: rgba(255,255,255,.14);
+      transform: rotate(-12deg); pointer-events: none;
+    }
+    .goods-panel-silhouette-2 {
+      position: absolute; left: -16px; top: -16px; z-index: -1; color: rgba(255,255,255,.10);
+      transform: rotate(16deg); pointer-events: none;
+    }
+    .goods-panel-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+    .goods-panel-intro p { max-width: 540px; margin: 0; font-size: .92rem; line-height: 1.65; opacity: .92; }
+    .goods-panel-cta {
+      display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
+      color: #fff; padding: 10px 22px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
+      letter-spacing: .04em; text-transform: uppercase; margin-top: 2px;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .goods-panel-cta:hover { background: #fff; color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); text-decoration: none; }
+    /* Wrapper statis pemegang inset (pola sama seperti .agenda-panel-cards-
+       wrap — lihat catatan panjang di sana soal kenapa padding kiri/kanan
+       TIDAK boleh taruh di elemen yang scroll). */
+    .goods-panel-cards-wrap { position: relative; z-index: 1; padding: 4px 24px 36px; }
+    .goods-panel-track-wrap { position: relative; }
+    .goods-panel-track {
+      display: flex; gap: 20px; overflow-x: auto; scroll-behavior: smooth;
+      scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    .goods-panel-track::-webkit-scrollbar { display: none; }
+    .goods-panel-track .goods-card2 { flex: 0 0 250px; scroll-snap-align: start; }
+    .goods-panel-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+      width: 40px; height: 40px; border-radius: 50%; border: none; background: #fff; box-shadow: var(--shadow-lg);
+      display: grid; place-items: center; color: var(--color-primary-dark); cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .goods-panel-arrow:hover { background: var(--color-primary); color: #fff; transform: translateY(-50%) scale(1.08); }
+    .goods-panel-arrow.prev { left: -14px; }
+    .goods-panel-arrow.next { right: -14px; }
+    @media (max-width: 900px) { .goods-panel-arrow { display: none; } }
+    @media (max-width: 720px) {
+      .goods-panel { margin-bottom: 24px; }
+      .goods-panel-intro { padding: 28px 20px 22px; }
+      .goods-panel-cards-wrap { padding: 0 16px 24px; }
+      .goods-panel-track { padding: 0; }
+      .goods-panel-track .goods-card2 { flex-basis: 78%; }
+    }
+
     /* ---------- Goods card: overlay hover berisi shortDescription + CTA
        (data yang tadinya tidak dipakai sama sekali di kartu ringkas
        beranda), ribbon "Unggulan" diagonal untuk isFeatured, badge stok
-       untuk availabilityStatus selain 'available'. ---------- */
+       untuk availabilityStatus selain 'available'. Strip thumbnail
+       .goods-card2-gallery (previewImages, maks 3) ditumpuk di sudut
+       kiri-bawah foto utama — ala shop.app (referensi user), gambar
+       tambahan produk masuk ke DALAM foto utama, bukan galeri terpisah. ---------- */
     .goods-card2 { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
     .goods-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
     .goods-card2-media { position: relative; aspect-ratio: 1/1; background: var(--color-primary-soft); overflow: hidden; }
@@ -748,14 +844,37 @@ interface CardPreview {
       position: absolute; top: 10px; right: 10px; background: rgba(22,33,28,.72); color: #fff;
       font-size: .7rem; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-full);
     }
-    .goods-card2-overlay {
-      position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px; padding: 16px;
-      background: linear-gradient(to top, rgba(4,55,26,.92) 0%, transparent 62%); color: #fff;
-      opacity: 0; transform: translateY(8px); transition: opacity var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    /* Scrim hijau + nama produk di TENGAH foto — dua-duanya HOVER-ONLY
+       (opacity 0 -> 1), balik ke pola transisi yang sudah ada sebelumnya
+       (dulu .goods-card2-overlay), cuma teksnya sekarang nama produk
+       ditengah (bukan shortDescription di bawah) dan scrim-nya menutup
+       seluruh foto (bukan cuma gradient bawah) supaya kontras teks putih
+       terjamin di mana pun namanya jatuh. */
+    .goods-card2-scrim {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background: linear-gradient(to top, rgba(4,55,26,.88) 0%, rgba(4,55,26,.5) 55%, rgba(4,55,26,.22) 100%);
+      opacity: 0; transition: opacity var(--motion-base) ease;
     }
-    @media (hover: hover) and (pointer: fine) { .goods-card2:hover .goods-card2-overlay { opacity: 1; transform: translateY(0); } }
-    .goods-card2-overlay p { margin: 0; font-size: .8rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .goods-card2-cta { display: inline-flex; align-items: center; gap: 4px; font-size: .78rem; font-weight: 800; }
+    @media (hover: hover) and (pointer: fine) { .goods-card2:hover .goods-card2-scrim { opacity: 1; } }
+    .goods-card2-name-overlay {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, calc(-50% + 6px)); z-index: 2;
+      max-width: calc(100% - 32px); padding: 0 16px; color: #fff; text-align: center;
+      font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem; line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+      opacity: 0; pointer-events: none;
+      transition: opacity var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .goods-card2:hover .goods-card2-name-overlay { opacity: 1; transform: translate(-50%, -50%); }
+    }
+    /* Strip gambar tambahan — SELALU tampak (tidak ikut hover), z-index
+       paling atas supaya tidak ketutup scrim/nama produk. */
+    .goods-card2-gallery { position: absolute; left: 10px; bottom: 10px; z-index: 3; display: flex; gap: 6px; }
+    .goods-card2-gallery-thumb {
+      display: block; width: 54px; height: 54px; border-radius: 10px; overflow: hidden;
+      border: 2.5px solid #fff; box-shadow: var(--shadow-md, var(--shadow-sm)); background: #fff;
+    }
+    .goods-card2-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .goods-card2-price { display: block; margin-top: 10px; font-weight: 800; color: var(--color-primary-dark); font-size: 1.05rem; }
 
     /* ---------- Campaign card: cincin progres melingkar (conic-gradient,
@@ -1290,6 +1409,12 @@ interface CardPreview {
        thumbnail kecil di atas judul. */
     .sheet-image { position: relative; margin: 0 0 14px; border-radius: 14px; overflow: hidden; }
     .sheet-image img { display: block; width: 100%; height: 300px; object-fit: cover; object-position: center top; }
+    /* Strip thumbnail gambar tambahan (mis. Goods.previewImages) — baris
+       kecil di bawah foto utama sheet, bukan overlay di atas foto (beda dari
+       versi kartu .goods-card2-gallery) supaya tidak menumpuk di ruang
+       sheet yang sempit dan sudah vertikal-scroll. */
+    .sheet-gallery { display: flex; gap: 8px; margin: 0 0 16px; }
+    .sheet-gallery-thumb { width: 64px; height: 64px; flex-shrink: 0; border-radius: 10px; object-fit: cover; box-shadow: var(--shadow-sm); }
     .sheet-title { margin: 0 0 16px; }
     .sheet-meta-line { margin: 0 0 4px; }
     /* Baris meta berlabel ikon (Penulis/Editor/Tanggal) — pola sama seperti
@@ -1339,6 +1464,7 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   @ViewChildren('tentangTabBtn') private tentangTabBtnRefs!: QueryList<ElementRef<HTMLButtonElement>>;
   @ViewChild('newsTrack') private newsTrackRef?: ElementRef<HTMLElement>;
   @ViewChild('booksTrack') private booksTrackRef?: ElementRef<HTMLElement>;
+  @ViewChild('goodsTrack') private goodsTrackRef?: ElementRef<HTMLElement>;
 
   news = signal<News[]>([]);
   articles = signal<Article[]>([]);
@@ -1725,6 +1851,38 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     const track = this.booksTrackRef?.nativeElement;
     if (!track) return;
     track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
+  }
+
+  /** Sama seperti scrollNews()/scrollBooks() — carousel FSLDK Goods. */
+  scrollGoods(direction: 1 | -1): void {
+    const track = this.goodsTrackRef?.nativeElement;
+    if (!track) return;
+    track.scrollBy({ left: direction * track.clientWidth * 0.8, behavior: 'smooth' });
+  }
+
+  /** Bentuk CardPreview untuk kartu Goods — sheet mobile-nya ikut
+   *  menampilkan harga, status ketersediaan, dan strip previewImages
+   *  (lihat p.gallery di template sheet). */
+  goodsPreview(g: Goods): CardPreview {
+    const metaRows: CardPreviewMetaRow[] = [{ icon: 'coins', label: 'Harga', value: this.formatRupiah(g.price) }];
+    if (g.availabilityStatus !== 'available') {
+      metaRows.push({
+        icon: g.availabilityStatus === 'out_of_stock' ? 'x-circle' : 'clock',
+        label: 'Ketersediaan',
+        value: g.availabilityStatus === 'out_of_stock' ? 'Stok Habis' : 'Segera Hadir',
+      });
+    }
+    return {
+      chip: g.categoryName,
+      title: g.goodsName,
+      metaLines: [],
+      metaRows,
+      link: goodsPath.publicDetail(g.goodsSlug),
+      ctaLabel: 'Lihat Produk',
+      image: g.mainImageUrl,
+      excerpt: g.shortDescription,
+      gallery: g.previewImages,
+    };
   }
 
   setLoading(loading: boolean): void { this.loading.set(loading); }

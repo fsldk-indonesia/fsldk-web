@@ -343,6 +343,7 @@
         <div class="berita-carousel reveal">
           <div class="berita-carousel-intro">
             <span class="berita-carousel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="150" /></span>
+            <span class="berita-carousel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="64" /></span>
             <span class="berita-carousel-icon"><app-icon name="newspaper" [size]="24" /></span>
             <p>Informasi terkini seputar dakwah kampus dan kegiatan FSLDK Indonesia se-Nusantara.</p>
             <a [routerLink]="newsPath.publicIndex" class="berita-carousel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
@@ -549,6 +550,7 @@
         </div>
         <div class="pustaka-carousel-intro">
           <span class="pustaka-carousel-silhouette" aria-hidden="true"><app-icon name="book-open" [size]="150" /></span>
+          <span class="pustaka-carousel-silhouette-2" aria-hidden="true"><app-icon name="book-open" [size]="64" /></span>
           <span class="pustaka-carousel-icon"><app-icon name="book-open" [size]="24" /></span>
           <p>Koleksi buku digital seputar dakwah kampus, keislaman, dan pengembangan diri kader FSLDK Indonesia.</p>
           <a [routerLink]="catalogbookPath.publicIndex" class="pustaka-carousel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
@@ -573,8 +575,9 @@
         <h2>Event Terbaru FSLDK Indonesia</h2>
       </div>
       <div class="agenda-panel reveal">
-        <span class="agenda-panel-silhouette" aria-hidden="true"><app-icon name="calendar-days" [size]="140" /></span>
         <div class="agenda-panel-intro">
+          <span class="agenda-panel-silhouette" aria-hidden="true"><app-icon name="calendar-days" [size]="140" /></span>
+          <span class="agenda-panel-silhouette-2" aria-hidden="true"><app-icon name="calendar-days" [size]="64" /></span>
           <span class="agenda-panel-icon"><app-icon name="calendar-days" [size]="24" /></span>
           <p>Ikuti rangkaian musyawarah, pelatihan, dan silaturahmi nasional FSLDK Indonesia dari waktu ke waktu.</p>
           <a [routerLink]="eventPath.publicIndex" class="agenda-panel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
@@ -626,68 +629,70 @@
 }
 
 @if (!loading() && goods().length > 0) {
+  <!-- Redesign: heading eyebrow+h2 polos di atas (pola sama seperti Agenda &
+       Kegiatan), panel hijau full-width di bawahnya membungkus ikon+
+       deskripsi+CTA "Lihat Semua" SEKALIGUS carousel kartu produk (bukan
+       grid statis seperti Agenda — di sini tetap carousel geser dengan
+       panah, karena jumlah produk cenderung lebih banyak dari yang muat
+       sekali layar). Kartu .goods-card2 TIDAK diubah strukturnya (foto+
+       overlay hover+body kategori/nama/harga) — cuma ditambah strip
+       thumbnail .goods-card2-gallery (previewImages, maks 3) yang
+       ditumpuk di dalam foto utama, ala shop.app (referensi user). -->
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Layanan</span>
-        <h2>FSLDK Goods</h2>
+      <div class="reveal" style="margin-bottom:28px">
+        <span class="eyebrow">FSLDK Goods</span>
+        <h2>Merchandise Resmi FSLDK Indonesia</h2>
       </div>
-      <div class="card-scroller">
-        @for (g of goods(); track g.goodsID) {
-          <a class="goods-card2 reveal" [routerLink]="goodsPath.publicDetail(g.goodsSlug)">
-            <div class="goods-card2-media">
-              @if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }
-              @if (g.isFeatured) { <span class="goods-featured-ribbon">Unggulan</span> }
-              @if (g.availabilityStatus !== 'available') {
-                <span class="goods-unavailable-badge">{{ g.availabilityStatus === 'out_of_stock' ? 'Stok Habis' : 'Segera Hadir' }}</span>
+      <div class="goods-panel reveal">
+        <div class="goods-panel-intro">
+          <span class="goods-panel-silhouette" aria-hidden="true"><app-icon name="shopping-bag" [size]="140" /></span>
+          <span class="goods-panel-silhouette-2" aria-hidden="true"><app-icon name="shopping-bag" [size]="64" /></span>
+          <span class="goods-panel-icon"><app-icon name="shopping-bag" [size]="24" /></span>
+          <p>Dukung dakwah kampus sambil membawa pulang merchandise resmi FSLDK Indonesia — kaos, aksesoris, dan cendera mata pilihan.</p>
+          <a [routerLink]="goodsPath.publicIndex" class="goods-panel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+        </div>
+        <div class="goods-panel-cards-wrap">
+          <div class="goods-panel-track-wrap">
+            <button type="button" class="goods-panel-arrow prev" (click)="scrollGoods(-1)" aria-label="Produk sebelumnya">
+              <app-icon name="chevron-left" [size]="16" />
+            </button>
+            <div class="goods-panel-track" #goodsTrack>
+              @for (g of goods(); track g.goodsID) {
+                <a
+                  class="goods-card2 reveal"
+                  [routerLink]="isMobilePreview() ? null : goodsPath.publicDetail(g.goodsSlug)"
+                  (click)="openPreview($event, goodsPreview(g))"
+                >
+                  <div class="goods-card2-media">
+                    @if (g.mainImageUrl) { <img [src]="g.mainImageUrl" [alt]="g.goodsName"> } @else { <span>PRODUK</span> }
+                    @if (g.isFeatured) { <span class="goods-featured-ribbon">Unggulan</span> }
+                    @if (g.availabilityStatus !== 'available') {
+                      <span class="goods-unavailable-badge">{{ g.availabilityStatus === 'out_of_stock' ? 'Stok Habis' : 'Segera Hadir' }}</span>
+                    }
+                    <span class="goods-card2-scrim" aria-hidden="true"></span>
+                    <span class="goods-card2-name-overlay">{{ g.goodsName }}</span>
+                    @if (g.previewImages; as previews) {
+                      @if (previews.length > 0) {
+                        <div class="goods-card2-gallery">
+                          @for (img of previews; track img) { <span class="goods-card2-gallery-thumb"><img [src]="img" [alt]="g.goodsName"></span> }
+                        </div>
+                      }
+                    }
+                  </div>
+                  <div class="news-body">
+                    <span class="chip chip-green">{{ g.categoryName }}</span>
+                    <h3>{{ g.goodsName }}</h3>
+                    <span class="goods-card2-price">{{ formatRupiah(g.price) }}</span>
+                  </div>
+                </a>
               }
-              <div class="goods-card2-overlay">
-                @if (g.shortDescription) { <p>{{ g.shortDescription }}</p> }
-                <span class="goods-card2-cta">Lihat Produk <app-icon name="chevron-right" [size]="12" /></span>
-              </div>
             </div>
-            <div class="news-body">
-              <span class="chip chip-green">{{ g.categoryName }}</span>
-              <h3>{{ g.goodsName }}</h3>
-              <span class="goods-card2-price">{{ formatRupiah(g.price) }}</span>
-            </div>
-          </a>
-        }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="goodsPath.publicIndex" class="btn btn-outline">Lihat Semua Produk</a>
-      </div>
-    </div>
-  </section>
-}
-
-@if (!loading() && schedules().length > 0) {
-  <section class="section">
-    <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Jadwal</span>
-        <h2>Agenda Kegiatan Terdekat</h2>
-      </div>
-      <div class="agenda-mini-list">
-        @for (s of schedules(); track s.scheduleID) {
-          <div class="agenda-mini-item reveal">
-            <div class="agenda-mini-date">
-              <span class="day">{{ s.startDate | date:'d' }}</span>
-              <span class="mon">{{ s.startDate | date:'MMM' }}</span>
-            </div>
-            <div class="agenda-mini-body">
-              <span class="chip chip-green">{{ s.category }}</span>
-              <h3>{{ s.title }}</h3>
-              <p class="meta">
-                @if (!s.isAllDay && s.startTime) { {{ s.startTime }} · }
-                @if (s.location) { {{ s.location }} }
-              </p>
-            </div>
+            <button type="button" class="goods-panel-arrow next" (click)="scrollGoods(1)" aria-label="Produk berikutnya">
+              <app-icon name="chevron-right" [size]="16" />
+            </button>
           </div>
-        }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="schedulePath.publicIndex" class="btn btn-outline">Lihat Semua Jadwal</a>
+        </div>
       </div>
     </div>
   </section>
@@ -720,6 +725,38 @@
       </div>
       <div class="text-center mt-lg">
         <a [routerLink]="kantongAmalPath.list" class="btn btn-outline">Lihat Semua Campaign</a>
+      </div>
+    </div>
+  </section>
+}
+
+@if (!loading() && schedules().length > 0) {
+  <section class="section">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:40px">
+        <span class="eyebrow">Jadwal</span>
+        <h2>Agenda Kegiatan Terdekat</h2>
+      </div>
+      <div class="agenda-mini-list">
+        @for (s of schedules(); track s.scheduleID) {
+          <div class="agenda-mini-item reveal">
+            <div class="agenda-mini-date">
+              <span class="day">{{ s.startDate | date:'d' }}</span>
+              <span class="mon">{{ s.startDate | date:'MMM' }}</span>
+            </div>
+            <div class="agenda-mini-body">
+              <span class="chip chip-green">{{ s.category }}</span>
+              <h3>{{ s.title }}</h3>
+              <p class="meta">
+                @if (!s.isAllDay && s.startTime) { {{ s.startTime }} · }
+                @if (s.location) { {{ s.location }} }
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+      <div class="text-center mt-lg">
+        <a [routerLink]="schedulePath.publicIndex" class="btn btn-outline">Lihat Semua Jadwal</a>
       </div>
     </div>
   </section>
@@ -768,6 +805,13 @@
 >
   @if (previewSheet(); as p) {
     @if (p.image) { <div class="sheet-image"><img [src]="p.image" [alt]="p.title"></div> }
+    @if (p.gallery; as gallery) {
+      @if (gallery.length > 0) {
+        <div class="sheet-gallery">
+          @for (img of gallery; track img) { <img [src]="img" [alt]="p.title" class="sheet-gallery-thumb"> }
+        </div>
+      }
+    }
     <span class="chip chip-green" [style.background]="p.accent ? 'color-mix(in srgb, ' + p.accent + ' 12%, white)' : null" [style.color]="p.accent || null">{{ p.chip }}</span>
     <h3 class="sheet-title">{{ p.title }}</h3>
     @if (p.metaRows; as rows) {

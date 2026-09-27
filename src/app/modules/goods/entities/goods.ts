@@ -19,6 +19,10 @@ export interface Goods {
   purchaseUrl: string;
   purchaseButtonLabel: string;
   createdDate: string;
+  /** Cuplikan gallery singkat (maks. 3) — hanya diisi oleh endpoint public
+   *  list (dipakai kartu "shop.app style" di Beranda), kosong/undefined di
+   *  konteks lain (CMS list, dsb). */
+  previewImages?: string[];
 }
 
 /** Produk beserta gallery gambarnya — dipakai endpoint detail publik & CMS get. */
