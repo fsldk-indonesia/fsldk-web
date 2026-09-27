@@ -11,7 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { GalleryPhoto } from '../../entities/gallery';
 import { IconComponent } from '../../../../shared/icon.component';
-import { environment } from '../../../../../environments/environment';
+import { resolveImageUrl } from '../../../../core/utils/image-url';
 
 /**
  * Fullscreen accessible lightbox component for displaying gallery images.
@@ -356,15 +356,5 @@ export class GalleryLightboxComponent {
     }
   }
 
-  imgUrl(path: string): string {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
-      return path;
-    }
-    const base = environment.apiBaseUrl.replace('/api/v1', '');
-    if (path.startsWith('/')) {
-      return `${base}${path}`;
-    }
-    return `${base}/uploads/${path}`;
-  }
+  imgUrl = resolveImageUrl;
 }
