@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SiteHeaderComponent } from '../shared/site-header.component';
 import { SiteFooterComponent } from '../shared/site-footer.component';
+import { WhatsappFabComponent } from '../shared/whatsapp-fab.component';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 
 /**
@@ -30,12 +31,13 @@ import { AuthRepository } from '../modules/user/repositories/auth.repository';
 @Component({
   selector: 'app-public-layout',
   standalone: true,
-  imports: [RouterOutlet, SiteHeaderComponent, SiteFooterComponent],
+  imports: [RouterOutlet, SiteHeaderComponent, SiteFooterComponent, WhatsappFabComponent],
   template: `
     <div class="page-shell">
       <app-site-header />
       <main><router-outlet /></main>
       <app-site-footer />
+      <app-whatsapp-fab />
     </div>
   `,
   styles: [`

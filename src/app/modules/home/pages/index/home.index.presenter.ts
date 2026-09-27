@@ -97,5 +97,9 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
       next: (res) => { if (res.email) this.view.setContactEmail(res.email); },
       error: () => {},
     });
+    this.settingApi.getPublicContactWhatsapp().subscribe({
+      next: (res) => { if (res.whatsappNumber) this.view.setContactWhatsapp(res.whatsappNumber); },
+      error: () => {},
+    });
   }
 }

@@ -20,4 +20,5 @@ export interface HomeIndexView {
   setCampaignStats(stats: CampaignPublicStats | null): void;
   setGalleryFeature(feature: GalleryFeature | null): void;
   setContactEmail(email: string): void;
+  setContactWhatsapp(number: string): void;
 }

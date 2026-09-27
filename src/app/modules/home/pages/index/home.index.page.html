@@ -1028,7 +1028,7 @@
             <span class="contact-method-icon"><app-icon name="whatsapp" [size]="18" /></span>
             <div class="contact-method-body">
               <span class="contact-method-label">WhatsApp</span>
-              <a href="https://wa.me/6285111332861" target="_blank" rel="noopener noreferrer" class="contact-method-value">+62 851-1133-2861</a>
+              <a [href]="'https://wa.me/' + contactWhatsappDigits()" target="_blank" rel="noopener noreferrer" class="contact-method-value">{{ contactWhatsapp() }}</a>
             </div>
           </div>
         </div>

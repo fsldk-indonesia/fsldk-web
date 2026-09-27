@@ -956,7 +956,16 @@ interface CardPreview {
     @media (min-width: 993px) {
       .kantong-panel { grid-template-columns: 1.6fr 1fr; align-items: start; }
       .kantong-grid { order: 1; }
-      .kantong-sidebar { order: 2; position: sticky; top: 100px; }
+      /* position:sticky SENGAJA DILEPAS (percobaan sebelumnya pakai
+         position:sticky dengan top:100px) — sticky punya jarak minimum 100px
+         dari atas viewport begitu section ini terlihat, sedangkan
+         .kantong-grid di sebelahnya (TIDAK sticky) natural position-nya bisa
+         lebih dekat ke atas viewport. Selisih itu yang bikin sidebar
+         kelihatan lebih rendah/"di tengah" dibanding baris pertama kartu,
+         bukan soal align-items yang salah. Tanpa sticky, align-self:start
+         menjamin sidebar rata PERSIS dengan atas grid, tidak ada syarat
+         jarak minimum apa pun. */
+      .kantong-sidebar { order: 2; align-self: start; }
     }
     .kantong-sidebar h2 { margin: 8px 0 10px; }
     .kantong-stats { display: flex; flex-direction: column; gap: 12px; margin: 20px 0 24px; }
@@ -1305,8 +1314,13 @@ interface CardPreview {
     .gallery-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
     .gallery-section-head-text { flex: 1; min-width: 0; }
     /* Duplikat mobile-only (lihat markup setelah .gallery-feature) —
-       disembunyikan di desktop, tombol asli di header yang dipakai. */
-    .gallery-btn-all-bottom { display: none; }
+       disembunyikan di desktop, tombol asli di header yang dipakai. Selector
+       DIGABUNG dua class (.gallery-btn-all.gallery-btn-all-bottom), bukan
+       cuma .gallery-btn-all-bottom sendiri — kalau cuma satu class, rule
+       .gallery-btn-all {display:inline-flex} yang letaknya lebih bawah di
+       file ini (spesifisitas sama, menang karena urutan source) bakal
+       nimpa display:none ini, bikin tombolnya tetap kelihatan di desktop. */
+    .gallery-btn-all.gallery-btn-all-bottom { display: none; }
     @media (max-width: 640px) {
       .gallery-section-head { flex-direction: column; align-items: flex-start; }
       /* Tombol di header DIHILANGKAN di mobile (bukan cuma pindah posisi) —
@@ -1314,7 +1328,7 @@ interface CardPreview {
          urutan baca mobile: judul → deskripsi → kartu → CTA, bukan CTA
          nyempil di antara deskripsi dan kartu. */
       .gallery-section-head .gallery-btn-all { display: none; }
-      .gallery-btn-all-bottom { display: flex; margin-top: 20px; justify-content: center; }
+      .gallery-btn-all.gallery-btn-all-bottom { display: flex; margin-top: 20px; justify-content: center; }
     }
 
     /* ---------- Galeri: satu kartu "Dokumentasi Kegiatan Terbaru" ala
@@ -2032,6 +2046,10 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
    *  supaya tidak sempat kosong sebelum GET /public/settings/contact-email
    *  selesai, lihat setContactEmail(). */
   contactEmail = signal('fsldkindonesia29@gmail.com');
+  /** Sama pola dengan contactEmail — default migration (0042_contact_whatsapp_setting),
+   *  lihat setContactWhatsapp(). Dipakai section "Hubungi Kami" (bukan
+   *  floating button, itu punya fetch sendiri di app-whatsapp-fab). */
+  contactWhatsapp = signal('+62 851-1133-2861');
 
   loading = signal(true);
 
@@ -2503,6 +2521,11 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   }
   setGalleryFeature(feature: GalleryFeature | null): void { this.galleryFeature.set(feature); }
   setContactEmail(email: string): void { this.contactEmail.set(email); }
+  setContactWhatsapp(number: string): void { this.contactWhatsapp.set(number); }
+
+  /** Digit saja (buang "+"/spasi/strip) — dipakai link wa.me di
+   *  contact-method-item, sama teknik dengan app-whatsapp-fab. */
+  contactWhatsappDigits(): string { return this.contactWhatsapp().replace(/\D/g, ''); }
 
   openGalleryZoom(index: number): void {
     this.galleryZoomIndex.set(index);
