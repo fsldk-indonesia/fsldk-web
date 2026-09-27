@@ -748,7 +748,7 @@ interface CardPreview {
        (sudah ada overlay gelap di baliknya) supaya tidak menumpuk elemen. */
     .event-card-hover-cta {
       display: flex; align-items: center; gap: 4px; margin-top: 10px; font-size: .78rem; font-weight: 700;
-      color: var(--color-gold); opacity: 0; transform: translateY(4px);
+      color: #fff; opacity: 0; transform: translateY(4px);
       transition: opacity var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
     }
     @media (hover: hover) and (pointer: fine) {
