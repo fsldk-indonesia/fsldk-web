@@ -63,6 +63,10 @@ interface CardPreview {
   /** Ringkasan/excerpt — ala ldksyahid-app (news-sheet__excerpt), teks penuh
    *  tanpa line-clamp (beda dari excerpt di kartu teaser yang diclamp). */
   excerpt?: string | null;
+  /** Warna aksen per-kartu (redesign "Karya Tulis Kita" ala ldksyahid-app —
+   *  lihat articleAccent()) — override chip/ikon-meta/CTA hijau default di
+   *  sheet supaya konsisten dengan warna kartu artikel yang di-tap. */
+  accent?: string;
 }
 
 @Component({
@@ -306,7 +310,7 @@ interface CardPreview {
     .berita-carousel-intro p { margin-block: 0; font-size: .88rem; line-height: 1.6; opacity: .92; }
     .berita-carousel-cta {
       display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
-      color: #fff; padding: 10px 20px; border-radius: var(--radius-full); font-weight: 700; font-size: .76rem;
+      color: #fff; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
       letter-spacing: .04em; text-transform: uppercase;
       transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
     }
@@ -435,7 +439,7 @@ interface CardPreview {
     .pustaka-carousel-intro p { margin-block: 0; font-size: .88rem; line-height: 1.6; opacity: .92; }
     .pustaka-carousel-cta {
       display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
-      color: #fff; padding: 10px 20px; border-radius: var(--radius-full); font-weight: 700; font-size: .76rem;
+      color: #fff; padding: 10px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
       letter-spacing: .04em; text-transform: uppercase;
       transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
     }
@@ -472,24 +476,136 @@ interface CardPreview {
       .pustaka-carousel-track { padding: 14px 0; }
     }
 
-    /* ---------- Artikel: "kartu kajian" — teks-sentris (tanpa foto dominan
-       seperti Berita), aksen batang warna emas di kiri + excerpt
-       (articleIntro) + identitas penulis, kesan lebih tenang/reflektif
-       dibanding sorotan berita yang bergambar. ---------- */
-    .artikel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-    .artikel-card {
-      position: relative; display: block; background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: 26px 24px 22px 28px; overflow: hidden;
-      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out), border-color var(--motion-fast) ease;
+    /* ---------- Artikel: redesign "Karya Tulis Kita" ala ldksyahid-app —
+       header-nya SENGAJA dikembalikan ke pola eyebrow+h2 polos yang sama
+       dipakai section lain (Berita/Pustaka/Event/dst), cuma layoutnya yang
+       beda (heading+subtitle kiri, "Lihat Semua" sejajar di kanan, bukan
+       di bawah grid) — badge pill+heading berwarna+sparkle ala referensi
+       dicoba lalu di-drop lagi karena tidak konsisten dengan gaya heading
+       section lain di halaman ini. Kartu foto full-bleed (media/scrim/
+       overlay pakai ULANG .news-carousel-media dkk, sama seperti Berita/
+       Pustaka) + badge tanggal ala Event tetap dipertahankan, ditutup chip
+       kategori/judul/Penulis-Editor/CTA yang semuanya mengikuti SATU warna
+       aksen per-kartu (--card-accent, 3 warna bergilir — lihat
+       articleAccent() di .ts) via color-mix(), bukan lagi batang emas
+       tunggal seperti sebelumnya. ---------- */
+    .artikel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 32px; flex-wrap: wrap; }
+    .artikel-subtitle { margin: 8px 0 0; color: var(--color-text-secondary); font-size: 1rem; max-width: 46ch; }
+    /* Pil gradient hijau brand, border-radius+teknik hover disamakan PERSIS
+       dengan .account-chip navbar (site-header.component.ts): radius
+       var(--radius-sm) (diwarisi .btn-sm di sana, bukan var(--radius-full)
+       seperti CTA gradient lain), dan swap gradient hover lewat ::before
+       terpisah yang di-crossfade via opacity — background-image (gradient)
+       tidak bisa ditransisikan mulus (properti "discrete"), jadi gradient
+       hover-nya loncat instan kalau ditransisi langsung di background. */
+    .artikel-btn-all {
+      position: relative; flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
     }
-    .artikel-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; border-color: var(--color-gold-soft); }
-    .artikel-card-accent { position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: linear-gradient(var(--color-gold), var(--color-gold-dark)); }
-    .artikel-card h3 { margin: 12px 0 10px; font-size: 1.1rem; line-height: 1.35; }
-    .artikel-intro { margin: 0 0 18px; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-    .artikel-writer { display: flex; align-items: center; gap: 10px; font-size: .8rem; color: var(--color-muted); font-weight: 600; }
-    .artikel-writer-avatar { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--color-gold-soft); color: var(--color-gold-dark); font-weight: 800; font-size: .8rem; }
+    .artikel-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .artikel-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .artikel-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .artikel-btn-all:hover::before { opacity: 1; }
+    .artikel-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .artikel-btn-all::before { transition: none; } }
+
+    .artikel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+    /* .reveal (scroll entrance animation) DIPINDAH ke wrapper ini, TERPISAH
+       dari .artikel-card — .reveal pakai animation-timeline:view() yang
+       terus-menerus "memegang" properti transform (reveal-in keyframe:
+       translateY(16px)->0, fill:both). CSS Animations menang atas normal
+       author rule di cascade TERLEPAS dari specificity/:hover, jadi kalau
+       .reveal dan hover-transform ada di ELEMEN YANG SAMA, transform hover
+       tidak akan pernah benar-benar berjalan smooth — sekalipun dipaksa
+       !important (menang di nilai akhir), TRANSISI-nya tetap gagal jalan
+       karena transition disuppress selama propertinya masih "dimiliki"
+       animasi aktif (dibuktikan: matrix hover instan tanpa interpolasi sama
+       sekali di getComputedStyle, walau sudah !important). Wrapper ini
+       murni utilitas layout (mengambil alih sizing grid/flex dari
+       .artikel-card, lihat @media mobile di bawah) supaya .artikel-card
+       sendiri bebas transform tanpa kompetisi. */
+    .artikel-card-wrap { height: 100%; }
+    .artikel-card {
+      --card-accent: var(--color-gold-dark);
+      position: relative; height: 100%; display: flex; flex-direction: column; background: #fff;
+      border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(6,26,15,.06);
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    .artikel-card:hover {
+      transform: translateY(-6px) scale(1.03); text-decoration: none;
+      box-shadow: 0 20px 40px rgba(6,26,15,.08), 0 4px 20px color-mix(in srgb, var(--card-accent) 25%, transparent);
+    }
+    .artikel-card-media { aspect-ratio: 4 / 5; }
+    /* Badge tanggal — pola sama seperti .event-date-badge, ditempel di kartu
+       artikel alih-alih di kartu event. */
+    .artikel-card-date {
+      position: absolute; top: 12px; left: 12px; z-index: 1; background: rgba(255,255,255,.95);
+      border-radius: 14px; padding: 6px 11px; text-align: center; line-height: 1; box-shadow: var(--shadow-sm);
+      transition: transform var(--motion-fast) var(--ease-out);
+    }
+    .artikel-card:hover .artikel-card-date { transform: rotate(-3deg) scale(1.05); }
+    .artikel-card-date-num { display: block; font-size: 1.05rem; font-weight: 800; color: var(--card-accent); }
+    .artikel-card-date-month { display: block; font-size: .6rem; font-weight: 700; color: var(--color-muted); text-transform: uppercase; letter-spacing: .04em; }
+    .artikel-card-body { padding: 18px 20px 20px; flex: 1; display: flex; flex-direction: column; }
+    .artikel-chip {
+      align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px;
+      background: color-mix(in srgb, var(--card-accent) 12%, white); color: var(--card-accent);
+      padding: 5px 14px 5px 10px; border-radius: 10px; font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .artikel-chip::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--card-accent); flex-shrink: 0; }
+    .artikel-card:hover .artikel-chip { background: var(--card-accent); color: #fff; }
+    .artikel-card:hover .artikel-chip::before { background: #fff; }
+    .artikel-card-title {
+      margin: 0 0 14px; font-size: .98rem; line-height: 1.45; font-weight: 700; color: var(--color-text);
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      background-image: linear-gradient(var(--card-accent), var(--card-accent)); background-size: 0 2px; background-repeat: no-repeat; background-position: left bottom;
+      transition: background-size var(--motion-fast) ease, color var(--motion-fast) ease; padding-bottom: 2px; flex: 1;
+    }
+    .artikel-card:hover .artikel-card-title { background-size: 100% 2px; color: var(--card-accent); }
+    .artikel-people {
+      display: flex; flex-direction: column; background: color-mix(in srgb, var(--card-accent) 5%, var(--color-bg-alt));
+      border-radius: 14px; padding: 11px 13px; margin-bottom: 14px;
+    }
+    .artikel-people-row { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .artikel-people-divider { height: 1px; background: color-mix(in srgb, var(--card-accent) 14%, transparent); margin: 8px 0; border-radius: 1px; }
+    .artikel-avatar {
+      flex-shrink: 0; width: 27px; height: 27px; border-radius: 9px; display: grid; place-items: center;
+      background: color-mix(in srgb, var(--card-accent) 16%, white); color: var(--card-accent);
+    }
+    .artikel-people-info { display: flex; flex-direction: column; line-height: 1.3; min-width: 0; }
+    .artikel-people-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
+    .artikel-people-name { font-size: .82rem; font-weight: 600; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .artikel-card-cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: auto;
+      color: var(--card-accent); background: color-mix(in srgb, var(--card-accent) 8%, transparent);
+      font-weight: 700; font-size: .82rem; padding: 10px 18px; border-radius: 14px;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .artikel-card-cta app-icon { transition: transform var(--motion-fast) ease; }
+    .artikel-card:hover .artikel-card-cta { background: var(--card-accent); color: #fff; }
+    .artikel-card:hover .artikel-card-cta app-icon { transform: translateX(4px); }
     @media (max-width: 900px) { .artikel-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 600px) { .artikel-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) {
+      .artikel-head { flex-direction: column; }
+      .artikel-btn-all { align-self: stretch; justify-content: center; }
+      /* Carousel horizontal scroll-snap di mobile (bukan grid stack) —
+         konsisten dengan pola .card-scroller section lain, kartu kajian
+         sekarang cukup berat (foto+chip+people+CTA) untuk pantas discroll
+         alih-alih ditumpuk vertikal penuh. */
+      .artikel-grid { display: flex; grid-template-columns: none; overflow-x: auto; gap: 16px; padding: 4px 4px 12px; scroll-snap-type: x mandatory; scrollbar-width: none; }
+      .artikel-grid::-webkit-scrollbar { display: none; }
+      .artikel-card-wrap { flex: 0 0 84%; scroll-snap-align: start; }
+    }
 
     /* ---------- Book card: siluet rak buku (thumb potret, bukan 16:10 seperti
        kartu berita), rating disematkan sebagai ribbon di sudut sampul. ---------- */
@@ -1092,8 +1208,12 @@ interface CardPreview {
        .sheet-handle/.sheet-close yang duduk di zona padding-top yang sama
        (foto menimpa handle+tombol X). Sengaja TIDAK menyentuh margin-top
        supaya jarak dari handle/close tetap seperti bawaan .sheet-panel. */
-    .sheet-image { border-radius: 14px; overflow: hidden; margin: 0 0 14px; }
-    .sheet-image img { display: block; width: 100%; height: 190px; object-fit: cover; object-position: center top; }
+    /* Kotak mengambang di dalam padding panel (bukan full-bleed ke tepi) —
+       radius bulat di keempat sisi seperti versi sebelumnya, cuma tingginya
+       yang dibesarkan (190->300px) supaya kelihatan "gambar utama", bukan
+       thumbnail kecil di atas judul. */
+    .sheet-image { position: relative; margin: 0 0 14px; border-radius: 14px; overflow: hidden; }
+    .sheet-image img { display: block; width: 100%; height: 300px; object-fit: cover; object-position: center top; }
     .sheet-title { margin: 0 0 16px; }
     .sheet-meta-line { margin: 0 0 4px; }
     /* Baris meta berlabel ikon (Penulis/Editor/Tanggal) — pola sama seperti
@@ -1111,15 +1231,10 @@ interface CardPreview {
        (tanpa line-clamp), justify, line-height lega supaya tidak berkesan
        padat/mepet seperti metaRows yang langsung nempel CTA sebelumnya. */
     .sheet-excerpt { margin: 0 0 20px; font-size: .88rem; line-height: 1.7; text-align: justify; color: var(--color-text-secondary); }
-    /* Pil gradient (bukan lagi .btn-primary kotak) khusus tombol sheet —
-       di-scope lokal ke elemen yang dirender komponen ini sendiri, pola sama
-       seperti override .modal-pop di app-alert-dialog. */
-    .sheet-cta {
-      margin-top: 4px; justify-content: center; border: none; border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--color-primary-bright), var(--color-primary-dark)); box-shadow: var(--shadow-sm);
-      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
-    }
-    .sheet-cta:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    /* Tombol CTA sheet (pil gradient + warna aksen per-kartu) sekarang
+       di-render langsung oleh app-bottom-sheet lewat [ctaLabel]/[ctaAccent]/
+       (ctaClick) — bukan lagi di sini. Lihat bottom-sheet.component.ts
+       untuk alasan content projection ditinggalkan untuk footer ini. */
 
     /* ---------- Card scroller: pengganti .grid.grid-3 KHUSUS di halaman ini
        untuk daftar kartu (berita/artikel/buku/event/goods/campaign) — di
@@ -1402,6 +1517,17 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   progressPercent(c: Campaign): number {
     return c.targetAmount > 0 ? Math.min(100, Math.round((c.collectedAmount / c.targetAmount) * 100)) : 0;
+  }
+
+  /** Rotasi 3 warna aksen per-kartu — redesign "Karya Tulis Kita" ala
+   *  ldksyahid-app (resources/views/landing-page/home/partials/article,
+   *  $cardColors di-index dengan $key % count). Nilai hex-nya SENGAJA
+   *  dipertahankan persis (bukan diganti ke hijau brand) — index/teal/amber
+   *  ini yang bikin tiap kartu artikel kelihatan beda identitas, konsisten
+   *  dengan referensinya. */
+  private readonly articleAccents = ['#6366f1', '#10b981', '#f59e0b'];
+  articleAccent(index: number): string {
+    return this.articleAccents[index % this.articleAccents.length];
   }
 
   formatDate(d: string | Date | null | undefined): string {

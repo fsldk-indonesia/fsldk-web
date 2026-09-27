@@ -345,7 +345,7 @@
             <span class="berita-carousel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="150" /></span>
             <span class="berita-carousel-icon"><app-icon name="newspaper" [size]="24" /></span>
             <p>Informasi terkini seputar dakwah kampus dan kegiatan FSLDK Indonesia se-Nusantara.</p>
-            <a [routerLink]="newsPath.publicIndex" class="berita-carousel-cta">Lihat Berita Lainnya <app-icon name="chevron-right" [size]="13" /></a>
+            <a [routerLink]="newsPath.publicIndex" class="berita-carousel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
           </div>
           <div class="berita-carousel-track-wrap">
             <button type="button" class="berita-carousel-arrow prev" (click)="scrollNews(-1)" aria-label="Berita sebelumnya">
@@ -398,27 +398,76 @@
 @if (!loading() && articles().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Artikel &amp; Kajian</span>
-        <h2>Gagasan &amp; Wawasan Dakwah Kampus</h2>
+      <!-- Redesign ala "Karya Tulis Kita" ldksyahid-app (resources/views/
+           landing-page/home/partials/article) — badge+heading berwarna,
+           "Lihat Semua" sejajar heading, dan kartu dengan 3 warna aksen
+           bergilir (indigo/teal/amber, $cardColors[$key % count] di source
+           aslinya — lihat articleAccent()). Media+scrim+title-overlay pakai
+           ULANG .news-carousel-media & kerabatnya (sama seperti Berita/
+           Pustaka), badge tanggal ala Event (date | 'd' + 'MMM'). -->
+      <div class="artikel-head reveal">
+        <div>
+          <span class="eyebrow">Artikel &amp; Kajian</span>
+          <h2>Karya Tulis Kita</h2>
+          <p class="artikel-subtitle">Gagasan dan wawasan dakwah kampus dari kader FSLDK Indonesia se-Nusantara.</p>
+        </div>
+        <a [routerLink]="articlePath.publicIndex" class="artikel-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
       </div>
       <div class="artikel-grid">
-        @for (a of articles(); track a.articleID) {
-          <a class="artikel-card reveal" [routerLink]="isMobilePreview() ? null : ['/artikel', a.articleSlug]"
-             (click)="openPreview($event, { chip: a.categoryName, title: a.articleTitle, metaLines: [a.articleWriter || a.authorName, formatDate(a.publishedDate)], link: ['/artikel', a.articleSlug], ctaLabel: 'Baca Artikel Lengkap' })">
-            <span class="artikel-card-accent" aria-hidden="true"></span>
-            <span class="chip chip-gold">{{ a.categoryName }}</span>
-            <h3>{{ a.articleTitle }}</h3>
-            @if (a.articleIntro) { <p class="artikel-intro">{{ a.articleIntro }}</p> }
-            <div class="artikel-writer">
-              <span class="artikel-writer-avatar">{{ (a.articleWriter || a.authorName).charAt(0) }}</span>
-              <span>{{ a.articleWriter || a.authorName }} &middot; {{ formatDate(a.publishedDate) }}</span>
-            </div>
-          </a>
+        @for (a of articles(); track a.articleID; let i = $index) {
+          <div class="artikel-card-wrap reveal">
+            <a
+              class="artikel-card"
+              [style.--card-accent]="articleAccent(i)"
+              [routerLink]="isMobilePreview() ? null : ['/artikel', a.articleSlug]"
+              (click)="openPreview($event, {
+                chip: a.categoryName,
+                title: a.articleTitle,
+                metaLines: [],
+                metaRows: [
+                  { icon: 'user-check', label: 'Penulis', value: a.articleWriter || a.authorName },
+                  { icon: 'edit', label: 'Editor', value: a.articleEditor || a.authorName },
+                  { icon: 'calendar', label: 'Tanggal', value: formatDate(a.publishedDate) }
+                ],
+                link: ['/artikel', a.articleSlug],
+                ctaLabel: 'Baca Artikel Lengkap',
+                image: a.articleImage,
+                excerpt: a.articleIntro,
+                accent: articleAccent(i)
+              })"
+            >
+              <div class="news-carousel-media artikel-card-media">
+                @if (a.articleImage) { <img [src]="a.articleImage" [alt]="a.articleTitle"> } @else { <span class="news-carousel-media-fallback">FOTO ARTIKEL</span> }
+                <span class="news-carousel-scrim" aria-hidden="true"></span>
+                @if (a.publishedDate) {
+                  <span class="artikel-card-date">
+                    <span class="artikel-card-date-num">{{ a.publishedDate | date:'d' }}</span>
+                    <span class="artikel-card-date-month">{{ a.publishedDate | date:'MMM' }}</span>
+                  </span>
+                }
+                <div class="news-carousel-overlay"><h4>{{ a.articleTitle }}</h4></div>
+              </div>
+              <div class="artikel-card-body">
+                <span class="artikel-chip">{{ a.categoryName }}</span>
+                <h3 class="artikel-card-title">{{ a.articleTitle }}</h3>
+                <div class="artikel-people">
+                  <div class="artikel-people-row">
+                    <span class="artikel-avatar"><app-icon name="user-check" [size]="12" /></span>
+                    <span class="artikel-people-info"><span class="artikel-people-label">Penulis</span><span class="artikel-people-name">{{ a.articleWriter || a.authorName }}</span></span>
+                  </div>
+                  @if (a.articleEditor) {
+                    <span class="artikel-people-divider" aria-hidden="true"></span>
+                    <div class="artikel-people-row">
+                      <span class="artikel-avatar"><app-icon name="edit" [size]="12" /></span>
+                      <span class="artikel-people-info"><span class="artikel-people-label">Editor</span><span class="artikel-people-name">{{ a.articleEditor }}</span></span>
+                    </div>
+                  }
+                </div>
+                <span class="artikel-card-cta">Baca Selengkapnya <app-icon name="chevron-right" [size]="12" /></span>
+              </div>
+            </a>
+          </div>
         }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="articlePath.publicIndex" class="btn btn-outline">Lihat Semua Artikel</a>
       </div>
     </div>
   </section>
@@ -502,7 +551,7 @@
           <span class="pustaka-carousel-silhouette" aria-hidden="true"><app-icon name="book-open" [size]="150" /></span>
           <span class="pustaka-carousel-icon"><app-icon name="book-open" [size]="24" /></span>
           <p>Koleksi buku digital seputar dakwah kampus, keislaman, dan pengembangan diri kader FSLDK Indonesia.</p>
-          <a [routerLink]="catalogbookPath.publicIndex" class="pustaka-carousel-cta">Lihat Semua Buku <app-icon name="chevron-right" [size]="13" /></a>
+          <a [routerLink]="catalogbookPath.publicIndex" class="pustaka-carousel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
         </div>
       </div>
     }
@@ -681,16 +730,22 @@
   </section>
 }
 
-<app-bottom-sheet [open]="!!previewSheet()" (closed)="previewSheet.set(null)">
+<app-bottom-sheet
+  [open]="!!previewSheet()"
+  (closed)="previewSheet.set(null)"
+  [ctaLabel]="previewSheet()?.ctaLabel"
+  [ctaAccent]="previewSheet()?.accent"
+  (ctaClick)="goToPreview()"
+>
   @if (previewSheet(); as p) {
     @if (p.image) { <div class="sheet-image"><img [src]="p.image" [alt]="p.title"></div> }
-    <span class="chip chip-green">{{ p.chip }}</span>
+    <span class="chip chip-green" [style.background]="p.accent ? 'color-mix(in srgb, ' + p.accent + ' 12%, white)' : null" [style.color]="p.accent || null">{{ p.chip }}</span>
     <h3 class="sheet-title">{{ p.title }}</h3>
     @if (p.metaRows; as rows) {
       <div class="sheet-meta-rows">
         @for (row of rows; track row.label) {
           <div class="sheet-meta-row">
-            <span class="sheet-meta-icon"><app-icon [name]="row.icon" [size]="13" /></span>
+            <span class="sheet-meta-icon" [style.background]="p.accent ? 'color-mix(in srgb, ' + p.accent + ' 16%, white)' : null" [style.color]="p.accent || null"><app-icon [name]="row.icon" [size]="13" /></span>
             <span>
               <span class="sheet-meta-label">{{ row.label }}</span>
               <span class="sheet-meta-value">{{ row.value }}</span>
@@ -708,7 +763,6 @@
       <div class="progress-track"><div class="progress-fill" [style.width.%]="p.progress.percent"></div></div>
       <p class="progress-meta"><span>{{ p.progress.label }}</span></p>
     }
-    <button type="button" class="btn btn-primary btn-block sheet-cta" (click)="goToPreview()">{{ p.ctaLabel }} <app-icon name="chevron-right" [size]="14" /></button>
   }
 </app-bottom-sheet>
 
