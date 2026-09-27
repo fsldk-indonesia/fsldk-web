@@ -35,7 +35,7 @@
 
     <section class="card card-pad form-section-card">
       <p class="form-section-label"><span class="icon-badge sm icon-badge-ember"><app-icon name="image" [size]="14" /></span>Foto Sampul</p>
-      <div class="form-group"><app-image-upload [(value)]="form.coverImage" [disabled]="isReadonly" />
+      <div class="form-group"><app-image-upload [(value)]="form.coverImage" [disabled]="isReadonly" [maxSizeMB]="3" />
         <p class="form-hint">Format JPG/PNG/WebP, rasio 16:9 atau 4:3 direkomendasikan.</p></div>
     </section>
 
@@ -72,7 +72,7 @@
         <div class="add-photo-box">
           <h4 style="font-size:.92rem; font-weight:700; margin:0 0 14px">Tambah Satu Foto ke Galeri</h4>
           <div class="grid grid-2">
-            <div><app-image-upload [value]="newPhotoPath() || ''" (valueChange)="newPhotoPath.set($event)" /></div>
+            <div><app-image-upload [value]="newPhotoPath() || ''" (valueChange)="newPhotoPath.set($event)" [maxSizeMB]="3" /></div>
             <div class="photo-input-column">
               <div class="form-group" style="margin-bottom:16px"><label class="form-label">Keterangan / Caption <span class="text-muted" style="font-weight:400">(opsional)</span></label>
                 <input class="form-control" placeholder="Contoh: Sesi foto bersama peserta" [(ngModel)]="newPhotoCaption">
@@ -114,7 +114,7 @@
         <div class="add-photo-box">
           <div class="grid grid-2">
             <div><label class="form-label text-sm">Unggah Foto</label>
-              <app-image-upload [value]="newPhotoPath() || ''" (valueChange)="newPhotoPath.set($event)" /></div>
+              <app-image-upload [value]="newPhotoPath() || ''" (valueChange)="newPhotoPath.set($event)" [maxSizeMB]="3" /></div>
             <div class="photo-input-column">
               <div class="form-group" style="margin-bottom:16px"><label class="form-label">Keterangan Foto <span class="text-muted" style="font-weight:400">(opsional)</span></label>
                 <input class="form-control" placeholder="Contoh: Dokumentasi pembukaan" [(ngModel)]="newPhotoCaption">
