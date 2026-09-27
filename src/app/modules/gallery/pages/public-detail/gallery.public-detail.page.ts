@@ -6,7 +6,7 @@ import { GalleryRepository } from '../../repositories/gallery.repository';
 import { GalleryLightboxComponent } from '../../components/gallery-lightbox/gallery-lightbox.component';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PaginationComponent } from '../../../../shared/pagination.component';
-import { environment } from '../../../../../environments/environment';
+import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/image-url';
 
 /**
  * Public detail page displaying a gallery documentation entry, YouTube video, and photo grid with lightbox.
@@ -641,26 +641,6 @@ export class GalleryPublicDetailPage implements OnInit {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  imgUrl(path: string): string {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) {
-      return path;
-    }
-    const base = environment.apiBaseUrl.replace('/api/v1', '');
-    if (path.startsWith('/')) {
-      return `${base}${path}`;
-    }
-    return `${base}/uploads/${path}`;
-  }
-
-  /** Varian thumbnail untuk grid foto (lihat gallery.public-index.page.ts
-   *  untuk penjelasan konvensi "_thumb"). Lightbox tetap pakai imgUrl() —
-   *  cuma satu foto ditampilkan sekaligus di sana, jadi resolusi penuh aman. */
-  thumbUrl(path: string): string {
-    const full = this.imgUrl(path);
-    if (!full) return '';
-    const dot = full.lastIndexOf('.');
-    if (dot === -1) return full;
-    return `${full.slice(0, dot)}_thumb${full.slice(dot)}`;
-  }
+  imgUrl = resolveImageUrl;
+  thumbUrl = resolveThumbnailUrl;
 }
