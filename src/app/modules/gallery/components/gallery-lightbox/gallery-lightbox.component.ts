@@ -4,6 +4,8 @@ import {
   Output,
   EventEmitter,
   HostListener,
+  OnChanges,
+  SimpleChanges,
   signal,
   computed,
   effect,
@@ -21,9 +23,10 @@ import { resolveImageUrl } from '../../../../core/utils/image-url';
   standalone: true,
   imports: [CommonModule, IconComponent],
   template: `
-    @if (isOpen) {
+    @if (visible()) {
       <div
         class="lightbox-overlay"
+        [class.closing]="closing()"
         (click)="onBackdropClick($event)"
         role="dialog"
         aria-modal="true"
@@ -112,6 +115,13 @@ import { resolveImageUrl } from '../../../../core/utils/image-url';
       justify-content: center;
       animation: fadeIn 0.2s ease-out;
       user-select: none;
+    }
+
+    .lightbox-overlay.closing {
+      animation: fadeOut 0.2s ease-in forwards;
+    }
+    .lightbox-overlay.closing .lightbox-img {
+      animation: zoomOut 0.2s ease-in forwards;
     }
 
     .lightbox-topbar {
@@ -260,6 +270,16 @@ import { resolveImageUrl } from '../../../../core/utils/image-url';
       to { opacity: 1; transform: scale(1); }
     }
 
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    @keyframes zoomOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0.8; transform: scale(0.96); }
+    }
+
     @media (max-width: 768px) {
       .lightbox-nav {
         width: 42px;
@@ -273,7 +293,7 @@ import { resolveImageUrl } from '../../../../core/utils/image-url';
     }
   `],
 })
-export class GalleryLightboxComponent {
+export class GalleryLightboxComponent implements OnChanges {
   @Input() photos: GalleryPhoto[] = [];
   @Input() set initialIndex(val: number) {
     if (val >= 0 && val < this.photos.length) {
@@ -284,6 +304,35 @@ export class GalleryLightboxComponent {
   @Input() galleryTitle = '';
 
   @Output() close = new EventEmitter<void>();
+
+  /** isOpen flips to false immediately (parent closes right away), but the
+   *  overlay needs to stay in the DOM a bit longer to play its fade/zoom-out
+   *  exit animation (see .closing below) — visible is what the template's
+   *  @if actually gates on, closing lagging isOpen by the animation's
+   *  duration before visible catches up and the overlay unmounts. */
+  visible = signal(false);
+  closing = signal(false);
+  private closeTimer: ReturnType<typeof setTimeout> | null = null;
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['isOpen']) return;
+    if (this.isOpen) {
+      if (this.closeTimer) {
+        clearTimeout(this.closeTimer);
+        this.closeTimer = null;
+      }
+      this.closing.set(false);
+      this.visible.set(true);
+      return;
+    }
+    if (!this.visible()) return;
+    this.closing.set(true);
+    this.closeTimer = setTimeout(() => {
+      this.visible.set(false);
+      this.closing.set(false);
+      this.closeTimer = null;
+    }, 200); // match .lightbox-overlay.closing's fadeOut duration
+  }
 
   currentIndex = signal<number>(0);
 
