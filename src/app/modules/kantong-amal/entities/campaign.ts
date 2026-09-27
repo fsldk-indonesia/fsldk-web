@@ -49,6 +49,13 @@ export interface CampaignLite {
   title: string;
 }
 
+/** Agregat "dampak" Kantong Amal, aman ditampilkan publik tanpa autentikasi
+ *  — dipakai kartu statistik section Kantong Amal beranda. */
+export interface CampaignPublicStats {
+  totalDonors: number;
+  totalCollected: number;
+}
+
 export interface CreateCampaignRequest {
   title: string;
   categoryID: number;

@@ -21,7 +21,7 @@ import {
   DAYS_ID_SHORT, categoryMeta as scheduleCategoryMeta,
   formatLongDate as scheduleLongDate, formatTimeRange as scheduleTimeRange,
 } from '../../../schedule/schedule.constants';
-import { Campaign } from '../../../kantong-amal/entities/campaign';
+import { Campaign, CampaignPublicStats } from '../../../kantong-amal/entities/campaign';
 import { GalleryFeature } from '../../../gallery/entities/gallery';
 import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
 import { eventPath } from '../../../event/event.path';
@@ -886,24 +886,108 @@ interface CardPreview {
     .goods-card2-gallery-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .goods-card2-price { display: block; margin-top: 10px; font-weight: 800; color: var(--color-primary-dark); font-size: 1.05rem; }
 
-    /* ---------- Campaign card: cincin progres melingkar (conic-gradient,
-       tanpa chart lib) menggantikan bar linear + badge persen — progres jadi
-       elemen visual utama yang lebih kuat, bar linear (.progress-track/
-       .progress-fill/.progress-meta) tetap dipakai TERPISAH di bottom sheet
-       preview mobile (openPreview), tidak dihapus. ---------- */
-    .campaign-card2 { display: block; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
-    .campaign-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
-    .campaign-card2-media { aspect-ratio: 16/10; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
-    .campaign-card2-media img { width: 100%; height: 100%; object-fit: cover; }
-    .campaign-card2-body { display: flex; align-items: center; gap: 16px; }
-    .campaign-ring {
-      --pct: 0; flex-shrink: 0; position: relative; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center;
-      background: conic-gradient(var(--color-gold) calc(var(--pct) * 1%), var(--color-primary-soft) 0);
+    /* Bar progres generik (.progress-track/.progress-fill/.progress-meta) —
+       dipakai kartu campaign DAN bottom sheet preview (openPreview). Sebelum
+       ini classnya dipakai di markup (sheet) tapi TIDAK PERNAH didefinisikan
+       di sini — bar-nya render tanpa tinggi/warna (invisible bug). */
+    .progress-track { height: 9px; border-radius: var(--radius-full); background: var(--color-bg-alt); overflow: hidden; margin-top: 10px; }
+    .progress-fill { height: 100%; border-radius: var(--radius-full); background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark)); transition: width var(--motion-base) var(--ease-out); }
+    .progress-meta { display: flex; justify-content: flex-end; margin: 6px 0 0; font-size: .78rem; font-weight: 700; color: var(--color-primary-dark); }
+
+    /* ---------- Kantong Amal: redesign ala ldksyahid-app (home partial
+       testimony) — grid kartu campaign + sidebar (badge/heading/deskripsi +
+       2 stat card dampak nyata dari GET /public/campaigns/stats). Sidebar
+       duluan di markup supaya tampil di ATAS di mobile, digeser ke kanan
+       via properti CSS order di desktop (lihat .kantong-*). ---------- */
+    .kantong-panel { display: grid; grid-template-columns: 1fr; gap: 28px; }
+    .kantong-sidebar { order: 1; }
+    .kantong-grid { order: 2; display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    @media (min-width: 993px) {
+      .kantong-panel { grid-template-columns: 1.6fr 1fr; align-items: start; }
+      .kantong-grid { order: 1; }
+      .kantong-sidebar { order: 2; position: sticky; top: 100px; }
     }
-    .campaign-ring::before { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: #fff; }
-    .campaign-ring span { position: relative; z-index: 1; font-family: var(--font-heading); font-weight: 800; font-size: .82rem; color: var(--color-primary-dark); }
-    .campaign-card2-info { min-width: 0; }
-    .campaign-card2-info h3 { margin: 6px 0 4px; font-size: 1rem; }
+    .kantong-sidebar h2 { margin: 8px 0 10px; }
+    .kantong-stats { display: flex; flex-direction: column; gap: 12px; margin: 20px 0 24px; }
+    .kantong-stat-card {
+      display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 18px 20px; box-shadow: var(--shadow-sm);
+      transition: all var(--motion-fast) ease;
+    }
+    .kantong-stat-card:hover { border-color: var(--color-primary-soft); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .kantong-stat-icon {
+      flex-shrink: 0; width: 46px; height: 46px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--color-primary-tint), var(--color-primary-soft));
+      color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center;
+    }
+    .kantong-stat-content { display: flex; flex-direction: column; min-width: 0; }
+    .kantong-stat-number { font-family: var(--font-heading); font-weight: 800; font-size: 1.4rem; color: var(--color-primary-dark); line-height: 1.15; }
+    .kantong-stat-label { font-size: .8rem; color: var(--color-text-secondary); font-weight: 600; }
+
+    /* ---------- Campaign card: badge/chip di atas foto, judul, bar progres
+       linear + persen, lalu terkumpul/target berdampingan. ---------- */
+    .campaign-card2-wrap { height: 100%; }
+    .campaign-card2 { height: 100%; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
+    .campaign-card2:hover { box-shadow: var(--shadow-lg); transform: translateY(-6px) scale(1.03); text-decoration: none; z-index: 1; }
+    /* height tetap (bukan aspect-ratio) + flex-shrink:0 — supaya SEMUA
+       kartu (foto landscape, sertifikat putih, dst.) tampil dengan tinggi
+       gambar yang sama persis, tidak ikut mengecil/membesar mengikuti
+       panjang judul di bawahnya seperti sebelumnya. */
+    .campaign-card2-media { position: relative; flex-shrink: 0; height: 190px; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
+    .campaign-card2-media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--motion-base) ease; }
+    .campaign-card2:hover .campaign-card2-media img { transform: scale(1.06); }
+    .campaign-card2-chip { position: absolute; left: 12px; top: 12px; }
+    .campaign-card2-badge {
+      position: absolute; right: 12px; top: 12px; background: var(--color-gold); color: var(--color-gold-dark, #5c4400);
+      font-size: .7rem; font-weight: 800; padding: 4px 10px; border-radius: var(--radius-full); box-shadow: var(--shadow-sm);
+    }
+    .campaign-card2-body { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
+    .campaign-card2-body h3 { margin: 0; font-size: 1rem; line-height: 1.35; }
+    .campaign-card2-amounts { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border); }
+    .campaign-card2-amount { display: flex; flex-direction: column; gap: 2px; }
+    .campaign-card2-amount strong { font-size: .92rem; color: var(--color-text); }
+    .campaign-card2-amount span { font-size: .74rem; color: var(--color-muted); }
+    .campaign-card2-amount-target { margin-left: auto; text-align: right; }
+
+    /* CTA "Lihat Semua" — style copy dari .gallery-btn-all/.jadwal-btn-all
+       (pil gradient + swap gradient hover via ::before) supaya konsisten,
+       sebelumnya .btn.btn-outline polos. */
+    .campaign-btn-all {
+      position: relative; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .campaign-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .campaign-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .campaign-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .campaign-btn-all:hover::before { opacity: 1; }
+    .campaign-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .campaign-btn-all::before { transition: none; } }
+
+    /* Mobile: bukan carousel horizontal seperti section lain — daftar
+       kartu horizontal (thumb kiri + info kanan) ditumpuk vertikal, sesuai
+       referensi user (mirip list donasi ala kitabisa/benihbaik). */
+    @media (max-width: 640px) {
+      .kantong-grid { display: flex; flex-direction: column; gap: 14px; }
+      .campaign-card2-wrap { height: auto; }
+      .campaign-card2 { flex-direction: row; height: auto; }
+      .campaign-card2-media { width: 112px; height: auto; flex-shrink: 0; }
+      .campaign-card2-chip { font-size: .62rem; padding: 3px 8px; left: 8px; top: 8px; }
+      .campaign-card2-badge { font-size: .58rem; padding: 3px 7px; right: 8px; top: 8px; }
+      .campaign-card2-body { padding: 10px 14px; gap: 0; }
+      .campaign-card2-body h3 { font-size: .88rem; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .progress-track { margin-top: 8px; }
+      .campaign-card2-amounts { border-top: none; margin-top: 6px; padding-top: 0; }
+      .campaign-card2-amount-target { display: none; }
+    }
 
     /* ---------- Jadwal: kalender bulan berjalan (statis, tanpa toolbar
        prev/next — beda dari /jadwal index) + daftar agenda di bawahnya.
@@ -1190,11 +1274,19 @@ interface CardPreview {
     }
     .gallery-feature-name { color: rgba(255,255,255,.9); font-size: .85rem; font-weight: 700; letter-spacing: .2px; }
     .gallery-feature-badges { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    /* Solid (bukan ghost translucent) supaya bobot visualnya setara dengan
+       badge Video yang sudah solid merah — sebelumnya badge Foto pakai
+       background putih transparan tipis, kelihatan lemah/pudar di sebelah
+       badge Video yang tegas. */
     .gallery-feature-badge {
-      display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.15); color: rgba(255,255,255,.95);
-      border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-full); padding: 4px 11px; font-size: .74rem; font-weight: 700;
+      display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--color-primary-dark);
+      border-radius: var(--radius-full); padding: 5px 12px; font-size: .74rem; font-weight: 800;
+      box-shadow: 0 3px 10px rgba(0,0,0,.15);
     }
-    .gallery-feature-badge-video { background: rgba(239,68,68,.85); border-color: rgba(255,255,255,.3); }
+    .gallery-feature-badge-video {
+      background: linear-gradient(135deg, #ff5757, #dc2626); color: #fff;
+      box-shadow: 0 3px 10px rgba(220,38,38,.4);
+    }
     .gallery-feature-body { padding: 28px 28px 30px; }
     .gallery-feature-title { position: relative; margin: 0 0 10px; padding-left: 16px; font-size: 1.4rem; line-height: 1.35; }
     .gallery-feature-title::before {
@@ -1846,6 +1938,7 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   /** Sheet mobile-only, tap tanggal kalender (lihat onScheduleCellClick()). */
   daySheet = signal<CalendarCell | null>(null);
   campaigns = signal<Campaign[]>([]);
+  campaignStats = signal<CampaignPublicStats | null>(null);
   galleryFeature = signal<GalleryFeature | null>(null);
   /** Overlay zoom foto (app-gallery-lightbox, dipakai ulang dari halaman
    *  detail galeri) dan lightbox video YouTube — keduanya di-drive langsung
@@ -2119,11 +2212,11 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   /** Rotasi 3 warna aksen per-kartu — redesign "Karya Tulis Kita" ala
    *  ldksyahid-app (resources/views/landing-page/home/partials/article,
-   *  $cardColors di-index dengan $key % count). Nilai hex-nya SENGAJA
-   *  dipertahankan persis (bukan diganti ke hijau brand) — index/teal/amber
-   *  ini yang bikin tiap kartu artikel kelihatan beda identitas, konsisten
-   *  dengan referensinya. */
-  private readonly articleAccents = ['#6366f1', '#10b981', '#f59e0b'];
+   *  $cardColors di-index dengan $key % count). Diganti dari trio generic
+   *  (indigo/teal/amber) ke trio warna base brand yang sama dipakai
+   *  chip-green/chip-ember/chip-gold & node peta hero (styles.scss) —
+   *  tetap 3 warna berbeda per-kartu, tapi konsisten dengan palet FSLDK. */
+  private readonly articleAccents = ['var(--color-primary)', 'var(--color-ember)', 'var(--color-gold)'];
   articleAccent(index: number): string {
     return this.articleAccents[index % this.articleAccents.length];
   }
@@ -2333,6 +2426,16 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   }
 
   setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
+  setCampaignStats(stats: CampaignPublicStats | null): void { this.campaignStats.set(stats); }
+
+  /** Angka besar di stat card ("Rp 12,5 Jt") — beda dari formatRupiah()
+   *  (dipakai kartu campaign, butuh nominal presisi penuh), stat card
+   *  butuh angka ringkas ala "1000+ Anggota Aktif" di ldksyahid-app. */
+  formatCompactRupiah(amount: number): string {
+    if (amount >= 1_000_000_000) return `Rp ${(amount / 1_000_000_000).toFixed(1).replace(/\.0$/, '').replace('.', ',')} M`;
+    if (amount >= 1_000_000) return `Rp ${(amount / 1_000_000).toFixed(1).replace(/\.0$/, '').replace('.', ',')} Jt`;
+    return formatRupiah(amount);
+  }
   setGalleryFeature(feature: GalleryFeature | null): void { this.galleryFeature.set(feature); }
   setContactEmail(email: string): void { this.contactEmail.set(email); }
 

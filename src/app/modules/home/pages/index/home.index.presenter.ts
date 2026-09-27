@@ -66,9 +66,13 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
       next: (rows) => this.view.setScheduleWeeks(buildMonthView(scheduleYear, scheduleMonth, rows ?? []).weeks),
       error: () => this.view.setScheduleWeeks([]),
     });
-    this.campaignRepo.publicList({ page: 1, limit: 5 }).subscribe({
+    this.campaignRepo.publicList({ page: 1, limit: 4 }).subscribe({
       next: (p) => this.view.setCampaigns(p.data),
       error: () => this.view.setCampaigns([]),
+    });
+    this.campaignRepo.publicStats().subscribe({
+      next: (stats) => this.view.setCampaignStats(stats),
+      error: () => this.view.setCampaignStats(null),
     });
     // Cuma galeri paling baru (limit 1) — tapi list item-nya tidak bawa
     // eventDescription/documentLink/foto, jadi begitu dapat ID-nya susul

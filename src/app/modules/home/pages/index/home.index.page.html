@@ -701,30 +701,81 @@
 @if (!loading() && campaigns().length > 0) {
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Kantong Amal</span>
-        <h2>Salurkan Kebaikan, Bantu Sesama</h2>
-      </div>
-      <div class="card-scroller">
-        @for (c of campaigns(); track c.campaignID) {
-          <a class="campaign-card2 reveal" [routerLink]="isMobilePreview() ? null : kantongAmalPath.detail(c.slug)"
-             (click)="openPreview($event, { chip: c.categoryName, title: c.title, metaLines: [formatRupiah(c.collectedAmount) + ' terkumpul'], link: kantongAmalPath.detail(c.slug), ctaLabel: 'Lihat Campaign', progress: { percent: progressPercent(c), label: progressPercent(c) + '% tercapai' } })">
-            <div class="campaign-card2-media">
-              @if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }
-            </div>
-            <div class="news-body campaign-card2-body">
-              <div class="campaign-ring" [style.--pct]="progressPercent(c)"><span>{{ progressPercent(c) }}%</span></div>
-              <div class="campaign-card2-info">
-                <span class="chip chip-green">{{ c.categoryName }}</span>
-                <h3>{{ c.title }}</h3>
-                <p class="meta"><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</p>
+      <div class="kantong-panel reveal">
+        <!-- Sidebar dulu di markup (bukan grid) supaya di mobile tampil DI
+             ATAS sebagai "intro" sebelum kartu campaign — persis urutan
+             ldksyahid-app (testimony-sidebar order-1 di mobile). Desktop
+             posisinya digeser ke kanan lewat CSS `order`, lihat .kantong-*. -->
+        <aside class="kantong-sidebar">
+          <span class="eyebrow">Kantong Amal</span>
+          <h2>Salurkan Kebaikan, Bantu Sesama</h2>
+          <p class="text-muted">Setiap donasi yang tersalurkan lewat Kantong Amal membantu mahasiswa dan kegiatan dakwah kampus LDK se-Indonesia yang membutuhkan.</p>
+
+          @if (campaignStats(); as stats) {
+            <div class="kantong-stats">
+              <div class="kantong-stat-card">
+                <span class="kantong-stat-icon"><app-icon name="users" [size]="22" /></span>
+                <div class="kantong-stat-content">
+                  <span class="kantong-stat-number">{{ stats.totalDonors }}</span>
+                  <span class="kantong-stat-label">Total Donatur</span>
+                </div>
+              </div>
+              <div class="kantong-stat-card">
+                <span class="kantong-stat-icon"><app-icon name="hand-heart" [size]="22" /></span>
+                <div class="kantong-stat-content">
+                  <span class="kantong-stat-number">{{ formatCompactRupiah(stats.totalCollected) }}</span>
+                  <span class="kantong-stat-label">Dana Tersalurkan</span>
+                </div>
               </div>
             </div>
-          </a>
-        }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="kantongAmalPath.list" class="btn btn-outline">Lihat Semua Campaign</a>
+          }
+
+          <a [routerLink]="kantongAmalPath.list" class="campaign-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+        </aside>
+
+        <div class="kantong-grid">
+          @for (c of campaigns(); track c.campaignID) {
+            <!-- .reveal di WRAPPER, transform hover di .campaign-card2 —
+                 kalau digabung satu elemen, CSS Animation (.reveal, pakai
+                 transform keyframes) menang atas transform :hover biasa di
+                 cascade dan hover-nya tidak akan pernah kelihatan jalan
+                 (pola sama seperti .artikel-card-wrap/.artikel-card). -->
+            <div class="campaign-card2-wrap reveal">
+              <a class="campaign-card2" [routerLink]="isMobilePreview() ? null : kantongAmalPath.detail(c.slug)"
+                 (click)="openPreview($event, {
+                   chip: c.categoryName, title: c.title, metaLines: [],
+                   metaRows: [
+                     { icon: 'coins', label: 'Terkumpul', value: formatRupiah(c.collectedAmount) },
+                     { icon: 'flag', label: 'Target', value: formatRupiah(c.targetAmount) }
+                   ],
+                   link: kantongAmalPath.detail(c.slug), ctaLabel: 'Lihat Campaign',
+                   progress: { percent: progressPercent(c), label: progressPercent(c) + '% tercapai' },
+                   image: c.coverImageUrl
+                 })">
+                <div class="campaign-card2-media">
+                  @if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>CAMPAIGN</span> }
+                  <span class="chip chip-green campaign-card2-chip">{{ c.categoryName }}</span>
+                  @if (progressPercent(c) >= 90) { <span class="campaign-card2-badge">Hampir Tercapai!</span> }
+                </div>
+                <div class="campaign-card2-body">
+                  <h3>{{ c.title }}</h3>
+                  <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent(c)"></div></div>
+                  <p class="progress-meta"><span>{{ progressPercent(c) }}% tercapai</span></p>
+                  <div class="campaign-card2-amounts">
+                    <div class="campaign-card2-amount">
+                      <strong>{{ formatRupiah(c.collectedAmount) }}</strong>
+                      <span>terkumpul</span>
+                    </div>
+                    <div class="campaign-card2-amount campaign-card2-amount-target">
+                      <strong>{{ formatRupiah(c.targetAmount) }}</strong>
+                      <span>target</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          }
+        </div>
       </div>
     </div>
   </section>

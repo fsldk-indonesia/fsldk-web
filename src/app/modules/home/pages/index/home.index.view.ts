@@ -4,7 +4,7 @@ import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
 import { EventListItem } from '../../../event/entities/event';
 import { Goods } from '../../../goods/entities/goods';
 import { CalendarCell } from '../../../schedule/entities/schedule';
-import { Campaign } from '../../../kantong-amal/entities/campaign';
+import { Campaign, CampaignPublicStats } from '../../../kantong-amal/entities/campaign';
 import { GalleryFeature } from '../../../gallery/entities/gallery';
 
 export interface HomeIndexView {
@@ -17,6 +17,7 @@ export interface HomeIndexView {
   setSchedulePeriodLabel(label: string): void;
   setScheduleWeeks(weeks: CalendarCell[][]): void;
   setCampaigns(campaigns: Campaign[]): void;
+  setCampaignStats(stats: CampaignPublicStats | null): void;
   setGalleryFeature(feature: GalleryFeature | null): void;
   setContactEmail(email: string): void;
 }
