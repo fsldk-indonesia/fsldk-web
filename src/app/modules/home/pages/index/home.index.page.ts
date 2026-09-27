@@ -22,7 +22,7 @@ import {
   formatLongDate as scheduleLongDate, formatTimeRange as scheduleTimeRange,
 } from '../../../schedule/schedule.constants';
 import { Campaign, CampaignPublicStats } from '../../../kantong-amal/entities/campaign';
-import { GalleryFeature } from '../../../gallery/entities/gallery';
+import { GalleryFeature, GalleryPhoto } from '../../../gallery/entities/gallery';
 import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
 import { eventPath } from '../../../event/event.path';
 import { goodsPath } from '../../../goods/goods.path';
@@ -1373,9 +1373,11 @@ interface CardPreview {
        sebelumnya (dulu elemen ini sendiri yang <p>, bukan pembungkus). */
     .gallery-feature-desc p { margin: 0; }
     .gallery-feature-desc p + p { margin-top: 10px; }
+    .gallery-feature-cover { aspect-ratio: 21/7; border-radius: 10px; overflow: hidden; margin-bottom: 10px; cursor: pointer; transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
+    .gallery-feature-cover:hover { transform: scale(1.01); box-shadow: var(--shadow); }
+    .gallery-feature-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .gallery-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
     .gallery-feature-grid-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
-    .gallery-feature-grid-item:first-child { grid-column: 1 / -1; aspect-ratio: 21/7; }
     .gallery-feature-grid-item:hover { transform: scale(1.02); box-shadow: var(--shadow); }
     .gallery-feature-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .gallery-feature-video { margin-bottom: 20px; }
@@ -1399,7 +1401,7 @@ interface CardPreview {
     @media (max-width: 640px) {
       .gallery-feature-body { padding: 22px 18px 24px; }
       .gallery-feature-grid { grid-template-columns: repeat(2, 1fr); }
-      .gallery-feature-grid-item:first-child { aspect-ratio: 16/7; }
+      .gallery-feature-cover { aspect-ratio: 16/7; }
     }
 
     /* CTA "Lihat Semua" — style copy dari .jadwal-btn-all/.artikel-btn-all
@@ -2526,6 +2528,23 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   /** Digit saja (buang "+"/spasi/strip) — dipakai link wa.me di
    *  contact-method-item, sama teknik dengan app-whatsapp-fab. */
   contactWhatsappDigits(): string { return this.contactWhatsapp().replace(/\D/g, ''); }
+
+  /** Lightbox butuh satu array GalleryPhoto flat (lihat app-gallery-lightbox)
+   *  — foto sampul ditampilkan terpisah dari grid di template, jadi supaya
+   *  bisa ikut di-zoom kita sisipkan sebagai entri semu index 0 (photoID -1,
+   *  tidak nyata di backend) di depan feature.photos. Index yang dikirim ke
+   *  openGalleryZoom() dari cover/grid harus mengacu ke array gabungan ini. */
+  galleryZoomPhotos(feature: GalleryFeature): GalleryPhoto[] {
+    if (!feature.gallery.coverImage) return feature.photos;
+    const cover: GalleryPhoto = {
+      photoID: -1,
+      galleryID: feature.gallery.galleryID,
+      imagePath: feature.gallery.coverImage,
+      caption: null,
+      sortOrder: -1,
+    };
+    return [cover, ...feature.photos];
+  }
 
   openGalleryZoom(index: number): void {
     this.galleryZoomIndex.set(index);

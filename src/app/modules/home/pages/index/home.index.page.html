@@ -925,11 +925,17 @@
             <div class="gallery-feature-desc" [innerHTML]="sanitizeGalleryDescription(feature.gallery.eventDescription)"></div>
           }
 
+          @if (feature.gallery.coverImage) {
+            <div class="gallery-feature-cover" (click)="openGalleryZoom(0)">
+              <img [src]="galleryThumbUrl(feature.gallery.coverImage)" [alt]="feature.gallery.eventTheme" loading="lazy">
+            </div>
+          }
+
           @if (feature.photos.length > 0) {
             <div class="gallery-feature-grid">
               @for (photo of feature.photos; track photo.photoID; let i = $index) {
-                <div class="gallery-feature-grid-item" (click)="openGalleryZoom(i)">
-                  <img [src]="i === 0 && feature.gallery.coverImage ? galleryThumbUrl(feature.gallery.coverImage) : galleryThumbUrl(photo.imagePath)" [alt]="photo.caption || feature.gallery.eventTheme" loading="lazy">
+                <div class="gallery-feature-grid-item" (click)="openGalleryZoom(feature.gallery.coverImage ? i + 1 : i)">
+                  <img [src]="galleryThumbUrl(photo.imagePath)" [alt]="photo.caption || feature.gallery.eventTheme" loading="lazy">
                 </div>
               }
             </div>
@@ -965,7 +971,7 @@
   </section>
 
   <app-gallery-lightbox
-    [photos]="feature.photos"
+    [photos]="galleryZoomPhotos(feature)"
     [initialIndex]="galleryZoomIndex()"
     [isOpen]="galleryZoomOpen()"
     [galleryTitle]="feature.gallery.eventTheme"
