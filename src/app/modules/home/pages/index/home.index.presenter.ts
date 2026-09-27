@@ -49,7 +49,7 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
       next: (p) => this.view.setCatalogBooks(p.data),
       error: () => this.view.setCatalogBooks([]),
     });
-    this.eventRepo.publicList({ page: 1, limit: 5 }).subscribe({
+    this.eventRepo.publicList({ page: 1, limit: 6 }).subscribe({
       next: (p) => this.view.setEvents(p.data),
       error: () => this.view.setEvents([]),
     });

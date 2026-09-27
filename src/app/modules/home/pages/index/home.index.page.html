@@ -559,15 +559,34 @@
 }
 
 @if (!loading() && events().length > 0) {
+  <!-- Redesign: heading eyebrow+h2 polos di atas (center, konsisten dengan
+       heading section lain), panel hijau full-width DI BAWAHNYA membungkus
+       ikon+deskripsi+"Lihat Semua Event" (gaya pill CTA-nya sama persis
+       dengan .pustaka-carousel-cta, Koleksi Buku Digital) + grid kartu
+       sekaligus — kartu event "duduk" di dalam panel, bukan lagi terpisah
+       di bawahnya. Grid-nya TETAP .card-scroller apa adanya — grid 3 kolom
+       di desktop, geser horizontal (swipe, tanpa panah) di mobile. -->
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:28px">
         <span class="eyebrow">Agenda &amp; Kegiatan</span>
-        <h2>Event Terbaru</h2>
+        <h2>Event Terbaru FSLDK Indonesia</h2>
       </div>
-      <div class="card-scroller">
+      <div class="agenda-panel reveal">
+        <span class="agenda-panel-silhouette" aria-hidden="true"><app-icon name="calendar-days" [size]="140" /></span>
+        <div class="agenda-panel-intro">
+          <span class="agenda-panel-icon"><app-icon name="calendar-days" [size]="24" /></span>
+          <p>Ikuti rangkaian musyawarah, pelatihan, dan silaturahmi nasional FSLDK Indonesia dari waktu ke waktu.</p>
+          <a [routerLink]="eventPath.publicIndex" class="agenda-panel-cta">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
+        </div>
+        <div class="agenda-panel-cards-wrap">
+        <div class="card-scroller agenda-panel-cards">
         @for (e of events(); track e.eventID) {
-          <a class="event-card reveal" [routerLink]="eventPath.publicDetail(e.eventSlug)">
+          <a
+            class="event-card reveal"
+            [routerLink]="isMobilePreview() ? null : eventPath.publicDetail(e.eventSlug)"
+            (click)="openPreview($event, eventPreview(e))"
+          >
             <div class="event-card-media">
               @if (e.eventImage) { <img [src]="e.eventImage" [alt]="e.eventTitle"> } @else { <span>EVENT</span> }
               <span class="event-card-overlay" aria-hidden="true"></span>
@@ -577,20 +596,30 @@
                   <span class="mon">{{ e.startDate | date:'MMM' }}</span>
                 </span>
               }
-              <span class="event-status-chip" [class.ongoing]="e.status === 'ongoing'" [class.past]="e.status === 'past'">
-                {{ e.status === 'ongoing' ? 'Berlangsung' : e.status === 'past' ? 'Selesai' : 'Akan Datang' }}
-              </span>
+              @if (e.status === 'upcoming') {
+                <span class="event-status-chip" [class.open]="e.registOpen" [class.closed]="!e.registOpen">
+                  {{ e.registOpen ? 'Pendaftaran Dibuka' : 'Pendaftaran Ditutup' }}
+                </span>
+              } @else {
+                <span class="event-status-chip" [class.ongoing]="e.status === 'ongoing'" [class.past]="e.status === 'past'">
+                  {{ e.status === 'ongoing' ? 'Berlangsung' : 'Selesai' }}
+                </span>
+              }
               <div class="event-card-caption">
-                <span class="chip chip-green">{{ e.eventDivision }}</span>
+                <div class="event-card-tags">
+                  <span class="chip chip-green">{{ e.eventDivision }}</span>
+                  @if (e.tag) { <span class="event-tag-pill"><app-icon name="hash" [size]="10" /> {{ e.tag }}</span> }
+                </div>
                 <h3>{{ e.eventTitle }}</h3>
-                @if (e.location) { <p class="event-card-location"><app-icon name="map-pin" [size]="12" /> {{ e.location }}</p> }
+                <p class="event-card-date-range"><app-icon name="calendar" [size]="12" /> {{ eventDateRange(e) }}</p>
+                @if (e.location) { <p class="event-card-location"><app-icon name="map-pin" [size]="12" /> {{ eventLocationText(e) }}</p> }
+                <span class="event-card-hover-cta">Lihat Detail <app-icon name="chevron-right" [size]="11" /></span>
               </div>
             </div>
           </a>
         }
-      </div>
-      <div class="text-center mt-lg">
-        <a [routerLink]="eventPath.publicIndex" class="btn btn-outline">Lihat Semua Event</a>
+        </div>
+        </div>
       </div>
     </div>
   </section>

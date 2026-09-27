@@ -623,20 +623,67 @@ interface CardPreview {
       font-size: .72rem; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-full);
     }
 
+    /* ---------- Agenda & Kegiatan: heading eyebrow+h2 dikembalikan polos di
+       LUAR panel (center, di atas — konsisten dengan heading section lain),
+       panel hijau full-width di bawahnya membungkus ikon+deskripsi+CTA pill
+       ("Lihat Semua Event", gayanya SENGAJA identik dengan
+       .pustaka-carousel-cta / Koleksi Buku Digital) SEKALIGUS grid kartu
+       event — kartu "duduk" di dalam panel (bukan section terpisah di
+       bawahnya), makanya padding dipecah dua wrapper (-intro untuk teks,
+       -cards untuk grid) alih-alih satu padding di .agenda-panel sendiri. ---------- */
+    .agenda-panel {
+      position: relative; overflow: hidden; margin-bottom: 40px;
+      background: var(--color-primary); color: #fff; border-radius: var(--radius-lg);
+      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
+    }
+    .agenda-panel-silhouette {
+      position: absolute; right: -30px; bottom: -30px; z-index: 0; color: rgba(255,255,255,.14);
+      transform: rotate(-12deg); pointer-events: none;
+    }
+    .agenda-panel-intro {
+      position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center;
+      gap: 12px; text-align: center; padding: 40px 24px 28px;
+    }
+    .agenda-panel-icon { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.16); }
+    .agenda-panel-intro p { max-width: 540px; margin: 0; font-size: .92rem; line-height: 1.65; opacity: .92; }
+    .agenda-panel-cta {
+      display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid rgba(255,255,255,.7);
+      color: #fff; padding: 10px 22px; border-radius: var(--radius-sm); font-weight: 700; font-size: .76rem;
+      letter-spacing: .04em; text-transform: uppercase; margin-top: 2px;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .agenda-panel-cta:hover { background: #fff; color: var(--color-primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-lg); text-decoration: none; }
+    /* Grid kartu di DALAM panel — .card-scroller (grid 3 kolom/geser mobile)
+       dipakai apa adanya. Inset horizontal SENGAJA dipecah dua: wrapper
+       statis (.agenda-panel-cards-wrap) yang pegang padding kiri/kanan +
+       z-index, .card-scroller sendiri cuma padding atas/bawah. Di mobile,
+       .card-scroller jadi elemen yang overflow-x:auto+scroll-snap — padding
+       kiri/kanan DI ELEMEN YANG SCROLL ITU SENDIRI selalu dikoreksi/
+       dihapus browser (scroll-snap-type:mandatory terus membetulkan
+       scrollLeft supaya kartu snap PERTAMA rata pas di awal scrollport),
+       persis masalah yang sama seperti .berita-carousel-track-wrap —
+       makanya inset kiri/kanan mobile-nya dipindah ke wrapper yang statis
+       (tidak ikut scroll), bukan ke .card-scroller. */
+    .agenda-panel-cards-wrap { position: relative; z-index: 1; }
+    .agenda-panel-cards { padding: 4px 24px 36px; margin: 0; }
+
     /* ---------- Event card: "poster" — foto penuh + overlay gradasi bawah
-       menampung judul/lokasi (bukan lagi thumb+body terpisah seperti kartu
-       lain), badge tanggal mengambang gaya agenda-mini-date, chip status
-       (Akan Datang/Berlangsung/Selesai) di sudut kanan. ---------- */
+       menampung judul/lokasi/tanggal (bukan lagi thumb+body terpisah seperti
+       kartu lain), badge tanggal mengambang gaya agenda-mini-date, chip
+       status detail (Pendaftaran Dibuka/Ditutup untuk event akan datang,
+       Berlangsung/Selesai untuk sisanya — bukan lagi "Akan Datang" generik
+       yang tidak bilang apa-apa soal bisa/tidaknya masih daftar). ---------- */
     .event-card {
       position: relative; display: block; aspect-ratio: 3/4; border-radius: var(--radius-lg); overflow: hidden;
       box-shadow: var(--shadow-sm); transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
     }
     .event-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); text-decoration: none; }
     .event-card-media { position: relative; width: 100%; height: 100%; background: var(--color-primary-soft); }
-    .event-card-media img { width: 100%; height: 100%; object-fit: cover; }
+    .event-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--motion-slow) ease; }
+    @media (hover: hover) and (pointer: fine) { .event-card:hover .event-card-media img { transform: scale(1.06); } }
     .event-card-overlay {
       position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(4,20,10,.88) 0%, rgba(4,20,10,.2) 55%, transparent 75%);
+      background: linear-gradient(to top, rgba(4,20,10,.9) 0%, rgba(4,20,10,.3) 58%, transparent 78%);
     }
     .event-date-badge {
       position: absolute; top: 14px; left: 14px; display: flex; flex-direction: column; align-items: center;
@@ -645,15 +692,44 @@ interface CardPreview {
     .event-date-badge .day { font-family: var(--font-heading); font-weight: 800; font-size: 1.2rem; color: var(--color-primary-dark); }
     .event-date-badge .mon { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); }
     .event-status-chip {
-      position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,.92); color: var(--color-primary-dark);
-      font-size: .7rem; font-weight: 800; padding: 4px 10px; border-radius: var(--radius-full);
+      position: absolute; top: 14px; right: 14px; max-width: calc(100% - 90px); background: rgba(255,255,255,.92); color: var(--color-primary-dark);
+      font-size: .68rem; font-weight: 800; padding: 4px 10px; border-radius: var(--radius-full); text-align: right;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .event-status-chip.open { background: var(--color-gold); color: #fff; }
+    .event-status-chip.closed { background: rgba(255,255,255,.7); color: var(--color-muted); }
     .event-status-chip.ongoing { background: var(--color-gold); color: #fff; }
     .event-status-chip.past { background: rgba(255,255,255,.7); color: var(--color-muted); }
     .event-card-caption { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px; color: #fff; }
-    .event-card-caption .chip { margin-bottom: 8px; }
-    .event-card-caption h3 { color: #fff; margin: 0 0 6px; font-size: 1.05rem; line-height: 1.3; }
-    .event-card-location { display: flex; align-items: center; gap: 5px; margin: 0; font-size: .78rem; color: rgba(255,255,255,.85); }
+    .event-card-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+    .event-card-tags .chip { margin-bottom: 0; }
+    .event-tag-pill {
+      display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,.16); color: #fff;
+      font-size: .7rem; font-weight: 600; padding: 3px 9px; border-radius: var(--radius-full);
+    }
+    .event-card-caption h3 { color: #fff; margin: 0 0 8px; font-size: 1.05rem; line-height: 1.3; }
+    .event-card-date-range, .event-card-location {
+      display: flex; align-items: center; gap: 5px; margin: 0 0 4px; font-size: .78rem; color: rgba(255,255,255,.85);
+    }
+    .event-card-location:last-of-type { margin-bottom: 0; }
+    /* CTA halus yang muncul saat hover (desktop saja) — penegas afordansi
+       klik, pola sama seperti .artikel-card-cta tapi tanpa background pill
+       (sudah ada overlay gelap di baliknya) supaya tidak menumpuk elemen. */
+    .event-card-hover-cta {
+      display: flex; align-items: center; gap: 4px; margin-top: 10px; font-size: .78rem; font-weight: 700;
+      color: var(--color-gold); opacity: 0; transform: translateY(4px);
+      transition: opacity var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .event-card:hover .event-card-hover-cta { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 720px) {
+      .agenda-panel { margin-bottom: 24px; }
+      .agenda-panel-intro { padding: 28px 20px 22px; }
+      .agenda-panel-cards-wrap { padding: 0 16px 24px; }
+      .agenda-panel-cards { padding: 0; }
+      .event-card-hover-cta { display: none; }
+    }
 
     /* ---------- Goods card: overlay hover berisi shortDescription + CTA
        (data yang tadinya tidak dipakai sama sekali di kartu ringkas
@@ -1543,6 +1619,64 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   formatTime(d: string | Date | null | undefined): string {
     return d ? (this.datePipe.transform(d, 'HH.mm') ?? '') : '';
+  }
+
+  /** Rentang tanggal kartu Event — "23 Nov 2026" untuk event sehari, atau
+   *  "23 – 25 Nov 2026" kalau startDate/endDate beda hari (event multi-hari),
+   *  data yang tadinya tidak dipakai sama sekali di kartu ringkas. */
+  eventDateRange(e: EventListItem): string {
+    if (!e.startDate) return '';
+    if (!e.endDate || new Date(e.startDate).toDateString() === new Date(e.endDate).toDateString()) {
+      return this.formatDate(e.startDate);
+    }
+    const start = this.datePipe.transform(e.startDate, 'd MMM') ?? '';
+    const end = this.datePipe.transform(e.endDate, 'd MMM yyyy') ?? '';
+    return `${start} – ${end}`;
+  }
+
+  /** Kota + venue digabung — pola sama seperti event.public-detail.page.html
+   *  ("Yogyakarta — Hotel Grand Keisha…"). */
+  eventLocationText(e: EventListItem): string {
+    if (e.location && e.place) return `${e.location} — ${e.place}`;
+    return e.location || e.place || '';
+  }
+
+  /** Label status pendaftaran yang lebih detail (dipakai di sheet mobile,
+   *  lihat eventPreview()) — chip di kartu sendiri tetap versi singkatnya
+   *  (lihat template, langsung inline karena cuma dua kata). */
+  eventRegistLabel(e: EventListItem): string {
+    if (e.status === 'upcoming') {
+      if (e.registOpen) {
+        return e.closeRegistDate ? `Dibuka hingga ${this.formatDate(e.closeRegistDate)}` : 'Pendaftaran Dibuka';
+      }
+      return 'Pendaftaran Ditutup';
+    }
+    return e.status === 'ongoing' ? 'Sedang Berlangsung' : 'Sudah Selesai';
+  }
+
+  /** Bentuk CardPreview generik (lihat definisi interface di atas) untuk
+   *  kartu Event — dipakai openPreview() supaya tap kartu di mobile membuka
+   *  bottom sheet konsisten dengan Berita/Artikel/Buku, bukan langsung
+   *  pindah halaman. */
+  eventPreview(e: EventListItem): CardPreview {
+    const metaRows: CardPreviewMetaRow[] = [{ icon: 'calendar', label: 'Tanggal', value: this.eventDateRange(e) }];
+    const locationText = this.eventLocationText(e);
+    if (locationText) metaRows.push({ icon: 'map-pin', label: 'Lokasi', value: locationText });
+    metaRows.push({
+      icon: e.status === 'upcoming' ? (e.registOpen ? 'check-circle' : 'x-circle') : 'clock',
+      label: 'Status',
+      value: this.eventRegistLabel(e),
+    });
+    if (e.tag) metaRows.push({ icon: 'hash', label: 'Kategori', value: e.tag });
+    return {
+      chip: e.eventDivision,
+      title: e.eventTitle,
+      metaLines: [],
+      metaRows,
+      link: eventPath.publicDetail(e.eventSlug),
+      ctaLabel: 'Lihat Detail Event',
+      image: e.eventImage,
+    };
   }
 
   /** Mobile-only preview: klik kartu berita/artikel/campaign membuka bottom
