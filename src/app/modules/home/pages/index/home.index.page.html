@@ -843,36 +843,196 @@
   }
 </app-bottom-sheet>
 
-@if (!loading() && latestGallery(); as gallery) {
+@if (!loading() && galleryFeature(); as feature) {
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
-        <span class="eyebrow">Galeri</span>
-        <h2>Dokumentasi Kegiatan Terbaru</h2>
-      </div>
-      <a class="gallery-card reveal" [routerLink]="['/tentang/galeri', gallery.galleryID]">
-        <div class="gallery-thumb">@if (gallery.coverImage) { <img [src]="gallery.coverImage" [alt]="gallery.eventName"> } @else { <span>GALERI</span> }</div>
-        <div class="gallery-body">
-          <span class="chip chip-green">{{ gallery.eventTheme }}</span>
-          <h3>{{ gallery.eventName }}</h3>
-          <p class="meta">{{ (gallery.eventDate ?? gallery.createdDate) | date:'d MMM yyyy' }}</p>
-          <span class="gallery-count"><app-icon name="images" [size]="14" /> {{ gallery.totalPhotos }} foto</span>
+      <div class="gallery-section-head reveal" style="margin-bottom:28px">
+        <div class="gallery-section-head-text">
+          <span class="eyebrow">Galeri</span>
+          <h2>Dokumentasi Kegiatan Terbaru</h2>
+          <p class="text-muted">Telusuri jejak dokumentasi musyawarah, kajian, dan momen kebersamaan dakwah kampus LDK se-Indonesia dari waktu ke waktu.</p>
         </div>
-      </a>
-      <div class="text-center mt-lg">
-        <a routerLink="/tentang/galeri" class="btn btn-outline">Lihat Semua Galeri</a>
+        <a routerLink="/tentang/galeri" class="gallery-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
       </div>
+
+      <article class="gallery-feature reveal">
+        <header class="gallery-feature-head">
+          <span class="gallery-feature-name">{{ feature.gallery.eventName }}</span>
+          <span class="gallery-feature-badges">
+            @if (feature.gallery.youtubeVideoID) {
+              <span class="gallery-feature-badge gallery-feature-badge-video"><app-icon name="youtube" [size]="12" /> Video</span>
+            }
+            @if (feature.gallery.totalPhotos > 0) {
+              <span class="gallery-feature-badge"><app-icon name="images" [size]="12" /> {{ feature.gallery.totalPhotos }} Foto</span>
+            }
+          </span>
+        </header>
+
+        <div class="gallery-feature-body">
+          <h3 class="gallery-feature-title">{{ feature.gallery.eventTheme }}</h3>
+          @if (feature.gallery.eventDescription) {
+            <p class="gallery-feature-desc">{{ feature.gallery.eventDescription }}</p>
+          }
+
+          @if (feature.photos.length > 0) {
+            <div class="gallery-feature-grid">
+              @for (photo of feature.photos; track photo.photoID; let i = $index) {
+                <div class="gallery-feature-grid-item" (click)="openGalleryZoom(i)">
+                  <img [src]="galleryImgUrl(photo.imagePath)" [alt]="photo.caption || feature.gallery.eventTheme" loading="lazy">
+                </div>
+              }
+            </div>
+          }
+
+          @if (feature.gallery.youtubeVideoID; as vid) {
+            <div class="gallery-feature-video">
+              <span class="gallery-feature-video-label"><app-icon name="youtube" [size]="13" /> Video Dokumentasi</span>
+              <div class="gallery-feature-video-thumb" (click)="openGalleryVideo()">
+                <img [src]="'https://img.youtube.com/vi/' + vid + '/maxresdefault.jpg'" [alt]="'Video dokumentasi ' + feature.gallery.eventName" loading="lazy">
+                <span class="gallery-feature-play"><app-icon name="play" [size]="20" /></span>
+              </div>
+            </div>
+          }
+
+          @if (feature.gallery.documentLink; as docLink) {
+            <div class="gallery-feature-footer">
+              <a [href]="docLink" target="_blank" rel="noopener" class="gallery-feature-doc">
+                <app-icon name="external-link" [size]="14" /> Dokumentasi Lengkap
+              </a>
+            </div>
+          }
+        </div>
+      </article>
     </div>
   </section>
+
+  <app-gallery-lightbox
+    [photos]="feature.photos"
+    [initialIndex]="galleryZoomIndex()"
+    [isOpen]="galleryZoomOpen()"
+    [galleryTitle]="feature.gallery.eventTheme"
+    (close)="closeGalleryZoom()"
+  />
+
+  @if (feature.gallery.youtubeVideoID; as vid) {
+    <div class="gallery-video-overlay" [class.active]="galleryVideoOpen()" (click)="closeGalleryVideo()">
+      <div class="gallery-video-wrap" (click)="$event.stopPropagation()">
+        @if (galleryVideoOpen()) {
+          <iframe
+            [src]="safeGalleryVideoUrl(vid)"
+            title="Video Dokumentasi {{ feature.gallery.eventName }}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        }
+      </div>
+      <button type="button" class="gallery-video-close" (click)="closeGalleryVideo()" aria-label="Tutup video">
+        <app-icon name="x" [size]="18" />
+      </button>
+    </div>
+  }
 }
 
 <section class="section">
   <div class="container">
-    <div class="contact-cta-inner reveal">
+    <div class="text-center reveal" style="margin-bottom:40px">
       <span class="eyebrow">Hubungi Kami</span>
-      <h2>Ada Pertanyaan atau Ingin Berkolaborasi?</h2>
-      <p class="text-muted">Sampaikan pertanyaan, aspirasi, atau ajakan kolaborasi dakwah kampus kepada kami — tim sekretariat FSLDK Indonesia siap menindaklanjuti.</p>
-      <a [routerLink]="contactPath.public" class="btn btn-primary">Kirim Pesan</a>
+      <h2>Ada Pertanyaan?</h2>
+      <p class="text-muted">Jika kamu memiliki pertanyaan, kritik, atau saran mengenai dakwah kampus, jangan ragu untuk menghubungi kami ya!</p>
+    </div>
+
+    <div class="contact-panel reveal">
+      <div class="contact-panel-info">
+        <div class="contact-quote-card">
+          <span class="contact-quote-silhouette" aria-hidden="true"><app-icon name="quote-left" [size]="96" /></span>
+          <span class="contact-quote-icon"><app-icon name="book-open" [size]="26" /></span>
+          <p class="contact-quote-text">"Dan Kami tidak mengutus sebelum engkau (Muhammad), melainkan orang laki-laki yang Kami beri wahyu kepada mereka; maka bertanyalah kepada orang yang mempunyai pengetahuan jika kamu tidak mengetahui,"</p>
+          <span class="contact-quote-source"><app-icon name="sparkles" [size]="13" /> QS. An-Nahl 16: Ayat 43</span>
+        </div>
+
+        <div class="contact-method-list">
+          <div class="contact-method-item">
+            <span class="contact-method-icon"><app-icon name="mail" [size]="18" /></span>
+            <div class="contact-method-body">
+              <span class="contact-method-label">Email</span>
+              <a [href]="'mailto:' + contactEmail()" class="contact-method-value">{{ contactEmail() }}</a>
+            </div>
+          </div>
+          <div class="contact-method-item">
+            <span class="contact-method-icon"><app-icon name="map-pin" [size]="18" /></span>
+            <div class="contact-method-body">
+              <span class="contact-method-label">Lokasi</span>
+              <span class="contact-method-value">Plaza Aminta Lantai 5/504, Jl. TB Simatupang Kav. 10 – Pondok Pinang, Kebayoran Lama, Jakarta Selatan 12310, Indonesia</span>
+            </div>
+          </div>
+          <div class="contact-method-item">
+            <span class="contact-method-icon"><app-icon name="whatsapp" [size]="18" /></span>
+            <div class="contact-method-body">
+              <span class="contact-method-label">WhatsApp</span>
+              <a href="https://wa.me/6285111332861" target="_blank" rel="noopener noreferrer" class="contact-method-value">+62 851-1133-2861</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-panel-form">
+        @if (contactSubmitted()) {
+          <div class="contact-success">
+            <span class="contact-success-icon"><app-icon name="check-circle" [size]="44" /></span>
+            <h3>Pesan Berhasil Terkirim!</h3>
+            <p>Jazakumullah khairan katsiran. Tim sekretariat FSLDK Indonesia akan meninjau dan merespon pesanmu secepatnya.</p>
+            <button type="button" class="btn btn-outline" (click)="resetContactForm()">
+              <app-icon name="plus" [size]="14" /> Kirim Pesan Lainnya
+            </button>
+          </div>
+        } @else {
+          <div class="contact-form-head">
+            <span class="contact-form-icon"><app-icon name="send" [size]="22" /></span>
+            <h3>Kirim Pesan</h3>
+            <p>Kami akan segera membalas pesanmu!</p>
+          </div>
+
+          @if (contactRateLimited()) {
+            <div class="contact-form-alert"><app-icon name="alert-triangle" [size]="16" /> Terlalu banyak permintaan pengiriman pesan. Coba lagi beberapa saat lagi.</div>
+          }
+
+          <form [formGroup]="contactForm" (ngSubmit)="onContactSubmit()">
+            <div class="contact-form-row">
+              <div class="contact-form-group">
+                <label for="home-ct-name"><app-icon name="user-circle" [size]="14" /> Nama Kamu <span class="req">*</span></label>
+                <input id="home-ct-name" type="text" [class.is-invalid]="contactHasError('senderName')" formControlName="senderName" placeholder="Masukkan namamu" maxlength="100">
+                @if (contactHasError('senderName')) { <span class="contact-form-error">Nama wajib diisi (minimal 3 karakter).</span> }
+              </div>
+              <div class="contact-form-group">
+                <label for="home-ct-email"><app-icon name="envelope" [size]="14" /> Email Kamu <span class="req">*</span></label>
+                <input id="home-ct-email" type="email" [class.is-invalid]="contactHasError('email')" formControlName="email" placeholder="Masukkan emailmu" maxlength="255">
+                @if (contactHasError('email')) { <span class="contact-form-error">Email tidak valid.</span> }
+              </div>
+            </div>
+
+            <div class="contact-form-group">
+              <label for="home-ct-subject"><app-icon name="tags" [size]="14" /> Subjek <span class="req">*</span></label>
+              <input id="home-ct-subject" type="text" [class.is-invalid]="contactHasError('subject')" formControlName="subject" placeholder="Tentang apa pesanmu?" maxlength="200">
+              @if (contactHasError('subject')) { <span class="contact-form-error">Subjek wajib diisi (minimal 5 karakter).</span> }
+            </div>
+
+            <div class="contact-form-group">
+              <label for="home-ct-message"><app-icon name="message-circle" [size]="14" /> Pesan <span class="req">*</span></label>
+              <textarea id="home-ct-message" rows="4" [class.is-invalid]="contactHasError('message')" formControlName="message" placeholder="Tulis pesanmu di sini..." maxlength="1000"></textarea>
+              @if (contactHasError('message')) { <span class="contact-form-error">Pesan wajib diisi (minimal 10 karakter).</span> }
+            </div>
+
+            <button type="submit" class="contact-form-submit" [disabled]="contactRepo.submitting() || contactRateLimited()">
+              @if (contactRepo.submitting()) {
+                <div class="spinner spinner-sm"></div> Mengirim...
+              } @else {
+                <app-icon name="send" [size]="15" /> Kirim Pesan
+              }
+            </button>
+          </form>
+        }
+      </div>
     </div>
   </div>
 </section>

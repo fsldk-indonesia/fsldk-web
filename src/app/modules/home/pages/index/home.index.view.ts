@@ -5,7 +5,7 @@ import { EventListItem } from '../../../event/entities/event';
 import { Goods } from '../../../goods/entities/goods';
 import { CalendarCell } from '../../../schedule/entities/schedule';
 import { Campaign } from '../../../kantong-amal/entities/campaign';
-import { GalleryListItem } from '../../../gallery/entities/gallery';
+import { GalleryFeature } from '../../../gallery/entities/gallery';
 
 export interface HomeIndexView {
   setLoading(loading: boolean): void;
@@ -17,5 +17,6 @@ export interface HomeIndexView {
   setSchedulePeriodLabel(label: string): void;
   setScheduleWeeks(weeks: CalendarCell[][]): void;
   setCampaigns(campaigns: Campaign[]): void;
-  setLatestGallery(gallery: GalleryListItem | null): void;
+  setGalleryFeature(feature: GalleryFeature | null): void;
+  setContactEmail(email: string): void;
 }

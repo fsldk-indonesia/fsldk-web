@@ -26,12 +26,14 @@ const GROUP_META: Record<string, { icon: string; variant: string }> = {
   layanan: { icon: 'wrench', variant: 'info' },
   notifikasi: { icon: 'message-circle', variant: 'gold' },
   kantong_amal: { icon: 'hand-heart', variant: 'ember' },
+  kontak: { icon: 'mail', variant: 'solid' },
 };
 const GROUP_LABELS: Record<string, string> = {
   format_keuangan: 'Format Keuangan',
   layanan: 'Layanan',
   notifikasi: 'Notifikasi',
   kantong_amal: 'Kantong Amal',
+  kontak: 'Kontak',
 };
 
 @Component({

@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { NewsRepository } from '../../../news/repositories/news.repository';
 import { ArticleRepository } from '../../../article/repositories/article.repository';
@@ -9,6 +10,7 @@ import { ScheduleRepository } from '../../../schedule/repositories/schedule.repo
 import { buildCalendarGrid, buildMonthView, monthName, toISODate } from '../../../schedule/schedule.constants';
 import { CampaignRepository } from '../../../kantong-amal/repositories/campaign.repository';
 import { GalleryApiService } from '../../../gallery/services/gallery-api.service';
+import { SettingApiService } from '../../../setting/services/setting-api.service';
 import { HomeIndexView } from './home.index.view';
 
 @Injectable()
@@ -25,6 +27,7 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
   // dipakai halaman daftar galeri penuh; memanggil loadPublic() dari sini
   // akan menimpa state itu dan bikin flash data 1 item saat pindah halaman.
   private galleryApi = inject(GalleryApiService);
+  private settingApi = inject(SettingApiService);
 
   load(): void {
     this.view.setLoading(true);
@@ -67,9 +70,28 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
       next: (p) => this.view.setCampaigns(p.data),
       error: () => this.view.setCampaigns([]),
     });
+    // Cuma galeri paling baru (limit 1) — tapi list item-nya tidak bawa
+    // eventDescription/documentLink/foto, jadi begitu dapat ID-nya susul
+    // dengan detail + halaman foto pertama (7, sama seperti photosLimit di
+    // gallery.public-detail.page.ts) supaya kartu di beranda bisa tampilkan
+    // mosaic foto + video + link dokumentasi, bukan cuma cover.
     this.galleryApi.listPublic(1, 1, 'newest').subscribe({
-      next: (res) => this.view.setLatestGallery(res.data[0] ?? null),
-      error: () => this.view.setLatestGallery(null),
+      next: (res) => {
+        const latest = res.data[0];
+        if (!latest) { this.view.setGalleryFeature(null); return; }
+        forkJoin({
+          gallery: this.galleryApi.getPublic(latest.galleryID),
+          photos: this.galleryApi.listPhotosPublic(latest.galleryID, 1, 7),
+        }).subscribe({
+          next: ({ gallery, photos }) => this.view.setGalleryFeature({ gallery, photos: photos.data }),
+          error: () => this.view.setGalleryFeature(null),
+        });
+      },
+      error: () => this.view.setGalleryFeature(null),
+    });
+    this.settingApi.getPublicContactEmail().subscribe({
+      next: (res) => { if (res.email) this.view.setContactEmail(res.email); },
+      error: () => {},
     });
   }
 }

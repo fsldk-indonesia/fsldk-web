@@ -1,10 +1,16 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IconComponent } from '../../../../shared/icon.component';
 import { WelcomePopupComponent } from '../../components/welcome-popup.component';
 import { BottomSheetComponent } from '../../../../shared/bottom-sheet.component';
 import { PopupModalComponent } from '../../../../shared/popup-modal.component';
+import { GalleryLightboxComponent } from '../../../gallery/components/gallery-lightbox/gallery-lightbox.component';
+import { ContactRepository } from '../../../contact/repositories/contact.repository';
+import { ToastService } from '../../../../core/services/toast.service';
+import { environment } from '../../../../../environments/environment';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
 import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
@@ -16,8 +22,7 @@ import {
   formatLongDate as scheduleLongDate, formatTimeRange as scheduleTimeRange,
 } from '../../../schedule/schedule.constants';
 import { Campaign } from '../../../kantong-amal/entities/campaign';
-import { GalleryListItem } from '../../../gallery/entities/gallery';
-import { contactPath } from '../../../contact/contact.path';
+import { GalleryFeature } from '../../../gallery/entities/gallery';
 import { catalogbookPath } from '../../../catalogbook/catalogbook.path';
 import { eventPath } from '../../../event/event.path';
 import { goodsPath } from '../../../goods/goods.path';
@@ -81,7 +86,7 @@ interface CardPreview {
   selector: 'app-home-index-page',
   standalone: true,
   templateUrl: './home.index.page.html',
-  imports: [RouterLink, DatePipe, IconComponent, WelcomePopupComponent, BottomSheetComponent, PopupModalComponent],
+  imports: [RouterLink, DatePipe, ReactiveFormsModule, IconComponent, WelcomePopupComponent, BottomSheetComponent, PopupModalComponent, GalleryLightboxComponent],
   providers: [HomeIndexPresenter],
   styles: [`
     /* ---------- Kanvas: putih campur sedikit hijau (var(--color-primary-tint))
@@ -1049,20 +1054,225 @@ interface CardPreview {
       .jadwal-cal-pop { display: none; }
     }
 
-    .contact-cta-inner {
-      max-width: 640px; margin: 0 auto; text-align: center; background: #fff; border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); padding: 40px 36px; box-shadow: var(--shadow-sm);
+    /* ---------- Hubungi Kami: redesign ala ldksyahid-app (home partial
+       contact-us) — panel kiri kutipan Al-Qur'an + info kontak resmi FSLDK
+       (data sama dengan ContactPublicIndexPage, /tentang/kontak), panel
+       kanan FORM interaktif terpasang langsung (bukan cuma tombol CTA ke
+       halaman lain seperti sebelumnya). Validator & alur submit sama
+       persis dengan halaman penuh (ContactRepository.sendPublic) supaya
+       perilaku kedua form konsisten. ---------- */
+    .contact-panel { display: grid; grid-template-columns: .82fr 1fr; gap: 28px; align-items: stretch; }
+    .contact-panel-info { display: flex; flex-direction: column; gap: 20px; }
+    .contact-quote-card {
+      position: relative; overflow: hidden;
+      background: #fff; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px;
+      box-shadow: var(--shadow);
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
     }
-    .contact-cta-inner p { max-width: 46ch; margin: 8px auto 20px; }
+    .contact-quote-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); }
+    /* Motif siluet raksasa transparan — pola sama seperti panel hijau
+       Berita/Perpustakaan/Agenda/Goods lainnya di beranda ini. */
+    .contact-quote-silhouette {
+      position: absolute; right: -14px; bottom: -18px; z-index: 0; color: var(--color-primary);
+      opacity: .08; transform: rotate(8deg); pointer-events: none;
+    }
+    .contact-quote-icon {
+      position: relative; z-index: 1; display: inline-flex; align-items: center; justify-content: center;
+      width: 48px; height: 48px; border-radius: var(--radius-full); color: var(--color-primary-dark);
+      background: linear-gradient(135deg, var(--color-primary-tint), var(--color-primary-soft));
+      margin-bottom: 16px;
+    }
+    .contact-quote-text { position: relative; z-index: 1; font-style: italic; color: var(--color-text); font-size: .92rem; line-height: 1.8; margin: 0 0 16px; }
+    .contact-quote-source {
+      position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 7px 16px; border-radius: var(--radius-sm); font-size: .8rem; font-weight: 700;
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary-dark) 30%, transparent);
+    }
+    .contact-method-list { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+    .contact-method-item {
+      display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 16px 18px; box-shadow: var(--shadow-sm);
+      transition: all var(--motion-fast) ease;
+    }
+    .contact-method-item:hover { border-color: var(--color-primary-soft); box-shadow: var(--shadow); transform: translateY(-2px) translateX(2px); }
+    .contact-method-icon {
+      flex-shrink: 0; width: 42px; height: 42px; border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--color-primary-tint), var(--color-primary-soft));
+      color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center;
+      transition: transform var(--motion-fast) var(--ease-out);
+    }
+    .contact-method-item:hover .contact-method-icon { transform: scale(1.08) rotate(-4deg); }
+    .contact-method-body { display: flex; flex-direction: column; gap: 3px; }
+    .contact-method-label { font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--color-muted); }
+    .contact-method-value { font-size: .92rem; font-weight: 600; color: var(--color-text); text-decoration: none; }
+    a.contact-method-value:hover { color: var(--color-primary); text-decoration: underline; }
 
-    .gallery-card { display: grid; grid-template-columns: 1.1fr 1fr; gap: 0; max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
-    .gallery-card:hover { box-shadow: var(--shadow); transform: translateY(-3px); text-decoration: none; }
-    .gallery-thumb { aspect-ratio: 4/3; background: var(--color-primary-soft); display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: .8rem; letter-spacing: .1em; }
-    .gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .gallery-body { padding: 28px; display: flex; flex-direction: column; justify-content: center; }
-    .gallery-body h3 { margin: 12px 0 8px; font-size: 1.3rem; }
-    .gallery-count { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: .85rem; margin-top: 10px; }
-    @media (max-width: 640px) { .gallery-card { grid-template-columns: 1fr; } }
+    .contact-panel-form {
+      background: #fff; border: 1.5px solid var(--color-border); border-radius: var(--radius-lg);
+      padding: 32px; box-shadow: var(--shadow);
+      transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out);
+    }
+    .contact-panel-form:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .contact-form-head { text-align: center; margin-bottom: 24px; }
+    .contact-form-icon {
+      display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px;
+      border-radius: var(--radius-full); color: #fff; margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--color-primary-dark) 35%, transparent);
+    }
+    .contact-form-head h3 { margin: 0 0 4px; font-size: 1.25rem; }
+    .contact-form-head p { margin: 0; font-size: .88rem; color: var(--color-text-secondary); }
+    .contact-form-alert {
+      display: flex; align-items: center; gap: 8px; background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+      padding: 10px 14px; border-radius: var(--radius-sm); font-size: .82rem; margin-bottom: 18px;
+    }
+    .contact-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .contact-form-group { margin-bottom: 16px; }
+    .contact-form-group label { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: .84rem; color: var(--color-text); margin-bottom: 7px; }
+    .contact-form-group .req { color: var(--color-danger); }
+    .contact-form-group input, .contact-form-group textarea {
+      width: 100%; padding: 12px 15px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      font-size: .92rem; font-family: inherit; color: var(--color-text); background: #fff;
+      transition: border-color var(--motion-fast), box-shadow var(--motion-fast); box-sizing: border-box;
+    }
+    .contact-form-group input:hover, .contact-form-group textarea:hover { border-color: var(--color-primary-soft); }
+    .contact-form-group input:focus, .contact-form-group textarea:focus {
+      outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 4px var(--color-primary-tint);
+    }
+    .contact-form-group input.is-invalid, .contact-form-group textarea.is-invalid { border-color: var(--color-danger); background: #fffbfa; }
+    .contact-form-group textarea { resize: vertical; min-height: 110px; }
+    .contact-form-error { display: block; margin-top: 5px; font-size: .78rem; color: var(--color-danger); font-weight: 500; }
+    .contact-form-submit {
+      width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff; border: none;
+      padding: 13px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: .95rem; cursor: pointer;
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .contact-form-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 30px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); }
+    .contact-form-submit:disabled { opacity: .7; cursor: not-allowed; }
+    .contact-success { text-align: center; padding: 30px 10px; }
+    .contact-success-icon { display: inline-flex; color: #16a34a; margin-bottom: 12px; }
+    .contact-success h3 { margin: 0 0 8px; font-size: 1.2rem; }
+    .contact-success p { margin: 0 0 20px; color: var(--color-text-secondary); font-size: .9rem; line-height: 1.55; }
+    @media (max-width: 900px) {
+      .contact-panel { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .contact-panel-form { padding: 22px; }
+      .contact-form-row { grid-template-columns: 1fr; gap: 0; }
+    }
+
+    /* Heading kiri + CTA "Lihat Semua" sebaris di kanan (bukan dipusatkan
+       di bawah kartu seperti draft awal) — mirror pola shop.app: judul
+       section dan aksi utamanya sejajar. */
+    .gallery-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+    .gallery-section-head-text { flex: 1; min-width: 0; }
+    @media (max-width: 640px) {
+      .gallery-section-head { flex-direction: column; align-items: flex-start; }
+      .gallery-section-head .gallery-btn-all { align-self: stretch; justify-content: center; }
+    }
+
+    /* ---------- Galeri: satu kartu "Dokumentasi Kegiatan Terbaru" ala
+       ldksyahid-app (home partial gallery) — header gradient + badge foto/
+       video, judul beraksen, deskripsi, mosaic foto (foto pertama full-
+       width), thumbnail video YouTube (buka lightbox), link dokumentasi.
+       Foto & video sama-sama bisa di-zoom/diputar di desktop MAUPUN mobile
+       (responsif lewat media query grid, bukan kartu berbeda + bottom
+       sheet terpisah seperti reference — di sini cuma SATU item, bukan
+       daftar, jadi tap-untuk-buka-sheet tidak perlu). ---------- */
+    .gallery-feature { background: #fff; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow var(--motion-base) ease, transform var(--motion-base) var(--ease-out); }
+    .gallery-feature:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+    .gallery-feature-head {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    }
+    .gallery-feature-name { color: rgba(255,255,255,.9); font-size: .85rem; font-weight: 700; letter-spacing: .2px; }
+    .gallery-feature-badges { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .gallery-feature-badge {
+      display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,.15); color: rgba(255,255,255,.95);
+      border: 1px solid rgba(255,255,255,.25); border-radius: var(--radius-full); padding: 4px 11px; font-size: .74rem; font-weight: 700;
+    }
+    .gallery-feature-badge-video { background: rgba(239,68,68,.85); border-color: rgba(255,255,255,.3); }
+    .gallery-feature-body { padding: 28px 28px 30px; }
+    .gallery-feature-title { position: relative; margin: 0 0 10px; padding-left: 16px; font-size: 1.4rem; line-height: 1.35; }
+    .gallery-feature-title::before {
+      content: ''; position: absolute; left: 0; top: .15em; bottom: .1em; width: 4px; border-radius: 2px;
+      background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-dark));
+    }
+    .gallery-feature-desc { color: var(--color-text-secondary); font-size: .92rem; line-height: 1.7; margin: 0 0 20px; }
+    .gallery-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .gallery-feature-grid-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
+    .gallery-feature-grid-item:first-child { grid-column: 1 / -1; aspect-ratio: 21/7; }
+    .gallery-feature-grid-item:hover { transform: scale(1.02); box-shadow: var(--shadow); }
+    .gallery-feature-grid-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-feature-video { margin-bottom: 20px; }
+    .gallery-feature-video-label { display: flex; align-items: center; gap: 6px; color: var(--color-text-secondary); font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+    .gallery-feature-video-label app-icon { color: #ef4444; }
+    .gallery-feature-video-thumb { position: relative; aspect-ratio: 16/7; border-radius: 14px; overflow: hidden; cursor: pointer; transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
+    .gallery-feature-video-thumb:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .gallery-feature-video-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-feature-play {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(239,68,68,.88); color: #fff; display: flex; align-items: center; justify-content: center;
+      transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .gallery-feature-video-thumb:hover .gallery-feature-play { background: #ef4444; transform: translate(-50%,-50%) scale(1.08); }
+    .gallery-feature-footer { padding-top: 18px; border-top: 1px solid var(--color-border); }
+    .gallery-feature-doc {
+      display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-secondary); font-size: .84rem; font-weight: 600;
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-full); padding: 8px 16px; transition: all var(--motion-fast) ease;
+    }
+    .gallery-feature-doc:hover { color: var(--color-primary); border-color: var(--color-primary-soft); background: var(--color-primary-tint); text-decoration: none; }
+    @media (max-width: 640px) {
+      .gallery-feature-body { padding: 22px 18px 24px; }
+      .gallery-feature-grid { grid-template-columns: repeat(2, 1fr); }
+      .gallery-feature-grid-item:first-child { aspect-ratio: 16/7; }
+    }
+
+    /* CTA "Lihat Semua" — style copy dari .jadwal-btn-all/.artikel-btn-all
+       (pil gradient + swap gradient hover via ::before) supaya konsisten
+       dengan tombol "Lihat Semua" section lain (sebelumnya beda gaya:
+       .btn.btn-outline polos). */
+    .gallery-btn-all {
+      position: relative; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .gallery-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .gallery-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .gallery-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .gallery-btn-all:hover::before { opacity: 1; }
+    .gallery-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .gallery-btn-all::before { transition: none; } }
+
+    /* Lightbox video YouTube (overlay fixed, selalu di DOM supaya transisi
+       opacity mulus — mirip .gl-video-overlay ldksyahid-app; iframe cuma
+       dirender saat aktif supaya video berhenti begitu ditutup). */
+    .gallery-video-overlay {
+      position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.88);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity var(--motion-base) ease;
+    }
+    .gallery-video-overlay.active { opacity: 1; pointer-events: all; }
+    .gallery-video-wrap { width: min(90vw, 960px); aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.5); background: #000; }
+    .gallery-video-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
+    .gallery-video-close {
+      position: absolute; top: 24px; right: 24px; width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: background var(--motion-fast) ease, transform var(--motion-fast) ease;
+    }
+    .gallery-video-close:hover { background: rgba(255,255,255,.28); transform: rotate(90deg); }
 
     /* font-body polos (bukan font-accent italic) + warna secondary yang lebih
        lembut — sama seperti perbaikan sebelumnya di kartu kutipan hero. */
@@ -1604,6 +1814,10 @@ interface CardPreview {
 export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   private presenter = inject(HomeIndexPresenter);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
+  private fb = inject(FormBuilder);
+  private toast = inject(ToastService);
+  contactRepo = inject(ContactRepository);
   private datePipe = new DatePipe('id-ID');
 
   @ViewChild('islandPath') private islandPathRef?: ElementRef<SVGPathElement>;
@@ -1632,7 +1846,35 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   /** Sheet mobile-only, tap tanggal kalender (lihat onScheduleCellClick()). */
   daySheet = signal<CalendarCell | null>(null);
   campaigns = signal<Campaign[]>([]);
-  latestGallery = signal<GalleryListItem | null>(null);
+  galleryFeature = signal<GalleryFeature | null>(null);
+  /** Overlay zoom foto (app-gallery-lightbox, dipakai ulang dari halaman
+   *  detail galeri) dan lightbox video YouTube — keduanya di-drive langsung
+   *  dari kartu "Dokumentasi Kegiatan Terbaru", tidak lewat previewSheet
+   *  generik karena kontennya (mosaic foto + video) jauh lebih kaya dari
+   *  bentuk CardPreview lintas-modul. */
+  galleryZoomOpen = signal(false);
+  galleryZoomIndex = signal(0);
+  galleryVideoOpen = signal(false);
+
+  /** Form "Hubungi Kami" terpasang langsung di beranda (ala ldksyahid-app
+   *  home partial contact-us) — logic/validator SAMA PERSIS dengan
+   *  ContactPublicIndexPage (/tentang/kontak) supaya perilaku kedua form
+   *  konsisten, cuma tanpa notice-card/newsletter/social-links di sini
+   *  (di luar scope kartu ringkas beranda, sudah ada di halaman penuh). */
+  contactForm = this.fb.group({
+    senderName: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+    subject: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
+    message: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
+  });
+  contactSubmitted = signal(false);
+  contactRateLimited = signal(false);
+  contactSubmitTried = signal(false);
+  /** Diinisialisasi ke default migration (0041_contact_email_setting) —
+   *  supaya tidak sempat kosong sebelum GET /public/settings/contact-email
+   *  selesai, lihat setContactEmail(). */
+  contactEmail = signal('fsldkindonesia29@gmail.com');
+
   loading = signal(true);
 
   readonly catalogbookPath = catalogbookPath;
@@ -1640,7 +1882,6 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   readonly goodsPath = goodsPath;
   readonly schedulePath = schedulePath;
   readonly kantongAmalPath = kantongAmalPath;
-  readonly contactPath = contactPath;
   readonly newsPath = newsPath;
   readonly articlePath = articlePath;
   readonly statisticPath = statisticPath;
@@ -2092,5 +2333,71 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   }
 
   setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
-  setLatestGallery(gallery: GalleryListItem | null): void { this.latestGallery.set(gallery); }
+  setGalleryFeature(feature: GalleryFeature | null): void { this.galleryFeature.set(feature); }
+  setContactEmail(email: string): void { this.contactEmail.set(email); }
+
+  openGalleryZoom(index: number): void {
+    this.galleryZoomIndex.set(index);
+    this.galleryZoomOpen.set(true);
+  }
+  closeGalleryZoom(): void { this.galleryZoomOpen.set(false); }
+
+  openGalleryVideo(): void { this.galleryVideoOpen.set(true); }
+  closeGalleryVideo(): void { this.galleryVideoOpen.set(false); }
+
+  safeGalleryVideoUrl(videoID: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoID}?autoplay=1&rel=0`);
+  }
+
+  /** Sama seperti imgUrl() di gallery.public-index/detail.page.ts — path foto
+   *  galeri disimpan relatif (butuh di-prefix apiBaseUrl), beda dari gambar
+   *  modul lain di beranda ini yang sudah dikirim backend sebagai URL utuh. */
+  galleryImgUrl(path: string): string {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    const base = environment.apiBaseUrl.replace('/api/v1', '');
+    return path.startsWith('/') ? `${base}${path}` : `${base}/uploads/${path}`;
+  }
+
+  contactHasError(field: 'senderName' | 'email' | 'subject' | 'message'): boolean {
+    const control = this.contactForm.get(field);
+    return !!(control && control.invalid && (control.touched || this.contactSubmitTried()));
+  }
+
+  onContactSubmit(): void {
+    this.contactSubmitTried.set(true);
+    if (this.contactForm.invalid) {
+      this.toast.error('Mohon lengkapi seluruh field dengan benar.');
+      return;
+    }
+
+    const payload = {
+      senderName: this.contactForm.value.senderName!.trim(),
+      email: this.contactForm.value.email!.trim(),
+      subject: this.contactForm.value.subject!.trim(),
+      message: this.contactForm.value.message!.trim(),
+    };
+
+    this.contactRepo.sendPublic(payload).subscribe({
+      next: () => {
+        this.contactSubmitted.set(true);
+        this.contactRateLimited.set(false);
+        this.toast.success('Pesan Anda berhasil dikirim!');
+      },
+      error: (err) => {
+        if (err.status === 429) {
+          this.contactRateLimited.set(true);
+          this.toast.warning('Terlalu banyak permintaan pengiriman pesan. Coba lagi beberapa saat lagi.');
+        } else {
+          this.toast.error(err.error?.message || 'Gagal mengirim pesan. Silakan coba kembali.');
+        }
+      },
+    });
+  }
+
+  resetContactForm(): void {
+    this.contactForm.reset();
+    this.contactSubmitTried.set(false);
+    this.contactSubmitted.set(false);
+  }
 }
