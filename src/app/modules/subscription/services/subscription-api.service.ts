@@ -9,7 +9,7 @@ import { Subscriber, BulkAddResult } from '../entities/subscriber';
 export class SubscriptionApiService {
   private api = inject(ApiService);
 
-  subscribe(email: string): Observable<unknown> { return this.api.post('/public/subscribers', { email }); }
+  subscribe(email: string): Observable<unknown> { return this.api.post('/public/subscribers', { email }, undefined, { silent: true }); }
   unsubscribe(email: string, token: string): Observable<unknown> {
     return this.api.post('/public/subscribers/unsubscribe', { email, token });
   }

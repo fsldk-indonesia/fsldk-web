@@ -40,8 +40,9 @@ export class ApiService {
     return this.http.get<ApiResponse<T>>(`${this.base}${path}`, { params: this.toParams(query), context }).pipe(this.unwrap<T>());
   }
 
-  post<T>(path: string, body?: unknown, query?: Record<string, unknown>): Observable<T> {
-    return this.http.post<ApiResponse<T>>(`${this.base}${path}`, body ?? {}, { params: this.toParams(query) }).pipe(this.unwrap<T>());
+  post<T>(path: string, body?: unknown, query?: Record<string, unknown>, opts?: { silent?: boolean }): Observable<T> {
+    const context = opts?.silent ? new HttpContext().set(SILENT_ERROR, true) : undefined;
+    return this.http.post<ApiResponse<T>>(`${this.base}${path}`, body ?? {}, { params: this.toParams(query), context }).pipe(this.unwrap<T>());
   }
 
   put<T>(path: string, body?: unknown): Observable<T> {
