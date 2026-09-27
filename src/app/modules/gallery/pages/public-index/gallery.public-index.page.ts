@@ -76,7 +76,7 @@ import { environment } from '../../../../../environments/environment';
                 <a [routerLink]="['/tentang/galeri', item.galleryID]" class="card-media-link">
                   <div class="card-media-wrapper">
                     <img
-                      [src]="imgUrl(item.coverImage)"
+                      [src]="thumbUrl(item.coverImage)"
                       [alt]="item.eventName"
                       class="card-img"
                       loading="lazy"
@@ -457,5 +457,17 @@ export class GalleryPublicIndexPage implements OnInit {
       return `${base}${path}`;
     }
     return `${base}/uploads/${path}`;
+  }
+
+  /** Varian thumbnail (lebih kecil, di-generate backend saat upload — lihat
+   *  fsldk-api/pkg/upload) untuk cover galeri di grid, supaya tidak semua
+   *  card meng-load gambar resolusi penuh sekaligus. Cukup sisip "_thumb"
+   *  sebelum ekstensi — konvensi penamaan yang sama dipakai backend. */
+  thumbUrl(path: string): string {
+    const full = this.imgUrl(path);
+    if (!full) return '';
+    const dot = full.lastIndexOf('.');
+    if (dot === -1) return full;
+    return `${full.slice(0, dot)}_thumb${full.slice(dot)}`;
   }
 }
