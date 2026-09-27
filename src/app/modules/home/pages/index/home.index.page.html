@@ -929,7 +929,7 @@
             <div class="gallery-feature-grid">
               @for (photo of feature.photos; track photo.photoID; let i = $index) {
                 <div class="gallery-feature-grid-item" (click)="openGalleryZoom(i)">
-                  <img [src]="galleryThumbUrl(photo.imagePath)" [alt]="photo.caption || feature.gallery.eventTheme" loading="lazy">
+                  <img [src]="i === 0 && feature.gallery.coverImage ? galleryThumbUrl(feature.gallery.coverImage) : galleryThumbUrl(photo.imagePath)" [alt]="photo.caption || feature.gallery.eventTheme" loading="lazy">
                 </div>
               }
             </div>
