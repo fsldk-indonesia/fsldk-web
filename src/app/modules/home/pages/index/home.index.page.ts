@@ -10,7 +10,11 @@ import { Article } from '../../../article/entities/article';
 import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
 import { EventListItem } from '../../../event/entities/event';
 import { Goods } from '../../../goods/entities/goods';
-import { Schedule } from '../../../schedule/entities/schedule';
+import { CalendarCell } from '../../../schedule/entities/schedule';
+import {
+  DAYS_ID_SHORT, categoryMeta as scheduleCategoryMeta,
+  formatLongDate as scheduleLongDate, formatTimeRange as scheduleTimeRange,
+} from '../../../schedule/schedule.constants';
 import { Campaign } from '../../../kantong-amal/entities/campaign';
 import { GalleryListItem } from '../../../gallery/entities/gallery';
 import { contactPath } from '../../../contact/contact.path';
@@ -896,12 +900,150 @@ interface CardPreview {
     .campaign-card2-info { min-width: 0; }
     .campaign-card2-info h3 { margin: 6px 0 4px; font-size: 1rem; }
 
-    .agenda-mini-list { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin: 0 auto; }
-    .agenda-mini-item { display: flex; gap: 18px; align-items: flex-start; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 20px; }
-    .agenda-mini-date { flex-shrink: 0; width: 56px; text-align: center; border-right: 1px solid var(--color-border); padding-right: 16px; }
-    .agenda-mini-date .day { display: block; font-family: var(--font-heading); font-size: 1.4rem; font-weight: 800; color: var(--color-primary-dark); }
-    .agenda-mini-date .mon { display: block; font-size: .75rem; color: var(--color-muted); text-transform: uppercase; letter-spacing: .05em; }
-    .agenda-mini-body h3 { margin: 6px 0 4px; font-size: 1.05rem; }
+    /* ---------- Jadwal: kalender bulan berjalan (statis, tanpa toolbar
+       prev/next — beda dari /jadwal index) + daftar agenda di bawahnya.
+       Class & nilai visual sengaja MIRIP .cal- dan .agenda- di
+       schedule.public-index.page.ts (styles komponen tidak lintas-komponen
+       di Angular, jadi didefinisikan ulang di sini, bukan cuma reuse) —
+       cuma dipersempit/dipadatkan supaya pas jadi satu section teaser di
+       Beranda, bukan halaman penuh. ---------- */
+    .jadwal-cal-wrap {
+      max-width: 980px; margin: 0 auto 40px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow-sm);
+    }
+    .jadwal-cal-period {
+      margin: 0 0 18px; text-align: center; font-family: var(--font-heading); font-weight: 700; font-size: 1.3rem;
+      color: var(--color-primary-dark);
+    }
+    .jadwal-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .jadwal-cal-dow-cell { padding: 8px 6px; text-align: center; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--color-muted); }
+    .jadwal-cal-cell {
+      position: relative; min-height: 108px; padding: 8px; border: 1px solid var(--color-border);
+      margin: -0.5px; display: flex; flex-direction: column; gap: 4px; background: #fff;
+      transition: background var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out);
+    }
+    .jadwal-cal-cell.out { background: var(--color-bg-alt); }
+    .jadwal-cal-cell.out .jadwal-cal-date { color: var(--color-muted); }
+    .jadwal-cal-cell.has { cursor: pointer; }
+    .jadwal-cal-cell:hover, .jadwal-cal-cell:focus-within, .jadwal-cal-cell:focus { z-index: 30; outline: none; }
+    /* Hover tanggal: naik+membesar tipis, latar tint hijau, ring dalam +
+       shadow — bukan cuma inset box-shadow instan seperti sebelumnya. */
+    .jadwal-cal-cell.has:hover {
+      transform: translateY(-2px) scale(1.04); background: var(--color-primary-tint);
+      box-shadow: inset 0 0 0 2px var(--color-primary), var(--shadow-md, var(--shadow-sm));
+    }
+    .jadwal-cal-cell.has:hover .jadwal-cal-date { color: var(--color-primary-dark); }
+    .jadwal-cal-date { font-size: .92rem; font-weight: 600; color: var(--color-text-secondary); transition: color var(--motion-fast) ease; }
+    .jadwal-cal-cell.today .jadwal-cal-date {
+      background: var(--color-primary); color: #fff; border-radius: var(--radius-full);
+      width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    }
+    @media (prefers-reduced-motion: reduce) { .jadwal-cal-cell, .jadwal-cal-date { transition: none; } }
+    .jadwal-cal-chips { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+    .jadwal-cal-chip { display: flex; align-items: center; gap: 5px; font-size: .76rem; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--color-text); }
+    .jadwal-cal-chip .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .jadwal-cal-more { font-size: .7rem; color: var(--color-muted); }
+    /* Titik kategori mobile-only (lihat media query di bawah) — pengganti
+       .jadwal-cal-chips yang kepanjangan buat sel sesempit layar HP. */
+    .jadwal-cal-dots { display: none; flex-wrap: wrap; gap: 3px; }
+    .jadwal-cal-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Popup muncul dengan fade+turun halus (bukan langsung nongol) — element
+       baru yang Angular mount otomatis menjalankan animation-nya begitu
+       masuk DOM, tidak perlu toggle class terpisah. Redesign: header jadi
+       band hijau-tint dengan ikon (bukan teks polos), tiap kegiatan jadi
+       baris kartu dengan titik kategori + accent kiri saat hover (bukan
+       flex-wrap datar yang bikin badge kategori jatuh ke baris sendiri
+       seperti sebelumnya) — accent-nya diambil dari warna kategori via
+       custom property --jadwal-pop-accent per <li> (lihat [style.--...]
+       di template), satu-satunya cara CSS baca warna dinamis per-item. */
+    @keyframes jadwal-pop-in { from { opacity: 0; transform: translateY(-6px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    /* Jarak ke sel dinaikkan (100%-2px -> 100%+14px) supaya popup tidak
+       "nempel" langsung ke ring hijau sel yang di-hover (kelihatan sempit/
+       jelek kalau ketemu langsung) — arrow di bawah ini yang menjaga
+       hubungan visualnya tetap jelas walau ada jarak. overflow:hidden
+       DIPINDAH ke belakang (dihapus dari sini) karena arrow (posisi negatif,
+       nongol di ATAS kotak) butuh keluar dari box ini — radius sudut atas
+       dipindah ke .jadwal-cal-pop-head sendiri sebagai gantinya. */
+    .jadwal-cal-pop {
+      position: absolute; top: calc(100% + 14px); left: -1px; width: 300px; max-width: 82vw; z-index: 40;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg); text-align: left; cursor: default;
+      animation: jadwal-pop-in .18s var(--ease-out) both;
+    }
+    .jadwal-cal-cell:nth-child(7n) .jadwal-cal-pop, .jadwal-cal-cell:nth-child(7n-1) .jadwal-cal-pop { left: auto; right: -1px; }
+    /* Panah kecil menghubungkan popup ke sel tanggal di atasnya — kotak
+       diputar 45° dengan cuma sisi kiri+atas berwarna (2 border), meniru
+       tampilan segitiga tooltip standar. */
+    .jadwal-cal-pop-arrow {
+      position: absolute; top: -7px; left: 24px; width: 13px; height: 13px; z-index: 1;
+      background: var(--color-primary-tint); border-left: 1px solid var(--color-border); border-top: 1px solid var(--color-border);
+      transform: rotate(45deg); border-radius: 3px 0 0 0;
+    }
+    .jadwal-cal-cell:nth-child(7n) .jadwal-cal-pop-arrow, .jadwal-cal-cell:nth-child(7n-1) .jadwal-cal-pop-arrow { left: auto; right: 24px; }
+    .jadwal-cal-pop-head {
+      position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+      background: var(--color-primary-tint); color: var(--color-primary-dark); border-radius: var(--radius-md) var(--radius-md) 0 0;
+    }
+    .jadwal-cal-pop-date { margin: 0; font-weight: 700; font-size: .84rem; }
+    .jadwal-cal-pop ul { list-style: none; margin: 0; padding: 6px 0; display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; }
+    .jadwal-cal-pop li {
+      position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px;
+      transition: background var(--motion-fast) ease;
+    }
+    .jadwal-cal-pop li::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; border-radius: var(--radius-full);
+      background: var(--jadwal-pop-accent, var(--color-primary)); opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .jadwal-cal-pop li:hover { background: var(--color-bg-alt); }
+    .jadwal-cal-pop li:hover::before { opacity: 1; }
+    .jadwal-cal-pop li:last-child:hover { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+    .jadwal-cal-pop-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; }
+    .jadwal-cal-pop-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .jadwal-cal-pop-title { font-weight: 700; font-size: .84rem; line-height: 1.35; color: var(--color-text); }
+    .jadwal-cal-pop-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .jadwal-cal-pop-time { font-variant-numeric: tabular-nums; color: var(--color-muted); font-size: .74rem; font-weight: 600; }
+    .jadwal-cat-badge { display: inline-block; padding: 1px 8px; border-radius: var(--radius-full); font-size: .68rem; font-weight: 700; }
+    @media (prefers-reduced-motion: reduce) { .jadwal-cal-pop { animation: none; } }
+
+    /* CTA "Lihat Semua" — style copy dari .artikel-btn-all (pil gradient +
+       swap gradient hover via ::before, lihat catatan di sana) supaya
+       konsisten dengan tombol "Lihat Semua" section lain. */
+    .jadwal-btn-all {
+      position: relative; display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark)); color: #fff;
+      padding: 8px 14px; border-radius: var(--radius-sm); font-weight: 700; font-size: .85rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-dark) 32%, transparent);
+      transition: transform var(--motion-fast) var(--ease-out), box-shadow var(--motion-fast) ease;
+    }
+    .jadwal-btn-all::before {
+      content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+      background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+      opacity: 0; transition: opacity var(--motion-fast) ease;
+    }
+    .jadwal-btn-all app-icon { transition: transform var(--motion-fast) ease; }
+    .jadwal-btn-all:hover {
+      transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 42%, transparent); text-decoration: none; color: #fff;
+    }
+    .jadwal-btn-all:hover::before { opacity: 1; }
+    .jadwal-btn-all:hover app-icon { transform: translateX(4px); }
+    @media (prefers-reduced-motion: reduce) { .jadwal-btn-all::before { transition: none; } }
+
+    /* Sheet mobile tap-tanggal (lihat daySheet/onScheduleCellClick di .ts). */
+    .jadwal-daysheet-list { display: flex; flex-direction: column; gap: 16px; }
+    .jadwal-daysheet-item { padding-top: 14px; border-top: 1px solid var(--color-border); }
+    .jadwal-daysheet-item:first-child { padding-top: 0; border-top: none; }
+    .jadwal-daysheet-item h4 { margin: 8px 0 4px; font-size: .98rem; }
+    .jadwal-daysheet-meta { display: flex; flex-wrap: wrap; gap: 12px; color: var(--color-muted); font-size: .8rem; margin: 0 0 4px; }
+    .jadwal-daysheet-meta span { display: inline-flex; align-items: center; gap: 5px; }
+    .jadwal-daysheet-desc { color: var(--color-text-secondary); font-size: .86rem; margin: 4px 0 0; white-space: pre-line; }
+
+    @media (max-width: 640px) {
+      .jadwal-cal-cell { min-height: 44px; gap: 2px; }
+      .jadwal-cal-chips { display: none; }
+      .jadwal-cal-dots { display: flex; }
+      .jadwal-cal-pop { display: none; }
+    }
 
     .contact-cta-inner {
       max-width: 640px; margin: 0 auto; text-align: center; background: #fff; border: 1px solid var(--color-border);
@@ -1479,7 +1621,12 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   catalogBooksForCarousel = computed(() => [...this.catalogBooks()].reverse());
   events = signal<EventListItem[]>([]);
   goods = signal<Goods[]>([]);
-  schedules = signal<Schedule[]>([]);
+  schedulePeriodLabel = signal('');
+  scheduleWeeks = signal<CalendarCell[][]>([]);
+  /** Popup hover desktop (pola sama seperti previewIso di /jadwal index). */
+  schedulePopupIso = signal<string | null>(null);
+  /** Sheet mobile-only, tap tanggal kalender (lihat onScheduleCellClick()). */
+  daySheet = signal<CalendarCell | null>(null);
   campaigns = signal<Campaign[]>([]);
   latestGallery = signal<GalleryListItem | null>(null);
   loading = signal(true);
@@ -1494,6 +1641,10 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   readonly articlePath = articlePath;
   readonly statisticPath = statisticPath;
   readonly formatRupiah = formatRupiah;
+  readonly scheduleDow = DAYS_ID_SHORT;
+  readonly scheduleCategoryMeta = scheduleCategoryMeta;
+  readonly scheduleTimeRange = scheduleTimeRange;
+  readonly scheduleLongDate = scheduleLongDate;
 
   readonly missionList: MissionItem[] = [
     { no: '01', icon: 'fingerprint', text: 'Membangkitkan kembali identitas Islam pada mahasiswa muslim dan masyarakat.' },
@@ -1919,7 +2070,23 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
   }
   setEvents(events: EventListItem[]): void { this.events.set(events); }
   setGoods(goods: Goods[]): void { this.goods.set(goods); }
-  setSchedules(schedules: Schedule[]): void { this.schedules.set(schedules); }
+  setSchedulePeriodLabel(label: string): void { this.schedulePeriodLabel.set(label); }
+  setScheduleWeeks(weeks: CalendarCell[][]): void { this.scheduleWeeks.set(weeks); }
+
+  openSchedulePopup(iso: string): void { this.schedulePopupIso.set(iso); }
+  closeSchedulePopup(): void { this.schedulePopupIso.set(null); }
+
+  /** Klik tanggal kalender Jadwal — mobile buka bottom sheet (tidak ada
+   *  hover di touch device). Desktop SENGAJA cuma "pastikan terbuka", BUKAN
+   *  toggle — hover (mouseenter/mouseleave) sudah pegang buka/tutupnya;
+   *  kalau klik juga toggle, klik di kartu yang popup-nya lagi kebuka via
+   *  hover malah langsung MENUTUPNYA (bug yang dilaporkan user). */
+  onScheduleCellClick(cell: CalendarCell): void {
+    if (!cell.items.length) return;
+    if (this.isMobilePreview()) { this.daySheet.set(cell); return; }
+    this.schedulePopupIso.set(cell.iso);
+  }
+
   setCampaigns(campaigns: Campaign[]): void { this.campaigns.set(campaigns); }
   setLatestGallery(gallery: GalleryListItem | null): void { this.latestGallery.set(gallery); }
 }

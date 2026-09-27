@@ -18,3 +18,14 @@ export interface Schedule {
   createdDate: string;
   updatedDate: string | null;
 }
+
+/** One day cell in a 6×7 month calendar grid — shared shape between the
+ *  full /jadwal index page and the Beranda mini-calendar. */
+export interface CalendarCell {
+  date: Date;
+  iso: string;
+  day: number;
+  inMonth: boolean;
+  isToday: boolean;
+  items: Schedule[];
+}

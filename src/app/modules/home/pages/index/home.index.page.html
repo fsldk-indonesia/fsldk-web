@@ -730,48 +730,114 @@
   </section>
 }
 
-@if (!loading() && schedules().length > 0) {
+@if (!loading()) {
+  <!-- Redesign: kalender bulan berjalan (statis, tanpa navigasi bulan —
+       beda dari /jadwal index yang bisa prev/next) + daftar "Agenda
+       {bulan}" di bawahnya, gaya kartu PERSIS seperti di /jadwal index
+       (tanggal, chip kategori, judul, deskripsi, meta) — cuma limit 5 item
+       + CTA "Lihat Semua Jadwal" ke index untuk navigasi bulan lain.
+       Logic grid/agenda-nya dari buildMonthView() (schedule.constants.ts),
+       dipakai bareng oleh index page supaya tidak duplikasi. Desktop: hover
+       tanggal munculkan popup ringkas (reuse pola .cal-pop index). Mobile:
+       grid disederhanakan (cuma titik kategori, bukan chip judul), tap
+       tanggal buka bottom sheet daftar kegiatan hari itu (lihat
+       app-bottom-sheet kedua di bawah, terpisah dari previewSheet kartu
+       karena isinya list bukan single-card). -->
   <section class="section">
     <div class="container">
-      <div class="text-center reveal" style="margin-bottom:40px">
+      <div class="text-center reveal" style="margin-bottom:28px">
         <span class="eyebrow">Jadwal</span>
-        <h2>Agenda Kegiatan Terdekat</h2>
+        <h2>Kalender Kegiatan Bulan Ini</h2>
+        <p class="text-muted">Ikuti agenda musyawarah, kajian, dan kegiatan dakwah kampus LDK se-Indonesia setiap bulannya.</p>
       </div>
-      <div class="agenda-mini-list">
-        @for (s of schedules(); track s.scheduleID) {
-          <div class="agenda-mini-item reveal">
-            <div class="agenda-mini-date">
-              <span class="day">{{ s.startDate | date:'d' }}</span>
-              <span class="mon">{{ s.startDate | date:'MMM' }}</span>
-            </div>
-            <div class="agenda-mini-body">
-              <span class="chip chip-green">{{ s.category }}</span>
-              <h3>{{ s.title }}</h3>
-              <p class="meta">
-                @if (!s.isAllDay && s.startTime) { {{ s.startTime }} · }
-                @if (s.location) { {{ s.location }} }
-              </p>
-            </div>
+
+      @if (scheduleWeeks().length > 0) {
+        <div class="jadwal-cal-wrap reveal">
+          <p class="jadwal-cal-period">{{ schedulePeriodLabel() }}</p>
+          <div class="jadwal-cal-grid">
+            @for (d of scheduleDow; track d) { <div class="jadwal-cal-dow-cell">{{ d }}</div> }
           </div>
-        }
-      </div>
+          @for (week of scheduleWeeks(); track $index) {
+            <div class="jadwal-cal-grid">
+              @for (cell of week; track cell.iso) {
+                <div
+                  class="jadwal-cal-cell" [class.out]="!cell.inMonth" [class.today]="cell.isToday" [class.has]="cell.items.length"
+                  [attr.tabindex]="cell.items.length ? 0 : null"
+                  (mouseenter)="openSchedulePopup(cell.iso)" (mouseleave)="closeSchedulePopup()"
+                  (focus)="openSchedulePopup(cell.iso)" (blur)="closeSchedulePopup()"
+                  (click)="onScheduleCellClick(cell)"
+                >
+                  <span class="jadwal-cal-date">{{ cell.day }}</span>
+                  <div class="jadwal-cal-dots">
+                    @for (it of cell.items.slice(0, 4); track it.scheduleID) {
+                      <span class="jadwal-cal-dot" [style.background]="scheduleCategoryMeta(it.category).color"></span>
+                    }
+                  </div>
+                  <div class="jadwal-cal-chips">
+                    @for (it of cell.items.slice(0, 2); track it.scheduleID) {
+                      <span class="jadwal-cal-chip"><span class="dot" [style.background]="scheduleCategoryMeta(it.category).color"></span>{{ it.title }}</span>
+                    }
+                    @if (cell.items.length > 2) { <span class="jadwal-cal-more">+{{ cell.items.length - 2 }} lainnya</span> }
+                  </div>
+
+                  @if (schedulePopupIso() === cell.iso && cell.items.length) {
+                    <div class="jadwal-cal-pop" role="tooltip" (click)="$event.stopPropagation()">
+                      <span class="jadwal-cal-pop-arrow" aria-hidden="true"></span>
+                      <div class="jadwal-cal-pop-head">
+                        <app-icon name="calendar-days" [size]="13" />
+                        <p class="jadwal-cal-pop-date">{{ scheduleLongDate(cell.date) }}</p>
+                      </div>
+                      <ul>
+                        @for (it of cell.items; track it.scheduleID) {
+                          <li [style.--jadwal-pop-accent]="scheduleCategoryMeta(it.category).color">
+                            <span class="jadwal-cal-pop-dot" [style.background]="scheduleCategoryMeta(it.category).color"></span>
+                            <div class="jadwal-cal-pop-body">
+                              <span class="jadwal-cal-pop-title">{{ it.title }}</span>
+                              <span class="jadwal-cal-pop-meta">
+                                <span class="jadwal-cal-pop-time">{{ scheduleTimeRange(it) }}</span>
+                                <span class="jadwal-cat-badge" [style.background]="scheduleCategoryMeta(it.category).color + '1f'" [style.color]="scheduleCategoryMeta(it.category).color">{{ scheduleCategoryMeta(it.category).label }}</span>
+                              </span>
+                            </div>
+                          </li>
+                        }
+                      </ul>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
       <div class="text-center mt-lg">
-        <a [routerLink]="schedulePath.publicIndex" class="btn btn-outline">Lihat Semua Jadwal</a>
+        <a [routerLink]="schedulePath.publicIndex" class="jadwal-btn-all">Lihat Semua <app-icon name="chevron-right" [size]="13" /></a>
       </div>
     </div>
   </section>
 }
 
-<section class="section">
-  <div class="container">
-    <div class="contact-cta-inner reveal">
-      <span class="eyebrow">Hubungi Kami</span>
-      <h2>Ada Pertanyaan atau Ingin Berkolaborasi?</h2>
-      <p class="text-muted">Sampaikan pertanyaan, aspirasi, atau ajakan kolaborasi dakwah kampus kepada kami — tim sekretariat FSLDK Indonesia siap menindaklanjuti.</p>
-      <a [routerLink]="contactPath.public" class="btn btn-primary">Kirim Pesan</a>
+<!-- Sheet mobile-only: tap satu tanggal di grid kalender Jadwal membuka ini
+     (lihat onScheduleCellClick) — instance TERPISAH dari previewSheet kartu
+     karena isinya daftar (bisa >1 kegiatan/hari), bukan satu kartu. -->
+<app-bottom-sheet [open]="!!daySheet()" (closed)="daySheet.set(null)">
+  @if (daySheet(); as cell) {
+    <h3 class="sheet-title">{{ scheduleLongDate(cell.date) }}</h3>
+    <div class="jadwal-daysheet-list">
+      @for (it of cell.items; track it.scheduleID) {
+        <div class="jadwal-daysheet-item">
+          <span class="jadwal-cat-badge" [style.background]="scheduleCategoryMeta(it.category).color + '1f'" [style.color]="scheduleCategoryMeta(it.category).color">{{ scheduleCategoryMeta(it.category).label }}</span>
+          <h4>{{ it.title }}</h4>
+          <p class="jadwal-daysheet-meta">
+            <span><app-icon name="clock" [size]="12" /> {{ scheduleTimeRange(it) }}</span>
+            @if (it.location) { <span><app-icon name="building" [size]="12" /> {{ it.location }}</span> }
+          </p>
+          @if (it.description) { <p class="jadwal-daysheet-desc">{{ it.description }}</p> }
+        </div>
+      }
     </div>
-  </div>
-</section>
+  }
+</app-bottom-sheet>
 
 @if (!loading() && latestGallery(); as gallery) {
   <section class="section">
@@ -795,6 +861,17 @@
     </div>
   </section>
 }
+
+<section class="section">
+  <div class="container">
+    <div class="contact-cta-inner reveal">
+      <span class="eyebrow">Hubungi Kami</span>
+      <h2>Ada Pertanyaan atau Ingin Berkolaborasi?</h2>
+      <p class="text-muted">Sampaikan pertanyaan, aspirasi, atau ajakan kolaborasi dakwah kampus kepada kami — tim sekretariat FSLDK Indonesia siap menindaklanjuti.</p>
+      <a [routerLink]="contactPath.public" class="btn btn-primary">Kirim Pesan</a>
+    </div>
+  </div>
+</section>
 
 <app-bottom-sheet
   [open]="!!previewSheet()"
