@@ -113,7 +113,7 @@
   </div>
 </section>
 
-<section class="section section-transition" id="tentang">
+<section class="section section-transition section-blob-drift" id="tentang">
   <div class="container">
     <div class="text-center tentang-head reveal">
       <span class="eyebrow">Tentang Kami</span>
@@ -699,7 +699,7 @@
 }
 
 @if (!loading() && campaigns().length > 0) {
-  <section class="section">
+  <section class="section section-blob-drift">
     <div class="container">
       <div class="kantong-panel reveal">
         <!-- Sidebar dulu di markup (bukan grid) supaya di mobile tampil DI
@@ -922,7 +922,7 @@
         <div class="gallery-feature-body">
           <h3 class="gallery-feature-title">{{ feature.gallery.eventTheme }}</h3>
           @if (feature.gallery.eventDescription) {
-            <p class="gallery-feature-desc">{{ feature.gallery.eventDescription }}</p>
+            <div class="gallery-feature-desc" [innerHTML]="sanitizeGalleryDescription(feature.gallery.eventDescription)"></div>
           }
 
           @if (feature.photos.length > 0) {
@@ -985,7 +985,7 @@
   }
 }
 
-<section class="section">
+<section class="section section-blob-drift">
   <div class="container">
     <div class="text-center reveal" style="margin-bottom:40px">
       <span class="eyebrow">Hubungi Kami</span>

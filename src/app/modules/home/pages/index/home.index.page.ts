@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IconComponent } from '../../../../shared/icon.component';
 import { WelcomePopupComponent } from '../../components/welcome-popup.component';
@@ -97,6 +97,50 @@ interface CardPreview {
        kontennya konsisten satu warna dari ujung ke ujung, dot-dot glow-nya
        dihapus (class section-glow juga sudah dilepas dari template). ---------- */
     .section { background: var(--color-primary-tint); position: relative; }
+    /* ---------- Blob gradient bergerak pelan — dipakai SANGAT selektif, cuma
+       di 3 section (Tentang Kami, Kantong Amal, Kontak — disebar dari awal,
+       tengah, sampai akhir halaman, bukan menumpuk) supaya beranda tidak
+       terasa flat statis dari ujung ke ujung tanpa mengulang .section-glow
+       lama (dot-dot radial, sudah sengaja dilepas di atas demi konsistensi
+       kanvas). Teknik
+       & token warnanya SAMA PERSIS dengan glow di .hero::after (inset:0 +
+       radial-gradient ellipse, BUKAN lingkaran ukuran tetap yang digeser
+       pakai top/right negatif) — percobaan pertama pakai offset negatif
+       kepotong rata oleh overflow:hidden section karena garis potongnya
+       jatuh di tengah gradient yang masih pekat, bukan di bagian yang sudah
+       transparan. inset:0 menghitung fade relatif terhadap kotak section itu
+       sendiri jadi tidak ada seam di lingkaran-nya sendiri — TAPI titik pusat
+       (at 88% 8%) ternyata masih terlalu dekat ke tepi atas section, jadi
+       tepi ATAS section itu sendiri mulai dengan warna blob yang masih
+       pekat, dan lompat tajam terhadap section SEBELUMNYA yang berakhir
+       polos tint — makanya tetap kelihatan "kepotong" sebagai garis di
+       BATAS ANTAR SECTION, bukan lagi di dalam bentuk blob-nya. Pusat
+       digeser lebih ke tengah (88% 42%) supaya radiusnya sempat pudar dulu
+       sebelum sampai tepi, DITAMBAH ::after meniru overlay solid-fade milik
+       .hero::before — menutup ~70px pertama & terakhir section dengan warna
+       tint rata supaya sambungan ke section tetangga selalu mulus apa pun
+       posisi blob-nya. Cuma transform+opacity yang dianimasikan (bukan
+       width/height/padding) supaya tidak memicu layout thrash. ---------- */
+    .section-blob-drift { overflow: hidden; }
+    .section-blob-drift > .container { position: relative; z-index: 1; }
+    .section-blob-drift::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%);
+      opacity: .75; animation: sectionBlobDrift 24s ease-in-out infinite alternate;
+    }
+    .section-blob-drift::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom,
+        var(--color-primary-tint) 0, transparent 70px,
+        transparent calc(100% - 70px), var(--color-primary-tint) 100%);
+    }
+    @keyframes sectionBlobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-3%, 4%) scale(1.12); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .section-blob-drift::before { animation: none; }
+    }
 
     /* padding-top diperkecil dari default .section (72px) — supaya jarak
        kosong antara kartu kutipan di hero dan heading "Tentang Kami" tidak
@@ -1294,6 +1338,12 @@ interface CardPreview {
       background: linear-gradient(to bottom, var(--color-primary), var(--color-primary-dark));
     }
     .gallery-feature-desc { color: var(--color-text-secondary); font-size: .92rem; line-height: 1.7; margin: 0 0 20px; }
+    /* eventDescription sekarang dirender via [innerHTML] (rich text, lihat
+       sanitizeGalleryDescription()) — isinya biasanya cuma satu <p> dari
+       editor, reset margin bawaan browser-nya supaya card tetap sepadat
+       sebelumnya (dulu elemen ini sendiri yang <p>, bukan pembungkus). */
+    .gallery-feature-desc p { margin: 0; }
+    .gallery-feature-desc p + p { margin-top: 10px; }
     .gallery-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
     .gallery-feature-grid-item { aspect-ratio: 4/3; border-radius: 10px; overflow: hidden; cursor: pointer; transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
     .gallery-feature-grid-item:first-child { grid-column: 1 / -1; aspect-ratio: 21/7; }
@@ -2450,6 +2500,14 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   safeGalleryVideoUrl(videoID: string): SafeResourceUrl {
     return this.sanitizer.bypassSecurityTrustResourceUrl(`https://www.youtube.com/embed/${videoID}?autoplay=1&rel=0`);
+  }
+
+  /** eventDescription diisi lewat app-rich-text-editor di CMS (lihat
+   * gallery.form.page.html) — jadi legitimately berisi tag HTML, sama seperti
+   * di gallery.public-detail.page.ts. Interpolasi biasa {{ }} akan meng-escape
+   * tag-nya jadi teks mentah, makanya butuh innerHTML + sanitizer di sini. */
+  sanitizeGalleryDescription(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   /** Sama seperti imgUrl() di gallery.public-index/detail.page.ts — path foto
