@@ -10,7 +10,7 @@ import { PopupModalComponent } from '../../../../shared/popup-modal.component';
 import { GalleryLightboxComponent } from '../../../gallery/components/gallery-lightbox/gallery-lightbox.component';
 import { ContactRepository } from '../../../contact/repositories/contact.repository';
 import { ToastService } from '../../../../core/services/toast.service';
-import { environment } from '../../../../../environments/environment';
+import { resolveThumbnailUrl } from '../../../../core/utils/image-url';
 import { News } from '../../../news/entities/news';
 import { Article } from '../../../article/entities/article';
 import { CatalogBook } from '../../../catalogbook/entities/catalog-book';
@@ -2548,15 +2548,11 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  /** Sama seperti imgUrl() di gallery.public-index/detail.page.ts — path foto
-   *  galeri disimpan relatif (butuh di-prefix apiBaseUrl), beda dari gambar
-   *  modul lain di beranda ini yang sudah dikirim backend sebagai URL utuh. */
-  galleryImgUrl(path: string): string {
-    if (!path) return '';
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
-    const base = environment.apiBaseUrl.replace('/api/v1', '');
-    return path.startsWith('/') ? `${base}${path}` : `${base}/uploads/${path}`;
-  }
+  /** Grid galeri di beranda menampilkan banyak foto sekaligus (bukan satu
+   *  seperti lightbox) — HARUS pakai varian thumbnail, bukan resolveImageUrl,
+   *  supaya browser tidak decode banyak JPEG resolusi penuh sekaligus saat
+   *  discroll. Sama seperti thumbUrl() di gallery.public-index/detail.page.ts. */
+  galleryThumbUrl = resolveThumbnailUrl;
 
   contactHasError(field: 'senderName' | 'email' | 'subject' | 'message'): boolean {
     const control = this.contactForm.get(field);
