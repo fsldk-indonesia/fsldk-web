@@ -1003,6 +1003,10 @@ interface CardPreview {
     .jadwal-cal-pop-title { font-weight: 700; font-size: .84rem; line-height: 1.35; color: var(--color-text); }
     .jadwal-cal-pop-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
     .jadwal-cal-pop-time { font-variant-numeric: tabular-nums; color: var(--color-muted); font-size: .74rem; font-weight: 600; }
+    /* Penanggung jawab/panitia (Schedule.organizer) — baris terpisah di
+       bawah waktu+kategori, bukan digabung ke .jadwal-cal-pop-meta supaya
+       tidak ikut wrap berdesakan dengan badge kategori. */
+    .jadwal-cal-pop-organizer { display: flex; align-items: center; gap: 5px; color: var(--color-muted); font-size: .74rem; }
     .jadwal-cat-badge { display: inline-block; padding: 1px 8px; border-radius: var(--radius-full); font-size: .68rem; font-weight: 700; }
     @media (prefers-reduced-motion: reduce) { .jadwal-cal-pop { animation: none; } }
 
