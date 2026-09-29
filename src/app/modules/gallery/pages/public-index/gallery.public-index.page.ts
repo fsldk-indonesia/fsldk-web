@@ -218,8 +218,8 @@ const MAX_MOBILE_DOTS = 7;
           <div class="gallery-mobile-carousel">
             <div class="gm-track-wrap">
               <div class="gm-track" #mobileTrack (scroll)="onMobileScroll()">
-                @for (item of repo.publicGalleries(); track item.galleryID) {
-                  <div class="gm-slide">
+                @for (item of repo.publicGalleries(); track item.galleryID; let i = $index) {
+                  <div class="gm-slide stagger-in" [style.--stagger-i]="i">
                     <button type="button" class="gm-slide-card" (click)="openSheet(item)">
                       <img [src]="thumbUrl(item.coverImage)" [alt]="item.eventName" loading="lazy" />
                       <span class="gm-slide-scrim" aria-hidden="true"></span>
@@ -719,6 +719,15 @@ export class GalleryPublicIndexPage implements OnInit, AfterViewInit {
       year: filter['year'] as number[] | undefined,
       eventName: filter['eventName'] as string[] | undefined,
     });
+    // Carousel mobile-nya SATU elemen #mobileTrack yang bertahan lintas
+    // render (cuma isinya/@for yang diganti) — tanpa ini scrollLeft & dot
+    // aktif dari halaman/filter SEBELUMNYA masih nempel begitu data baru
+    // datang, jadi kartu pertama halaman baru muncul di posisi scroll acak
+    // (bukan slide 0) — itu yang kelihatan "glitch". Direset di sini
+    // (satu tempat, dipanggil semua jalur reload: search/filter/sort/page)
+    // supaya track sudah di posisi 0 SEBELUM konten baru sempat dirender.
+    this.activeSlide.set(0);
+    if (this.mobileTrackRef?.nativeElement) this.mobileTrackRef.nativeElement.scrollLeft = 0;
   }
 
   onSearchChange(value: string): void {

@@ -11,12 +11,15 @@ import { IconComponent } from './icon.component';
  * Desain diadaptasi dari komponen "pagination-custom" ldksyahid-app
  * (resources/views/components/pagination-custom/): baris info "Menampilkan
  * X–Y dari Z <label>" di atas, tombol lompat ke halaman pertama/terakhir
- * («/») + sebelumnya/berikutnya (‹/›) di kiri-kanan nomor halaman, aktif
- * terisi gradient dengan glow, non-aktif outline yang terisi solid saat
- * hover. BEDA dari referensi aslinya: semua tombol (termasuk «/») dibuat
- * rounded-square konsisten (var(--radius-md)) — bukan pill/lingkaran penuh
- * seperti referensi — sesuai permintaan eksplisit, dan warnanya dipetakan ke
- * token brand hijau proyek ini (--color-primary), bukan teal ldksyahid-app.
+ * («/») + sebelumnya/berikutnya (‹/›) di kiri-kanan nomor halaman. BEDA dari
+ * referensi aslinya: (1) semua tombol rounded-square (var(--radius-md)),
+ * bukan pill/lingkaran penuh — sesuai permintaan eksplisit; (2) seluruh
+ * baris tombol dibungkus SATU kartu putih (bukan tombol lepas ber-border
+ * sendiri-sendiri mengambang di atas background section) — pola sama
+ * seperti .tentang-tabs-bar (Beranda): kartu + tombol transparan, aktif
+ * dapat gradient, supaya terasa satu kesatuan yang dirancang, bukan
+ * kumpulan lingkaran lepas; (3) warna dipetakan ke token brand hijau
+ * proyek ini, bukan teal ldksyahid-app.
  *
  * Nomor halaman ditampilkan langsung (bukan cuma Sebelumnya/Selanjutnya) —
  * kalau jumlah halaman banyak, sebagian di tengah diringkas jadi "…" supaya
@@ -32,92 +35,113 @@ import { IconComponent } from './icon.component';
         <div class="pgn-info">
           Menampilkan <strong>{{ firstItem }}–{{ lastItem }}</strong> dari <strong>{{ count }}</strong> {{ itemLabel }}
         </div>
-        <div class="pgn-inner">
-          <button type="button" class="pgn-nav pgn-edge" [disabled]="page <= 1" (click)="go(1)" aria-label="Halaman pertama">
-            <app-icon name="chevrons-left" [size]="13" />
-          </button>
-          <button type="button" class="pgn-nav" [disabled]="page <= 1" (click)="go(page - 1)" aria-label="Halaman sebelumnya">
-            <app-icon name="chevron-left" [size]="13" />
-          </button>
+        <div class="pgn-card">
+          <div class="pgn-inner">
+            <button type="button" class="pgn-nav pgn-edge" [disabled]="page <= 1" (click)="go(1)" aria-label="Halaman pertama">
+              <app-icon name="chevrons-left" [size]="13" />
+            </button>
+            <button type="button" class="pgn-nav" [disabled]="page <= 1" (click)="go(page - 1)" aria-label="Halaman sebelumnya">
+              <app-icon name="chevron-left" [size]="13" />
+            </button>
 
-          <div class="pgn-pages">
-            @for (p of pageList(); track $index) {
-              @if (p === ELLIPSIS) {
-                <span class="pgn-ellipsis">&middot;&middot;&middot;</span>
-              } @else {
-                <button type="button" class="pgn-num" [class.active]="p === page" (click)="go(p)">{{ p }}</button>
+            <span class="pgn-sep" aria-hidden="true"></span>
+
+            <div class="pgn-pages">
+              @for (p of pageList(); track $index) {
+                @if (p === ELLIPSIS) {
+                  <span class="pgn-ellipsis" aria-hidden="true"><span></span><span></span><span></span></span>
+                } @else {
+                  <button type="button" class="pgn-num" [class.active]="p === page" [attr.aria-current]="p === page ? 'page' : null" (click)="go(p)">{{ p }}</button>
+                }
               }
-            }
-          </div>
+            </div>
 
-          <button type="button" class="pgn-nav" [disabled]="page >= totalPages" (click)="go(page + 1)" aria-label="Halaman berikutnya">
-            <app-icon name="chevron-right" [size]="13" />
-          </button>
-          <button type="button" class="pgn-nav pgn-edge" [disabled]="page >= totalPages" (click)="go(totalPages)" aria-label="Halaman terakhir">
-            <app-icon name="chevrons-right" [size]="13" />
-          </button>
+            <span class="pgn-sep" aria-hidden="true"></span>
+
+            <button type="button" class="pgn-nav" [disabled]="page >= totalPages" (click)="go(page + 1)" aria-label="Halaman berikutnya">
+              <app-icon name="chevron-right" [size]="13" />
+            </button>
+            <button type="button" class="pgn-nav pgn-edge" [disabled]="page >= totalPages" (click)="go(totalPages)" aria-label="Halaman terakhir">
+              <app-icon name="chevrons-right" [size]="13" />
+            </button>
+          </div>
         </div>
       </div>
     }
   `,
   styles: [`
-    .pgn-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .pgn-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .pgn-info { font-size: .82rem; color: var(--color-muted); }
     .pgn-info strong { color: var(--color-primary-dark); font-weight: 700; }
 
-    .pgn-inner { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
-    .pgn-pages { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    /* ---------- Kartu pembungkus — SATU permukaan putih dengan border+shadow
+       lembut, pola sama seperti .tentang-tabs-bar (Beranda). Ini yang
+       menggantikan kesan "lingkaran-lingkaran lepas mengambang di atas
+       background section" jadi satu komponen yang terasa dirancang. ---------- */
+    .pgn-card {
+      display: inline-flex; background: #fff; border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 6px; box-shadow: var(--shadow-sm);
+      max-width: 100%; overflow-x: auto;
+    }
+    .pgn-inner { display: flex; align-items: center; gap: 3px; flex-wrap: nowrap; }
+    .pgn-pages { display: flex; align-items: center; gap: 3px; }
 
-    /* ---------- Basis bersama tombol nav (</>/«/») & nomor halaman — rounded-
-       square (var(--radius-md)) di semua tombol, BUKAN pill/lingkaran seperti
-       referensi ldksyahid-app (di sana «/» pakai radius asimetris 50px/14px
-       supaya sisi luar bulat; di sini disamakan semua sisinya). ---------- */
+    /* Garis pemisah tipis antar kelompok (lompat-halaman / nomor / navigasi)
+       — cuma tampil kalau ada dua kelompok yang benar-benar bersebelahan
+       (mis. hilang otomatis di ujung kalau salah satu kelompoknya kosong,
+       tidak relevan di sini karena kelompoknya selalu ada keduanya). */
+    .pgn-sep { width: 1px; align-self: stretch; margin: 6px 3px; background: var(--color-border); flex-shrink: 0; }
+
+    /* ---------- Tombol — rounded-square (var(--radius-md)), TANPA border
+       sendiri (kartu pembungkus yang jadi wadahnya) — transparan sampai
+       di-hover/aktif, konsisten dengan pola tab pill lain di app ini. ---------- */
     .pgn-nav, .pgn-num {
-      height: 40px; min-width: 40px; padding: 0 10px;
-      border: 1.5px solid var(--color-primary); border-radius: var(--radius-md);
-      background: #fff; color: var(--color-primary-dark);
+      height: 40px; min-width: 40px; padding: 0 12px;
+      border: none; border-radius: var(--radius-md);
+      background: transparent; color: var(--color-text-secondary);
       font-size: .85rem; font-weight: 700; line-height: 1;
       display: inline-flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0;
       transition: background var(--motion-base) var(--ease-out), color var(--motion-base) var(--ease-out),
-        border-color var(--motion-base) ease, transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out);
+        transform var(--motion-base) var(--ease-out), box-shadow var(--motion-base) var(--ease-out);
     }
     .pgn-nav { width: 40px; padding: 0; }
 
     @media (hover: hover) and (pointer: fine) {
-      .pgn-nav:hover:not(:disabled), .pgn-num:hover:not(.active) {
-        background: var(--color-primary); color: #fff;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 18px color-mix(in srgb, var(--color-primary) 30%, transparent);
-      }
+      .pgn-nav:hover:not(:disabled) { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+      .pgn-num:hover:not(.active) { background: var(--color-primary-soft); color: var(--color-primary-dark); transform: translateY(-2px); }
     }
 
     .pgn-num.active {
       background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-      border-color: transparent; color: #fff; font-weight: 800;
-      transform: translateY(-3px) scale(1.06);
-      box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 38%, transparent);
+      color: #fff; font-weight: 800;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 40%, transparent);
+      animation: pgnActivePop .35s var(--ease-out);
       cursor: default;
     }
+    @keyframes pgnActivePop { from { transform: scale(.85); } to { transform: scale(1); } }
 
     .pgn-nav:disabled {
-      color: var(--color-muted); border-color: var(--color-border);
-      background: var(--color-bg-alt); cursor: not-allowed; opacity: .55;
+      color: var(--color-border-strong); background: transparent; cursor: not-allowed;
     }
 
+    /* Titik-titik "…" sebagai 3 dot kecil rata tengah (bukan lagi karakter
+       teks nempel di bawah) — lebih rapi & konsisten tingginya dengan
+       tombol di sekelilingnya. */
     .pgn-ellipsis {
-      width: 28px; height: 40px; display: flex; align-items: flex-end; justify-content: center;
-      padding-bottom: 6px; color: var(--color-primary); font-weight: 800; font-size: .8rem;
-      letter-spacing: 2px; opacity: .7; user-select: none;
+      width: 32px; height: 40px; display: flex; align-items: center; justify-content: center; gap: 3px;
+      flex-shrink: 0; user-select: none;
     }
+    .pgn-ellipsis span { width: 4px; height: 4px; border-radius: 50%; background: var(--color-border-strong); }
 
     @media (max-width: 480px) {
-      .pgn-wrap { gap: 10px; }
-      .pgn-inner { gap: 5px; }
-      .pgn-pages { order: -1; width: 100%; gap: 5px; }
-      .pgn-nav, .pgn-num { height: 34px; min-width: 34px; font-size: .78rem; }
+      .pgn-wrap { gap: 12px; }
+      .pgn-card { padding: 4px; }
+      .pgn-inner, .pgn-pages { gap: 2px; }
+      .pgn-nav, .pgn-num { height: 34px; min-width: 34px; padding: 0 8px; font-size: .78rem; }
       .pgn-nav { width: 34px; }
-      .pgn-ellipsis { height: 34px; font-size: .72rem; }
+      .pgn-sep { margin: 4px 1px; }
+      .pgn-ellipsis { width: 24px; height: 34px; }
       .pgn-info { font-size: .78rem; text-align: center; }
     }
   `],
