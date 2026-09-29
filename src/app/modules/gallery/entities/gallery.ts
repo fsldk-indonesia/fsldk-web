@@ -31,6 +31,14 @@ export interface GalleryListItem {
   createdDate: string;
 }
 
+/** Opsi dropdown filter publik "Tahun Kegiatan"/"Nama Kegiatan" (lihat
+ *  GalleryApiService.getPublicFilterOptions) — nilai distinct dari data yang
+ *  sudah ada, supaya UI tidak pernah menawarkan opsi yang hasilnya kosong. */
+export interface GalleryFilterOptions {
+  years: number[];
+  eventNames: string[];
+}
+
 export interface Gallery extends GalleryListItem {
   eventDescription: string;
   documentLink: string | null;

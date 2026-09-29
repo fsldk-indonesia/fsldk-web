@@ -1,8 +1,9 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
-import { GalleryApiService } from '../services/gallery-api.service';
+import { GalleryApiService, GalleryPublicListParams } from '../services/gallery-api.service';
 import {
   Gallery,
+  GalleryFilterOptions,
   GalleryListItem,
   GalleryPhoto,
   PhotoPage,
@@ -34,14 +35,20 @@ export class GalleryRepository {
   currentGallery = signal<Gallery | null>(null);
   photoPage = signal<PhotoPage | null>(null);
 
+  /** Opsi dropdown filter publik (Tahun Kegiatan/Nama Kegiatan) — dimuat
+   *  sekali lewat loadFilterOptions(), independen dari loading()/error() di
+   *  atas (itu punya arti "sedang memuat DAFTAR galeri", bukan opsi filter). */
+  filterOptions = signal<GalleryFilterOptions | null>(null);
+  filterOptionsLoading = signal<boolean>(false);
+
   loading = signal<boolean>(false);
   photosLoading = signal<boolean>(false);
   error = signal<string | null>(null);
 
-  loadPublic(page = 1, limit = 9, sort = 'newest'): void {
+  loadPublic(page = 1, limit = 9, sort = 'newest', params: GalleryPublicListParams = {}): void {
     this.loading.set(true);
     this.error.set(null);
-    this.api.listPublic(page, limit, sort).subscribe({
+    this.api.listPublic(page, limit, sort, params).subscribe({
       next: (result) => {
         this.publicGalleries.set(result.data);
         this.publicPage.set(result.page);
@@ -53,6 +60,18 @@ export class GalleryRepository {
         this.error.set(err.error?.message || 'Gagal memuat galeri');
         this.loading.set(false);
       },
+    });
+  }
+
+  loadFilterOptions(): void {
+    if (this.filterOptions() || this.filterOptionsLoading()) return;
+    this.filterOptionsLoading.set(true);
+    this.api.getPublicFilterOptions().subscribe({
+      next: (opts) => {
+        this.filterOptions.set(opts);
+        this.filterOptionsLoading.set(false);
+      },
+      error: () => this.filterOptionsLoading.set(false),
     });
   }
 

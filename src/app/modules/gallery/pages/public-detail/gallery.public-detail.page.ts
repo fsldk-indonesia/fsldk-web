@@ -157,6 +157,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
                         [page]="repo.photoPage()!.page"
                         [count]="repo.photoPage()!.total"
                         [limit]="photosLimit"
+                        itemLabel="foto"
                         (pageChange)="onPhotoPageChange($event)"
                       />
                     </div>

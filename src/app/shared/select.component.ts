@@ -21,7 +21,7 @@ export interface SelectOption {
       <button type="button" class="app-select-control" [disabled]="disabled"
               (click)="toggle()" (keydown)="onKeydown($event)"
               aria-haspopup="listbox" [attr.aria-expanded]="open()">
-        <span [class.placeholder]="!selectedOption()">{{ selectedOption()?.label ?? placeholder }}</span>
+        <span [class.placeholder]="!hasSelection()">{{ triggerLabel() }}</span>
         <i class="fas fa-chevron-down"></i>
       </button>
       <div class="app-select-menu" [class.open]="open()"
@@ -31,11 +31,16 @@ export interface SelectOption {
           <input class="app-select-search" type="text" placeholder="Cari…" [(ngModel)]="query"
                  (ngModelChange)="onQueryChange()" (click)="$event.stopPropagation()" (keydown)="onSearchKeydown($event)">
         }
-        <ul class="app-select-list" role="listbox" [style.maxHeight.px]="listMaxH()">
+        <ul class="app-select-list" role="listbox" [attr.aria-multiselectable]="multiple || null" [style.maxHeight.px]="listMaxH()">
           @for (opt of filteredOptions(); track opt.value; let i = $index) {
-            <li role="option" [attr.aria-selected]="opt.value === value"
-                [class.selected]="opt.value === value" [class.active]="i === activeIndex()"
-                (mouseenter)="activeIndex.set(i)" (click)="choose(opt)">{{ opt.label }}</li>
+            <li role="option" [attr.aria-selected]="isSelected(opt)"
+                [class.selected]="isSelected(opt)" [class.active]="i === activeIndex()"
+                (mouseenter)="activeIndex.set(i)" (click)="choose(opt)">
+              @if (multiple) {
+                <span class="app-select-checkbox" [class.checked]="isSelected(opt)"><i class="fas fa-check"></i></span>
+              }
+              <span class="app-select-opt-label">{{ opt.label }}</span>
+            </li>
           } @empty {
             <li class="empty">Tidak ada pilihan</li>
           }
@@ -84,13 +89,24 @@ export interface SelectOption {
     }
     .app-select-search:focus { outline: none; border-color: var(--color-primary); }
     .app-select-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; }
-    .app-select-list li { padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
+    .app-select-list li { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
     .app-select-list li:hover { background: var(--color-bg-alt); }
     .app-select-list li.active { background: var(--color-bg-alt); }
     .app-select-list li.selected { background: var(--color-primary-soft); color: var(--color-primary-dark); font-weight: 600; }
     .app-select-list li.selected.active { background: var(--color-primary); color: #fff; }
+    .app-select-list li.selected.active .app-select-checkbox.checked { background: #fff; border-color: #fff; color: var(--color-primary); }
     .app-select-list li.empty { color: var(--color-muted); cursor: default; }
     .app-select-list li.empty:hover { background: none; }
+    .app-select-opt-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Checkbox mode multi-select — cuma dirender saat [multiple]="true"
+       (lihat template), list item lain (single-select) tidak berubah sama
+       sekali karena elemen ini tidak ada di DOM-nya. */
+    .app-select-checkbox {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+      border-radius: 5px; border: 1.5px solid var(--color-border-strong); color: transparent; font-size: .62rem;
+      transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .app-select-checkbox.checked { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
   `],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => SelectComponent), multi: true }],
 })
@@ -103,6 +119,12 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   /** Tampilkan kotak cari-dalam-daftar di atas opsi — nyalakan untuk daftar
    *  panjang (mis. Provinsi/Kota-Kabupaten dari wilayah.id). */
   @Input() searchable = false;
+  /** Mode pilih-banyak — `value` jadi array, klik opsi TOGGLE (menu tetap
+   *  terbuka supaya bisa pilih beberapa sekaligus, ditutup lewat klik luar/
+   *  Escape/klik trigger lagi), trigger menampilkan label gabungan. Default
+   *  false supaya SEMUA pemanggil lama (single-select) tidak berubah sama
+   *  sekali — lihat isSelected()/choose()/triggerLabel() untuk percabangannya. */
+  @Input() multiple = false;
 
   value: unknown = null;
   open = signal(false);
@@ -169,6 +191,32 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
     return this.options.find((o) => o.value === this.value);
   }
 
+  /** Opsi terpilih dalam mode [multiple] — `value` di mode ini adalah array. */
+  selectedOptionsMulti(): SelectOption[] {
+    if (!Array.isArray(this.value)) return [];
+    const chosen = this.value as unknown[];
+    return this.options.filter((o) => chosen.includes(o.value));
+  }
+
+  isSelected(opt: SelectOption): boolean {
+    if (this.multiple) return Array.isArray(this.value) && (this.value as unknown[]).includes(opt.value);
+    return opt.value === this.value;
+  }
+
+  hasSelection(): boolean {
+    return this.multiple ? this.selectedOptionsMulti().length > 0 : this.selectedOption() !== undefined;
+  }
+
+  /** Label trigger — gabungan koma untuk multi (truncate via CSS ellipsis
+   *  di .app-select-control span, lihat styles), label tunggal untuk single. */
+  triggerLabel(): string {
+    if (this.multiple) {
+      const opts = this.selectedOptionsMulti();
+      return opts.length > 0 ? opts.map((o) => o.label).join(', ') : this.placeholder;
+    }
+    return this.selectedOption()?.label ?? this.placeholder;
+  }
+
   toggle(): void {
     if (this.disabled) return;
     if (this.open()) { this.close(); return; }
@@ -178,7 +226,7 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   private openMenu(): void {
     this.reposition();
     this.query = '';
-    const sel = this.filteredOptions().findIndex((o) => o.value === this.value);
+    const sel = this.filteredOptions().findIndex((o) => this.isSelected(o));
     this.activeIndex.set(sel >= 0 ? sel : 0);
     this.open.set(true);
     if (this.searchable) {
@@ -294,6 +342,17 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   }
 
   choose(opt: SelectOption): void {
+    if (this.multiple) {
+      const current = Array.isArray(this.value) ? [...(this.value as unknown[])] : [];
+      const idx = current.indexOf(opt.value);
+      if (idx >= 0) current.splice(idx, 1); else current.push(opt.value);
+      this.value = current;
+      this.onChange(this.value);
+      this.onTouched();
+      // Menu SENGAJA tidak ditutup di sini — mode multiple butuh bisa pilih
+      // beberapa opsi berturut-turut; tertutup lewat klik luar/Escape/toggle().
+      return;
+    }
     this.value = opt.value;
     this.onChange(this.value);
     this.onTouched();

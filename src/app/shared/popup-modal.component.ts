@@ -26,6 +26,8 @@ import { IconComponent } from './icon.component';
         class="popup-modal-card"
         [class.active]="open"
         [class.paper]="variant === 'paper'"
+        [style.max-width.px]="maxWidth"
+        [style.min-height.px]="minHeight || null"
         role="dialog" aria-modal="true" [attr.aria-label]="label || null" (click)="$event.stopPropagation()"
       >
         <button type="button" class="popup-modal-close" (click)="close()" aria-label="Tutup"><app-icon name="x" [size]="15" /></button>
@@ -46,8 +48,15 @@ import { IconComponent } from './icon.component';
       opacity: 1; visibility: visible; pointer-events: auto;
       transition: opacity var(--motion-base) ease, visibility 0s linear 0s;
     }
+    /* display:flex column — kalau [minHeight] dipakai dan kontennya lebih
+       pendek dari itu, pemanggil bisa mendorong elemen ke dasar kartu (mis.
+       footer lewat margin-top:auto di wrapper-nya sendiri) alih-alih
+       menyisakan ruang kosong menggantung. Konten satu blok biasa (tanpa
+       flex tricks) tetap terlihat sama persis seperti sebelumnya karena
+       .popup-modal-body di bawah ikut jadi flex column + flex:1. */
     .popup-modal-card {
       position: relative; width: 100%; max-width: 380px; max-height: 88vh; overflow-y: auto;
+      display: flex; flex-direction: column;
       background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
       opacity: 0; transform: scale(.85) translateY(14px);
       transition: opacity var(--motion-slow) var(--ease-out), transform var(--motion-slow) var(--ease-out);
@@ -82,7 +91,7 @@ import { IconComponent } from './icon.component';
       cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
     }
     .popup-modal-close:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
-    .popup-modal-body { padding: 30px 22px 24px; }
+    .popup-modal-body { padding: 30px 22px 24px; flex: 1; display: flex; flex-direction: column; }
     @media (prefers-reduced-motion: reduce) { .popup-modal-backdrop, .popup-modal-card, .popup-modal-card.paper { transition: none; } }
   `],
 })
@@ -90,6 +99,15 @@ export class PopupModalComponent implements AfterViewInit, OnDestroy {
   @Input() open = false;
   @Input() label = '';
   @Input() variant: 'default' | 'paper' = 'default';
+  /** Lebar maksimum kartu (px) — default 380 sama seperti sebelumnya
+   *  (lihat .popup-modal-card max-width di styles). Dibuat @Input supaya
+   *  konten yang lebih lebar (mis. grid filter 2 kolom) bisa minta kartu
+   *  lebih lega tanpa mengubah default semua pemanggil lain. */
+  @Input() maxWidth = 380;
+  /** Tinggi minimum kartu (px), opsional — default tidak diset (tinggi
+   *  murni ngikut konten seperti sebelumnya). Dipakai konten yang perlu
+   *  terasa lega walau isinya sedikit (mis. modal filter). */
+  @Input() minHeight?: number;
   @Output() closed = new EventEmitter<void>();
 
   // Dipindah fisik ke document.body — lihat catatan yang sama di
