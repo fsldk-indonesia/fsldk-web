@@ -30,12 +30,18 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       </div>
     } @else {
       @if (repo.currentGallery(); as gallery) {
-      <!-- Hero Header Section (Immediately below Navbar) -->
+      <!-- ---------- Hero Header — TIDAK lagi memakai cover image apa adanya
+           sebagai background penuh-layar (foto dokumentasi kadang berupa
+           screenshot/QR/teks yang jadi pecah & tidak terbaca saat dibentangkan
+           sebesar itu, dilaporkan "jelek"). Latar sekarang murni gradasi +
+           tekstur titik (pola sama seperti app-page-hero), cover image-nya
+           ditampilkan dalam bingkai kartu berukuran wajar di kolom kanan —
+           seburuk apa pun isi fotonya, dampaknya kecil & terkontrol. ---------- -->
       <header class="hero-section">
-        <div class="hero-bg" [style.backgroundImage]="'url(' + imgUrl(gallery.coverImage) + ')'"></div>
-        <div class="hero-overlay"></div>
-        <div class="container hero-content">
-          <div class="hero-text-content">
+        <div class="hero-texture" aria-hidden="true"></div>
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="container hero-grid">
+          <div class="hero-copy">
             <div class="hero-badges">
               @if (gallery.eventDate) {
                 <span class="hero-tag"><app-icon name="calendar-days" [size]="13" /> {{ gallery.eventDate | date: 'd MMMM y' }}</span>
@@ -62,16 +68,31 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
               </div>
             }
           </div>
+
+          <div class="hero-visual">
+            <div class="hero-cover-frame">
+              @if (gallery.coverImage) {
+                <img [src]="imgUrl(gallery.coverImage)" [alt]="gallery.eventName" class="hero-cover-img" />
+              } @else {
+                <div class="hero-cover-fallback"><app-icon name="images" [size]="40" /></div>
+              }
+              <span class="hero-cover-badge"><app-icon name="images" [size]="12" /> {{ gallery.totalPhotos }} Foto</span>
+            </div>
+          </div>
         </div>
       </header>
 
-      <!-- Breadcrumb Navigation (Below Hero) -->
-      <nav class="breadcrumb-container" aria-label="Breadcrumb">
+      <!-- Breadcrumb Navigation — kartu pil mengambang di atas kanvas tint
+           hijau yang sama dengan section listing Galeri (bukan lagi baris
+           teks polos "/" di atas latar transparan). -->
+      <nav class="breadcrumb-bar" aria-label="Breadcrumb">
         <div class="container">
-          <ol class="breadcrumb">
-            <li><a routerLink="/">Beranda</a></li>
-            <li><a routerLink="/tentang/galeri">Galeri</a></li>
-            <li class="active" aria-current="page">{{ gallery.eventName }}</li>
+          <ol class="breadcrumb-pill reveal">
+            <li><a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a></li>
+            <li class="crumb-sep" aria-hidden="true"><app-icon name="chevron-right" [size]="11" /></li>
+            <li><a routerLink="/tentang/galeri" class="crumb-link"><app-icon name="images" [size]="13" /> Galeri</a></li>
+            <li class="crumb-sep" aria-hidden="true"><app-icon name="chevron-right" [size]="11" /></li>
+            <li class="crumb-current" aria-current="page">{{ gallery.eventName }}</li>
           </ol>
         </div>
       </nav>
@@ -202,94 +223,91 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
   }
   `,
   styles: [`
-    .breadcrumb-container {
-      background: transparent;
-      border-bottom: none;
-      padding: 28px 0 10px;
+    /* ---------- Breadcrumb — kartu pil putih mengambang di kanvas tint hijau
+       (background section ini SENGAJA disamakan dengan .detail-main-section
+       di bawahnya & titik akhir gradasi .hero-overlay, lihat komentar di
+       sana — supaya hero->breadcrumb->konten jadi satu alur warna menerus,
+       bukan tiga blok warna berbeda yang kelihatan berbatas). ---------- */
+    .breadcrumb-bar { background: var(--color-primary-tint); padding: 18px 0 34px; }
+    .breadcrumb-bar .container { display: flex; justify-content: center; }
+
+    .breadcrumb-pill {
+      display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;
+      gap: 4px; list-style: none; margin: 0; padding: 9px 20px; max-width: 100%;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-full);
+      box-shadow: var(--shadow-sm);
+      animation: crumbFadeUp .5s var(--ease-out) .05s both;
+    }
+    @keyframes crumbFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .breadcrumb-pill li { display: flex; align-items: center; }
+
+    .crumb-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 9px; border-radius: var(--radius-full);
+      color: var(--color-text-secondary); font-size: 0.82rem; font-weight: 600;
+      text-decoration: none; white-space: nowrap;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+    .crumb-link app-icon { opacity: 0.75; }
+    .crumb-link:hover { color: var(--color-primary-dark); background: var(--color-primary-soft); text-decoration: none; }
+
+    .crumb-sep { color: var(--color-border-strong); flex-shrink: 0; }
+
+    .crumb-current {
+      padding: 5px 9px; color: var(--color-primary-dark); font-weight: 700; font-size: 0.82rem;
+      max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
-    .breadcrumb {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      font-size: 0.85rem;
+    @media (max-width: 640px) {
+      .crumb-link span, .crumb-link { font-size: 0.78rem; }
+      .crumb-current { max-width: 160px; font-size: 0.78rem; }
+      .breadcrumb-pill { gap: 2px; padding: 7px 14px; }
     }
 
-    .breadcrumb li {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--color-text-muted);
-    }
-
-    .breadcrumb li:not(:last-child)::after {
-      content: '/';
-      color: var(--color-text-muted);
-    }
-
-    .breadcrumb a {
-      color: var(--color-text-secondary);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .breadcrumb a:hover {
-      color: var(--color-primary);
-    }
-
-    .breadcrumb .active {
-      color: var(--color-text);
-      font-weight: 600;
-    }
-
+    /* Latar gradasi + tekstur titik — pola sama dengan app-page-hero
+       (shared/page-hero.component.ts), disalin di sini karena view
+       encapsulation. Tidak lagi bergantung sama sekali pada isi cover image
+       (lihat .hero-cover-frame di bawah), jadi kualitas foto dokumentasi
+       apa pun tidak bisa merusak tampilan hero-nya sendiri. */
     .hero-section {
       position: relative;
-      background: var(--color-primary-dark, #064e3b);
+      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
       color: #fff;
-      padding: 70px 0 80px;
+      padding: 64px 0 56px;
       overflow: hidden;
     }
 
-    .hero-bg {
-      position: absolute;
-      inset: 0;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      transform: scale(1.02);
+    .hero-texture {
+      position: absolute; inset: 0; opacity: .5; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 1.6px);
+      background-size: 26px 26px; background-position: 15% -10px;
+      mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+      -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+    }
+    .hero-glow {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 55% 65% at 88% 30%, rgba(255,196,0,.18) 0%, transparent 70%);
+    }
+    /* Sempat dicoba fade linear-gradient (belang pucat kotor — bug
+       interpolasi "transparent") dan wave SVG (kelihatan seperti pita putih
+       terpisah karena var(--color-primary-tint) = #f3faf5, nyaris putih,
+       jadi wave-nya kebaca sebagai "warna ketiga" alih-alih menyatu). Kedua
+       percobaan itu DIBUANG — potongan tegas dua warna solid (hero hijau tua
+       -> .breadcrumb-bar tint) yang paling bersih & sesuai permintaan
+       eksplisit ("cuma warna hijau & warna seperti di Beranda", TANPA warna
+       ketiga di antaranya). */
+
+    .hero-grid {
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; align-items: center;
     }
 
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        180deg,
-        rgba(13, 92, 59, 0.65) 0%,
-        rgba(6, 78, 59, 0.58) 60%,
-        rgba(10, 60, 42, 0.62) 82%,
-        var(--color-bg, #f8faf9) 100%
-      );
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-    }
-
-    .hero-text-content {
-      max-width: 860px;
-      margin: 0 auto;
-      text-align: center;
-    }
+    .hero-copy { position: relative; z-index: 2; }
 
     .hero-badges {
       display: flex;
       flex-wrap: wrap;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 10px;
       margin-bottom: 16px;
     }
@@ -334,7 +352,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
 
     .hero-actions {
       display: flex;
-      justify-content: center;
+      justify-content: flex-start;
       gap: 14px;
       flex-wrap: wrap;
     }
@@ -362,10 +380,95 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       box-shadow: 0 8px 22px rgba(13, 92, 59, 0.4);
     }
 
-    .detail-main-section {
-      padding: 56px 0 80px;
-      background: var(--color-bg, #f8faf9);
+    .hero-badges, .hero-event-name, .hero-title, .hero-actions {
+      opacity: 0; animation: heroCopyFadeUp .7s var(--ease-out) forwards;
     }
+    .hero-badges { animation-delay: .05s; }
+    .hero-event-name { animation-delay: .15s; }
+    .hero-title { animation-delay: .25s; }
+    .hero-actions { animation-delay: .4s; }
+    @keyframes heroCopyFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ---------- Cover image — dibingkai kartu berukuran wajar (BUKAN
+       object-fit:cover penuh-layar yang memotong foto), object-fit:contain
+       supaya foto sampul selalu terlihat UTUH apa pun rasio aslinya; sisa
+       ruang di sekitarnya jadi matte/bingkai, bukan crop paksa. ---------- */
+    .hero-visual { position: relative; z-index: 2; display: flex; justify-content: center; }
+    .hero-cover-frame {
+      position: relative; width: 100%; max-width: 420px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+      border-radius: 20px; padding: 10px; box-sizing: border-box;
+      box-shadow: 0 24px 50px rgba(0,0,0,.35);
+      opacity: 0; animation: heroCoverIn .7s var(--ease-out) .3s forwards;
+    }
+    @keyframes heroCoverIn { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: none; } }
+    .hero-cover-img {
+      display: block; width: 100%; max-height: 380px;
+      object-fit: contain; border-radius: 12px;
+    }
+    .hero-cover-fallback {
+      width: 100%; height: 220px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.06); color: rgba(255,255,255,.6);
+    }
+    .hero-cover-badge {
+      position: absolute; left: 22px; bottom: 22px; z-index: 2;
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.2); color: #fff;
+      font-size: .74rem; font-weight: 700; padding: 5px 11px; border-radius: 999px;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 28px; }
+      .hero-copy { text-align: center; }
+      .hero-badges, .hero-actions { justify-content: center; }
+      .hero-visual { order: -1; }
+      .hero-cover-frame { max-width: 340px; }
+    }
+
+    /* ---------- Kanvas konten — DISAMAKAN dengan .section-blob-drift index
+       Galeri (tint hijau + dua radial-gradient "blob" yang melayang pelan),
+       supaya berpindah dari listing ke detail tidak terasa seperti masuk ke
+       halaman lain sama sekali. Duplikasi disengaja (view encapsulation
+       Angular tidak membagikan style antar komponen), lihat komentar aslinya
+       di gallery.public-index.page.ts. ---------- */
+    .detail-main-section {
+      position: relative;
+      overflow: hidden;
+      padding: 8px 0 80px;
+      background: var(--color-primary-tint);
+    }
+    .detail-main-section::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 45% at 92% 0%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 72%),
+        radial-gradient(ellipse 50% 45% at 4% 28%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 72%);
+      opacity: .75;
+      animation: detailBlobDrift 12s ease-in-out infinite alternate;
+    }
+    /* Fade-mask tepi atas — TANPA ini, blob di atas mulai tepat di 0% (garis
+       batas dengan .breadcrumb-bar), jadi warna hangat blob-nya kelihatan
+       "muncul tiba-tiba" persis di seam (dilaporkan: "warnanya masih beda").
+       Menutupi 70px pertama balik ke flat var(--color-primary-tint) — sama
+       PERSIS milik .breadcrumb-bar di atasnya — supaya blob baru mulai
+       terlihat setelah masuk cukup dalam, bukan menempel di garis batas.
+       Endpoint transparan DITULIS rgba(...,0) dengan RGB SAMA (bukan
+       keyword 'transparent' polos, itu rgba(0,0,0,0) — pernah kejadian
+       belang pucat kotor di percobaan fade sebelumnya karena browser
+       menginterpolasi lewat hitam semi-transparan) — RGB yang sama di kedua
+       ujung menutup celah itu, cuma alpha yang berubah. */
+    .detail-main-section::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom, var(--color-primary-tint) 0, rgba(243, 250, 245, 0) 70px);
+    }
+    .detail-main-section > .container { position: relative; z-index: 1; }
+    @keyframes detailBlobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-4%, 5%) scale(1.15); }
+    }
+    @media (prefers-reduced-motion: reduce) { .detail-main-section::before { animation: none; } }
 
     .content-layout {
       max-width: 1080px;
@@ -547,7 +650,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
 
     @media (max-width: 992px) {
       .detail-main-section {
-        padding: 40px 0 64px;
+        padding: 4px 0 64px;
       }
       .hero-title { font-size: 2rem; }
       .photo-grid {
