@@ -4,9 +4,16 @@ import { permissionGuard } from '../../core/guards/guards';
 export function structurePublicRoutes(): Routes {
   return [
     {
-      path: 'tentang/struktur',
+      path: 'struktur',
       title: 'Struktur Organisasi',
       loadComponent: () => import('./pages/public-index/structure.public-index.page').then((m) => m.StructurePublicIndexPage),
+    },
+    // Alias legacy — URL publik dulu berprefix /tentang, dipertahankan
+    // sebagai redirect supaya link lama tidak 404.
+    {
+      path: 'tentang/struktur',
+      redirectTo: 'struktur',
+      pathMatch: 'full',
     },
   ];
 }

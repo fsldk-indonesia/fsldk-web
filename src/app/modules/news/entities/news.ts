@@ -17,3 +17,11 @@ export interface News {
   authorName: string;
   createdDate: string;
 }
+
+/** Nilai distinct yang mengisi dropdown filter publik "Filter Berita"
+ *  (Tahun Terbit/Penulis) — lihat GET /public/news/filter-options, pola
+ *  sama seperti GalleryFilterOptions. */
+export interface NewsFilterOptions {
+  years: number[];
+  reporters: string[];
+}

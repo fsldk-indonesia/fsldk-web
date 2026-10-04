@@ -25,7 +25,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
         <div class="empty-icon text-danger"><app-icon name="alert-triangle" [size]="48" /></div>
         <h3>Terjadi Kesalahan</h3>
         <p class="text-muted">{{ repo.error() }}</p>
-        <a routerLink="/tentang/galeri" class="btn btn-outline mt-md">Kembali ke Galeri</a>
+        <a routerLink="/galeri" class="btn btn-outline mt-md">Kembali ke Galeri</a>
       </div>
     } @else {
       @if (repo.currentGallery(); as gallery) {
@@ -97,7 +97,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
             <nav class="crumb-row reveal" aria-label="Breadcrumb">
               <a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a>
               <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
-              <a routerLink="/tentang/galeri" class="crumb-link"><app-icon name="images" [size]="13" /> Galeri</a>
+              <a routerLink="/galeri" class="crumb-link"><app-icon name="images" [size]="13" /> Galeri</a>
               <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
               <span class="crumb-current" aria-current="page">{{ gallery.eventName }}</span>
             </nav>
@@ -628,7 +628,7 @@ export class GalleryPublicDetailPage implements OnInit {
   private route = inject(ActivatedRoute);
   private sanitizer = inject(DomSanitizer);
 
-  galleryId = 0;
+  gallerySlug = '';
   /** Tidak ada pagination di grid foto — "tampilkan semuanya" baik di mobile
    *  maupun desktop, jadi limit dipasang besar supaya satu fetch sudah
    *  memulangkan seluruh foto galeri (backend tidak membatasi limit maksimum,
@@ -639,11 +639,11 @@ export class GalleryPublicDetailPage implements OnInit {
   selectedPhotoIndex = signal<number>(0);
 
   ngOnInit(): void {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    if (idParam) {
-      this.galleryId = Number(idParam);
-      this.repo.loadPublicDetail(this.galleryId);
-      this.repo.loadPhotosPublic(this.galleryId, 1, this.photosLimit);
+    const slugParam = this.route.snapshot.paramMap.get('slug');
+    if (slugParam) {
+      this.gallerySlug = slugParam;
+      this.repo.loadPublicDetail(this.gallerySlug);
+      this.repo.loadPhotosPublic(this.gallerySlug, 1, this.photosLimit);
     }
   }
 

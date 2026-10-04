@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { News } from '../entities/news';
+import { News, NewsFilterOptions } from '../entities/news';
 import { NewsCategory } from '../entities/news-category';
 
 /** Panggilan HTTP mentah untuk berita — publik & CMS. */
@@ -14,6 +14,8 @@ export class NewsApiService {
   publicDetail(slug: string): Observable<News> { return this.api.get(`/public/news/${slug}`); }
   featured(limit = 3): Observable<News[]> { return this.api.get('/public/news-featured', { limit }); }
   categories(): Observable<NewsCategory[]> { return this.api.get('/public/news-categories'); }
+  /** Nilai distinct (Tahun Terbit/Penulis) untuk dropdown "Filter Berita" publik. */
+  getPublicFilterOptions(): Observable<NewsFilterOptions> { return this.api.get('/public/news/filter-options'); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<News>> { return this.api.get('/news', q); }
   cmsGet(id: number): Observable<News> { return this.api.get(`/news/${id}`); }

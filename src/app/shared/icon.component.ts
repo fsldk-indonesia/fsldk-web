@@ -91,6 +91,9 @@ const ICONS: Record<string, string> = {
   'list-todo': 'fas fa-list-check',
   // Komentar (sidebar menuIcon lk_permission — sebelumnya jatuh ke fallback "?").
   'message-circle': 'fas fa-comment',
+  // Ajakan masuk untuk berkomentar (app-comment-section, guest CTA) — ikon
+  // komentar "dicoret" melambangkan belum bisa berkomentar sebelum masuk.
+  'comment-slash': 'fas fa-comment-slash',
   // Navbar "Layanan" dropdown — Kalkulator Zakat.
   calculator: 'fas fa-calculator',
   // FSLDK Goods (sidebar menuIcon lk_permission + navbar "Layanan").

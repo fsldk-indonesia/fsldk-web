@@ -1,3 +1,3 @@
 export const statisticPath = {
-  publicIndex: '/tentang/statistik-jaringan',
+  publicIndex: '/statistik-jaringan',
 };

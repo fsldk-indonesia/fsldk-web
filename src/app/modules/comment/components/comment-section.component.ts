@@ -6,6 +6,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { UploadService } from '../../../core/services/upload.service';
 import { CommentRepository } from '../repositories/comment.repository';
 import { Comment, MediaType, MentionRef } from '../entities/comment';
+import { IconComponent } from '../../../shared/icon.component';
 import { CommentItemComponent } from './comment-item.component';
 import { GifPickerComponent } from './gif-picker.component';
 import { MentionTextareaComponent } from './mention-textarea.component';
@@ -19,10 +20,16 @@ import { MentionTextareaComponent } from './mention-textarea.component';
 @Component({
   selector: 'app-comment-section',
   standalone: true,
-  imports: [FormsModule, RouterLink, CommentItemComponent, GifPickerComponent, MentionTextareaComponent],
+  imports: [FormsModule, RouterLink, IconComponent, CommentItemComponent, GifPickerComponent, MentionTextareaComponent],
   template: `
     <section class="cmt-section" id="cmt-section">
-      <h3 class="cmt-section-title">Komentar</h3>
+      <div class="cmt-section-head">
+        <span class="eyebrow"><app-icon name="comments" [size]="13" /> Diskusi</span>
+        <h3 class="cmt-section-title">
+          Komentar
+          @if (!loading() && comments().length > 0) { <span class="cmt-count">({{ comments().length }})</span> }
+        </h3>
+      </div>
 
       @if (isLoggedIn()) {
         <div class="cmt-compose">
@@ -46,19 +53,30 @@ import { MentionTextareaComponent } from './mention-textarea.component';
         </div>
       } @else {
         <div class="cmt-guest-cta">
-          <p>Masuk untuk ikut berkomentar.</p>
-          <a [routerLink]="['/login']" [queryParams]="{ returnUrl }" class="btn btn-primary btn-sm">Masuk untuk berkomentar</a>
+          <span class="icon-badge lg icon-badge-soft"><app-icon name="comment-slash" [size]="20" /></span>
+          <p class="cmt-guest-title">Bergabung dalam Diskusi</p>
+          <p class="cmt-guest-desc">Masuk untuk berbagi pendapat, bertanya, atau menanggapi komentar lainnya.</p>
+          <a [routerLink]="['/login']" [queryParams]="{ returnUrl }" class="btn btn-primary">
+            <app-icon name="log-in" [size]="14" /> Masuk untuk Berkomentar
+          </a>
         </div>
       }
 
       @if (loading()) {
-        <p class="text-muted cmt-loading">Memuat komentar…</p>
+        <div class="cmt-loading">
+          <span class="skel skel-line" style="width:70%;height:16px"></span>
+          <span class="skel skel-line" style="width:45%;height:16px"></span>
+        </div>
       } @else {
         <div class="cmt-list">
           @for (c of comments(); track c.commentID) {
             <app-comment-item [comment]="c" [level]="0" (removed)="onCommentRemoved($event)" />
           } @empty {
-            <p class="text-muted">Belum ada komentar. Jadilah yang pertama!</p>
+            <div class="cmt-empty">
+              <span class="icon-badge lg icon-badge-neutral"><app-icon name="comments" [size]="22" /></span>
+              <p class="cmt-empty-title">Belum Ada Komentar</p>
+              <p class="cmt-empty-desc">Jadilah yang pertama memberikan tanggapan.</p>
+            </div>
           }
         </div>
       }
@@ -66,16 +84,41 @@ import { MentionTextareaComponent } from './mention-textarea.component';
   `,
   styles: [`
     .cmt-section { margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--color-border); }
-    .cmt-section-title { margin-bottom: 16px; }
+    .cmt-section-head { margin-bottom: 20px; }
+    .cmt-section-head .eyebrow { display: block; margin-bottom: 6px; }
+    .cmt-section-title { margin: 0; }
+    .cmt-count { color: var(--color-muted); font-weight: 600; font-size: .85em; }
+
     .cmt-compose { margin-bottom: 24px; }
     .cmt-compose-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
     .cmt-compose-actions .grow { flex: 1; }
     .cmt-media-preview { position: relative; display: inline-block; margin-top: 8px; }
     .cmt-media-preview img { max-width: 160px; max-height: 160px; border-radius: var(--radius-md); display: block; }
     .cmt-media-preview .link-danger { display: block; margin-top: 4px; font-size: .8rem; }
-    .cmt-guest-cta { padding: 20px; text-align: center; background: var(--color-bg-warm); border: 1px solid var(--color-border); border-radius: var(--radius-lg); margin-bottom: 24px; }
-    .cmt-guest-cta p { margin: 0 0 12px; color: var(--color-text-secondary); }
-    .cmt-loading { padding: 20px 0; }
+
+    /* Ajakan masuk untuk tamu — dulu kotak abu-abu polos, sekarang kartu
+       gradien hijau lembut + icon-badge + CTA lebih jelas, konsisten dengan
+       empty-state bergaya di halaman lain (bukan kotak flat tanpa aksen). */
+    .cmt-guest-cta {
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+      padding: 32px 24px; margin-bottom: 24px; border-radius: var(--radius-lg);
+      background: linear-gradient(160deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 100%);
+      border: 1px solid var(--color-primary-soft);
+    }
+    .cmt-guest-cta .icon-badge { margin-bottom: 12px; }
+    .cmt-guest-title { margin: 0; font-weight: 800; font-size: 1.05rem; color: var(--color-text); }
+    .cmt-guest-desc { margin: 6px 0 20px; color: var(--color-text-secondary); font-size: .9rem; max-width: 360px; }
+    .cmt-guest-cta .btn { display: inline-flex; align-items: center; gap: 8px; }
+
+    .cmt-loading { display: flex; flex-direction: column; gap: 10px; padding: 8px 0 20px; }
+
+    /* Empty state daftar komentar — identik pola empty-state bergaya lain
+       (Galeri/Berita): icon-badge + judul + deskripsi, bukan teks polos
+       di tengah ruang kosong. */
+    .cmt-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 40px 20px; }
+    .cmt-empty .icon-badge { margin-bottom: 12px; }
+    .cmt-empty-title { margin: 0; font-weight: 700; color: var(--color-text); }
+    .cmt-empty-desc { margin: 4px 0 0; color: var(--color-muted); font-size: .88rem; }
   `],
 })
 export class CommentSectionComponent implements OnInit {

@@ -184,7 +184,7 @@ const MAX_MOBILE_DOTS = 7;
           <div class="gallery-desktop-grid">
             @for (item of repo.publicGalleries(); track item.galleryID; let i = $index) {
               <article class="gallery-card stagger-in" [style.--stagger-i]="i">
-                <a [routerLink]="['/tentang/galeri', item.galleryID]" class="gallery-card-media">
+                <a [routerLink]="['/galeri', item.gallerySlug]" class="gallery-card-media">
                   <img [src]="thumbUrl(item.coverImage)" [alt]="item.eventName" loading="lazy" />
                   <span class="gallery-card-scrim" aria-hidden="true"></span>
                   <span class="gallery-card-shine" aria-hidden="true"></span>
@@ -806,7 +806,7 @@ export class GalleryPublicIndexPage implements OnInit, AfterViewInit {
     this.sheetDetail.set(null);
     this.sheetError.set(false);
     this.sheetLoading.set(true);
-    this.api.getPublic(item.galleryID).subscribe({
+    this.api.getPublic(item.gallerySlug).subscribe({
       next: (gallery) => {
         this.sheetDetail.set(gallery);
         this.sheetLoading.set(false);
@@ -825,7 +825,7 @@ export class GalleryPublicIndexPage implements OnInit, AfterViewInit {
   goToSheetDetail(): void {
     const item = this.sheetItem();
     if (!item) return;
-    this.router.navigate(['/tentang/galeri', item.galleryID]);
+    this.router.navigate(['/galeri', item.gallerySlug]);
   }
 
   imgUrl = resolveImageUrl;
