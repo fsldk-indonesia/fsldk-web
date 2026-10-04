@@ -67,9 +67,13 @@ import { IconComponent } from '../shared/icon.component';
       -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
     }
 
+    /* view-transition-name — pindah halaman (login/daftar/dll) pakai grup
+       transisi SENDIRI (bukan "root"), lihat ::view-transition-old(auth-card)
+       di styles.scss untuk alasannya. */
     .auth-card {
       position: relative; z-index: 1; box-sizing: border-box;
       width: 100%; max-width: 400px;
+      view-transition-name: auth-card;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
       box-shadow: 0 24px 50px rgba(0,0,0,.35); padding: 26px 28px;
     }
