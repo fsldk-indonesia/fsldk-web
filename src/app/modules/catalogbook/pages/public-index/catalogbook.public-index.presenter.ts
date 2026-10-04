@@ -3,17 +3,23 @@ import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { CatalogBookRepository } from '../../repositories/catalogbook.repository';
 import { CatalogBookPublicIndexView } from './catalogbook.public-index.view';
 
+/** Nilai filter publik — SEMUA field multi-select (array), keynya SENGAJA
+ *  dibuat identik dengan nama query param backend (bookCategoryID,
+ *  authorTypeID, availabilityTypeID, languageID, year — lihat
+ *  catalogbook_handler.parseFilter) supaya bisa langsung disebar ke query
+ *  tanpa pemetaan nama. ApiService men-serialize array jadi repeated query
+ *  key (?bookCategoryID=1&bookCategoryID=2), dibaca backend lewat
+ *  c.QueryArray() + IN(...) — dukungan multi-value ini sudah ada di
+ *  backend sejak awal, cuma belum dipakai oleh UI filter lama. */
 export interface CatalogBookPublicFilter {
-  bookCategoryID: number;
-  authorTypeID: number;
-  availabilityTypeID: number;
-  languageID: number;
-  year: string;
+  bookCategoryID?: number[];
+  authorTypeID?: number[];
+  availabilityTypeID?: number[];
+  languageID?: number[];
+  year?: string[];
 }
 
-export const emptyCatalogBookPublicFilter: CatalogBookPublicFilter = {
-  bookCategoryID: 0, authorTypeID: 0, availabilityTypeID: 0, languageID: 0, year: '',
-};
+export const emptyCatalogBookPublicFilter: CatalogBookPublicFilter = {};
 
 @Injectable()
 export class CatalogBookPublicIndexPresenter extends BasePresenter<CatalogBookPublicIndexView> {
@@ -30,11 +36,11 @@ export class CatalogBookPublicIndexPresenter extends BasePresenter<CatalogBookPu
     this.view.setLoading(true);
     const q: Record<string, unknown> = {
       page, limit, search, sort,
-      bookCategoryID: filter.bookCategoryID || undefined,
-      authorTypeID: filter.authorTypeID || undefined,
-      availabilityTypeID: filter.availabilityTypeID || undefined,
-      languageID: filter.languageID || undefined,
-      year: filter.year || undefined,
+      bookCategoryID: filter.bookCategoryID,
+      authorTypeID: filter.authorTypeID,
+      availabilityTypeID: filter.availabilityTypeID,
+      languageID: filter.languageID,
+      year: filter.year,
     };
     this.bookRepo.publicList(q).subscribe({
       next: (p) => { this.view.setBooks(p.data, p.count); this.view.setLoading(false); },

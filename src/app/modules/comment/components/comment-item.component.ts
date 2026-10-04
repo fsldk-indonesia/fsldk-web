@@ -88,9 +88,7 @@ import { MentionTextareaComponent } from './mention-textarea.component';
             <button type="button" class="btn btn-ghost btn-sm" (click)="cancelEdit()">Batal</button>
             <button type="button" class="btn btn-primary btn-sm" [disabled]="editSubmitting()" (click)="submitEdit()">Simpan</button>
           </div>
-          @if (editGifOpen()) {
-            <app-gif-picker (select)="onEditGifSelected($event)" (close)="editGifOpen.set(false)" />
-          }
+          <app-gif-picker [open]="editGifOpen()" (select)="onEditGifSelected($event)" (close)="editGifOpen.set(false)" />
         }
 
         @if (replying()) {
@@ -110,9 +108,7 @@ import { MentionTextareaComponent } from './mention-textarea.component';
               <button type="button" class="btn btn-ghost btn-sm" (click)="cancelReply()">Batal</button>
               <button type="button" class="btn btn-primary btn-sm" [disabled]="replySubmitting()" (click)="submitReply()">Kirim</button>
             </div>
-            @if (replyGifOpen()) {
-              <app-gif-picker (select)="onReplyGifSelected($event)" (close)="replyGifOpen.set(false)" />
-            }
+            <app-gif-picker [open]="replyGifOpen()" (select)="onReplyGifSelected($event)" (close)="replyGifOpen.set(false)" />
           </div>
         }
 

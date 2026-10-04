@@ -3,23 +3,21 @@ import { IconComponent } from './icon.component';
 
 /**
  * Pagination reusable untuk tabel CMS (Berita, Artikel, Pengguna, Shortlink,
- * dst.) maupun halaman publik (Galeri) — dipakai lewat @Input page/limit/count
- * supaya tiap halaman tetap memegang sumber kebenaran datanya sendiri (page
- * presenter memanggil repository lagi saat pageChange terpicu), komponen ini
- * murni tampilan.
+ * dst.) maupun halaman publik (Galeri, Berita, Artikel, Katalog Buku) —
+ * dipakai lewat @Input page/limit/count supaya tiap halaman tetap memegang
+ * sumber kebenaran datanya sendiri (page presenter memanggil repository lagi
+ * saat pageChange terpicu), komponen ini murni tampilan.
  *
- * Desain diadaptasi dari komponen "pagination-custom" ldksyahid-app
- * (resources/views/components/pagination-custom/): baris info "Menampilkan
- * X–Y dari Z <label>" di atas, tombol lompat ke halaman pertama/terakhir
- * («/») + sebelumnya/berikutnya (‹/›) di kiri-kanan nomor halaman. BEDA dari
- * referensi aslinya: (1) semua tombol rounded-square (var(--radius-md)),
- * bukan pill/lingkaran penuh — sesuai permintaan eksplisit; (2) seluruh
- * baris tombol dibungkus SATU kartu putih (bukan tombol lepas ber-border
- * sendiri-sendiri mengambang di atas background section) — pola sama
- * seperti .tentang-tabs-bar (Beranda): kartu + tombol transparan, aktif
- * dapat gradient, supaya terasa satu kesatuan yang dirancang, bukan
- * kumpulan lingkaran lepas; (3) warna dipetakan ke token brand hijau
- * proyek ini, bukan teal ldksyahid-app.
+ * Dua tampilan lewat @Input variant:
+ * - 'card' (default, halaman publik): baris info "Menampilkan X–Y dari Z
+ *   <label>" di atas, tombol-tombol dibungkus satu kartu putih dengan
+ *   nomor halaman aktif bergradient — desain diadaptasi dari komponen
+ *   "pagination-custom" ldksyahid-app.
+ * - 'bar' (CMS — Portal Admin/LDK/Puskomda/Puskomnas): tombol nomor halaman
+ *   lepas ber-border tipis, tanpa kartu pembungkus atau baris info —
+ *   tampilan asli CMS sebelum redesign halaman publik di atas tanpa sengaja
+ *   ikut mengubah gaya tabel CMS (shared component yang sama dipakai
+ *   keduanya). Jangan ganti default CMS call sites ke 'card'.
  *
  * Nomor halaman ditampilkan langsung (bukan cuma Sebelumnya/Selanjutnya) —
  * kalau jumlah halaman banyak, sebagian di tengah diringkas jadi "…" supaya
@@ -31,45 +29,79 @@ import { IconComponent } from './icon.component';
   imports: [IconComponent],
   template: `
     @if (totalPages > 1) {
-      <div class="pgn-wrap">
-        <div class="pgn-info">
-          Menampilkan <strong>{{ firstItem }}–{{ lastItem }}</strong> dari <strong>{{ count }}</strong> {{ itemLabel }}
-        </div>
-        <div class="pgn-card">
-          <div class="pgn-inner">
-            <button type="button" class="pgn-nav pgn-edge" [disabled]="page <= 1" (click)="go(1)" aria-label="Halaman pertama">
-              <app-icon name="chevrons-left" [size]="13" />
-            </button>
-            <button type="button" class="pgn-nav" [disabled]="page <= 1" (click)="go(page - 1)" aria-label="Halaman sebelumnya">
-              <app-icon name="chevron-left" [size]="13" />
-            </button>
-
-            <span class="pgn-sep" aria-hidden="true"></span>
-
-            <div class="pgn-pages">
-              @for (p of pageList(); track $index) {
-                @if (p === ELLIPSIS) {
-                  <span class="pgn-ellipsis" aria-hidden="true"><span></span><span></span><span></span></span>
-                } @else {
-                  <button type="button" class="pgn-num" [class.active]="p === page" [attr.aria-current]="p === page ? 'page' : null" (click)="go(p)">{{ p }}</button>
-                }
+      @if (variant === 'bar') {
+        <div class="pagination">
+          <span class="pagination-info">Halaman {{ page }} dari {{ totalPages }} &middot; {{ count }} data</span>
+          <div class="pagination-nav">
+            <button type="button" class="pagination-btn pagination-arrow" [disabled]="page <= 1" (click)="go(page - 1)" aria-label="Halaman sebelumnya">‹</button>
+            @for (p of pageList(); track $index) {
+              @if (p === ELLIPSIS) {
+                <span class="pagination-ellipsis">…</span>
+              } @else {
+                <button type="button" class="pagination-btn" [class.active]="p === page" [attr.aria-current]="p === page ? 'page' : null" (click)="go(p)">{{ p }}</button>
               }
-            </div>
-
-            <span class="pgn-sep" aria-hidden="true"></span>
-
-            <button type="button" class="pgn-nav" [disabled]="page >= totalPages" (click)="go(page + 1)" aria-label="Halaman berikutnya">
-              <app-icon name="chevron-right" [size]="13" />
-            </button>
-            <button type="button" class="pgn-nav pgn-edge" [disabled]="page >= totalPages" (click)="go(totalPages)" aria-label="Halaman terakhir">
-              <app-icon name="chevrons-right" [size]="13" />
-            </button>
+            }
+            <button type="button" class="pagination-btn pagination-arrow" [disabled]="page >= totalPages" (click)="go(page + 1)" aria-label="Halaman berikutnya">›</button>
           </div>
         </div>
-      </div>
+      } @else {
+        <div class="pgn-wrap">
+          <div class="pgn-info">
+            Menampilkan <strong>{{ firstItem }}–{{ lastItem }}</strong> dari <strong>{{ count }}</strong> {{ itemLabel }}
+          </div>
+          <div class="pgn-card">
+            <div class="pgn-inner">
+              <button type="button" class="pgn-nav pgn-edge" [disabled]="page <= 1" (click)="go(1)" aria-label="Halaman pertama">
+                <app-icon name="chevrons-left" [size]="13" />
+              </button>
+              <button type="button" class="pgn-nav" [disabled]="page <= 1" (click)="go(page - 1)" aria-label="Halaman sebelumnya">
+                <app-icon name="chevron-left" [size]="13" />
+              </button>
+
+              <span class="pgn-sep" aria-hidden="true"></span>
+
+              <div class="pgn-pages">
+                @for (p of pageList(); track $index) {
+                  @if (p === ELLIPSIS) {
+                    <span class="pgn-ellipsis" aria-hidden="true"><span></span><span></span><span></span></span>
+                  } @else {
+                    <button type="button" class="pgn-num" [class.active]="p === page" [attr.aria-current]="p === page ? 'page' : null" (click)="go(p)">{{ p }}</button>
+                  }
+                }
+              </div>
+
+              <span class="pgn-sep" aria-hidden="true"></span>
+
+              <button type="button" class="pgn-nav" [disabled]="page >= totalPages" (click)="go(page + 1)" aria-label="Halaman berikutnya">
+                <app-icon name="chevron-right" [size]="13" />
+              </button>
+              <button type="button" class="pgn-nav pgn-edge" [disabled]="page >= totalPages" (click)="go(totalPages)" aria-label="Halaman terakhir">
+                <app-icon name="chevrons-right" [size]="13" />
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     }
   `,
   styles: [`
+    /* ---------- variant="bar" — tampilan CMS lama: tombol lepas ber-border,
+       tanpa kartu pembungkus atau baris info "Menampilkan X-Y dari Z". ---------- */
+    .pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 14px 18px; }
+    .pagination-info { color: var(--color-muted); font-size: .85rem; }
+    .pagination-nav { display: flex; align-items: center; gap: 4px; }
+    .pagination-btn {
+      min-width: 32px; height: 32px; padding: 0 8px; border: 1px solid var(--color-border); border-radius: var(--radius-xs);
+      background: #fff; color: var(--color-text); font-size: .85rem; font-weight: 600; cursor: pointer;
+      transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .pagination-btn:hover:not(:disabled):not(.active) { background: var(--color-primary-soft); border-color: var(--color-primary); }
+    .pagination-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; cursor: default; }
+    .pagination-btn:disabled { opacity: .4; cursor: not-allowed; }
+    .pagination-arrow { font-size: 1rem; line-height: 1; }
+    .pagination-ellipsis { min-width: 20px; text-align: center; color: var(--color-muted); font-size: .85rem; user-select: none; }
+
+    /* ---------- variant="card" (default) — halaman publik. ---------- */
     .pgn-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .pgn-info { font-size: .82rem; color: var(--color-muted); }
     .pgn-info strong { color: var(--color-primary-dark); font-weight: 700; }
@@ -151,8 +183,12 @@ export class PaginationComponent {
   @Input() limit = 10;
   @Input() count = 0;
   /** Kata benda jamak untuk baris info, mis. "artikel"/"galeri"/"berita" —
-   *  default generik supaya call site lama yang belum diisi tetap masuk akal. */
+   *  default generik supaya call site lama yang belum diisi tetap masuk akal.
+   *  Hanya dipakai oleh variant="card". */
   @Input() itemLabel = 'item';
+  /** 'card' = kartu putih + gradient (halaman publik, default).
+   *  'bar' = tombol lepas ber-border (CMS — jangan diganti ke 'card'). */
+  @Input() variant: 'card' | 'bar' = 'card';
   @Output() pageChange = new EventEmitter<number>();
 
   readonly ELLIPSIS = -1;

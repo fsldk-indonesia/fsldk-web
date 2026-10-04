@@ -47,9 +47,7 @@ import { MentionTextareaComponent } from './mention-textarea.component';
             <span class="grow"></span>
             <button type="button" class="btn btn-primary btn-sm" [disabled]="submitting()" (click)="submit()">Kirim</button>
           </div>
-          @if (gifOpen()) {
-            <app-gif-picker (select)="onGifSelected($event)" (close)="gifOpen.set(false)" />
-          }
+          <app-gif-picker [open]="gifOpen()" (select)="onGifSelected($event)" (close)="gifOpen.set(false)" />
         </div>
       } @else {
         <div class="cmt-guest-cta">

@@ -151,6 +151,6 @@
     </table>
   </div>
   @if (!loading()) {
-    <app-pagination [page]="page()" [limit]="config.limit ?? 10" [count]="count()" (pageChange)="goPage($event)" />
+    <app-pagination variant="bar" [page]="page()" [limit]="config.limit ?? 10" [count]="count()" (pageChange)="goPage($event)" />
   }
 </div>

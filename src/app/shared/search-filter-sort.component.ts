@@ -94,12 +94,18 @@ export interface SortOptionDef {
       </div>
     }
 
-    <app-popup-modal [open]="filterModalOpen()" [label]="filterTitle" [maxWidth]="560" [minHeight]="480" (closed)="closeFilterModal()">
+    <app-popup-modal [open]="filterModalOpen()" [label]="filterTitle" [maxWidth]="560" [mobileSheet]="filterMobileSheet" (closed)="closeFilterModal()">
       <!-- Wrapper flex-column sendiri (BUKAN diserahkan ke .popup-modal-body
            milik app-popup-modal — itu block biasa, di luar jangkauan style
-           komponen ini karena view encapsulation) supaya footer bisa didorong
-           ke dasar kartu (margin-top:auto) mengisi min-height 480px yang
-           diminta, bukan menyisakan ruang kosong menggantung di bawah footer. -->
+           komponen ini karena view encapsulation) — TANPA [minHeight] tetap
+           (dulu dipatok 480px): field-nya data-driven lewat [filterFields],
+           pemanggil dengan 2 field (Artikel/Galeri saat ini) berakhir dengan
+           kartu setinggi 480px tapi kontennya cuma ~300px, menyisakan celah
+           kosong menggantung persis di atas footer (dilaporkan "filter gk
+           lengkap" — kelihatan seperti ada field yang belum dimuat). Kartu
+           sekarang mengikuti tinggi konten asli; margin-top:auto di footer
+           tetap dipertahankan untuk pemanggil masa depan dengan field lebih
+           banyak yang kontennya mendekati/melebihi max-height popup. -->
       <div class="sfs-filter-modal-body">
         <div class="sfs-filter-head">
           <span class="chip chip-green"><app-icon name="filter" [size]="12" /> Cari &amp; Saring</span>
@@ -286,6 +292,10 @@ export class SearchFilterSortComponent implements OnChanges, OnDestroy {
   @Input() sortValue = '';
   @Input() filterTitle = 'Filter';
   @Input() filterSubtitle = 'Pilih satu atau lebih filter untuk menyaring data.';
+  /** Diteruskan ke app-popup-modal — default false (kartu terpusat seperti
+   *  sebelumnya), opt-in per pemanggil yang mau modal filternya jadi bottom
+   *  sheet native di mobile (lihat komentar PopupModalComponent). */
+  @Input() filterMobileSheet = false;
 
   @Output() searchChange = new EventEmitter<string>();
   @Output() filterApply = new EventEmitter<Record<string, unknown>>();

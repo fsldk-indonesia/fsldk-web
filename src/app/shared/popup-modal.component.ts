@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Output, ViewChild, signal } from '@angular/core';
 import { ModalBackdropDirective } from './modal-backdrop.directive';
 import { IconComponent } from './icon.component';
 
@@ -15,21 +15,36 @@ import { IconComponent } from './icon.component';
  * yang punya transform (mis. topbar .scrolled). Backdrop SENGAJA tidak
  * menutup popup — kebijakan global ModalBackdropDirective (dismissible
  * default false): hanya tombol close atau tombol Escape yang menutup.
+ *
+ * [mobileSheet] (opt-in, default false) — di breakpoint <=640px kartu
+ * berubah jadi bottom sheet (nempel ke dasar viewport, slide-up dari bawah,
+ * rounded-top-only, handle drag) alih-alih tetap jadi kartu kecil terpusat.
+ * Drag-to-close (touch) ikut diaktifkan HANYA saat flag ini true — identik
+ * swipe-down BottomSheetComponent, backdrop sendiri tetap tidak menutup
+ * (konsisten kebijakan global di atas).
  */
 @Component({
   selector: 'app-popup-modal',
   standalone: true,
   imports: [ModalBackdropDirective, IconComponent],
   template: `
-    <div class="popup-modal-backdrop" [class.active]="open" appModalBackdrop (backdropClose)="close()" #overlayEl>
+    <div class="popup-modal-backdrop" [class.active]="open" [class.mobile-sheet]="mobileSheet" appModalBackdrop (backdropClose)="close()" #overlayEl>
       <div
         class="popup-modal-card"
         [class.active]="open"
         [class.paper]="variant === 'paper'"
+        [class.mobile-sheet]="mobileSheet"
+        [class.dragging]="dragging()"
         [style.max-width.px]="maxWidth"
         [style.min-height.px]="minHeight || null"
-        role="dialog" aria-modal="true" [attr.aria-label]="label || null" (click)="$event.stopPropagation()"
+        [style.transform]="dragOffset() ? 'translateY(' + dragOffset() + 'px)' : null"
+        role="dialog" aria-modal="true" [attr.aria-label]="label || null"
+        (click)="$event.stopPropagation()"
+        (touchstart)="onDragStart($event)"
+        (touchmove)="onDragMove($event)"
+        (touchend)="onDragEnd()"
       >
+        @if (mobileSheet) { <div class="popup-modal-handle" aria-hidden="true"></div> }
         <button type="button" class="popup-modal-close" (click)="close()" aria-label="Tutup"><app-icon name="x" [size]="15" /></button>
         <div class="popup-modal-body"><ng-content /></div>
       </div>
@@ -93,6 +108,25 @@ import { IconComponent } from './icon.component';
     .popup-modal-close:hover { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .popup-modal-body { padding: 30px 22px 24px; flex: 1; display: flex; flex-direction: column; }
     @media (prefers-reduced-motion: reduce) { .popup-modal-backdrop, .popup-modal-card, .popup-modal-card.paper { transition: none; } }
+
+    /* ---------- Varian [mobileSheet] — HANYA berubah bentuk di breakpoint
+       mobile (desktop tetap kartu terpusat seperti biasa). Backdrop pindah
+       align ke dasar viewport, kartu jadi full-width rounded-top-only yang
+       slide-up dari bawah — bahasa visual sama dengan app-bottom-sheet,
+       supaya filter terasa "native" di mobile alih-alih kartu kecil
+       mengambang di tengah. ---------- */
+    @media (max-width: 640px) {
+      .popup-modal-backdrop.mobile-sheet { align-items: flex-end; padding: 0; }
+      .popup-modal-card.mobile-sheet {
+        max-width: none; width: 100%; max-height: 90vh;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%);
+      }
+      .popup-modal-card.mobile-sheet.active { transform: translateY(0); }
+      .popup-modal-card.mobile-sheet.dragging { transition: none; }
+      .popup-modal-handle { width: 40px; height: 4px; border-radius: var(--radius-full); background: var(--color-border-strong); margin: 4px auto 2px; flex-shrink: 0; }
+      .popup-modal-card.mobile-sheet .popup-modal-close { top: 16px; }
+    }
   `],
 })
 export class PopupModalComponent implements AfterViewInit, OnDestroy {
@@ -108,11 +142,19 @@ export class PopupModalComponent implements AfterViewInit, OnDestroy {
    *  murni ngikut konten seperti sebelumnya). Dipakai konten yang perlu
    *  terasa lega walau isinya sedikit (mis. modal filter). */
   @Input() minHeight?: number;
+  /** Lihat komentar kelas di atas template — default false (kartu terpusat
+   *  seperti sebelumnya), diaktifkan pemanggil yang kontennya pas jadi
+   *  bottom sheet di mobile (mis. modal filter). */
+  @Input() mobileSheet = false;
   @Output() closed = new EventEmitter<void>();
 
   // Dipindah fisik ke document.body — lihat catatan yang sama di
   // BottomSheetComponent soal kenapa ini tidak bisa lewat @if/CDK Overlay.
   @ViewChild('overlayEl', { static: true }) private overlayRef!: ElementRef<HTMLElement>;
+
+  dragging = signal(false);
+  dragOffset = signal(0);
+  private dragStartY = 0;
 
   ngAfterViewInit(): void {
     document.body.appendChild(this.overlayRef.nativeElement);
@@ -123,11 +165,36 @@ export class PopupModalComponent implements AfterViewInit, OnDestroy {
   }
 
   close(): void {
+    this.dragOffset.set(0);
     this.closed.emit();
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.open) this.close();
+  }
+
+  // Swipe-down-to-close — HANYA aktif saat [mobileSheet], identik pola
+  // BottomSheetComponent.onDragStart/Move/End.
+  onDragStart(event: TouchEvent): void {
+    if (!this.mobileSheet) return;
+    this.dragStartY = event.touches[0].clientY;
+    this.dragging.set(true);
+  }
+
+  onDragMove(event: TouchEvent): void {
+    if (!this.mobileSheet || !this.dragging()) return;
+    const delta = event.touches[0].clientY - this.dragStartY;
+    if (delta > 0) this.dragOffset.set(delta);
+  }
+
+  onDragEnd(): void {
+    if (!this.mobileSheet) return;
+    this.dragging.set(false);
+    if (this.dragOffset() > 90) {
+      this.close();
+    } else {
+      this.dragOffset.set(0);
+    }
   }
 }

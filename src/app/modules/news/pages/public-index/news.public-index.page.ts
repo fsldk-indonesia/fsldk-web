@@ -585,8 +585,12 @@ const MAX_MOBILE_DOTS = 7;
     }
 
     .gm-dots { display: flex; justify-content: center; gap: 8px; margin-top: 4px; }
-    .gm-dot { width: 8px; height: 8px; border-radius: var(--radius-full); border: none; background: var(--color-border-strong); padding: 0; cursor: pointer; transition: width .25s ease, background .25s ease, transform .25s ease, opacity .25s ease; }
-    .gm-dot.active { width: 22px; background: var(--color-primary); }
+    /* Dot di atas section HIJAU SOLID — base putih tembus pandang + aktif
+       putih padat (BUKAN var(--color-primary): itu identik warna section
+       itu sendiri, jadi dot aktif malah nyaris hilang). Pola sama dengan
+       override toolbar/pagination putih di section ini. */
+    .gm-dot { width: 8px; height: 8px; border-radius: var(--radius-full); border: none; background: rgba(255,255,255,.4); padding: 0; cursor: pointer; transition: width .25s ease, background .25s ease, transform .25s ease, opacity .25s ease; }
+    .gm-dot.active { width: 22px; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.2); }
     .gm-dot.edge:not(.active) { transform: scale(.5); opacity: .5; }
 
     @media (max-width: 900px) {
