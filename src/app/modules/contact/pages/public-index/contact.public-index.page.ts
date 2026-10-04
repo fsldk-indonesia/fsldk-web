@@ -154,18 +154,6 @@ import { PageHeroComponent } from '../../../../shared/page-hero.component';
                 <p>Setiap pesan yang masuk melalui formulir ini akan diteruskan langsung ke divisi terkait dan dijawab dalam 1x24 jam kerja.</p>
               </div>
             </div>
-
-            <!-- Newsletter Signup Card -->
-            <div class="card card-hover newsletter-card stagger-in" style="--stagger-i: 2">
-              <div class="newsletter-card-header">
-                <span class="icon-badge md icon-badge-gold"><app-icon name="mail" [size]="18" /></span>
-                <div>
-                  <strong>Berlangganan Newsletter</strong>
-                  <p>Dapatkan kabar berita, artikel, dan agenda dakwah kampus langsung ke email Anda.</p>
-                </div>
-              </div>
-              <app-newsletter-form />
-            </div>
           </div>
 
           <!-- Right Column: Interactive Contact Form -->
@@ -297,6 +285,21 @@ import { PageHeroComponent } from '../../../../shared/page-hero.component';
                 </form>
               }
             </div>
+          </div>
+        </div>
+
+        <!-- Newsletter Signup — bentangan penuh di bawah grid, bukan dijejalkan
+             ke kolom kiri yang sempit, supaya form email+tombolnya lega. -->
+        <div class="card card-hover newsletter-card-full stagger-in" style="--stagger-i: 3">
+          <div class="newsletter-card-header">
+            <span class="icon-badge md icon-badge-gold"><app-icon name="mail" [size]="18" /></span>
+            <div>
+              <strong>Berlangganan Newsletter</strong>
+              <p>Dapatkan kabar berita, artikel, dan agenda dakwah kampus langsung ke email Anda.</p>
+            </div>
+          </div>
+          <div class="newsletter-card-form">
+            <app-newsletter-form />
           </div>
         </div>
       </div>
@@ -434,10 +437,26 @@ import { PageHeroComponent } from '../../../../shared/page-hero.component';
     .notice-text strong { display: block; font-size: 0.92rem; color: #166534; margin-bottom: 2px; }
     .notice-text p { margin: 0; font-size: 0.85rem; color: #15803d; line-height: 1.4; }
 
-    .newsletter-card { margin-top: 20px; padding: 24px; }
-    .newsletter-card-header { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+    .newsletter-card-header { display: flex; gap: 14px; align-items: flex-start; }
     .newsletter-card-header strong { display: block; font-size: 0.95rem; color: var(--color-text); margin-bottom: 2px; }
     .newsletter-card-header p { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.4; }
+
+    /* Bentangan penuh di bawah grid: teks di kiri, form email+tombol di kanan
+       (lega, bukan ditumpuk vertikal sempit seperti saat masih di kolom kiri). */
+    .newsletter-card-full {
+      margin-top: 28px;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .newsletter-card-full .newsletter-card-header { flex: 1; min-width: 240px; }
+    .newsletter-card-full .newsletter-card-form { flex: 1; min-width: 280px; max-width: 460px; }
+
+    @media (max-width: 760px) {
+      .newsletter-card-full { flex-direction: column; align-items: stretch; gap: 18px; padding: 24px; }
+      .newsletter-card-full .newsletter-card-form { max-width: none; }
+    }
 
     /* Right Column Styling */
     .form-card {
