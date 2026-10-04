@@ -782,6 +782,8 @@ export class CmsLayoutComponent implements OnInit {
     if (!ok) return;
     this.closeAllDropdowns();
     this.auth.logout();
-    this.router.navigate(['/login']);
+    // Sama seperti tombol "Keluar" di navbar publik (site-header.component.ts)
+    // — logout manual selalu kembali ke Beranda, bukan ke halaman login.
+    this.router.navigate(['/']);
   }
 }
