@@ -24,6 +24,7 @@ export interface GalleryListItem {
   galleryID: number;
   eventName: string;
   eventTheme: string;
+  gallerySlug: string;
   eventDate?: string | null;
   coverImage: string;
   youtubeVideoID: string | null;

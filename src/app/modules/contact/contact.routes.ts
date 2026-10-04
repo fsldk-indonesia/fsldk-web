@@ -6,12 +6,19 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
  */
 export const contactPublicRoutes: () => Routes = () => [
   {
-    path: 'tentang/kontak',
+    path: 'kontak',
     title: 'Hubungi Kami',
     loadComponent: () =>
       import('./pages/public-index/contact.public-index.page').then(
         (m) => m.ContactPublicIndexPage
       ),
+  },
+  // Alias legacy — URL publik dulu berprefix /tentang, dipertahankan sebagai
+  // redirect supaya link lama tidak 404.
+  {
+    path: 'tentang/kontak',
+    redirectTo: 'kontak',
+    pathMatch: 'full',
   },
 ];
 

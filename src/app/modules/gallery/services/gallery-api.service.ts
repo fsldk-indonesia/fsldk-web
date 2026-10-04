@@ -46,12 +46,12 @@ export class GalleryApiService {
     return this.api.get('/public/galleries/filter-options');
   }
 
-  getPublic(id: number): Observable<Gallery> {
-    return this.api.get(`/public/galleries/${id}`);
+  getPublic(slug: string): Observable<Gallery> {
+    return this.api.get(`/public/galleries/${slug}`);
   }
 
-  listPhotosPublic(id: number, page = 1, limit = 12): Observable<PhotoPage> {
-    return this.api.get(`/public/galleries/${id}/photos`, { page, limit });
+  listPhotosPublic(slug: string, page = 1, limit = 12): Observable<PhotoPage> {
+    return this.api.get(`/public/galleries/${slug}/photos`, { page, limit });
   }
 
   // CMS Endpoints

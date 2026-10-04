@@ -169,9 +169,9 @@ export class SiteFooterComponent {
   ];
 
   readonly tentangLinks = [
-    { icon: 'sitemap', label: 'Struktur Organisasi', href: '/tentang/struktur' },
-    { icon: 'photo', label: 'Galeri', href: '/tentang/galeri' },
-    { icon: 'file-bar-chart', label: 'Statistik Jaringan', href: '/tentang/statistik-jaringan' },
-    { icon: 'messages', label: 'Hubungi Kami', href: '/tentang/kontak' },
+    { icon: 'sitemap', label: 'Struktur Organisasi', href: '/struktur' },
+    { icon: 'photo', label: 'Galeri', href: '/galeri' },
+    { icon: 'file-bar-chart', label: 'Statistik Jaringan', href: '/statistik-jaringan' },
+    { icon: 'messages', label: 'Hubungi Kami', href: '/kontak' },
   ];
 }

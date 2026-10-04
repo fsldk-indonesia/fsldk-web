@@ -84,8 +84,8 @@ export class HomeIndexPresenter extends BasePresenter<HomeIndexView> {
         const latest = res.data[0];
         if (!latest) { this.view.setGalleryFeature(null); return; }
         forkJoin({
-          gallery: this.galleryApi.getPublic(latest.galleryID),
-          photos: this.galleryApi.listPhotosPublic(latest.galleryID, 1, 7),
+          gallery: this.galleryApi.getPublic(latest.gallerySlug),
+          photos: this.galleryApi.listPhotosPublic(latest.gallerySlug, 1, 7),
         }).subscribe({
           next: ({ gallery, photos }) => this.view.setGalleryFeature({ gallery, photos: photos.data }),
           error: () => this.view.setGalleryFeature(null),

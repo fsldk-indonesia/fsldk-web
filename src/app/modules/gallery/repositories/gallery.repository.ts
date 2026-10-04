@@ -75,10 +75,10 @@ export class GalleryRepository {
     });
   }
 
-  loadPublicDetail(id: number): void {
+  loadPublicDetail(slug: string): void {
     this.loading.set(true);
     this.error.set(null);
-    this.api.getPublic(id).subscribe({
+    this.api.getPublic(slug).subscribe({
       next: (result) => {
         this.currentGallery.set(result);
         this.loading.set(false);
@@ -90,9 +90,9 @@ export class GalleryRepository {
     });
   }
 
-  loadPhotosPublic(id: number, page = 1, limit = 12, onComplete?: (result: PhotoPage) => void): void {
+  loadPhotosPublic(slug: string, page = 1, limit = 12, onComplete?: (result: PhotoPage) => void): void {
     this.photosLoading.set(true);
-    this.api.listPhotosPublic(id, page, limit).subscribe({
+    this.api.listPhotosPublic(slug, page, limit).subscribe({
       next: (result) => {
         this.photoPage.set(result);
         this.photosLoading.set(false);

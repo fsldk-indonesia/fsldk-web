@@ -850,10 +850,10 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
 
   /** Isi dropdown navbar "Tentang Kami" */
   readonly tentangKamiItems = [
-    { icon: 'sitemap', title: 'Struktur Organisasi', caption: 'Kepengurusan FSLDK Indonesia', href: '/tentang/struktur' },
-    { icon: 'photo', title: 'Galeri', caption: 'Dokumentasi kegiatan LDK', href: '/tentang/galeri' },
-    { icon: 'file-bar-chart', title: 'Statistik Jaringan', caption: 'Data agregat LDK, Puskomda & Puskomnas', href: '/tentang/statistik-jaringan' },
-    { icon: 'messages', title: 'Hubungi Kami', caption: 'Kontak resmi FSLDK Indonesia', href: '/tentang/kontak' },
+    { icon: 'sitemap', title: 'Struktur Organisasi', caption: 'Kepengurusan FSLDK Indonesia', href: '/struktur' },
+    { icon: 'photo', title: 'Galeri', caption: 'Dokumentasi kegiatan LDK', href: '/galeri' },
+    { icon: 'file-bar-chart', title: 'Statistik Jaringan', caption: 'Data agregat LDK, Puskomda & Puskomnas', href: '/statistik-jaringan' },
+    { icon: 'messages', title: 'Hubungi Kami', caption: 'Kontak resmi FSLDK Indonesia', href: '/kontak' },
   ];
 
   /** Isi dropdown navbar "Layanan" — data-driven (bukan `<a>` di-hardcode)
@@ -950,12 +950,12 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     return this.router.url.split('?')[0] === '/';
   }
 
-  /** Cocok juga untuk sub-rute (mis. /tentang/galeri/7 halaman detail satu
-   *  galeri) — dulu cuma exact match ke item.href, jadi trigger dropdown
+  /** Cocok juga untuk sub-rute (mis. /galeri/rakernas-2026 halaman detail
+   *  satu galeri) — dulu cuma exact match ke item.href, jadi trigger dropdown
    *  tidak ikut menyala solid begitu masuk ke halaman detail turunannya
    *  walau item "Galeri" di dalam panel-nya sendiri sudah aktif (routerLinkActive
    *  default non-exact). path.startsWith(href + '/') menutup celah itu tanpa
-   *  salah tangkap prefix lain (mis. /tentang/galeri-x tidak akan cocok). */
+   *  salah tangkap prefix lain (mis. /galeri-x tidak akan cocok). */
   private matchesActivePrefix(path: string, items: { href: string }[]): boolean {
     return items.some((item) => path === item.href || path.startsWith(item.href + '/'));
   }

@@ -7,7 +7,7 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export function galleryPublicRoutes(): Routes {
   return [
     {
-      path: 'tentang/galeri',
+      path: 'galeri',
       title: 'Galeri Dokumentasi',
       loadComponent: () =>
         import('./pages/public-index/gallery.public-index.page').then(
@@ -15,21 +15,33 @@ export function galleryPublicRoutes(): Routes {
         ),
     },
     {
-      path: 'tentang/galeri/:id',
+      path: 'galeri/:slug',
       title: 'Detail Galeri',
       loadComponent: () =>
         import('./pages/public-detail/gallery.public-detail.page').then(
           (m) => m.GalleryPublicDetailPage
         ),
     },
+    // Alias legacy — URL publik dulu berprefix /tentang (dan sebelum itu
+    // /about), dipertahankan sebagai redirect supaya link lama yang sudah
+    // ter-index/dibagikan tidak 404.
+    {
+      path: 'tentang/galeri',
+      redirectTo: 'galeri',
+      pathMatch: 'full',
+    },
+    {
+      path: 'tentang/galeri/:slug',
+      redirectTo: 'galeri/:slug',
+    },
     {
       path: 'about/gallery',
-      redirectTo: 'tentang/galeri',
+      redirectTo: 'galeri',
       pathMatch: 'full',
     },
     {
       path: 'about/gallery/:id',
-      redirectTo: 'tentang/galeri/:id',
+      redirectTo: 'galeri/:id',
     },
   ];
 }

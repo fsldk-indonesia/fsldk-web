@@ -306,7 +306,7 @@ interface CardPreview {
 
     /* ---------- Statistik Jaringan Nasional — ringkasan angka jaringan
        LDK/Puskomda/Puskomnas + satu chart, versi ringkas dari halaman penuh
-       /tentang/statistik-jaringan (link "Lihat Selengkapnya" di bawahnya). ---------- */
+       /statistik-jaringan (link "Lihat Selengkapnya" di bawahnya). ---------- */
     .network-stats-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 36px; }
     .network-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
     .network-stat-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
@@ -1200,7 +1200,7 @@ interface CardPreview {
 
     /* ---------- Hubungi Kami: redesign ala ldksyahid-app (home partial
        contact-us) — panel kiri kutipan Al-Qur'an + info kontak resmi FSLDK
-       (data sama dengan ContactPublicIndexPage, /tentang/kontak), panel
+       (data sama dengan ContactPublicIndexPage, /kontak), panel
        kanan FORM interaktif terpasang langsung (bukan cuma tombol CTA ke
        halaman lain seperti sebelumnya). Validator & alur submit sama
        persis dengan halaman penuh (ContactRepository.sendPublic) supaya
@@ -2032,7 +2032,7 @@ export class HomeIndexPage implements OnInit, AfterViewInit, HomeIndexView {
 
   /** Form "Hubungi Kami" terpasang langsung di beranda (ala ldksyahid-app
    *  home partial contact-us) — logic/validator SAMA PERSIS dengan
-   *  ContactPublicIndexPage (/tentang/kontak) supaya perilaku kedua form
+   *  ContactPublicIndexPage (/kontak) supaya perilaku kedua form
    *  konsisten, cuma tanpa notice-card/newsletter/social-links di sini
    *  (di luar scope kartu ringkas beranda, sudah ada di halaman penuh). */
   contactForm = this.fb.group({
