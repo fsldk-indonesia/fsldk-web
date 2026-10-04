@@ -31,7 +31,8 @@ const MAX_MOBILE_DOTS = 7;
       title="Kabar Terkini,"
       titleAccent="Gerakan Dakwah Kampus"
       subtitle="Ikuti perkembangan, kegiatan, dan pencapaian jaringan dakwah kampus se-Indonesia dari waktu ke waktu."
-      quoteSource="quran">
+      quoteSource="quran"
+      waveColor="var(--color-primary)">
       <!-- Siluet sisi kanan hero: koran terlipat sebagai hub, garis jaringan
            menjalar ke titik-titik LDK (konsisten "Peta Silaturahmi" — primitif
            global .network-line/.network-node/.network-ping, styles.scss),
@@ -115,19 +116,6 @@ const MAX_MOBILE_DOTS = 7;
         </svg>
       </div>
     </app-page-hero>
-
-    <!-- ---------- Transisi hero -> section hijau. Bukan wave KEDUA yang
-         ditempel di tepi atas section (itu kebuat dua wave beda warna/bentuk
-         bertabrakan, makanya masih "putus"), tapi elemen ANTARA hero dan
-         section: 10px atasnya rata & berwarna tint PERSIS sama dengan warna
-         .hero-wave (jahitan tint-ke-tint tanpa garis), lalu wave hijau ada
-         di bawahnya yang jahitannya ke .section juga rata hijau-ke-hijau.
-         Satu-satunya wave yang tampak di zona ini. ---------- -->
-    <div class="hero-to-section-transition" aria-hidden="true">
-      <svg viewBox="0 0 2880 80" preserveAspectRatio="none">
-        <path d="M0,40 C240,70 480,10 720,40 C960,70 1200,10 1440,40 C1680,70 1920,10 2160,40 C2400,70 2640,10 2880,40 L2880,80 L0,80 Z" />
-      </svg>
-    </div>
 
     <!-- ---------- Section hijau penuh tepi-ke-tepi + siluet ikon raksasa
          pudar — pola sama persis dengan .agenda-panel (section Event) di
@@ -410,23 +398,6 @@ const MAX_MOBILE_DOTS = 7;
       transform: rotate(16deg); pointer-events: none;
     }
     .section > .container { position: relative; z-index: 1; }
-
-    /* Elemen transisi hero -> section (sibling, BUKAN child .section) —
-       MENIMPA wave bawaan .hero-wave (warnanya tint/pucat, itu sebabnya
-       masih terlihat ada warna ketiga nongol di tengah) dengan wave hijau
-       bentuk identik di posisi PERSIS sama: margin-top negatif setinggi
-       .hero-wave (80px, lihat shared/page-hero.component.ts) + z-index di
-       atas .hero (z-index:5 di sana) supaya elemen ini digambar DI ATASNYA,
-       menutup penuh wave pucat itu. Hasilnya cuma satu wave hijau yang
-       kelihatan, langsung menyatu ke .section — tanpa jarak/warna pucat
-       tersisa di antaranya. Tinggi & margin SAMA (saling meniadakan) jadi
-       tidak menambah tinggi halaman. */
-    .hero-to-section-transition {
-      position: relative; z-index: 6;
-      height: 80px; margin-top: -80px; line-height: 0; pointer-events: none;
-    }
-    .hero-to-section-transition svg { display: block; width: 100%; height: 100%; }
-    .hero-to-section-transition path { fill: var(--color-primary); }
 
     .news-section-head { margin-bottom: 28px; }
     .news-section-head h2 { margin: 14px 0 10px; color: #fff; }

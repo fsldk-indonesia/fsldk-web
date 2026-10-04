@@ -86,7 +86,7 @@ const QUOTE_MAX_RETRY = 5;
       <div class="hero-wave" aria-hidden="true">
         <div class="hero-wave-clip">
           <svg viewBox="0 0 2880 80" preserveAspectRatio="none">
-            <path d="M0,40 C240,70 480,10 720,40 C960,70 1200,10 1440,40 C1680,70 1920,10 2160,40 C2400,70 2640,10 2880,40 L2880,80 L0,80 Z" style="fill: var(--color-primary-tint)" />
+            <path d="M0,40 C240,70 480,10 720,40 C960,70 1200,10 1440,40 C1680,70 1920,10 2160,40 C2400,70 2640,10 2880,40 L2880,80 L0,80 Z" [style.fill]="waveColor()" />
           </svg>
         </div>
       </div>
@@ -204,6 +204,12 @@ export class PageHeroComponent implements OnInit, OnDestroy {
   subtitle = input<string>('');
   /** Sumber kutipan: 'quran' (ayat Al-Qur'an acak) atau 'hadith' (hadis acak). */
   quoteSource = input<'hadith' | 'quran'>('quran');
+  /** Warna fill .hero-wave — default tint (selaras gradient hero terang).
+   *  Dioverride ('var(--color-primary)') oleh pemanggil yang section
+   *  berikutnya berwarna hijau solid (mis. News index), supaya wave
+   *  animasinya menyambung lurus ke section itu tanpa warna pucat nongol
+   *  di antaranya. */
+  waveColor = input<string>('var(--color-primary-tint)');
 
   quoteLoading = signal(true);
   quoteFailed = signal(false);
