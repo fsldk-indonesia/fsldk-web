@@ -82,53 +82,87 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
         </div>
       </header>
 
-      <!-- Breadcrumb Navigation — kartu pil mengambang di atas kanvas tint
-           hijau yang sama dengan section listing Galeri (bukan lagi baris
-           teks polos "/" di atas latar transparan). -->
-      <nav class="breadcrumb-bar" aria-label="Breadcrumb">
-        <div class="container">
-          <ol class="breadcrumb-pill reveal">
-            <li><a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a></li>
-            <li class="crumb-sep" aria-hidden="true"><app-icon name="chevron-right" [size]="11" /></li>
-            <li><a routerLink="/tentang/galeri" class="crumb-link"><app-icon name="images" [size]="13" /> Galeri</a></li>
-            <li class="crumb-sep" aria-hidden="true"><app-icon name="chevron-right" [size]="11" /></li>
-            <li class="crumb-current" aria-current="page">{{ gallery.eventName }}</li>
-          </ol>
-        </div>
-      </nav>
-
-      <!-- Main Content Details -->
+      <!-- ---------- Konten — BENTO: beberapa kartu terpisah yang disusun
+           grid 2-kolom (bukan 1 kartu memanjang ke bawah, dilaporkan
+           langsung dua kali: pertama "kaku/pisah-pisah" ketika masih 3 kartu
+           bertumpuk jauh, lalu digabung jadi 1 kartu besar — itu juga
+           ditolak, "gk 1 card ... gk memanjang kebawah"). Solusinya: tetap
+           beberapa kartu (bukan satu), tapi disusun MELEBAR (Tentang Kegiatan
+           + Ringkasan berdampingan di baris pertama) alih-alih cuma
+           ditumpuk vertikal — total tinggi halaman lebih pendek & terasa
+           tersusun, bukan daftar kotak maupun satu kotak raksasa. Breadcrumb
+           jadi baris polos di luar kartu (tanpa pil/bingkai sendiri). ---------- -->
       <main class="detail-main-section">
         <div class="container">
           <div class="content-layout">
-            <!-- Main Column: Story Description, Photos, and Video -->
-            <div class="primary-column">
-              <!-- Event Description -->
-              <section class="detail-card mb-lg">
-                <h2 class="card-heading">
-                  <app-icon name="info-circle" [size]="20" /> Tentang Kegiatan
-                </h2>
+            <nav class="crumb-row reveal" aria-label="Breadcrumb">
+              <a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a>
+              <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
+              <a routerLink="/tentang/galeri" class="crumb-link"><app-icon name="images" [size]="13" /> Galeri</a>
+              <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
+              <span class="crumb-current" aria-current="page">{{ gallery.eventName }}</span>
+            </nav>
+
+            <div class="story-grid">
+              <!-- Tentang Kegiatan — teks mengalir, bukan kotak "info" -->
+              <section class="detail-card story-card-about">
+                <span class="eyebrow"><app-icon name="info-circle" [size]="13" /> Tentang Kegiatan</span>
                 <div
-                  class="rich-text-display mt-md"
+                  class="story-lead-text mt-sm"
                   [innerHTML]="sanitizeHtml(gallery.eventDescription)"
                 ></div>
               </section>
 
-              <!-- Photo Gallery Grid (Swapped Above Video) -->
-              <section class="detail-card mb-lg" id="photos-section">
-                <div class="photos-header">
-                  <div>
-                    <h2 class="card-heading">
-                      <app-icon name="images" [size]="20" /> Foto Dokumentasi
-                    </h2>
-                    <p class="text-muted text-sm mt-xs">
-                      Klik foto untuk memperbesar tampilan (lightbox) dan navigasi.
-                    </p>
-                  </div>
+              <!-- Ringkasan — kartu pendamping, bikin baris pertama melebar
+                   (bukan sekadar teks sendirian), sekaligus jalan pintas
+                   lompat ke Foto/Video tanpa perlu scroll panjang. -->
+              <aside class="detail-card story-card-info">
+                <span class="eyebrow"><app-icon name="sparkles" [size]="13" /> Ringkasan</span>
+                <ul class="info-rows mt-sm">
+                  @if (gallery.eventDate) {
+                    <li class="info-row">
+                      <span class="info-row-icon"><app-icon name="calendar-days" [size]="14" /></span>
+                      <span class="info-row-text"><b>Tanggal Kegiatan</b>{{ gallery.eventDate | date: 'd MMMM y' }}</span>
+                    </li>
+                  }
+                  <li class="info-row">
+                    <span class="info-row-icon"><app-icon name="images" [size]="14" /></span>
+                    <span class="info-row-text"><b>Total Foto</b>{{ gallery.totalPhotos }} foto</span>
+                  </li>
+                  @if (gallery.youtubeVideoID) {
+                    <li class="info-row">
+                      <span class="info-row-icon"><app-icon name="video" [size]="14" /></span>
+                      <span class="info-row-text"><b>Video</b>Tersedia</span>
+                    </li>
+                  }
+                </ul>
+                @if (gallery.documentLink) {
+                  <a
+                    [href]="gallery.documentLink"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="info-cta"
+                  >
+                    <app-icon name="external-link" [size]="13" /> Tautan Dokumentasi Lengkap
+                  </a>
+                }
+              </aside>
+
+              <!-- Foto Dokumentasi — grid 4 kolom yang mengalir ke bawah
+                   (bukan lagi filmstrip geser horizontal, dilaporkan "gk
+                   usah geser-geser"), kartu seragam tanpa perlakuan
+                   "featured" khusus supaya tidak ada foto yang dipotong
+                   paksa jadi panoramic (lihat riwayat redesign grid lama). -->
+              <section class="detail-card story-card-photos" id="photos-section">
+                <div class="story-block-head">
+                  <span class="eyebrow"><app-icon name="images" [size]="13" /> Foto Dokumentasi</span>
                   @if (repo.photoPage(); as page) {
-                    <span class="photos-count-badge">Total {{ page.total }} Foto</span>
+                    <span class="story-count">{{ page.total }} Foto</span>
                   }
                 </div>
+                <p class="text-muted text-sm mt-xs">
+                  Klik foto untuk memperbesar tampilan (lightbox) dan navigasi.
+                </p>
 
                 @if (repo.photosLoading() && !repo.photoPage()) {
                   <div class="text-center py-lg">
@@ -141,32 +175,27 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
                     <p class="text-muted mt-xs">Belum ada foto tambahan untuk galeri ini.</p>
                   </div>
                 } @else {
-                  <div class="photo-grid-wrapper mt-md" [class.switching]="isPageChanging()">
+                  <div class="photo-grid-wrap mt-md" [class.switching]="isPageChanging()">
                     @if (isPageChanging()) {
                       <div class="grid-loading-bar"></div>
                     }
                     <div class="photo-grid">
                       @for (photo of repo.photoPage()!.data; track photo.photoID; let idx = $index) {
-                        <div
-                          class="photo-card"
-                          [class.photo-card-featured]="idx % 7 === 0"
+                        <button
+                          type="button"
+                          class="photo-grid-card"
                           (click)="openLightbox(idx)"
-                          role="button"
-                          tabindex="0"
-                          (keydown.enter)="openLightbox(idx)"
                         >
                           <img
                             [src]="thumbUrl(photo.imagePath)"
                             [alt]="photo.caption || 'Foto dokumentasi ' + (idx + 1)"
-                            class="photo-thumbnail"
+                            class="photo-grid-img"
                             loading="lazy"
                           />
                           @if (photo.caption) {
-                            <div class="photo-caption-overlay">
-                              <span class="photo-caption-preview">{{ photo.caption }}</span>
-                            </div>
+                            <span class="photo-grid-caption">{{ photo.caption }}</span>
                           }
-                        </div>
+                        </button>
                       }
                     </div>
                   </div>
@@ -186,12 +215,10 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
                 }
               </section>
 
-              <!-- YouTube Video Embed (Below Photos) -->
+              <!-- YouTube Video Embed -->
               @if (gallery.youtubeVideoID) {
-                <section class="detail-card mb-lg">
-                  <h2 class="card-heading">
-                    <app-icon name="video" [size]="20" /> Video Dokumentasi
-                  </h2>
+                <section class="detail-card story-card-video" id="video-section">
+                  <span class="eyebrow"><app-icon name="video" [size]="13" /> Video Dokumentasi</span>
                   <div class="video-container mt-md">
                     <iframe
                       [src]="safeYoutubeUrl(gallery.youtubeVideoID)"
@@ -223,45 +250,34 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
   }
   `,
   styles: [`
-    /* ---------- Breadcrumb — kartu pil putih mengambang di kanvas tint hijau
-       (background section ini SENGAJA disamakan dengan .detail-main-section
-       di bawahnya & titik akhir gradasi .hero-overlay, lihat komentar di
-       sana — supaya hero->breadcrumb->konten jadi satu alur warna menerus,
-       bukan tiga blok warna berbeda yang kelihatan berbatas). ---------- */
-    .breadcrumb-bar { background: var(--color-primary-tint); padding: 18px 0 34px; }
-    .breadcrumb-bar .container { display: flex; justify-content: center; }
-
-    .breadcrumb-pill {
-      display: inline-flex; align-items: center; flex-wrap: wrap; justify-content: center;
-      gap: 4px; list-style: none; margin: 0; padding: 9px 20px; max-width: 100%;
-      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-full);
-      box-shadow: var(--shadow-sm);
-      animation: crumbFadeUp .5s var(--ease-out) .05s both;
+    /* ---------- Breadcrumb — BUKAN lagi pil putih mengambang di section-nya
+       sendiri (dilaporkan "kaku"/"pisah-pisah" bareng kartu-kartu konten di
+       bawahnya). Sekarang jadi baris teks polos di KEPALA .detail-card,
+       dipisah garis tipis .crumb-row dari "Tentang Kegiatan" — bagian dari
+       kartu yang sama, bukan elemen mengambang terpisah. ---------- */
+    .crumb-row {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      font-size: 0.82rem; font-weight: 600; color: var(--color-text-secondary);
+      margin-bottom: 20px;
     }
-    @keyframes crumbFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .breadcrumb-pill li { display: flex; align-items: center; }
-
     .crumb-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 5px 9px; border-radius: var(--radius-full);
-      color: var(--color-text-secondary); font-size: 0.82rem; font-weight: 600;
-      text-decoration: none; white-space: nowrap;
-      transition: color 0.2s ease, background 0.2s ease;
+      display: inline-flex; align-items: center; gap: 5px;
+      color: inherit; text-decoration: none; white-space: nowrap;
+      transition: color 0.2s ease;
     }
     .crumb-link app-icon { opacity: 0.75; }
-    .crumb-link:hover { color: var(--color-primary-dark); background: var(--color-primary-soft); text-decoration: none; }
+    .crumb-link:hover { color: var(--color-primary-dark); text-decoration: none; }
 
     .crumb-sep { color: var(--color-border-strong); flex-shrink: 0; }
 
     .crumb-current {
-      padding: 5px 9px; color: var(--color-primary-dark); font-weight: 700; font-size: 0.82rem;
+      color: var(--color-primary-dark); font-weight: 700;
       max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
 
     @media (max-width: 640px) {
-      .crumb-link span, .crumb-link { font-size: 0.78rem; }
-      .crumb-current { max-width: 160px; font-size: 0.78rem; }
-      .breadcrumb-pill { gap: 2px; padding: 7px 14px; }
+      .crumb-row { font-size: 0.76rem; gap: 4px; margin-bottom: 14px; }
+      .crumb-current { max-width: 140px; }
     }
 
     /* Latar gradasi + tekstur titik — pola sama dengan app-page-hero
@@ -293,9 +309,9 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
        terpisah karena var(--color-primary-tint) = #f3faf5, nyaris putih,
        jadi wave-nya kebaca sebagai "warna ketiga" alih-alih menyatu). Kedua
        percobaan itu DIBUANG — potongan tegas dua warna solid (hero hijau tua
-       -> .breadcrumb-bar tint) yang paling bersih & sesuai permintaan
-       eksplisit ("cuma warna hijau & warna seperti di Beranda", TANPA warna
-       ketiga di antaranya). */
+       -> tint .detail-main-section di bawahnya) yang paling bersih & sesuai
+       permintaan eksplisit ("cuma warna hijau & warna seperti di Beranda",
+       TANPA warna ketiga di antaranya). */
 
     .hero-grid {
       position: relative; z-index: 2;
@@ -398,17 +414,23 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       position: relative; width: 100%; max-width: 420px;
       display: flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
-      border-radius: 20px; padding: 10px; box-sizing: border-box;
+      border-radius: 5%; padding: 10px; box-sizing: border-box; overflow: hidden;
       box-shadow: 0 24px 50px rgba(0,0,0,.35);
       opacity: 0; animation: heroCoverIn .7s var(--ease-out) .3s forwards;
     }
     @keyframes heroCoverIn { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: none; } }
+    /* width/height:auto (dibatasi max-width/max-height) — box gambar
+       menyusut mengikuti rasio ASLI foto, bukan dipaksa width:100% lalu
+       disusutkan object-fit:contain di dalamnya (itu yang bikin box lebih
+       besar dari konten yang terlihat, border-radius jadi membulatkan area
+       kosong di sekitarnya, bukan tepi foto aslinya). Box == konten persis,
+       jadi border-radius membulatkan tepi foto yang sungguhan. */
     .hero-cover-img {
-      display: block; width: 100%; max-height: 380px;
-      object-fit: contain; border-radius: 12px;
+      display: block; max-width: 100%; max-height: 380px; width: auto; height: auto;
+      object-fit: contain; border-radius: 5%;
     }
     .hero-cover-fallback {
-      width: 100%; height: 220px; border-radius: 12px;
+      width: 100%; height: 220px; border-radius: 5%;
       display: flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,.06); color: rgba(255,255,255,.6);
     }
@@ -437,7 +459,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
     .detail-main-section {
       position: relative;
       overflow: hidden;
-      padding: 8px 0 80px;
+      padding: 48px 0 80px;
       background: var(--color-primary-tint);
     }
     .detail-main-section::before {
@@ -449,12 +471,11 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       animation: detailBlobDrift 12s ease-in-out infinite alternate;
     }
     /* Fade-mask tepi atas — TANPA ini, blob di atas mulai tepat di 0% (garis
-       batas dengan .breadcrumb-bar), jadi warna hangat blob-nya kelihatan
+       batas dengan hero di atasnya), jadi warna hangat blob-nya kelihatan
        "muncul tiba-tiba" persis di seam (dilaporkan: "warnanya masih beda").
-       Menutupi 70px pertama balik ke flat var(--color-primary-tint) — sama
-       PERSIS milik .breadcrumb-bar di atasnya — supaya blob baru mulai
-       terlihat setelah masuk cukup dalam, bukan menempel di garis batas.
-       Endpoint transparan DITULIS rgba(...,0) dengan RGB SAMA (bukan
+       Menutupi 70px pertama balik ke flat var(--color-primary-tint) supaya
+       blob baru mulai terlihat setelah masuk cukup dalam, bukan menempel di
+       garis batas. Endpoint transparan DITULIS rgba(...,0) dengan RGB SAMA (bukan
        keyword 'transparent' polos, itu rgba(0,0,0,0) — pernah kejadian
        belang pucat kotor di percobaan fade sebelumnya karena browser
        menginterpolasi lewat hitam semi-transparan) — RGB yang sama di kedua
@@ -475,29 +496,81 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       margin: 0 auto;
     }
 
-    .primary-column {
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
+    /* ---------- Bento — beberapa kartu TERPISAH (bukan satu kartu raksasa
+       memanjang ke bawah, lihat komentar di template) disusun grid 2-kolom.
+       Tentang Kegiatan + Ringkasan berdampingan jadi baris pertama, Foto &
+       Video melebar penuh di baris-baris berikutnya (keduanya butuh lebar
+       penuh untuk nyaman — grid foto & video 16:9). ---------- */
+    .story-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 24px;
     }
+    .story-card-photos, .story-card-video { grid-column: 1 / -1; }
+    /* Grid item default min-width:auto (bukan 0) — konten lebar di dalam
+       kartu (mis. teks panjang tanpa spasi) bisa memaksa track grid (dan
+       viewport mobile) melebar alih-alih mengikuti lebar kolom yang
+       tersedia. Dipertahankan sebagai pengaman meski sumber overflow
+       aslinya (filmstrip geser) sudah diganti grid 4 kolom di bawah. */
+    .story-grid > * { min-width: 0; }
 
     .detail-card {
       background: #fff;
-      border-radius: 18px;
+      border-radius: 20px;
       padding: 32px;
       border: 1px solid var(--color-border);
       box-shadow: var(--shadow-sm);
     }
 
-    .card-heading {
-      font-size: 1.28rem;
-      font-weight: 800;
-      font-family: var(--font-heading);
-      color: var(--color-text);
+    /* Ringkasan — daftar fakta singkat + CTA dokumentasi lengkap, supaya
+       kartu ini bukan cuma pengisi grid tapi punya fungsi nyata. */
+    .info-rows { display: flex; flex-direction: column; gap: 14px; list-style: none; margin: 0; padding: 0; }
+    .info-row { display: flex; align-items: center; gap: 12px; }
+    .info-row-icon {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 10px;
+      background: var(--color-primary-soft); color: var(--color-primary-dark);
+    }
+    .info-row-text { display: flex; flex-direction: column; gap: 1px; font-size: 0.86rem; color: var(--color-text); }
+    .info-row-text b { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
+
+    .info-cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border);
+      font-size: 0.84rem; font-weight: 700; color: var(--color-primary-dark);
+      text-decoration: none;
+    }
+    .info-cta:hover { color: var(--color-primary); text-decoration: none; }
+
+    @media (max-width: 860px) {
+      .story-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- Blok cerita — eyebrow label (pakai .eyebrow global) di atas
+       tiap topik, BUKAN lagi h2.card-heading berbingkai besar — biar terasa
+       sebagai bagian dari satu alur cerita, bukan judul kotak terpisah. ---------- */
+    .story-lead-text {
+      font-size: 1.04rem;
+      line-height: 1.9;
+      color: var(--color-text-secondary);
+    }
+
+    .story-block-head {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin: 0;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .story-count {
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: var(--color-primary-soft);
+      color: var(--color-primary-dark);
+      padding: 5px 12px;
+      border-radius: 999px;
+      white-space: nowrap;
     }
 
     .video-container {
@@ -517,32 +590,17 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       height: 100%;
     }
 
-    .photos-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .photos-count-badge {
-      font-size: 0.82rem;
-      font-weight: 700;
-      background: var(--color-primary-soft);
-      color: var(--color-primary-dark);
-      padding: 6px 14px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-
-    .photo-grid-wrapper {
+    /* ---------- Grid foto — 4 kolom yang mengalir ke bawah (dilaporkan "gk
+       usah geser-geser, langsung kebawah aja"), bukan lagi filmstrip geser
+       horizontal. Kartu tetap SERAGAM ukurannya, tidak ada perlakuan
+       "featured" khusus — itu yang dulu bikin foto pertama dipotong paksa
+       jadi panoramic (dilaporkan jelek, apalagi galeri isi sedikit/foto
+       potret seperti headshot) — pelajaran itu tetap dipakai di sini. ---------- */
+    .photo-grid-wrap {
       position: relative;
       transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
-
-    .photo-grid-wrapper.switching {
-      opacity: 0.5;
-      pointer-events: none;
-    }
+    .photo-grid-wrap.switching { opacity: 0.5; pointer-events: none; }
 
     .grid-loading-bar {
       position: absolute;
@@ -562,85 +620,28 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       100% { background-position: -200% 0; }
     }
 
-    .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+    .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+    .photo-grid-card {
+      position: relative; aspect-ratio: 4 / 3; border: none; padding: 0; cursor: pointer;
+      background: var(--color-bg-alt); border-radius: 16px; overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .photo-grid-card:hover { transform: translateY(-5px); box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15); }
+      .photo-grid-card:hover .photo-grid-caption { opacity: 1; }
     }
 
-    .photo-card {
-      position: relative;
-      width: 100%;
-      padding-top: 68%; /* 4:3 / 16:11 aspect ratio */
-      background: var(--color-bg-alt);
-      border-radius: 16px;
-      overflow: hidden;
-      cursor: pointer;
-      border: 1px solid var(--color-border);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
-      will-change: transform;
-      z-index: 1;
-    }
+    .photo-grid-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .photo-card:hover {
-      transform: scale(1.03) translateY(-4px);
-      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
-      border-color: rgba(13, 92, 59, 0.35);
-      z-index: 3;
-    }
-
-    /* Featured wide panoramic photo at the top of each set of 7 */
-    .photo-card.photo-card-featured {
-      grid-column: 1 / -1;
-      padding-top: 42%; /* panoramic wide ratio approx 2.4:1 / 16:7 */
-      border-radius: 18px;
-    }
-
-    .photo-card.photo-card-featured:hover {
-      transform: scale(1.015) translateY(-4px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
-    }
-
-    .photo-thumbnail {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .photo-caption-overlay {
-      position: absolute;
-      inset: auto 0 0 0;
-      background: linear-gradient(
-        180deg,
-        rgba(15, 23, 42, 0) 0%,
-        rgba(15, 23, 42, 0.75) 100%
-      );
-      padding: 24px 16px 12px;
-      opacity: 0;
-      transition: opacity 0.25s ease;
-      display: flex;
-      align-items: flex-end;
-      color: #fff;
-      pointer-events: none;
-    }
-
-    .photo-card:hover .photo-caption-overlay {
-      opacity: 1;
-    }
-
-    .photo-caption-preview {
-      font-size: 0.8rem;
-      font-weight: 500;
-      line-height: 1.3;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    .photo-grid-caption {
+      position: absolute; inset: auto 0 0 0; z-index: 1;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.75) 100%);
+      padding: 24px 12px 8px; opacity: 0; transition: opacity 0.25s ease;
+      color: #fff; font-size: 0.72rem; font-weight: 500; line-height: 1.3; text-align: left;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); pointer-events: none;
     }
 
     .pagination-wrapper {
@@ -650,35 +651,19 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
 
     @media (max-width: 992px) {
       .detail-main-section {
-        padding: 4px 0 64px;
+        padding: 36px 0 64px;
       }
       .hero-title { font-size: 2rem; }
-      .photo-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 14px;
-      }
-      .photo-card.photo-card-featured {
-        padding-top: 46%;
-      }
+      .photo-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
     }
 
     @media (max-width: 640px) {
       .hero-section { padding: 48px 0 60px; }
       .hero-title { font-size: 1.6rem; }
-      .detail-card { padding: 20px; }
-      .photo-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-      }
-      .photo-card {
-        border-radius: 12px;
-        padding-top: 72%;
-      }
-      .photo-card.photo-card-featured {
-        grid-column: 1 / -1;
-        padding-top: 54%;
-        border-radius: 14px;
-      }
+      .detail-card { padding: 20px; border-radius: 18px; }
+      /* Eksplisit: "kalo mobile jadiin 1 baris 2 image aja". */
+      .photo-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .photo-grid-card { border-radius: 12px; }
     }
   `],
 })
