@@ -452,18 +452,20 @@ const MAX_MOBILE_DOTS = 7;
     }
 
     .news-card { border-radius: 20px; }
+    /* Garis aksen hover MELINGKARI seluruh kartu (bukan cuma strip atas) —
+       pakai box-shadow sebagai "ring", bukan border-width (animasi
+       border-width memicu layout thrash; box-shadow tidak). Ring mengikuti
+       border-radius kartu secara alami karena box-shadow selalu menjiplak
+       bentuk box, beda dari outline yang tidak konsisten membulat di semua
+       browser. */
     .news-card-link {
       position: relative;
       display: flex; flex-direction: column; height: 100%;
       background: #fff; border-radius: 20px; overflow: hidden;
-      border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm), 0 0 0 0 var(--color-primary-bright);
       text-decoration: none; color: inherit;
       transition: transform .35s cubic-bezier(.22,1,.36,1), box-shadow .35s cubic-bezier(.22,1,.36,1), border-color .35s ease;
-    }
-    .news-card-link::before {
-      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3;
-      background: linear-gradient(90deg, var(--color-primary-bright), var(--color-gold));
-      transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease-out);
     }
 
     .news-card-media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--color-bg-alt); }
@@ -479,11 +481,12 @@ const MAX_MOBILE_DOTS = 7;
       box-shadow: 0 4px 12px rgba(0,0,0,.2);
     }
 
-    .news-card-body { position: relative; flex: 1; display: flex; flex-direction: column; padding: 28px 22px 22px; }
+    .news-card-body { position: relative; flex: 1; display: flex; flex-direction: column; padding: 22px; }
 
+    /* Pill kategori normal di alur (BUKAN absolute mengambang di jahitan
+       foto/body lagi) — ditempatkan di bawah gambar, sebelum judul. */
     .news-card-cat {
-      position: absolute; top: -14px; left: 22px; z-index: 2;
-      display: inline-flex; align-items: center;
+      display: inline-flex; align-items: center; align-self: flex-start;
       background: linear-gradient(135deg, var(--color-primary-bright), var(--color-primary));
       color: #fff; font-size: .72rem; font-weight: 700; letter-spacing: .02em;
       padding: 6px 14px; border-radius: var(--radius-full);
@@ -509,8 +512,11 @@ const MAX_MOBILE_DOTS = 7;
     }
 
     @media (hover: hover) and (pointer: fine) {
-      .news-card-link:hover { transform: translateY(-8px); box-shadow: 0 24px 48px rgba(0,60,25,.14); border-color: transparent; }
-      .news-card-link:hover::before { transform: scaleX(1); }
+      .news-card-link:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 24px 48px rgba(0,60,25,.14), 0 0 0 2px var(--color-primary-bright);
+        border-color: transparent;
+      }
       .news-card-link:hover .news-card-media img { transform: scale(1.08); }
       .news-card-link:hover .news-card-cta { gap: 9px; color: var(--color-primary-dark); }
     }
@@ -534,7 +540,7 @@ const MAX_MOBILE_DOTS = 7;
       -webkit-tap-highlight-color: transparent;
     }
     .news-mobile-card .news-card-media { aspect-ratio: 16 / 10; }
-    .news-mobile-card .news-card-body { padding: 26px 18px 18px; }
+    .news-mobile-card .news-card-body { padding: 18px; }
     .news-mobile-card .news-card-title { margin-bottom: 10px; }
     .news-mobile-hint {
       display: inline-flex; align-items: center; gap: 5px; width: fit-content;
@@ -598,10 +604,16 @@ export class NewsPublicIndexPage implements OnInit, AfterViewInit {
     { value: '-viewCount', label: 'Terpopuler', icon: 'eye' },
   ];
 
+  /** Field filter Berita — Kategori (single, selalu ada begitu kategori
+   *  termuat) ditambah Tahun Terbit/Penulis (multi-select, data-driven dari
+   *  repo.filterOptions() supaya dropdown tidak pernah menawarkan pilihan
+   *  yang hasilnya kosong — pola sama seperti Galeri) dan Unggulan
+   *  (single, statis Ya/Tidak). Field tambahan baru tampil setelah
+   *  filterOptions() termuat, supaya tidak "berkedip" muncul belakangan. */
   filterFields = computed<FilterFieldDef[]>(() => {
     const cats = this.repo.publicCategories();
     if (!cats.length) return [];
-    return [
+    const fields: FilterFieldDef[] = [
       {
         key: 'category',
         label: 'Kategori',
@@ -609,6 +621,38 @@ export class NewsPublicIndexPage implements OnInit, AfterViewInit {
         options: cats.map((c) => ({ value: c.categorySlug, label: c.categoryName })),
       },
     ];
+
+    const opts = this.repo.filterOptions();
+    if (opts) {
+      fields.push(
+        {
+          key: 'year',
+          label: 'Tahun Terbit',
+          icon: 'calendar-days',
+          multiple: true,
+          options: opts.years.map((y) => ({ value: y, label: String(y) })),
+        },
+        {
+          key: 'reporter',
+          label: 'Penulis',
+          icon: 'user-circle',
+          multiple: true,
+          options: opts.reporters.map((r) => ({ value: r, label: r })),
+        },
+      );
+    }
+
+    fields.push({
+      key: 'featured',
+      label: 'Unggulan',
+      icon: 'star',
+      options: [
+        { value: 'true', label: 'Ya' },
+        { value: 'false', label: 'Tidak' },
+      ],
+    });
+
+    return fields;
   });
 
   readonly skeletonItems = Array.from({ length: 6 }, (_, i) => i);
@@ -631,6 +675,7 @@ export class NewsPublicIndexPage implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.loadData();
     this.repo.loadPublicCategories();
+    this.repo.loadFilterOptions();
   }
 
   ngAfterViewInit(): void {
@@ -639,9 +684,13 @@ export class NewsPublicIndexPage implements OnInit, AfterViewInit {
 
   loadData(page = this.repo.publicPage()): void {
     const filter = this.filterValues();
+    const featured = filter['featured'] as string | undefined;
     this.repo.loadPublic(page, this.limit, this.currentSort(), {
       search: this.searchText(),
       category: filter['category'] as string | undefined,
+      year: filter['year'] as number[] | undefined,
+      reporter: filter['reporter'] as string[] | undefined,
+      featured: featured === undefined ? undefined : featured === 'true',
     });
     this.activeSlide.set(0);
     if (this.mobileTrackRef?.nativeElement) this.mobileTrackRef.nativeElement.scrollLeft = 0;

@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NewsApiService } from '../services/news-api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { News } from '../entities/news';
+import { News, NewsFilterOptions } from '../entities/news';
 import { NewsCategory } from '../entities/news-category';
 
 /**
@@ -32,16 +32,30 @@ export class NewsRepository {
   publicCategories = signal<NewsCategory[]>([]);
   categoriesLoading = signal<boolean>(false);
 
+  /** Opsi dropdown filter "Tahun Terbit"/"Penulis" — dimuat sekali lewat
+   *  loadFilterOptions(), pola sama seperti publicCategories di atas (dan
+   *  GalleryRepository.filterOptions). */
+  filterOptions = signal<NewsFilterOptions | null>(null);
+  filterOptionsLoading = signal<boolean>(false);
+
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
 
-  loadPublic(page = 1, limit = 9, sort = '-publishedDate', params: { search?: string; category?: string } = {}): void {
+  loadPublic(
+    page = 1,
+    limit = 9,
+    sort = '-publishedDate',
+    params: { search?: string; category?: string; year?: number[]; reporter?: string[]; featured?: boolean } = {},
+  ): void {
     this.loading.set(true);
     this.error.set(null);
     this.publicLimit.set(limit);
     const query: Record<string, unknown> = { page, limit, sort };
     if (params.search) query['search'] = params.search;
     if (params.category) query['category'] = params.category;
+    if (params.year?.length) query['year'] = params.year.join(',');
+    if (params.reporter?.length) query['reporter'] = params.reporter.join(',');
+    if (params.featured !== undefined) query['featured'] = params.featured;
     this.api.publicList(query).subscribe({
       next: (result) => {
         this.publicNews.set(result.data);
@@ -62,6 +76,15 @@ export class NewsRepository {
     this.api.categories().subscribe({
       next: (cats) => { this.publicCategories.set(cats); this.categoriesLoading.set(false); },
       error: () => this.categoriesLoading.set(false),
+    });
+  }
+
+  loadFilterOptions(): void {
+    if (this.filterOptions() || this.filterOptionsLoading()) return;
+    this.filterOptionsLoading.set(true);
+    this.api.getPublicFilterOptions().subscribe({
+      next: (opts) => { this.filterOptions.set(opts); this.filterOptionsLoading.set(false); },
+      error: () => this.filterOptionsLoading.set(false),
     });
   }
 
