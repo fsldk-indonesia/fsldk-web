@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { NewsRepository } from '../../repositories/news.repository';
@@ -417,6 +417,13 @@ const MAX_MOBILE_DOTS = 7;
     ::ng-deep .news-toolbar .sfs-btn-filter { background: #fff; color: var(--color-primary-dark); }
     ::ng-deep .news-toolbar .sfs-btn-filter:hover { background: var(--color-primary-soft); }
     ::ng-deep .news-toolbar .sfs-count { box-shadow: 0 0 0 2px var(--color-primary); }
+    /* Chip filter aktif (Kategori/Tahun Terbit/Penulis) bawaan sfs — pucat
+       hijau-di-atas-hijau terhadap section ini, nyaris nyatu dengan
+       background. Dibikin kartu putih solid supaya kontras jelas, selaras
+       tombol Filter di sebelahnya yang sudah putih juga. */
+    ::ng-deep .news-toolbar .sfs-active-chip { background: #fff; color: var(--color-primary-dark); box-shadow: var(--shadow-sm); }
+    ::ng-deep .news-toolbar .sfs-active-chip button { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    ::ng-deep .news-toolbar .sfs-active-chip button:hover { background: var(--color-primary); color: #fff; }
 
     @media (max-width: 640px) {
       .section { padding: 40px 0 56px; }
@@ -615,7 +622,7 @@ const MAX_MOBILE_DOTS = 7;
     ::ng-deep .pagination-wrapper .pgn-info strong { color: #fff !important; }
   `],
 })
-export class NewsPublicIndexPage implements OnInit, AfterViewInit {
+export class NewsPublicIndexPage implements OnInit, AfterViewInit, OnDestroy {
   repo = inject(NewsRepository);
   private router = inject(Router);
 
@@ -705,10 +712,24 @@ export class NewsPublicIndexPage implements OnInit, AfterViewInit {
     this.loadData();
     this.repo.loadPublicCategories();
     this.repo.loadFilterOptions();
+    /* Section di halaman ini berakhir hijau solid (bukan putih seperti
+       kebanyakan halaman publik lain) — ruang negatif wave footer
+       (app-site-footer .foot-wave, transparan secara default supaya
+       cocok dengan page lain yang berakhir putih) perlu diisi hijau
+       khusus di sini, bukan nembus ke warna body/putih. Footer sibling
+       dari <main>, bukan descendant halaman ini, jadi dikomunikasikan
+       lewat CSS custom property di :root (custom property TETAP
+       mengalir lewat DOM asli, tak terpengaruh scoping Angular) —
+       di-reset saat halaman ini lepas supaya tak "bocor" ke halaman lain. */
+    document.documentElement.style.setProperty('--footer-wave-backdrop', 'var(--color-primary)');
   }
 
   ngAfterViewInit(): void {
     this.animateNewsLines();
+  }
+
+  ngOnDestroy(): void {
+    document.documentElement.style.removeProperty('--footer-wave-backdrop');
   }
 
   loadData(page = this.repo.publicPage()): void {

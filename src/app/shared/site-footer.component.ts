@@ -97,7 +97,12 @@ import { goodsPath } from '../modules/goods/goods.path';
        overflow:hidden yang ada di .foot-wave-clip (anaknya) — filter +
        overflow:hidden di ELEMEN YANG SAMA bisa bikin browser gagal nge-clip
        dengan benar, muncul sebagai celah/garis putih di tepi. */
-    .foot-wave { position: relative; height: 60px; filter: drop-shadow(0 -12px 24px rgba(0,0,0,.22)); }
+    /* background default transparan (cocok untuk kebanyakan halaman yang
+       berakhir putih/terang sebelum footer) — halaman yang section
+       terakhirnya berwarna solid (mis. News index, lihat ngOnInit-nya)
+       men-set custom property ini di :root supaya ruang negatif wave tidak
+       nembus ke warna body/putih, melainkan ke warna section itu sendiri. */
+    .foot-wave { position: relative; height: 60px; background: var(--footer-wave-backdrop, transparent); filter: drop-shadow(0 -12px 24px rgba(0,0,0,.22)); }
     .foot-wave-clip { width: 100%; height: 100%; overflow: hidden; }
     /* svg dua kali lebar kontainer (dua periode identik, lihat komentar di
        template) digeser translateX(-50%) — persis satu periode — supaya
