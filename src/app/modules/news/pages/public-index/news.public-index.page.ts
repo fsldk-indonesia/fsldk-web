@@ -116,13 +116,22 @@ const MAX_MOBILE_DOTS = 7;
       </div>
     </app-page-hero>
 
-    <section class="section section-transition section-blob-drift">
+    <section class="section">
       <div class="container pb-xl">
         <div class="news-section-head text-center reveal" #sectionHead>
           <h2>Kabar &amp; Liputan Terbaru</h2>
           <p class="news-section-subtitle">Rangkuman kegiatan, pencapaian, dan cerita dari jaringan dakwah kampus FSLDK Indonesia se-Nusantara.</p>
         </div>
 
+        <!-- ---------- Panel hijau + siluet ikon raksasa pudar — pola sama
+             persis dengan .agenda-panel (section Event) di Beranda: panel
+             hijau solid membungkus toolbar+daftar berita, dua siluet koran
+             (besar di pojok kanan-bawah, kecil di kiri-atas) sebagai aksen
+             dekoratif, bukan kanvas blob-drift terang seperti sebelumnya. ---------- -->
+        <div class="news-panel">
+          <span class="news-panel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="140" /></span>
+          <span class="news-panel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="64" /></span>
+          <div class="news-panel-inner">
         <!-- Search + Filter + Urutkan — komponen global (shared/search-filter-sort.component.ts). -->
         <div class="news-toolbar">
           <app-search-filter-sort
@@ -165,14 +174,16 @@ const MAX_MOBILE_DOTS = 7;
             </div>
           </div>
         } @else if (repo.error()) {
-          <div class="empty-state">
+          <!-- Slab putih — state error/kosong butuh teks gelap tetap terbaca
+               di atas panel hijau, bukan diwarnai ulang satu-satu. -->
+          <div class="empty-state news-panel-slab">
             <div class="empty-icon text-danger"><app-icon name="alert-triangle" [size]="48" /></div>
             <h3>Terjadi Kesalahan</h3>
             <p>{{ repo.error() }}</p>
             <button class="btn btn-outline mt-md" (click)="loadData()">Coba Lagi</button>
           </div>
         } @else if (repo.publicNews().length === 0 && hasActiveSearchOrFilter()) {
-          <div class="empty-state news-empty-anim">
+          <div class="empty-state news-empty-anim news-panel-slab">
             <span class="news-empty-icon news-empty-icon-badge">
               <app-icon name="search" [size]="26" />
             </span>
@@ -191,7 +202,7 @@ const MAX_MOBILE_DOTS = 7;
             </div>
           </div>
         } @else if (repo.publicNews().length === 0) {
-          <div class="empty-state news-empty-anim">
+          <div class="empty-state news-empty-anim news-panel-slab">
             <div class="empty-icon news-empty-icon"><app-icon name="newspaper" [size]="48" /></div>
             <h3 class="news-empty-title">Belum Ada Berita</h3>
             <p class="news-empty-desc">Berita yang dipublikasikan akan muncul di sini.</p>
@@ -287,6 +298,8 @@ const MAX_MOBILE_DOTS = 7;
             </div>
           }
         }
+          </div>
+        </div>
       </div>
     </section>
 
@@ -366,38 +379,41 @@ const MAX_MOBILE_DOTS = 7;
     @keyframes newsBadgePop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
     @media (prefers-reduced-motion: reduce) { .news-tier, .news-badge { animation: none; opacity: 1; transform: none; } }
 
-    /* =====================================================================
-       Kanvas setelah hero — DISALIN PERSIS dari Galeri/Struktur/Kontak
-       (.section + .section-transition + .section-blob-drift). ===================================================================== */
-    .section { background: var(--color-primary-tint); position: relative; min-height: 60vh; }
-    .section-transition { position: relative; padding-top: 32px; }
-    .section-blob-drift { overflow: hidden; }
-    .section-blob-drift > .container { position: relative; z-index: 1; }
-    .section-blob-drift::before {
-      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
-        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
-      opacity: .8; animation: sectionBlobDrift 12s ease-in-out infinite alternate;
-    }
-    .section-blob-drift::after {
-      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background: linear-gradient(to bottom,
-        var(--color-primary-tint) 0, transparent 70px,
-        transparent calc(100% - 70px), var(--color-primary-tint) 100%);
-    }
-    @keyframes sectionBlobDrift {
-      from { transform: translate(0, 0) scale(1); }
-      to { transform: translate(-4%, 5%) scale(1.15); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .section-blob-drift::before { animation: none; }
-    }
+    .section { background: var(--color-primary-tint); position: relative; min-height: 60vh; padding-top: 32px; }
 
     .news-section-head { margin-bottom: 28px; }
     .news-section-head h2 { margin: 14px 0 10px; }
     .news-section-subtitle { max-width: 560px; margin: 0 auto; color: var(--color-text-secondary); font-size: 1.02rem; line-height: 1.6; }
-    .news-toolbar { max-width: 900px; margin: 0 auto 40px; }
+
+    /* ---------- Panel hijau + siluet — pola sama persis dengan .agenda-panel
+       (section "Event Terbaru" Beranda): latar hijau solid, dua siluet ikon
+       raksasa pudar diputar (bukan gambar/SVG custom, cuma app-icon ukuran
+       besar dengan opacity rendah) di pojok berlawanan, konten (toolbar +
+       grid/carousel + pagination) duduk di atasnya lewat .news-panel-inner. ---------- */
+    .news-panel {
+      position: relative; overflow: hidden;
+      background: var(--color-primary); border-radius: var(--radius-lg);
+      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
+      padding: 36px 24px;
+    }
+    .news-panel-silhouette {
+      position: absolute; right: -30px; bottom: -30px; z-index: 0; color: rgba(255,255,255,.14);
+      transform: rotate(-12deg); pointer-events: none;
+    }
+    .news-panel-silhouette-2 {
+      position: absolute; left: -16px; top: -16px; z-index: 0; color: rgba(255,255,255,.10);
+      transform: rotate(16deg); pointer-events: none;
+    }
+    .news-panel-inner { position: relative; z-index: 1; }
+    /* Slab putih — state error/kosong butuh teks gelap tetap terbaca di atas
+       panel hijau (lihat komentar di template), bukan diwarnai ulang. */
+    .news-panel-slab { background: #fff; border-radius: var(--radius-md); }
+
+    .news-toolbar { max-width: 900px; margin: 0 auto 32px; }
+
+    @media (max-width: 640px) {
+      .news-panel { padding: 24px 16px; border-radius: var(--radius-md); }
+    }
 
     /* ---------- Animasi state "tidak ada data" — identik pola Galeri. ---------- */
     .news-empty-anim { animation: newsEmptyFadeIn .5s var(--ease-out) both; }
