@@ -179,8 +179,17 @@ const RELATED_COUNT = 3;
       padding: 90px 0 120px;
       background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
     }
+    /* Foto apa pun isinya (sertifikat, screenshot, foto rapat — bukan foto
+       studio yang dikurasi) digelapkan LEBIH DULU lewat filter sebelum scrim
+       gradasi ditumpuk di atasnya. Dilaporkan: judul & breadcrumb putih
+       tidak terbaca menimpa foto terang/ramai (mis. sertifikat putih penuh
+       teks) karena scrim lama cuma kuat di 40% bawah — filter brightness di
+       SELURUH foto ini yang menjamin kontras di mana pun teks jatuh,
+       berapa pun panjang judulnya (2-3 baris mendorong blok teks naik
+       melewati zona scrim terkuat). */
     .article-hero-bg {
       position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;
+      filter: brightness(.5) saturate(.85);
     }
     .article-hero-texture {
       position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none;
@@ -190,13 +199,20 @@ const RELATED_COUNT = 3;
       -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
     }
     /* Hanya tampil kalau TIDAK ada foto (tekstur dotted di atas foto asli
-       akan terlihat kotor) — foto sungguhan sudah punya scrim sendiri. */
+       akan terlihat kotor) — foto sungguhan sudah digelapkan sendiri. */
     .article-hero.has-image .article-hero-texture { display: none; }
     .article-hero-scrim {
       position: absolute; inset: 0; z-index: 1; pointer-events: none;
-      background: linear-gradient(to top, rgba(6,14,10,.94) 0%, rgba(6,14,10,.62) 40%, rgba(6,14,10,.08) 75%, transparent 100%);
+      background: linear-gradient(to top, rgba(6,14,10,.6) 0%, rgba(6,14,10,.25) 55%, transparent 100%);
     }
-    .article-hero.has-image .article-hero-scrim { background: linear-gradient(to top, rgba(6,14,10,.92) 0%, rgba(6,14,10,.55) 42%, rgba(6,14,10,.1) 78%, transparent 100%); }
+    /* Wash hijau brand DI SELURUH foto (bukan cuma gradasi dari bawah) +
+       scrim gelap yang jauh lebih tinggi cakupannya — breadcrumb di PALING
+       ATAS hero pun tetap di atas lapisan gelap, bukan foto polos. */
+    .article-hero.has-image .article-hero-scrim {
+      background:
+        linear-gradient(160deg, rgba(4,100,40,.32) 0%, rgba(3,55,26,.58) 100%),
+        linear-gradient(to top, rgba(4,20,12,.78) 0%, rgba(4,20,12,.42) 55%, rgba(4,20,12,.12) 100%);
+    }
 
     .article-hero-inner { position: relative; z-index: 2; max-width: 820px; }
     .article-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
