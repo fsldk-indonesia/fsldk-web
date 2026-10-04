@@ -72,6 +72,7 @@
             }
             <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" type="email" [(ngModel)]="form.contactEmail" [disabled]="isReadonly"></div>
             <div class="form-group"><label class="form-label">Telepon Kontak</label><app-phone-input [(ngModel)]="form.contactPhone" [disabled]="isReadonly" /></div>
+            <div class="form-group"><label class="form-label">Website</label><input class="form-control" type="url" placeholder="https://..." [(ngModel)]="form.websiteURL" [disabled]="isReadonly"></div>
           </div>
         </div>
       </div>

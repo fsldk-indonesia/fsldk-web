@@ -10,7 +10,7 @@ import { OrganizationProfileFormValue, OrganizationProfilePresenter } from './or
 import { OrganizationProfileView } from './organization.profile.view';
 
 const emptyForm = (): OrganizationProfileFormValue => ({
-  organizationName: '', provinceName: '', cityName: '', contactEmail: '', contactPhone: '', photoURL: '',
+  organizationName: '', provinceName: '', cityName: '', contactEmail: '', contactPhone: '', websiteURL: '', photoURL: '',
 });
 
 @Component({
@@ -105,6 +105,7 @@ export class OrganizationProfilePage implements OnInit, OrganizationProfileView 
       cityName: org.cityName ?? '',
       contactEmail: org.contactEmail ?? '',
       contactPhone: org.contactPhone ?? '',
+      websiteURL: org.websiteURL ?? '',
       photoURL: org.photoURL ?? '',
     };
     this.loading.set(false);

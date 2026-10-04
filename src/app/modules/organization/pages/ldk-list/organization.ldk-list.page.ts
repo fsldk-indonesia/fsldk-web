@@ -16,7 +16,7 @@ import { LdkFormValue, OrganizationLdkListPresenter } from './organization.ldk-l
 import { OrganizationLdkListView } from './organization.ldk-list.view';
 
 const emptyForm = (): LdkFormValue => ({
-  organizationName: '', organizationCode: '', provinceName: '', cityName: '', contactEmail: '', contactPhone: '', parentOrganizationID: null, photoURL: '',
+  organizationName: '', organizationCode: '', provinceName: '', cityName: '', contactEmail: '', contactPhone: '', websiteURL: '', parentOrganizationID: null, photoURL: '',
 });
 
 /** Config CmsIndexConfig<Organization> — kolom "Puskomda" & filter combobox
@@ -235,6 +235,7 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
       organizationName: o.organizationName, organizationCode: o.organizationCode,
       provinceName: o.provinceName ?? '', cityName: o.cityName ?? '',
       contactEmail: o.contactEmail ?? '', contactPhone: o.contactPhone ?? '',
+      websiteURL: o.websiteURL ?? '',
       parentOrganizationID: o.parentOrganizationID ?? null, photoURL: o.photoURL ?? '',
     };
     this.resetWilayahSelection();
@@ -253,6 +254,7 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
       organizationName: o.organizationName, organizationCode: o.organizationCode,
       provinceName: o.provinceName ?? '', cityName: o.cityName ?? '',
       contactEmail: o.contactEmail ?? '', contactPhone: o.contactPhone ?? '',
+      websiteURL: o.websiteURL ?? '',
       parentOrganizationID: o.parentOrganizationID ?? null, photoURL: o.photoURL ?? '',
     };
     this.resetWilayahSelection();
