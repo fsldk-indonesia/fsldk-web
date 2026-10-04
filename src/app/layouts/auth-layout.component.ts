@@ -4,13 +4,14 @@ import { RouterOutlet } from '@angular/router';
 /**
  * Bingkai halaman autentikasi: dipasang bersarang di dalam PublicLayoutComponent
  * (navbar & footer landing page yang sama). Latar belakang memakai bahasa
- * visual yang SAMA PERSIS dengan app-page-hero (gradien diagonal 3-stop +
- * glow radial emas + tekstur titik, lihat shared/page-hero.component.ts)
- * TANPA mesin kontennya (badge/judul/kutipan Hadis-Qur'an/ilustrasi) — di
- * sini backdrop itu murni dipakai sebagai latar di belakang SATU kartu form
- * yang di-tengah-kan, bukan halaman landing. Panel kiri berisi ayat & poin
- * komunitas dakwah yang sebelumnya ada DIHAPUS sepenuhnya (konten teks
- * dianggap tidak perlu di halaman auth) — hanya kartu + isinya form.
+ * visual yang SAMA PERSIS dengan hero GELAP di halaman detail Galeri/Berita
+ * (gradien diagonal hijau tua + glow radial emas + tekstur titik, lihat
+ * .hero-section di gallery.public-detail.page.ts) — BUKAN gradien terang
+ * app-page-hero (itu untuk halaman index). Tidak ada mesin konten hero
+ * apa pun (badge/judul/kutipan/ilustrasi) — backdrop gelap ini murni jadi
+ * panggung untuk satu kartu putih yang di-tengah-kan. Panel kiri berisi
+ * ayat & poin komunitas dakwah yang sebelumnya ada DIHAPUS sepenuhnya
+ * (konten teks dianggap tidak perlu di halaman auth) — hanya kartu + isinya form.
  */
 @Component({
   selector: 'app-auth-layout',
@@ -25,36 +26,35 @@ import { RouterOutlet } from '@angular/router';
     </div>
   `,
   styles: [`
-    /* Backdrop — gradien diagonal + glow radial, disalin PERSIS dari
-       .hero/.hero::after app-page-hero (hanya bagian latar, bukan
-       badge/judul/kutipan/ilustrasinya) supaya satu bahasa visual dengan
-       halaman publik lain (Galeri/Struktur/Kontak/Berita), tapi di sini
-       cuma jadi panggung untuk satu kartu di tengah, bukan hero bertopik. */
+    /* Backdrop — gradien hijau tua diagonal + glow radial emas + tekstur
+       titik, disalin PERSIS dari .hero-section/.hero-glow/.hero-texture
+       milik hero gelap di detail Galeri/Berita (BUKAN gradien terang
+       app-page-hero yang dipakai halaman index) — di sini cuma jadi
+       panggung gelap untuk satu kartu putih di tengah. */
     .auth-wash {
       position: relative; overflow: hidden;
       min-height: 70vh;
       display: flex; align-items: center; justify-content: center;
       padding: 56px 24px;
-      background: linear-gradient(122deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 58%, var(--color-gold-soft) 100%);
+      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
     }
     .auth-wash::after {
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background: radial-gradient(ellipse 60% 70% at 78% 60%, var(--color-gold-soft) 0%, var(--color-primary-soft) 40%, transparent 75%);
-      opacity: .9;
+      background: radial-gradient(ellipse 55% 65% at 88% 30%, rgba(255,196,0,.18) 0%, transparent 70%);
     }
     .auth-texture {
-      position: absolute; inset: 0; z-index: 0; opacity: .7; pointer-events: none;
-      background-image: radial-gradient(circle, var(--color-primary-soft) 1.5px, transparent 1.6px);
-      background-size: 26px 26px; background-position: 80% -10px;
-      mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
-      -webkit-mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
+      position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 1.6px);
+      background-size: 26px 26px; background-position: 15% -10px;
+      mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+      -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
     }
 
     .auth-card {
       position: relative; z-index: 1; box-sizing: border-box;
       width: 100%; max-width: 420px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-lg); padding: 36px;
+      box-shadow: 0 24px 50px rgba(0,0,0,.35); padding: 36px;
     }
 
     @media (max-width: 480px) {
