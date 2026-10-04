@@ -3,10 +3,14 @@ import { RouterOutlet } from '@angular/router';
 
 /**
  * Bingkai halaman autentikasi: dipasang bersarang di dalam PublicLayoutComponent
- * (navbar & footer landing page yang sama, persis pola ldksyahid-app) — bukan
- * shell terpisah. Panel kiri berisi ayat & poin komunitas dakwah yang bersifat
- * umum, bukan pesan "Panel CMS", karena halaman login/daftar diperuntukkan
- * bagi masyarakat umum, tidak hanya pengguna dengan akses CMS.
+ * (navbar & footer landing page yang sama). Latar belakang memakai bahasa
+ * visual yang SAMA PERSIS dengan app-page-hero (gradien diagonal 3-stop +
+ * glow radial emas + tekstur titik, lihat shared/page-hero.component.ts)
+ * TANPA mesin kontennya (badge/judul/kutipan Hadis-Qur'an/ilustrasi) — di
+ * sini backdrop itu murni dipakai sebagai latar di belakang SATU kartu form
+ * yang di-tengah-kan, bukan halaman landing. Panel kiri berisi ayat & poin
+ * komunitas dakwah yang sebelumnya ada DIHAPUS sepenuhnya (konten teks
+ * dianggap tidak perlu di halaman auth) — hanya kartu + isinya form.
  */
 @Component({
   selector: 'app-auth-layout',
@@ -14,55 +18,49 @@ import { RouterOutlet } from '@angular/router';
   imports: [RouterOutlet],
   template: `
     <div class="auth-wash">
-      <div class="container auth-shell">
-        <aside class="auth-visual">
-          <blockquote class="auth-ayat">
-            <p>"Dan hendaklah ada di antara kamu segolongan umat yang menyeru kepada kebajikan, menyuruh kepada yang ma'ruf dan mencegah dari yang munkar; merekalah orang-orang yang beruntung."</p>
-            <cite>QS. Ali 'Imran: 104</cite>
-          </blockquote>
-          <ul class="auth-points">
-            <li>Ratusan Lembaga Dakwah Kampus se-Indonesia</li>
-            <li>Pembinaan dan kaderisasi dai kampus</li>
-            <li>Jaringan ukhuwah lintas kampus dan daerah</li>
-          </ul>
-        </aside>
-        <div class="auth-card">
-          <router-outlet />
-        </div>
+      <div class="auth-texture" aria-hidden="true"></div>
+      <div class="auth-card">
+        <router-outlet />
       </div>
     </div>
   `,
   styles: [`
-    /* Gradien di wrapper TERPISAH dari .container — sebelumnya class
-       "auth-shell container" dipasang di elemen yang sama sehingga padding
-       .auth-shell menimpa padding .container sepenuhnya (bug yang sama
-       persis dengan CTA band di beranda). */
-    .auth-wash { background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-primary-tint) 100%); }
-    /* align-items:start (bukan center) — sebelumnya panel kiri yang lebih
-       pendek dari kartu form malah mengambang di tengah tinggi kartu,
-       menyisakan jarak kosong besar di atasnya yang terlihat seperti
-       kontennya "terpotong"/hilang sebagian. */
-    .auth-shell { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; padding: 56px 24px; }
-    .auth-visual { padding: 8px; }
-    .auth-ayat { border-left: 3px solid var(--color-primary); padding-left: 20px; margin: 0 0 28px; }
-    .auth-ayat p { font-family: var(--font-heading); font-size: 1.15rem; color: var(--color-text); line-height: 1.6; margin: 0 0 10px; }
-    .auth-ayat cite { color: var(--color-primary); font-weight: 600; font-size: .88rem; font-style: normal; }
-    .auth-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-    .auth-points li { display: flex; align-items: center; gap: 10px; color: var(--color-text-secondary); font-size: .95rem; }
-    /* Titik simpul berdenyut bergantian hijau/emas/ember — gema motif
-       jaringan yang sama dipakai di hero & navbar, bukan bullet polos. */
-    .auth-points li::before { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--color-primary); flex-shrink: 0; animation: node-pulse 2.6s ease-in-out infinite; }
-    .auth-points li:nth-child(2)::before { background: var(--color-gold); animation-delay: .3s; }
-    .auth-points li:nth-child(3)::before { background: var(--color-ember); animation-delay: .6s; }
-    /* min-height + flex-center: tiap halaman auth (login/daftar/lupa-password/
-       reset-password/verifikasi-email) punya jumlah field/konten yang beda-beda,
-       sebelumnya kartu ikut memendek/memanjang mengikuti kontennya masing-masing
-       sehingga terasa "loncat" tinggi saat pindah halaman (miss-development-
-       prompt-3.md poin 7). Disamakan ke satu tinggi minimum (berdasar halaman
-       terpanjang, Daftar Akun) — halaman yang lebih pendek center secara vertikal
-       di dalamnya alih-alih menempel ke atas dengan sisa ruang kosong di bawah. */
-    .auth-card { width: 100%; max-width: 420px; min-height: 560px; display: flex; flex-direction: column; justify-content: center; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 36px; }
-    @media (max-width: 860px) { .auth-shell { grid-template-columns: 1fr; padding: 32px 20px; } .auth-visual { display: none; } .auth-card { max-width: 100%; margin: 0 auto; } }
+    /* Backdrop — gradien diagonal + glow radial, disalin PERSIS dari
+       .hero/.hero::after app-page-hero (hanya bagian latar, bukan
+       badge/judul/kutipan/ilustrasinya) supaya satu bahasa visual dengan
+       halaman publik lain (Galeri/Struktur/Kontak/Berita), tapi di sini
+       cuma jadi panggung untuk satu kartu di tengah, bukan hero bertopik. */
+    .auth-wash {
+      position: relative; overflow: hidden;
+      min-height: 70vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 56px 24px;
+      background: linear-gradient(122deg, var(--color-primary-tint) 0%, var(--color-primary-soft) 58%, var(--color-gold-soft) 100%);
+    }
+    .auth-wash::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 60% 70% at 78% 60%, var(--color-gold-soft) 0%, var(--color-primary-soft) 40%, transparent 75%);
+      opacity: .9;
+    }
+    .auth-texture {
+      position: absolute; inset: 0; z-index: 0; opacity: .7; pointer-events: none;
+      background-image: radial-gradient(circle, var(--color-primary-soft) 1.5px, transparent 1.6px);
+      background-size: 26px 26px; background-position: 80% -10px;
+      mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
+      -webkit-mask-image: radial-gradient(circle at 85% 15%, black, transparent 60%);
+    }
+
+    .auth-card {
+      position: relative; z-index: 1; box-sizing: border-box;
+      width: 100%; max-width: 420px;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg); padding: 36px;
+    }
+
+    @media (max-width: 480px) {
+      .auth-wash { padding: 40px 16px; min-height: 60vh; }
+      .auth-card { padding: 28px 24px; }
+    }
   `],
 })
 export class AuthLayoutComponent {}
