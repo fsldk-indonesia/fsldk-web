@@ -1,10 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, QueryList, ViewChildren, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ContactRepository } from '../../repositories/contact.repository';
 import { ToastService } from '../../../../core/services/toast.service';
 import { SettingApiService } from '../../../setting/services/setting-api.service';
 import { IconComponent } from '../../../../shared/icon.component';
 import { NewsletterFormComponent } from '../../../../shared/newsletter-form.component';
+import { PageHeroComponent } from '../../../../shared/page-hero.component';
 
 /**
  * Public Contact Us page with official organization contacts and interactive inquiry form.
@@ -12,26 +13,91 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
 @Component({
   selector: 'app-contact-public-index',
   standalone: true,
-  imports: [ReactiveFormsModule, IconComponent, NewsletterFormComponent],
+  imports: [ReactiveFormsModule, IconComponent, NewsletterFormComponent, PageHeroComponent],
   template: `
-    <section class="section">
-      <div class="container pb-xl">
-        <!-- Hero Header -->
-        <div class="text-center page-header">
-          <span class="eyebrow">Tentang Kami</span>
-          <h1>Hubungi Kami</h1>
-          <p class="text-muted page-subtitle">
-            Ada pertanyaan, kolaborasi dakwah, atau aspirasi kampus? Kami siap mendengar dan bersinergi bersama Anda.
-          </p>
-        </div>
+    <!-- Hero publik reusable (shared/page-hero.component.ts): teks lewat input,
+         ilustrasi "Jaringan Pesan" diproyeksikan lewat slot [heroVisual] (style
+         & animasi garisnya tetap di sini — lihat animateMsgLines() + .msg-*
+         di styles). Kartu kutipan Hadis sudah jadi bagian tetap hero itu. -->
+    <app-page-hero
+      badge="Tentang Kami · FSLDK Indonesia"
+      title="Mari Terhubung,"
+      titleAccent="Bersama Dakwah Kampus"
+      subtitle="Ada pertanyaan, kolaborasi dakwah, atau aspirasi kampus? Kami siap mendengar dan bersinergi bersama Anda."
+      quoteSource="hadith">
+      <div heroVisual class="hero-message-hub">
+        <svg aria-hidden="true" viewBox="0 0 480 320" class="msg-svg">
+          <defs>
+            <linearGradient id="msgEnvelopeFill" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="var(--color-primary-bright)" stop-opacity=".92" />
+              <stop offset="100%" stop-color="var(--color-primary)" stop-opacity=".82" />
+            </linearGradient>
+            <filter id="msgSoftBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+          </defs>
 
+          <!-- Siluet "amplop" — hub tempat pesan dari jaringan LDK se-Indonesia
+               berkumpul, ditopang bayangan tanah lembut (sama persis teknik
+               #treeSoftBlur di Struktur). -->
+          <g class="msg-envelope-silhouette">
+            <ellipse class="msg-ground-shadow" cx="240" cy="224" rx="85" ry="9" filter="url(#msgSoftBlur)" />
+            <rect class="msg-envelope-body" x="170" y="110" width="140" height="100" rx="14" />
+            <path class="msg-envelope-flap" d="M170,110 L240,162 L310,110" />
+          </g>
+
+          <!-- Garis "digambar sendiri" (lihat animateMsgLines()) — jalur utama
+               (amplop -> hub daerah) lebih tebal/terang dari jalur turunan
+               (hub daerah -> LDK), identik pembagian tier di Struktur. -->
+          <path #msgLine class="msg-line thick" d="M240,160 L120,85" />
+          <path #msgLine class="msg-line thick" d="M240,160 L240,45" />
+          <path #msgLine class="msg-line thick" d="M240,160 L360,85" />
+          <path #msgLine class="msg-line" d="M120,85 L55,70" />
+          <path #msgLine class="msg-line" d="M120,85 L75,150" />
+          <path #msgLine class="msg-line" d="M240,45 L190,15" />
+          <path #msgLine class="msg-line" d="M240,45 L290,15" />
+          <path #msgLine class="msg-line" d="M360,85 L425,70" />
+          <path #msgLine class="msg-line" d="M360,85 L405,150" />
+
+          <g class="msg-tier msg-tier-0">
+            <circle class="network-ping" cx="240" cy="160" r="15" />
+            <circle class="network-node" cx="240" cy="160" r="15" />
+          </g>
+          <g class="msg-tier msg-tier-1">
+            <circle class="network-ping gold" cx="120" cy="85" r="10" style="animation-delay:.3s" />
+            <circle class="network-node gold" cx="120" cy="85" r="10" />
+            <circle class="network-ping gold" cx="240" cy="45" r="10" style="animation-delay:.6s" />
+            <circle class="network-node gold" cx="240" cy="45" r="10" />
+            <circle class="network-ping gold" cx="360" cy="85" r="10" style="animation-delay:.9s" />
+            <circle class="network-node gold" cx="360" cy="85" r="10" />
+          </g>
+          <g class="msg-tier msg-tier-2">
+            <circle class="network-node ember" cx="55" cy="70" r="6" />
+            <circle class="network-node ember" cx="75" cy="150" r="6" />
+            <circle class="network-node ember" cx="190" cy="15" r="6" />
+            <circle class="network-node ember" cx="290" cy="15" r="6" />
+            <circle class="network-node ember" cx="425" cy="70" r="6" />
+            <circle class="network-node ember" cx="405" cy="150" r="6" />
+          </g>
+
+          <!-- Centang "terkirim" — pop-in setelah seluruh jaringan tergambar. -->
+          <g class="msg-sent-badge">
+            <circle cx="322" cy="96" r="17" fill="#fff" stroke="var(--color-gold)" stroke-width="3" />
+            <path d="M313,96 L320,103 L332,88" fill="none" stroke="var(--color-gold-dark)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+        </svg>
+      </div>
+    </app-page-hero>
+
+    <section class="section section-transition section-blob-drift">
+      <div class="container pb-xl">
         <div class="contact-grid">
           <!-- Left Column: Official Contact Information -->
           <div class="contact-info-col">
-            <div class="card info-card">
+            <div class="card card-hover info-card stagger-in" style="--stagger-i: 0">
               <div class="info-items">
                 <div class="info-item">
-                  <span class="item-icon"><app-icon name="map-pin" [size]="18" /></span>
+                  <span class="icon-badge sm icon-badge-solid"><app-icon name="map-pin" [size]="17" /></span>
                   <div class="item-content">
                     <span class="item-label">Alamat</span>
                     <span class="item-value">Plaza Aminta Lantai 5/504 Jl TB Simatupang Kav.10 - Pondok Pinang Kebayoran Lama - Jakarta Selatan 12310</span>
@@ -39,7 +105,7 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
                 </div>
 
                 <div class="info-item">
-                  <span class="item-icon"><app-icon name="envelope" [size]="18" /></span>
+                  <span class="icon-badge sm icon-badge-gold"><app-icon name="envelope" [size]="17" /></span>
                   <div class="item-content">
                     <span class="item-label">Email Resmi</span>
                     <a [href]="'mailto:' + contactEmail()" class="item-link">{{ contactEmail() }}</a>
@@ -47,10 +113,10 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
                 </div>
 
                 <div class="info-item">
-                  <span class="item-icon"><app-icon name="whatsapp" [size]="18" /></span>
+                  <span class="icon-badge sm icon-badge-ember"><app-icon name="whatsapp" [size]="17" /></span>
                   <div class="item-content">
                     <span class="item-label">WhatsApp</span>
-                    <a href="https://wa.me/6285111332861" target="_blank" rel="noopener noreferrer" class="item-link">+62 851-1133-2861</a>
+                    <a [href]="'https://wa.me/' + whatsappNumber()" target="_blank" rel="noopener noreferrer" class="item-link">{{ whatsappDisplay() }}</a>
                   </div>
                 </div>
               </div>
@@ -81,36 +147,22 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
             </div>
 
             <!-- Helpful Notice Card -->
-            <div class="card notice-card">
-              <div class="notice-icon"><app-icon name="info" [size]="20" /></div>
+            <div class="card card-hover notice-card stagger-in" style="--stagger-i: 1">
+              <span class="icon-badge md icon-badge-soft"><app-icon name="info" [size]="19" /></span>
               <div class="notice-text">
                 <strong>Respons Cepat</strong>
                 <p>Setiap pesan yang masuk melalui formulir ini akan diteruskan langsung ke divisi terkait dan dijawab dalam 1x24 jam kerja.</p>
               </div>
             </div>
-
-            <!-- Newsletter Signup Card -->
-            <div class="card newsletter-card">
-              <div class="newsletter-card-header">
-                <span class="item-icon"><app-icon name="mail" [size]="18" /></span>
-                <div>
-                  <strong>Berlangganan Newsletter</strong>
-                  <p>Dapatkan kabar berita, artikel, dan agenda dakwah kampus langsung ke email Anda.</p>
-                </div>
-              </div>
-              <app-newsletter-form />
-            </div>
           </div>
 
           <!-- Right Column: Interactive Contact Form -->
           <div class="contact-form-col">
-            <div class="card form-card">
+            <div class="card card-hover form-card stagger-in" style="--stagger-i: 1">
               @if (submittedSuccess()) {
                 <!-- Success State Screen -->
                 <div class="success-screen">
-                  <div class="success-icon-wrap">
-                    <app-icon name="check-circle" [size]="56" />
-                  </div>
+                  <span class="icon-badge lg icon-badge-solid success-icon-wrap"><app-icon name="check-circle" [size]="30" /></span>
                   <h2>Pesan Berhasil Terkirim!</h2>
                   <p class="success-text">
                     Jazakumullah khairan khatsiran. Pesan Anda telah kami terima dengan baik. Tim sekretariat FSLDK Indonesia akan meninjau dan merespon secepatnya.
@@ -235,33 +287,97 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
             </div>
           </div>
         </div>
+
+        <!-- Newsletter Signup — bentangan penuh di bawah grid, bukan dijejalkan
+             ke kolom kiri yang sempit, supaya form email+tombolnya lega. -->
+        <div class="card card-hover newsletter-card-full stagger-in" style="--stagger-i: 3">
+          <div class="newsletter-card-header">
+            <span class="icon-badge md icon-badge-gold"><app-icon name="mail" [size]="18" /></span>
+            <div>
+              <strong>Berlangganan Newsletter</strong>
+              <p>Dapatkan kabar berita, artikel, dan agenda dakwah kampus langsung ke email Anda.</p>
+            </div>
+          </div>
+          <div class="newsletter-card-form">
+            <app-newsletter-form />
+          </div>
+        </div>
       </div>
     </section>
   `,
   styles: [`
     :host { display: block; }
-    /* Wash gradien hijau khas FSLDK di bagian atas halaman (konsisten dengan halaman berita, artikel, event, galeri, struktur, dll.) */
-    .section {
-      background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-primary-tint) 220px, #fff 520px);
-      min-height: 85vh;
-      padding-top: 48px;
-    }
 
-    .page-header { margin-bottom: 48px; }
-    .page-header h1 {
-      font-size: clamp(2rem, 4vw, 2.75rem);
-      font-weight: 800;
-      color: var(--color-text);
-      margin: 6px 0 10px;
-      letter-spacing: -0.02em;
+    /* ---------- Ilustrasi hero: "Jaringan Pesan" — amplop sebagai hub tempat
+       pesan dari jaringan LDK se-Indonesia berkumpul, garis "digambar sendiri"
+       saat load (animateMsgLines()), simpul berdenyut pakai kelas global
+       .network-node/.network-ping (styles.scss) yang sudah jadi primitif
+       "Peta Silaturahmi" di seluruh app — dipakai ulang di sini supaya bahasa
+       visualnya konsisten dengan Beranda/Struktur/Galeri. ---------- */
+    .hero-message-hub { position: relative; width: 100%; }
+    .msg-svg { position: relative; z-index: 1; width: 100%; height: 240px; overflow: visible; }
+
+    .msg-envelope-silhouette {
+      transform-box: fill-box; transform-origin: 50% 100%; opacity: 0;
+      animation: envelopeGrow .9s cubic-bezier(.34,1.4,.64,1) forwards;
+      filter: drop-shadow(0 10px 18px rgba(0,147,59,.22));
     }
-    .page-subtitle { max-width: 620px; margin: 0 auto; font-size: 1.05rem; }
+    @keyframes envelopeGrow { from { opacity: 0; transform: scale(.75) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .msg-envelope-body { fill: url(#msgEnvelopeFill); }
+    .msg-envelope-flap { fill: none; stroke: var(--color-primary-dark); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+    .msg-ground-shadow { fill: var(--color-primary-dark); opacity: .14; }
+    @media (prefers-reduced-motion: reduce) { .msg-envelope-silhouette { animation: none; opacity: 1; transform: none; } }
+
+    .msg-line { fill: none; stroke: var(--color-primary); stroke-width: 1.8; stroke-linecap: round; opacity: .55; }
+    .msg-line.thick { stroke-width: 2.6; opacity: .75; stroke: var(--color-primary-bright); }
+    .msg-tier { opacity: 0; animation: msgTierFadeIn .4s ease-out forwards; }
+    .msg-tier-0 { animation-delay: .75s; }
+    .msg-tier-1 { animation-delay: 1.3s; }
+    .msg-tier-2 { animation-delay: 1.8s; }
+    @keyframes msgTierFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .msg-sent-badge {
+      transform-box: fill-box; transform-origin: center; opacity: 0;
+      animation: messageSentPop .5s cubic-bezier(.34,1.4,.64,1) 2.2s forwards;
+    }
+    @keyframes messageSentPop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+    @media (prefers-reduced-motion: reduce) { .msg-tier, .msg-sent-badge { animation: none; opacity: 1; transform: none; } }
+
+    /* ---------- Canvas transisi hero -> konten (identik Galeri/Struktur):
+       blob gradien bergeser pelan di belakang + fade-mask 70px atas/bawah yang
+       menyatukan tepi gelombang hero dengan latar section ini, supaya tak ada
+       "garis sambungan" terlihat. ---------- */
+    .section { background: var(--color-primary-tint); position: relative; }
+    .section-transition { position: relative; padding-top: 32px; }
+    .section-blob-drift { overflow: hidden; }
+    .section-blob-drift > .container { position: relative; z-index: 1; }
+    .section-blob-drift::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
+        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
+      opacity: .8; animation: sectionBlobDrift 12s ease-in-out infinite alternate;
+    }
+    .section-blob-drift::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom,
+        var(--color-primary-tint) 0, transparent 70px,
+        transparent calc(100% - 70px), var(--color-primary-tint) 100%);
+    }
+    @keyframes sectionBlobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-4%, 5%) scale(1.15); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .section-blob-drift::before { animation: none; }
+    }
 
     .contact-grid {
       display: grid;
       grid-template-columns: 1fr 1.35fr;
       gap: 32px;
       align-items: start;
+      padding-top: 8px;
     }
 
     @media (max-width: 960px) {
@@ -271,51 +387,12 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
     /* Left Column Styling */
     .info-card {
       padding: 32px;
-      border-radius: var(--radius-lg);
-      background: #fff;
-      border: 1px solid var(--color-border);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
     }
-
-    .info-card-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .badge-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: var(--radius-md);
-      background: var(--color-primary-soft);
-      color: var(--color-primary-dark);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .info-card-title { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--color-text); }
-    .info-card-desc { margin: 2px 0 0; font-size: 0.88rem; color: var(--color-text-secondary); }
 
     .info-items { display: flex; flex-direction: column; gap: 20px; }
     .info-item { display: flex; align-items: flex-start; gap: 14px; }
 
-    .item-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-full);
-      background: var(--color-bg-alt);
-      color: var(--color-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      margin-top: 2px;
-    }
-
-    .item-content { display: flex; flex-direction: column; gap: 3px; }
+    .item-content { display: flex; flex-direction: column; gap: 3px; padding-top: 2px; }
     .item-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
     .item-value { font-size: 0.95rem; color: var(--color-text); line-height: 1.45; }
     .item-link { font-size: 0.95rem; color: var(--color-primary); font-weight: 600; text-decoration: none; transition: color var(--motion-fast); }
@@ -343,36 +420,47 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
     .social-badge:hover {
       background: var(--color-primary-soft);
       color: var(--color-primary-dark);
-      transform: translateY(-1px);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
     }
 
     .notice-card {
       margin-top: 20px;
       padding: 20px 24px;
       background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: var(--radius-md);
+      border-color: #bbf7d0;
       display: flex;
       gap: 14px;
       align-items: flex-start;
     }
 
-    .notice-icon { color: #16a34a; flex-shrink: 0; margin-top: 2px; }
     .notice-text strong { display: block; font-size: 0.92rem; color: #166534; margin-bottom: 2px; }
     .notice-text p { margin: 0; font-size: 0.85rem; color: #15803d; line-height: 1.4; }
 
-    .newsletter-card { margin-top: 20px; padding: 24px; }
-    .newsletter-card-header { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 16px; }
+    .newsletter-card-header { display: flex; gap: 14px; align-items: flex-start; }
     .newsletter-card-header strong { display: block; font-size: 0.95rem; color: var(--color-text); margin-bottom: 2px; }
     .newsletter-card-header p { margin: 0; font-size: 0.85rem; color: var(--color-text-secondary); line-height: 1.4; }
+
+    /* Bentangan penuh di bawah grid: teks di kiri, form email+tombol di kanan
+       (lega, bukan ditumpuk vertikal sempit seperti saat masih di kolom kiri). */
+    .newsletter-card-full {
+      margin-top: 28px;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+    .newsletter-card-full .newsletter-card-header { flex: 1; min-width: 240px; }
+    .newsletter-card-full .newsletter-card-form { flex: 1; min-width: 280px; max-width: 460px; }
+
+    @media (max-width: 760px) {
+      .newsletter-card-full { flex-direction: column; align-items: stretch; gap: 18px; padding: 24px; }
+      .newsletter-card-full .newsletter-card-form { max-width: none; }
+    }
 
     /* Right Column Styling */
     .form-card {
       padding: 36px;
-      border-radius: var(--radius-lg);
-      background: #fff;
-      border: 1px solid var(--color-border);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
     }
 
     .form-card-header { margin-bottom: 28px; }
@@ -407,7 +495,7 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
     }
     .form-control:focus {
       border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(0, 147, 59, 0.12);
+      box-shadow: 0 0 0 3px var(--color-primary-soft);
     }
     .form-control.is-invalid {
       border-color: var(--color-danger);
@@ -459,7 +547,6 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
       align-items: center;
     }
     .success-icon-wrap {
-      color: #16a34a;
       margin-bottom: 16px;
       animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -484,7 +571,7 @@ import { NewsletterFormComponent } from '../../../../shared/newsletter-form.comp
     }
   `],
 })
-export class ContactPublicIndexPage {
+export class ContactPublicIndexPage implements AfterViewInit, OnDestroy {
   private fb = inject(FormBuilder);
   repo = inject(ContactRepository);
   private toast = inject(ToastService);
@@ -493,6 +580,16 @@ export class ContactPublicIndexPage {
   /** Default sama dengan migration 0041_contact_email_setting — dipakai
    *  selagi menunggu GET /public/settings/contact-email. */
   contactEmail = signal('fsldkindonesia29@gmail.com');
+
+  /** Default digit internasional (tanpa "+") sama dengan nomor yang sebelumnya
+   *  hardcoded — dipakai selagi menunggu GET /public/settings/contact-whatsapp. */
+  whatsappNumber = signal('6285111332861');
+  whatsappDisplay = computed(() => {
+    const digits = this.whatsappNumber();
+    if (!digits) return '';
+    const m = digits.match(/^(\d{2})(\d{3})(\d{4})(\d+)$/);
+    return m ? `+${m[1]} ${m[2]}-${m[3]}-${m[4]}` : `+${digits}`;
+  });
 
   submittedSuccess = signal<boolean>(false);
   rateLimited = signal<boolean>(false);
@@ -505,10 +602,42 @@ export class ContactPublicIndexPage {
     message: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
   });
 
+  @ViewChildren('msgLine') private msgLineRefs!: QueryList<ElementRef<SVGPathElement>>;
+
   constructor() {
     this.settingApi.getPublicContactEmail().subscribe({
       next: (res) => { if (res.email) this.contactEmail.set(res.email); },
       error: () => {},
+    });
+    this.settingApi.getPublicContactWhatsapp().subscribe({
+      next: (res) => { if (res.whatsappNumber) this.whatsappNumber.set(res.whatsappNumber); },
+      error: () => {},
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.animateMsgLines();
+  }
+
+  ngOnDestroy(): void {}
+
+  /** Efek "jaringan digambar sendiri" — identik animateOrgLines() di Struktur:
+   *  stroke di-dash sepanjang total panjang path (getTotalLength()) lalu
+   *  dashoffset dianimasikan lewat Web Animations API, digilir per-garis
+   *  mengikuti urutan hierarki (amplop->hub daerah dulu, baru hub->LDK).
+   *  Menghormati prefers-reduced-motion — langsung tampil penuh tanpa animasi. */
+  private animateMsgLines(): void {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.msgLineRefs?.forEach((ref, i) => {
+      const path = ref.nativeElement;
+      const length = path.getTotalLength();
+      path.style.strokeDasharray = `${length}`;
+      path.style.strokeDashoffset = `${length}`;
+      if (reduced) { path.style.strokeDashoffset = '0'; return; }
+      path.animate(
+        [{ strokeDashoffset: length }, { strokeDashoffset: 0 }],
+        { duration: 600, delay: 700 + i * 130, easing: 'ease-out', fill: 'forwards' },
+      );
     });
   }
 

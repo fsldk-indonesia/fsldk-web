@@ -950,21 +950,29 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     return this.router.url.split('?')[0] === '/';
   }
 
+  /** Cocok juga untuk sub-rute (mis. /tentang/galeri/7 halaman detail satu
+   *  galeri) — dulu cuma exact match ke item.href, jadi trigger dropdown
+   *  tidak ikut menyala solid begitu masuk ke halaman detail turunannya
+   *  walau item "Galeri" di dalam panel-nya sendiri sudah aktif (routerLinkActive
+   *  default non-exact). path.startsWith(href + '/') menutup celah itu tanpa
+   *  salah tangkap prefix lain (mis. /tentang/galeri-x tidak akan cocok). */
+  private matchesActivePrefix(path: string, items: { href: string }[]): boolean {
+    return items.some((item) => path === item.href || path.startsWith(item.href + '/'));
+  }
+
   isTentangKamiActive(): boolean {
-    const path = this.router.url.split('?')[0];
-    return this.tentangKamiItems.some((item) => path === item.href);
+    return this.matchesActivePrefix(this.router.url.split('?')[0], this.tentangKamiItems);
   }
 
   /** Trigger dropdown ikut tersorot solid saat halaman aktif adalah salah
-   *  satu opsi di dropdown-nya, bukan cuma opsi-nya sendiri di dalam panel. */
+   *  satu opsi di dropdown-nya (termasuk sub-rute detailnya), bukan cuma
+   *  opsi-nya sendiri di dalam panel. */
   isLainnyaActive(): boolean {
-    const path = this.router.url.split('?')[0];
-    return this.lainnyaItems.some((item) => path === item.href);
+    return this.matchesActivePrefix(this.router.url.split('?')[0], this.lainnyaItems);
   }
 
   isMoreActive(): boolean {
-    const path = this.router.url.split('?')[0];
-    return this.moreItems.some((item) => path === item.href);
+    return this.matchesActivePrefix(this.router.url.split('?')[0], this.moreItems);
   }
 
   initials(): string {

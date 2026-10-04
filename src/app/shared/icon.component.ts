@@ -122,6 +122,9 @@ const ICONS: Record<string, string> = {
   'external-link': 'fas fa-external-link-alt',
   'chevron-left': 'fas fa-chevron-left',
   'chevron-right': 'fas fa-chevron-right',
+  // Tombol lompat ke halaman pertama/terakhir (app-pagination).
+  'chevrons-left': 'fas fa-angle-double-left',
+  'chevrons-right': 'fas fa-angle-double-right',
   'arrow-up': 'fas fa-arrow-up',
   'arrow-down': 'fas fa-arrow-down',
   // Widget Hadis & Al-Qur'an + kutipan motivasi harian (dashboard CMS Utama).
@@ -145,6 +148,9 @@ const ICONS: Record<string, string> = {
   'circle-dot': 'fas fa-circle-dot',
   'square-check': 'fas fa-square-check',
   sliders: 'fas fa-sliders',
+  // Tombol "Filter" (app-search-filter-sort) — sebelumnya dipakai tanpa
+  // pernah dipetakan (jatuh ke fallback "?"), baru ditambahkan di sini.
+  filter: 'fas fa-filter',
   // Aksi baris index Campaign (Jeda/Arsipkan) — dikonversi dari button teks
   // ke icon-action, lihat kantong-amal.admin-campaign.page.html.
   pause: 'fas fa-pause',

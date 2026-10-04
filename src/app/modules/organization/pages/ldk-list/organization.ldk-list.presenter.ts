@@ -18,6 +18,7 @@ export interface LdkFormValue {
   cityName: string;
   contactEmail: string;
   contactPhone: string;
+  websiteURL: string;
   parentOrganizationID: number | null;
   /** Diedit lewat modul lain (belum ada UI upload di form ini) — cuma
    *  diteruskan apa adanya saat update supaya PUT tidak diam-diam menghapus
@@ -92,6 +93,7 @@ export class OrganizationLdkListPresenter extends BasePresenter<OrganizationLdkL
         cityName: form.cityName,
         contactEmail: form.contactEmail,
         contactPhone: form.contactPhone,
+        websiteURL: form.websiteURL,
         photoURL: form.photoURL,
       };
       this.orgRepo.update(editId, body).subscribe({
@@ -108,6 +110,7 @@ export class OrganizationLdkListPresenter extends BasePresenter<OrganizationLdkL
       cityName: form.cityName,
       contactEmail: form.contactEmail,
       contactPhone: form.contactPhone,
+      websiteURL: form.websiteURL,
     };
     if (form.parentOrganizationID) body['parentOrganizationID'] = form.parentOrganizationID;
     this.orgRepo.create(body).subscribe({

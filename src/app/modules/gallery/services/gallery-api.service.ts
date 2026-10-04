@@ -4,6 +4,7 @@ import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
 import {
   Gallery,
+  GalleryFilterOptions,
   GalleryListItem,
   GalleryPhoto,
   PhotoPage,
@@ -14,14 +15,35 @@ import {
   ReorderPhotosReq,
 } from '../entities/gallery';
 
+/** Query params opsional untuk listPublic — search (judul/tema kegiatan),
+ *  eventName & year (filter modal "Tahun Kegiatan"/"Nama Kegiatan"), keduanya
+ *  multi-select (array) — ApiService.toParams() mengirimnya sebagai query key
+ *  berulang (?eventName=A&eventName=B), diterima backend via Gin QueryArray.
+ *  Semua opsional supaya call site lama (tanpa filter) tetap kompatibel. */
+export interface GalleryPublicListParams {
+  search?: string;
+  eventName?: string[];
+  year?: number[];
+}
+
 /** Raw HTTP calls for the gallery module — public & CMS. */
 @Injectable({ providedIn: 'root' })
 export class GalleryApiService {
   private api = inject(ApiService);
 
   // Public Endpoints
-  listPublic(page = 1, limit = 9, sort = 'newest'): Observable<{ data: GalleryListItem[]; page: number; limit: number; total: number; totalPages: number }> {
-    return this.api.get('/public/galleries', { page, limit, sort });
+  listPublic(page = 1, limit = 9, sort = 'newest', params: GalleryPublicListParams = {}): Observable<{ data: GalleryListItem[]; page: number; limit: number; total: number; totalPages: number }> {
+    const query: Record<string, unknown> = { page, limit, sort };
+    if (params.search) query['search'] = params.search;
+    if (params.eventName?.length) query['eventName'] = params.eventName;
+    if (params.year?.length) query['year'] = params.year;
+    return this.api.get('/public/galleries', query);
+  }
+
+  /** Nilai distinct tahun & nama kegiatan yang ada di data — mengisi dropdown
+   *  filter publik (lihat GalleryFilterOptions). */
+  getPublicFilterOptions(): Observable<GalleryFilterOptions> {
+    return this.api.get('/public/galleries/filter-options');
   }
 
   getPublic(id: number): Observable<Gallery> {

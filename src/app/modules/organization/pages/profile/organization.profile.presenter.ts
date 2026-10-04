@@ -12,6 +12,7 @@ export interface OrganizationProfileFormValue {
   cityName: string;
   contactEmail: string;
   contactPhone: string;
+  websiteURL: string;
   photoURL: string;
 }
 

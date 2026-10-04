@@ -10,6 +10,7 @@ export interface Organization {
   cityName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  websiteURL?: string;
   /** Foto/logo organisasi — kosong berarti tampilkan avatar inisial huruf di FE. */
   photoURL?: string;
   isActive: boolean;

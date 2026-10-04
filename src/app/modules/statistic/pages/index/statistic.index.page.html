@@ -1,96 +1,297 @@
-<section class="section">
-  <div class="container">
-    <div class="page-header">
-      <span class="eyebrow">Tentang Kami</span>
-      <h1>Statistik Jaringan</h1>
-      <p class="page-subtitle">Data agregat jaringan LDK, Puskomda, dan Puskomnas se-Indonesia — terbuka untuk publik.</p>
+<app-page-hero
+  badge="Statistik Jaringan · FSLDK Indonesia"
+  title="Peta Jaringan"
+  titleAccent="Dakwah Kampus Nusantara"
+  subtitle="Data agregat LDK, Puskomda, dan Puskomnas se-Indonesia — terbuka untuk publik, selalu diperbarui."
+  quoteSource="quran">
+  <!-- Siluet hero: peta jaringan orbital (hub Puskomnas -> 3 simpul Puskomda
+       -> tiap Puskomda bercabang ke 2 simpul LDK). Primitif visualnya
+       (.network-node/.network-line/.network-ping) sama persis dipakai ulang
+       dari Beranda/Struktur/Galeri — lihat komentar lengkap di .ts. -->
+  <div heroVisual class="hero-network-visual">
+    <svg aria-hidden="true" viewBox="0 0 560 320" class="hero-network-svg">
+      <g class="stat-hub-group">
+        <circle class="network-ping" cx="280" cy="170" r="30" />
+        <circle class="network-node" cx="280" cy="170" r="30" />
+      </g>
+
+      <g class="stat-orbit-group o1">
+        <path class="network-line thick" d="M280,170 L280,75" />
+        <circle class="network-ping gold" cx="280" cy="75" r="15" style="animation-delay:.15s" />
+        <circle class="network-node gold" cx="280" cy="75" r="15" />
+      </g>
+      <g class="stat-orbit-group o2">
+        <path class="network-line thick" d="M280,170 L362,217" />
+        <circle class="network-ping gold" cx="362" cy="217" r="15" style="animation-delay:.4s" />
+        <circle class="network-node gold" cx="362" cy="217" r="15" />
+      </g>
+      <g class="stat-orbit-group o3">
+        <path class="network-line thick" d="M280,170 L198,217" />
+        <circle class="network-ping gold" cx="198" cy="217" r="15" style="animation-delay:.65s" />
+        <circle class="network-node gold" cx="198" cy="217" r="15" />
+      </g>
+
+      <g class="stat-leaf-group">
+        <path class="network-line" d="M280,75 L235,38" />
+        <circle class="network-node ember" cx="235" cy="38" r="7" />
+        <path class="network-line" d="M280,75 L325,38" />
+        <circle class="network-node ember" cx="325" cy="38" r="7" />
+
+        <path class="network-line" d="M362,217 L415,195" />
+        <circle class="network-node ember" cx="415" cy="195" r="7" />
+        <path class="network-line" d="M362,217 L402,255" />
+        <circle class="network-node ember" cx="402" cy="255" r="7" />
+
+        <path class="network-line" d="M198,217 L145,195" />
+        <circle class="network-node ember" cx="145" cy="195" r="7" />
+        <path class="network-line" d="M198,217 L158,255" />
+        <circle class="network-node ember" cx="158" cy="255" r="7" />
+      </g>
+    </svg>
+  </div>
+</app-page-hero>
+
+<section class="section section-transition section-blob-drift">
+  <div class="container pb-xl">
+    <div class="tab-bar-wrap reveal">
+      <div class="tab-bar">
+        @for (t of tabs; track t.id) {
+          <button type="button" class="tab-btn" [class.active]="activeTab() === t.id" (click)="switchTab(t.id)">
+            <app-icon [name]="t.icon" [size]="14" /> {{ t.label }}
+          </button>
+        }
+      </div>
     </div>
 
-    <div class="tab-bar">
-      @for (t of tabs; track t.id) {
-        <button type="button" class="tab-btn" [class.active]="activeTab() === t.id" (click)="switchTab(t.id)">{{ t.label }}</button>
-      }
-    </div>
-
-    @if (activeTab() === 'ringkasan') {
+    @if (activeTab() === 'statistik') {
       @if (statsLoading()) {
         <div class="stat-grid">
           @for (i of [1,2,3,4]; track i) {
-            <div class="stat-card"><span class="skel skel-line" style="width:60%;margin:0 auto"></span><span class="skel skel-title" style="width:80%;margin:10px auto 0"></span></div>
+            <div class="stat-card">
+              <span class="skel" style="width:52px;height:52px;border-radius:50%"></span>
+              <span class="skel skel-title" style="width:50%;margin-top:4px"></span>
+              <span class="skel skel-line" style="width:70%"></span>
+            </div>
           }
         </div>
       } @else {
         @if (stats(); as s) {
           <div class="stat-grid">
-            <div class="stat-card"><b>{{ s.totalPuskomnas }}</b><span>Puskomnas</span></div>
-            <div class="stat-card"><b>{{ s.totalPuskomda }}</b><span>Puskomda</span></div>
-            <div class="stat-card"><b>{{ s.totalLDK }}</b><span>LDK Aktif</span></div>
-            <div class="stat-card"><b>{{ s.totalActiveKader }}</b><span>Kader Aktif</span></div>
+            <div class="stat-card">
+              <span class="icon-badge md icon-badge-solid"><app-icon name="landmark" [size]="20" /></span>
+              <b>{{ s.totalPuskomnas }}</b>
+              <span>Puskomnas</span>
+            </div>
+            <div class="stat-card">
+              <span class="icon-badge md icon-badge-gold"><app-icon name="building" [size]="20" /></span>
+              <b>{{ s.totalPuskomda }}</b>
+              <span>Puskomda</span>
+            </div>
+            <div class="stat-card">
+              <span class="icon-badge md icon-badge-soft"><app-icon name="sitemap" [size]="20" /></span>
+              <b>{{ s.totalLDK }}</b>
+              <span>LDK Aktif</span>
+            </div>
+            <div class="stat-card">
+              <span class="icon-badge md icon-badge-ember"><app-icon name="users" [size]="20" /></span>
+              <b>{{ s.totalActiveKader }}</b>
+              <span>Kader Aktif</span>
+            </div>
           </div>
+
+          @if (insightStats(); as insight) {
+            <div class="insight-row">
+              <div class="insight-card">
+                <span class="icon-badge sm icon-badge-info"><app-icon name="map-pin" [size]="15" /></span>
+                <div>
+                  <b>{{ insight.provinceReach }}</b>
+                  <span>Provinsi Terjangkau</span>
+                </div>
+              </div>
+              <div class="insight-card">
+                <span class="icon-badge sm icon-badge-soft"><app-icon name="sitemap" [size]="15" /></span>
+                <div>
+                  <b>{{ insight.avgLdkPerPuskomda }}</b>
+                  <span>Rata-rata LDK / Puskomda</span>
+                </div>
+              </div>
+              <div class="insight-card">
+                <span class="icon-badge sm icon-badge-ember"><app-icon name="users" [size]="15" /></span>
+                <div>
+                  <b>{{ insight.avgKaderPerLdk }}</b>
+                  <span>Rata-rata Kader / LDK</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (s.byProvince.length > 0 || s.byLevel.length > 0) {
+            <div class="stats-charts-row">
+              @if (s.byProvince.length > 0) {
+                <div class="chart-card province">
+                  <h3>Sebaran LDK per Provinsi</h3>
+                  <div class="chart-wrap province"><canvas id="provinceChart"></canvas></div>
+                </div>
+              }
+              @if (s.byLevel.length > 0) {
+                <div class="chart-card level">
+                  <h3>Distribusi Level LDK</h3>
+                  <div class="chart-wrap level"><canvas id="levelChart"></canvas></div>
+                </div>
+              }
+            </div>
+          }
         } @else {
           <p class="empty-note">Data statistik belum tersedia saat ini.</p>
         }
       }
     }
 
-    @if (activeTab() === 'provinsi') {
-      @if (stats() && stats()!.byProvince.length > 0) {
-        <div class="chart-card">
-          <h3>Sebaran LDK per Provinsi</h3>
-          <div class="chart-wrap province"><canvas id="provinceChart"></canvas></div>
-        </div>
-      } @else if (!statsLoading()) {
-        <p class="empty-note">Belum ada data sebaran provinsi.</p>
-      }
-    }
-
-    @if (activeTab() === 'level') {
-      @if (stats() && stats()!.byLevel.length > 0) {
-        <div class="chart-card">
-          <h3>Distribusi Level LDK</h3>
-          <div class="chart-wrap level"><canvas id="levelChart"></canvas></div>
-        </div>
-      } @else if (!statsLoading()) {
-        <p class="empty-note">Belum ada data level LDK yang dipublikasikan.</p>
-      }
-    }
-
     @if (activeTab() === 'direktori') {
       <div class="directory-toolbar">
-        <input class="form-control" style="max-width:240px" [(ngModel)]="directorySearch" (keyup.enter)="applyDirectoryFilter()" placeholder="Cari nama organisasi…">
-        <app-select style="max-width:180px" [(ngModel)]="directoryType" [options]="typeOptions" (ngModelChange)="applyDirectoryFilter()" />
-        <app-select style="max-width:200px" [(ngModel)]="directoryProvince" [options]="provinceOptions()" (ngModelChange)="applyDirectoryFilter()" />
-        <button class="btn btn-outline btn-sm" (click)="applyDirectoryFilter()">Cari</button>
+        <app-search-filter-sort
+          searchPlaceholder="Cari nama unit..."
+          [searchValue]="directorySearch()"
+          [filterFields]="directoryFilterFields()"
+          [filterValues]="directoryFilterValues()"
+          filterTitle="Filter Direktori"
+          filterSubtitle="Saring unit berdasarkan tipe dan provinsi."
+          (searchChange)="onDirectorySearch($event)"
+          (filterApply)="onDirectoryFilterApply($event)"
+        />
       </div>
 
-      @if (directoryLoading()) {
-        <div class="directory-grid">
-          @for (i of [1,2,3,4,5,6]; track i) {
-            <div class="org-card">
-              <span class="skel" style="width:64px;height:64px;border-radius:50%;margin:0 auto 12px;display:block"></span>
-              <span class="skel skel-line" style="width:70%;margin:0 auto"></span>
+      @if (directoryTruncated()) {
+        <p class="directory-truncated-note">
+          <app-icon name="alert-triangle" [size]="13" />
+          Menampilkan {{ directory().length }} dari {{ directoryCount() }} unit — persempit dengan pencarian atau filter untuk melihat sisanya.
+        </p>
+      }
+
+      @if (showDirectorySkeleton()) {
+        <div class="org-hub-wrap">
+          <span class="skel" style="width:84px;height:84px;border-radius:50%;display:block"></span>
+        </div>
+        <div class="org-map-groups">
+          @for (i of [1,2]; track i) {
+            <div class="org-group">
+              <div class="org-group-head"><span class="skel skel-line" style="width:160px"></span></div>
+              <div class="org-group-children">
+                @for (j of [1,2,3]; track j) {
+                  <div class="org-card">
+                    <span class="skel" style="width:52px;height:52px;border-radius:50%;margin:0 auto 10px;display:block"></span>
+                    <span class="skel skel-line" style="width:70%;margin:0 auto"></span>
+                  </div>
+                }
+              </div>
             </div>
           }
         </div>
       } @else {
-        <div class="directory-grid">
-          @for (o of directory(); track o.organizationID) {
-            <div class="org-card">
-              @if (o.photoURL) {
-                <img class="org-logo" [src]="o.photoURL" [alt]="o.organizationName">
-              } @else {
-                <span class="org-logo-fallback"><app-icon name="building" [size]="26" /></span>
-              }
-              <h4>{{ o.organizationName }}</h4>
-              <p class="org-meta">{{ typeLabel(o.organizationTypeCode) }}@if (o.provinceName) { · {{ o.provinceName }} }</p>
+        <!-- Peta: hub Puskomnas bercahaya + garis kurva ke tiap grup Puskomda
+             (dihitung dari posisi DOM asli, lihat recomputeConnectors() di
+             .ts) — bukan tree indentasi lagi. Pencarian/filter berikutnya
+             cukup meredupkan (.is-refetching) peta yang sudah ada, TIDAK
+             diganti skeleton lagi, supaya terasa smooth bukan glitch. -->
+        <div class="org-map" #mapWrap [class.is-refetching]="directoryRefetching()">
+          @if (directoryRefetching()) { <div class="org-map-loading-bar" aria-hidden="true"></div> }
+
+          <svg class="org-map-lines" [class.ready]="linesReady()" [attr.width]="mapSize().w" [attr.height]="mapSize().h" aria-hidden="true">
+            @for (d of connectorPaths(); track $index) {
+              <path class="network-line" [attr.d]="d" />
+            }
+          </svg>
+
+          @if (rootPuskomnas(); as root) {
+            <div class="org-hub-wrap">
+              <div class="org-hub-node" #hubNode>
+                <svg viewBox="0 0 84 84" class="org-hub-svg" aria-hidden="true">
+                  <circle class="network-ping" cx="42" cy="42" r="28" />
+                  <circle class="network-node" cx="42" cy="42" r="28" />
+                </svg>
+                <span class="org-hub-icon"><app-icon name="landmark" [size]="24" /></span>
+              </div>
+              <div class="org-hub-body">
+                <h4>{{ root.organizationName }}</h4>
+                <span class="org-hub-caption">Pusat Komunikasi Nasional</span>
+              </div>
             </div>
-          } @empty {
-            <p class="empty-note" style="grid-column:1/-1">Tidak ada organisasi ditemukan.</p>
           }
+
+          <div class="org-map-groups">
+            @for (g of directoryTree(); track g.puskomdaID ?? g.puskomdaName; let i = $index) {
+              <div class="org-group stagger-in" [style.--stagger-i]="i">
+                <div class="org-group-head">
+                  <span class="org-group-node" #groupNode>
+                    <svg viewBox="0 0 16 16" aria-hidden="true">
+                      <circle class="network-ping gold" cx="8" cy="8" r="5" />
+                      <circle class="network-node gold" cx="8" cy="8" r="5" />
+                    </svg>
+                  </span>
+                  <span class="icon-badge sm icon-badge-gold"><app-icon name="building" [size]="15" /></span>
+                  <div class="org-group-title">
+                    @if (g.puskomda; as p) {
+                      <h4>{{ p.organizationName }}</h4>
+                      <span class="org-group-caption">
+                        Pusat Komunikasi Daerah
+                        @if (p.provinceName) { · {{ p.provinceName | titlecase }} }
+                      </span>
+                    } @else {
+                      <h4>{{ g.puskomdaName }}</h4>
+                      <span class="org-group-caption org-group-unloaded">Pusat Komunikasi Daerah · di luar hasil filter</span>
+                    }
+                  </div>
+                  <span class="org-group-count">{{ g.ldks.length }} Unit</span>
+                </div>
+
+                <div class="org-group-children">
+                  @for (o of g.ldks; track o.organizationID) {
+                    <div class="org-card">
+                      @if (o.photoURL) {
+                        <img class="org-logo" [src]="o.photoURL" [alt]="o.organizationName">
+                      } @else {
+                        <span class="org-logo-fallback icon-badge-soft"><app-icon name="building" [size]="20" /></span>
+                      }
+                      <h4>{{ o.organizationName }}</h4>
+                      @if (o.cityName || o.provinceName) {
+                        <p class="org-meta">
+                          <app-icon name="map-pin" [size]="11" />
+                          <span>{{ o.cityName | titlecase }}@if (o.cityName && o.provinceName) {, } {{ o.provinceName | titlecase }}</span>
+                        </p>
+                      }
+
+                      @if (o.websiteURL || o.contactEmail || o.contactPhone) {
+                        <div class="org-card-links">
+                          @if (o.websiteURL) {
+                            <a [href]="o.websiteURL" target="_blank" rel="noopener noreferrer" class="org-card-link">
+                              <app-icon name="external-link" [size]="11" /> <span>Website</span>
+                            </a>
+                          }
+                          @if (o.contactEmail) {
+                            <a [href]="'mailto:' + o.contactEmail" class="org-card-link">
+                              <app-icon name="mail" [size]="11" /> <span>{{ o.contactEmail }}</span>
+                            </a>
+                          }
+                          @if (o.contactPhone) {
+                            <a [href]="waLink(o.contactPhone)" target="_blank" rel="noopener noreferrer" class="org-card-link">
+                              <app-icon name="whatsapp" [size]="11" /> <span>{{ o.contactPhone }}</span>
+                            </a>
+                          }
+                        </div>
+                      }
+                    </div>
+                  } @empty {
+                    <p class="org-group-empty">Belum ada unit di grup ini sesuai filter.</p>
+                  }
+                </div>
+              </div>
+            } @empty {
+              @if (!rootPuskomnas()) {
+                <p class="empty-note">Tidak ada unit ditemukan.</p>
+              }
+            }
+          </div>
         </div>
-        @if (directory().length > 0) {
-          <app-pagination [page]="directoryPage()" [limit]="directoryLimit" [count]="directoryCount()" (pageChange)="goDirectoryPage($event)" />
-        }
       }
     }
   </div>

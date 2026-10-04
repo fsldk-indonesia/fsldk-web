@@ -23,9 +23,18 @@ export class ApiService {
     let params = new HttpParams();
     if (query) {
       for (const [k, v] of Object.entries(query)) {
-        if (v !== undefined && v !== null && v !== '') {
-          params = params.set(k, String(v));
+        if (v === undefined || v === null || v === '') continue;
+        // Array value -> repeated query key (?k=a&k=b&k=c), NOT comma-joined
+        // — some backends (mis. filter multi-select Galeri) parse ini via
+        // Gin's c.QueryArray(), yang aman walau salah satu nilainya sendiri
+        // mengandung koma (comma-join akan salah memecahnya).
+        if (Array.isArray(v)) {
+          for (const item of v) {
+            if (item !== undefined && item !== null && item !== '') params = params.append(k, String(item));
+          }
+          continue;
         }
+        params = params.set(k, String(v));
       }
     }
     return params;
