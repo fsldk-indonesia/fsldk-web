@@ -50,7 +50,7 @@
       </div>
     }
   </div>
-  <app-pagination [page]="page()" [limit]="limit" [count]="filteredForms().length" (pageChange)="goPage($event)" />
+  <app-pagination variant="bar" [page]="page()" [limit]="limit" [count]="filteredForms().length" (pageChange)="goPage($event)" />
 }
 
 <div class="modal-backdrop" [class.open]="showForm()" appModalBackdrop (backdropClose)="close()">
