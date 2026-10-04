@@ -42,7 +42,7 @@ import { IconComponent } from '../shared/icon.component';
       position: relative; overflow: hidden;
       min-height: 100dvh;
       display: flex; align-items: center; justify-content: center;
-      padding: 56px 24px;
+      padding: 28px 24px;
       background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
     }
     .auth-wash::after {
@@ -59,9 +59,9 @@ import { IconComponent } from '../shared/icon.component';
 
     .auth-card {
       position: relative; z-index: 1; box-sizing: border-box;
-      width: 100%; max-width: 420px;
+      width: 100%; max-width: 400px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      box-shadow: 0 24px 50px rgba(0,0,0,.35); padding: 36px;
+      box-shadow: 0 24px 50px rgba(0,0,0,.35); padding: 26px 28px;
     }
 
     /* Satu-satunya jalan keluar dari halaman auth sekarang (tidak ada
@@ -70,15 +70,15 @@ import { IconComponent } from '../shared/icon.component';
        reset-password/verifikasi-email) tanpa diulang manual. */
     .auth-back-home {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--color-border);
-      font-size: .86rem; font-weight: 700; color: var(--color-text-secondary);
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border);
+      font-size: .82rem; font-weight: 700; color: var(--color-text-secondary);
       text-decoration: none;
     }
     .auth-back-home:hover { color: var(--color-primary-dark); text-decoration: none; }
 
     @media (max-width: 480px) {
-      .auth-wash { padding: 40px 16px; }
-      .auth-card { padding: 28px 24px; }
+      .auth-wash { padding: 20px 16px; }
+      .auth-card { padding: 22px 20px; }
     }
   `],
 })

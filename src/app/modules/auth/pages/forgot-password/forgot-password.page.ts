@@ -11,9 +11,12 @@ import { ForgotPasswordView } from './forgot-password.view';
   imports: [FormsModule, RouterLink],
   providers: [ForgotPasswordPresenter],
   styles: [`
-    h2 { margin-bottom: 4px; } .subtitle { color: var(--color-text-secondary); margin: 0 0 24px; }
-    .notice { background: var(--color-primary-soft); color: var(--color-primary-dark); padding: 16px; border-radius: 12px; font-size: .9rem; }
-    .foot { text-align: center; margin-top: 24px; font-size: .9rem; }
+    h2 { margin: 0 0 3px; font-size: 1.3rem; } .subtitle { color: var(--color-text-secondary); margin: 0 0 14px; font-size: .88rem; }
+    .form-group { margin-bottom: 12px; }
+    .form-control { padding: 9px 12px; }
+    .btn-block { padding: 10px 22px; }
+    .notice { background: var(--color-primary-soft); color: var(--color-primary-dark); padding: 14px; border-radius: 12px; font-size: .88rem; }
+    .foot { text-align: center; margin-top: 14px; font-size: .86rem; }
   `],
 })
 export class ForgotPasswordPage implements ForgotPasswordView {
