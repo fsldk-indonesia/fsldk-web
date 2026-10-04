@@ -5,7 +5,6 @@ import { DatePipe } from '@angular/common';
 import { GalleryRepository } from '../../repositories/gallery.repository';
 import { GalleryLightboxComponent } from '../../components/gallery-lightbox/gallery-lightbox.component';
 import { IconComponent } from '../../../../shared/icon.component';
-import { PaginationComponent } from '../../../../shared/pagination.component';
 import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/image-url';
 
 /**
@@ -14,7 +13,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
 @Component({
   selector: 'app-gallery-public-detail',
   standalone: true,
-  imports: [RouterLink, DatePipe, GalleryLightboxComponent, IconComponent, PaginationComponent],
+  imports: [RouterLink, DatePipe, GalleryLightboxComponent, IconComponent],
   template: `
     @if (repo.loading()) {
       <div class="empty-state py-xl">
@@ -175,10 +174,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
                     <p class="text-muted mt-xs">Belum ada foto tambahan untuk galeri ini.</p>
                   </div>
                 } @else {
-                  <div class="photo-grid-wrap mt-md" [class.switching]="isPageChanging()">
-                    @if (isPageChanging()) {
-                      <div class="grid-loading-bar"></div>
-                    }
+                  <div class="photo-grid-wrap mt-md">
                     <div class="photo-grid">
                       @for (photo of repo.photoPage()!.data; track photo.photoID; let idx = $index) {
                         <button
@@ -199,19 +195,6 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
                       }
                     </div>
                   </div>
-
-                  <!-- Photos Pagination -->
-                  @if (repo.photoPage() && repo.photoPage()!.total > photosLimit) {
-                    <div class="pagination-wrapper mt-lg">
-                      <app-pagination
-                        [page]="repo.photoPage()!.page"
-                        [count]="repo.photoPage()!.total"
-                        [limit]="photosLimit"
-                        itemLabel="foto"
-                        (pageChange)="onPhotoPageChange($event)"
-                      />
-                    </div>
-                  }
                 }
               </section>
 
@@ -596,29 +579,7 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
        "featured" khusus — itu yang dulu bikin foto pertama dipotong paksa
        jadi panoramic (dilaporkan jelek, apalagi galeri isi sedikit/foto
        potret seperti headshot) — pelajaran itu tetap dipakai di sini. ---------- */
-    .photo-grid-wrap {
-      position: relative;
-      transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .photo-grid-wrap.switching { opacity: 0.5; pointer-events: none; }
-
-    .grid-loading-bar {
-      position: absolute;
-      top: -6px;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--color-primary, #0d5c3b), #10b981, var(--color-primary, #0d5c3b));
-      background-size: 200% 100%;
-      animation: shimmer 1s infinite linear;
-      border-radius: 999px;
-      z-index: 10;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
+    .photo-grid-wrap { position: relative; }
 
     .photo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 
@@ -642,11 +603,6 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
       color: #fff; font-size: 0.72rem; font-weight: 500; line-height: 1.3; text-align: left;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
       text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); pointer-events: none;
-    }
-
-    .pagination-wrapper {
-      display: flex;
-      justify-content: center;
     }
 
     @media (max-width: 992px) {
@@ -673,43 +629,22 @@ export class GalleryPublicDetailPage implements OnInit {
   private sanitizer = inject(DomSanitizer);
 
   galleryId = 0;
-  photosLimit = 7;
+  /** Tidak ada pagination di grid foto — "tampilkan semuanya" baik di mobile
+   *  maupun desktop, jadi limit dipasang besar supaya satu fetch sudah
+   *  memulangkan seluruh foto galeri (backend tidak membatasi limit maksimum,
+   *  lihat gallery_service_impl.go ListPhotosPublic). */
+  photosLimit = 500;
 
   lightboxOpen = signal<boolean>(false);
   selectedPhotoIndex = signal<number>(0);
-
-  // In-memory cache for visited pages to provide instant 0ms transitions
-  photoCache = new Map<number, any>();
-  isPageChanging = signal<boolean>(false);
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.galleryId = Number(idParam);
       this.repo.loadPublicDetail(this.galleryId);
-      this.fetchPhotos(1);
+      this.repo.loadPhotosPublic(this.galleryId, 1, this.photosLimit);
     }
-  }
-
-  fetchPhotos(page: number): void {
-    if (this.photoCache.has(page)) {
-      this.repo.photoPage.set(this.photoCache.get(page)!);
-      return;
-    }
-
-    const isFirstLoad = !this.repo.photoPage();
-    if (!isFirstLoad) {
-      this.isPageChanging.set(true);
-    }
-
-    this.repo.loadPhotosPublic(this.galleryId, page, this.photosLimit, (result) => {
-      this.photoCache.set(page, result);
-      this.isPageChanging.set(false);
-    });
-  }
-
-  onPhotoPageChange(page: number): void {
-    this.fetchPhotos(page);
   }
 
   openLightbox(index: number): void {
