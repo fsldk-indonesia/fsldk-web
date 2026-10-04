@@ -1,10 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { IconComponent } from '../shared/icon.component';
-
-/** Jarak maksimum (px) tekstur titik bergeser mengikuti mouse — kecil
- *  supaya terasa halus (parallax), bukan melompat-lompat. */
-const TEXTURE_PARALLAX_RANGE = 20;
 
 /**
  * Bingkai halaman autentikasi — shell SENDIRI di root routes (BUKAN lagi
@@ -21,19 +17,19 @@ const TEXTURE_PARALLAX_RANGE = 20;
  * ke Beranda" di dalam kartu itu sendiri (satu-satunya jalan keluar karena
  * tidak ada navbar lagi).
  *
- * Dua sentuhan animasi: kartu bergoyang pelan terus-menerus (idle sway,
- * transform saja — tidak memicu layout thrash), dan tekstur titik di
- * background bergeser mengikuti posisi mouse (parallax halus, pakai CSS
- * transition supaya pergerakannya "mengekor" lembut alih-alih melompat
- * mengikuti tiap event mousemove secara instan).
+ * Tekstur titik di background PERSIS sama dengan .hero-texture asli di
+ * detail Galeri/Berita (statis, dimask di pojok kanan-atas) — mengikuti
+ * mouse, drift bergeser, dan ripple mengembang-memudar semua sempat
+ * dicoba lalu dilepas; versi statis inilah yang dipakai final. Kartu juga
+ * statis (tanpa idle sway), gaya kartu putih polos.
  */
 @Component({
   selector: 'app-auth-layout',
   standalone: true,
   imports: [RouterOutlet, RouterLink, IconComponent],
   template: `
-    <div class="auth-wash" (mousemove)="onMouseMove($event)" (mouseleave)="onMouseLeave()">
-      <div class="auth-texture" [style.transform]="'translate(' + texturePos().x + 'px, ' + texturePos().y + 'px)'" aria-hidden="true"></div>
+    <div class="auth-wash">
+      <div class="auth-texture" aria-hidden="true"></div>
       <div class="auth-card">
         <router-outlet />
         <a routerLink="/" class="auth-back-home">
@@ -43,11 +39,11 @@ const TEXTURE_PARALLAX_RANGE = 20;
     </div>
   `,
   styles: [`
-    /* Backdrop — gradien hijau tua diagonal + glow radial emas + tekstur
-       titik, disalin PERSIS dari .hero-section/.hero-glow/.hero-texture
-       milik hero gelap di detail Galeri/Berita (BUKAN gradien terang
-       app-page-hero yang dipakai halaman index) — di sini cuma jadi
-       panggung gelap untuk satu kartu putih di tengah. */
+    /* Backdrop — gradien hijau tua diagonal + glow radial emas, disalin
+       PERSIS dari .hero-section/.hero-glow milik hero gelap di detail
+       Galeri/Berita (BUKAN gradien terang app-page-hero yang dipakai
+       halaman index) — di sini cuma jadi panggung gelap untuk satu kartu
+       putih di tengah. */
     .auth-wash {
       position: relative; overflow: hidden;
       min-height: 100dvh;
@@ -59,38 +55,23 @@ const TEXTURE_PARALLAX_RANGE = 20;
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
       background: radial-gradient(ellipse 55% 65% at 88% 30%, rgba(255,196,0,.18) 0%, transparent 70%);
     }
-    /* inset negatif (lebih besar dari TEXTURE_PARALLAX_RANGE) supaya saat
-       di-translate mengikuti mouse, tepinya tidak pernah menyingkap celah
-       kosong di pinggir .auth-wash. transition easing (bukan instan)
-       supaya gerakannya "mengekor" halus, bukan melompat tiap mousemove. */
+    /* Tekstur titik — PERSIS sama dengan .hero-texture asli di detail
+       Galeri/Berita (opacity, kerapatan, posisi mask di pojok kanan-atas),
+       statis tanpa animasi/mouse-follow/ripple (beberapa varian sudah
+       dicoba, ini yang dipakai final). */
     .auth-texture {
-      position: absolute; inset: -28px; z-index: 0; opacity: .5; pointer-events: none;
+      position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none;
       background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 1.6px);
       background-size: 26px 26px; background-position: 15% -10px;
       mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
       -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
-      transition: transform .35s ease-out;
     }
 
-    /* Goyang pelan terus-menerus — rotate+translateY kecil saja (transform
-       murni, tidak memicu layout thrash), easing ease-in-out (bukan bounce/
-       elastic) supaya terasa halus seperti mengambang, bukan jenaka. */
     .auth-card {
       position: relative; z-index: 1; box-sizing: border-box;
       width: 100%; max-width: 400px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
       box-shadow: 0 24px 50px rgba(0,0,0,.35); padding: 26px 28px;
-      animation: authCardSway 6s ease-in-out infinite;
-      transform-origin: center bottom;
-    }
-    @keyframes authCardSway {
-      0%, 100% { transform: rotate(0deg) translateY(0); }
-      25% { transform: rotate(-.5deg) translateY(-2px); }
-      75% { transform: rotate(.5deg) translateY(-2px); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .auth-card { animation: none; }
-      .auth-texture { transition: none; }
     }
 
     /* Satu-satunya jalan keluar dari halaman auth sekarang (tidak ada
@@ -107,29 +88,8 @@ const TEXTURE_PARALLAX_RANGE = 20;
 
     @media (max-width: 480px) {
       .auth-wash { padding: 20px 16px; }
-      .auth-card { padding: 22px 20px; }
+      .auth-card { padding: 22px 22px 18px; }
     }
   `],
 })
-export class AuthLayoutComponent {
-  texturePos = signal({ x: 0, y: 0 });
-
-  private reducedMotion(): boolean {
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  }
-
-  onMouseMove(event: MouseEvent): void {
-    if (this.reducedMotion()) return;
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    const relX = (event.clientX - rect.left) / rect.width - 0.5;
-    const relY = (event.clientY - rect.top) / rect.height - 0.5;
-    this.texturePos.set({
-      x: relX * -2 * TEXTURE_PARALLAX_RANGE,
-      y: relY * -2 * TEXTURE_PARALLAX_RANGE,
-    });
-  }
-
-  onMouseLeave(): void {
-    this.texturePos.set({ x: 0, y: 0 });
-  }
-}
+export class AuthLayoutComponent {}
