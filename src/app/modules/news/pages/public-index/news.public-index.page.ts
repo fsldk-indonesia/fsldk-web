@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChild, ViewChildren, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { NewsRepository } from '../../repositories/news.repository';
@@ -31,7 +31,8 @@ const MAX_MOBILE_DOTS = 7;
       title="Kabar Terkini,"
       titleAccent="Gerakan Dakwah Kampus"
       subtitle="Ikuti perkembangan, kegiatan, dan pencapaian jaringan dakwah kampus se-Indonesia dari waktu ke waktu."
-      quoteSource="quran">
+      quoteSource="quran"
+      waveColor="var(--color-primary)">
       <!-- Siluet sisi kanan hero: koran terlipat sebagai hub, garis jaringan
            menjalar ke titik-titik LDK (konsisten "Peta Silaturahmi" — primitif
            global .network-line/.network-node/.network-ping, styles.scss),
@@ -116,7 +117,15 @@ const MAX_MOBILE_DOTS = 7;
       </div>
     </app-page-hero>
 
-    <section class="section section-transition section-blob-drift">
+    <!-- ---------- Section hijau penuh tepi-ke-tepi + siluet ikon raksasa
+         pudar — pola sama persis dengan .agenda-panel (section Event) di
+         Beranda, tapi di sini mewarnai SELURUH section (judul, toolbar,
+         daftar berita, pagination), bukan cuma panel bulat mengambang di
+         tengahnya. Dua siluet koran (besar di pojok kanan-bawah, kecil di
+         kiri-atas) nempel ke section itu sendiri. ---------- -->
+    <section class="section">
+      <span class="news-panel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="220" /></span>
+      <span class="news-panel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="100" /></span>
       <div class="container pb-xl">
         <div class="news-section-head text-center reveal" #sectionHead>
           <h2>Kabar &amp; Liputan Terbaru</h2>
@@ -165,14 +174,16 @@ const MAX_MOBILE_DOTS = 7;
             </div>
           </div>
         } @else if (repo.error()) {
-          <div class="empty-state">
+          <!-- Slab putih — state error/kosong butuh teks gelap tetap terbaca
+               di atas panel hijau, bukan diwarnai ulang satu-satu. -->
+          <div class="empty-state news-panel-slab">
             <div class="empty-icon text-danger"><app-icon name="alert-triangle" [size]="48" /></div>
             <h3>Terjadi Kesalahan</h3>
             <p>{{ repo.error() }}</p>
             <button class="btn btn-outline mt-md" (click)="loadData()">Coba Lagi</button>
           </div>
         } @else if (repo.publicNews().length === 0 && hasActiveSearchOrFilter()) {
-          <div class="empty-state news-empty-anim">
+          <div class="empty-state news-empty-anim news-panel-slab">
             <span class="news-empty-icon news-empty-icon-badge">
               <app-icon name="search" [size]="26" />
             </span>
@@ -191,7 +202,7 @@ const MAX_MOBILE_DOTS = 7;
             </div>
           </div>
         } @else if (repo.publicNews().length === 0) {
-          <div class="empty-state news-empty-anim">
+          <div class="empty-state news-empty-anim news-panel-slab">
             <div class="empty-icon news-empty-icon"><app-icon name="newspaper" [size]="48" /></div>
             <h3 class="news-empty-title">Belum Ada Berita</h3>
             <p class="news-empty-desc">Berita yang dipublikasikan akan muncul di sini.</p>
@@ -366,38 +377,63 @@ const MAX_MOBILE_DOTS = 7;
     @keyframes newsBadgePop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
     @media (prefers-reduced-motion: reduce) { .news-tier, .news-badge { animation: none; opacity: 1; transform: none; } }
 
-    /* =====================================================================
-       Kanvas setelah hero — DISALIN PERSIS dari Galeri/Struktur/Kontak
-       (.section + .section-transition + .section-blob-drift). ===================================================================== */
-    .section { background: var(--color-primary-tint); position: relative; min-height: 60vh; }
-    .section-transition { position: relative; padding-top: 32px; }
-    .section-blob-drift { overflow: hidden; }
-    .section-blob-drift > .container { position: relative; z-index: 1; }
-    .section-blob-drift::before {
-      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background:
-        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
-        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
-      opacity: .8; animation: sectionBlobDrift 12s ease-in-out infinite alternate;
+    /* ---------- Section hijau PENUH tepi-ke-tepi (bukan lagi panel bulat
+       mengambang) — pola sama seperti .agenda-panel (section "Event
+       Terbaru" Beranda), tapi di sini mewarnai SELURUH section: judul,
+       toolbar, daftar berita, pagination, semuanya. Dua siluet ikon koran
+       raksasa pudar nempel ke section itu sendiri (pojok berlawanan),
+       bukan gambar/SVG custom — cuma app-icon ukuran besar + opacity
+       rendah, sama seperti teknik .agenda-panel-silhouette. ---------- */
+    .section {
+      position: relative; overflow: hidden;
+      background: var(--color-primary);
+      min-height: 60vh; padding: 56px 0 72px;
     }
-    .section-blob-drift::after {
-      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background: linear-gradient(to bottom,
-        var(--color-primary-tint) 0, transparent 70px,
-        transparent calc(100% - 70px), var(--color-primary-tint) 100%);
+    /* Inset POSITIF (bukan negatif menggantung keluar tepi) — .section
+       overflow:hidden sebelumnya memotong bentuk icon persis di tengah
+       lekukannya (apalagi dengan rotate, garis potongnya jadi miring &
+       kelihatan rusak, bukan memudar natural di pojok). Dengan inset
+       positif, seluruh bentuk icon utuh, cuma nempel dekat pojok. */
+    .news-panel-silhouette {
+      position: absolute; right: 8px; bottom: 8px; z-index: 0; color: rgba(255,255,255,.12);
+      transform: rotate(-12deg); pointer-events: none;
     }
-    @keyframes sectionBlobDrift {
-      from { transform: translate(0, 0) scale(1); }
-      to { transform: translate(-4%, 5%) scale(1.15); }
+    .news-panel-silhouette-2 {
+      position: absolute; left: 8px; top: 8px; z-index: 0; color: rgba(255,255,255,.08);
+      transform: rotate(16deg); pointer-events: none;
     }
-    @media (prefers-reduced-motion: reduce) {
-      .section-blob-drift::before { animation: none; }
-    }
+    .section > .container { position: relative; z-index: 1; }
 
     .news-section-head { margin-bottom: 28px; }
-    .news-section-head h2 { margin: 14px 0 10px; }
-    .news-section-subtitle { max-width: 560px; margin: 0 auto; color: var(--color-text-secondary); font-size: 1.02rem; line-height: 1.6; }
-    .news-toolbar { max-width: 900px; margin: 0 auto 40px; }
+    .news-section-head h2 { margin: 14px 0 10px; color: #fff; }
+    .news-section-subtitle { max-width: 560px; margin: 0 auto; color: rgba(255,255,255,.85); font-size: 1.02rem; line-height: 1.6; }
+
+    /* Slab putih — state error/kosong butuh teks gelap tetap terbaca di atas
+       hijau (lihat komentar di template), bukan diwarnai ulang satu-satu. */
+    .news-panel-slab { background: #fff; border-radius: var(--radius-md); }
+
+    .news-toolbar { max-width: 900px; margin: 0 auto 32px; }
+    /* Tombol "Filter" bawaan app-search-filter-sort solid hijau (cocok di
+       atas latar terang) — di atas section hijau ini jadi nyaris melebur
+       dengan background-nya sendiri. Dibalik jadi putih (pola sama seperti
+       tombol "Urutkan" yang sudah putih) supaya tetap kontras; override di
+       sini (BUKAN di komponen globalnya) karena di halaman lain yang masih
+       berlatar terang warna solid hijau aslinya tetap benar. */
+    ::ng-deep .news-toolbar .sfs-btn-filter { background: #fff !important; color: var(--color-primary-dark) !important; }
+    ::ng-deep .news-toolbar .sfs-btn-filter app-icon { color: var(--color-primary-dark) !important; }
+    ::ng-deep .news-toolbar .sfs-btn-filter:hover { background: var(--color-primary-soft) !important; }
+    ::ng-deep .news-toolbar .sfs-count { box-shadow: 0 0 0 2px var(--color-primary); }
+    /* Chip filter aktif (Kategori/Tahun Terbit/Penulis) bawaan sfs — pucat
+       hijau-di-atas-hijau terhadap section ini, nyaris nyatu dengan
+       background. Dibikin kartu putih solid supaya kontras jelas, selaras
+       tombol Filter di sebelahnya yang sudah putih juga. */
+    ::ng-deep .news-toolbar .sfs-active-chip { background: #fff; color: var(--color-primary-dark); box-shadow: var(--shadow-sm); }
+    ::ng-deep .news-toolbar .sfs-active-chip button { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    ::ng-deep .news-toolbar .sfs-active-chip button:hover { background: var(--color-primary); color: #fff; }
+
+    @media (max-width: 640px) {
+      .section { padding: 40px 0 56px; }
+    }
 
     /* ---------- Animasi state "tidak ada data" — identik pola Galeri. ---------- */
     .news-empty-anim { animation: newsEmptyFadeIn .5s var(--ease-out) both; }
@@ -584,9 +620,15 @@ const MAX_MOBILE_DOTS = 7;
       display: flex;
       justify-content: center;
     }
+    /* Teks "Menampilkan X-Y dari Z berita" bawaan app-pagination berwarna
+       abu-abu muted + hijau tua (dirancang untuk latar terang) — nyaris tak
+       terbaca di atas section hijau ini. Kartu nomor halaman (.pgn-card)
+       sendiri sudah putih jadi tetap kontras, tidak disentuh. */
+    ::ng-deep .pagination-wrapper .pgn-info { color: rgba(255,255,255,.8) !important; }
+    ::ng-deep .pagination-wrapper .pgn-info strong { color: #fff !important; }
   `],
 })
-export class NewsPublicIndexPage implements OnInit, AfterViewInit {
+export class NewsPublicIndexPage implements OnInit, AfterViewInit, OnDestroy {
   repo = inject(NewsRepository);
   private router = inject(Router);
 
@@ -676,10 +718,24 @@ export class NewsPublicIndexPage implements OnInit, AfterViewInit {
     this.loadData();
     this.repo.loadPublicCategories();
     this.repo.loadFilterOptions();
+    /* Section di halaman ini berakhir hijau solid (bukan putih seperti
+       kebanyakan halaman publik lain) — ruang negatif wave footer
+       (app-site-footer .foot-wave, transparan secara default supaya
+       cocok dengan page lain yang berakhir putih) perlu diisi hijau
+       khusus di sini, bukan nembus ke warna body/putih. Footer sibling
+       dari <main>, bukan descendant halaman ini, jadi dikomunikasikan
+       lewat CSS custom property di :root (custom property TETAP
+       mengalir lewat DOM asli, tak terpengaruh scoping Angular) —
+       di-reset saat halaman ini lepas supaya tak "bocor" ke halaman lain. */
+    document.documentElement.style.setProperty('--footer-wave-backdrop', 'var(--color-primary)');
   }
 
   ngAfterViewInit(): void {
     this.animateNewsLines();
+  }
+
+  ngOnDestroy(): void {
+    document.documentElement.style.removeProperty('--footer-wave-backdrop');
   }
 
   loadData(page = this.repo.publicPage()): void {
