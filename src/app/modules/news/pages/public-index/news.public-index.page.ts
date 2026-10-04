@@ -116,22 +116,21 @@ const MAX_MOBILE_DOTS = 7;
       </div>
     </app-page-hero>
 
+    <!-- ---------- Section hijau penuh tepi-ke-tepi + siluet ikon raksasa
+         pudar — pola sama persis dengan .agenda-panel (section Event) di
+         Beranda, tapi di sini mewarnai SELURUH section (judul, toolbar,
+         daftar berita, pagination), bukan cuma panel bulat mengambang di
+         tengahnya. Dua siluet koran (besar di pojok kanan-bawah, kecil di
+         kiri-atas) nempel ke section itu sendiri. ---------- -->
     <section class="section">
+      <span class="news-panel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="220" /></span>
+      <span class="news-panel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="100" /></span>
       <div class="container pb-xl">
         <div class="news-section-head text-center reveal" #sectionHead>
           <h2>Kabar &amp; Liputan Terbaru</h2>
           <p class="news-section-subtitle">Rangkuman kegiatan, pencapaian, dan cerita dari jaringan dakwah kampus FSLDK Indonesia se-Nusantara.</p>
         </div>
 
-        <!-- ---------- Panel hijau + siluet ikon raksasa pudar — pola sama
-             persis dengan .agenda-panel (section Event) di Beranda: panel
-             hijau solid membungkus toolbar+daftar berita, dua siluet koran
-             (besar di pojok kanan-bawah, kecil di kiri-atas) sebagai aksen
-             dekoratif, bukan kanvas blob-drift terang seperti sebelumnya. ---------- -->
-        <div class="news-panel">
-          <span class="news-panel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="140" /></span>
-          <span class="news-panel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="64" /></span>
-          <div class="news-panel-inner">
         <!-- Search + Filter + Urutkan — komponen global (shared/search-filter-sort.component.ts). -->
         <div class="news-toolbar">
           <app-search-filter-sort
@@ -298,8 +297,6 @@ const MAX_MOBILE_DOTS = 7;
             </div>
           }
         }
-          </div>
-        </div>
       </div>
     </section>
 
@@ -379,40 +376,40 @@ const MAX_MOBILE_DOTS = 7;
     @keyframes newsBadgePop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
     @media (prefers-reduced-motion: reduce) { .news-tier, .news-badge { animation: none; opacity: 1; transform: none; } }
 
-    .section { background: var(--color-primary-tint); position: relative; min-height: 60vh; padding-top: 32px; }
-
-    .news-section-head { margin-bottom: 28px; }
-    .news-section-head h2 { margin: 14px 0 10px; }
-    .news-section-subtitle { max-width: 560px; margin: 0 auto; color: var(--color-text-secondary); font-size: 1.02rem; line-height: 1.6; }
-
-    /* ---------- Panel hijau + siluet — pola sama persis dengan .agenda-panel
-       (section "Event Terbaru" Beranda): latar hijau solid, dua siluet ikon
-       raksasa pudar diputar (bukan gambar/SVG custom, cuma app-icon ukuran
-       besar dengan opacity rendah) di pojok berlawanan, konten (toolbar +
-       grid/carousel + pagination) duduk di atasnya lewat .news-panel-inner. ---------- */
-    .news-panel {
+    /* ---------- Section hijau PENUH tepi-ke-tepi (bukan lagi panel bulat
+       mengambang) — pola sama seperti .agenda-panel (section "Event
+       Terbaru" Beranda), tapi di sini mewarnai SELURUH section: judul,
+       toolbar, daftar berita, pagination, semuanya. Dua siluet ikon koran
+       raksasa pudar nempel ke section itu sendiri (pojok berlawanan),
+       bukan gambar/SVG custom — cuma app-icon ukuran besar + opacity
+       rendah, sama seperti teknik .agenda-panel-silhouette. ---------- */
+    .section {
       position: relative; overflow: hidden;
-      background: var(--color-primary); border-radius: var(--radius-lg);
-      box-shadow: 0 10px 24px rgba(6,26,15,.14), 0 2px 8px rgba(6,26,15,.08);
-      padding: 36px 24px;
+      background: var(--color-primary);
+      min-height: 60vh; padding: 56px 0 72px;
     }
     .news-panel-silhouette {
-      position: absolute; right: -30px; bottom: -30px; z-index: 0; color: rgba(255,255,255,.14);
+      position: absolute; right: -40px; bottom: -40px; z-index: 0; color: rgba(255,255,255,.12);
       transform: rotate(-12deg); pointer-events: none;
     }
     .news-panel-silhouette-2 {
-      position: absolute; left: -16px; top: -16px; z-index: 0; color: rgba(255,255,255,.10);
+      position: absolute; left: -24px; top: -24px; z-index: 0; color: rgba(255,255,255,.08);
       transform: rotate(16deg); pointer-events: none;
     }
-    .news-panel-inner { position: relative; z-index: 1; }
+    .section > .container { position: relative; z-index: 1; }
+
+    .news-section-head { margin-bottom: 28px; }
+    .news-section-head h2 { margin: 14px 0 10px; color: #fff; }
+    .news-section-subtitle { max-width: 560px; margin: 0 auto; color: rgba(255,255,255,.85); font-size: 1.02rem; line-height: 1.6; }
+
     /* Slab putih — state error/kosong butuh teks gelap tetap terbaca di atas
-       panel hijau (lihat komentar di template), bukan diwarnai ulang. */
+       hijau (lihat komentar di template), bukan diwarnai ulang satu-satu. */
     .news-panel-slab { background: #fff; border-radius: var(--radius-md); }
 
     .news-toolbar { max-width: 900px; margin: 0 auto 32px; }
 
     @media (max-width: 640px) {
-      .news-panel { padding: 24px 16px; border-radius: var(--radius-md); }
+      .section { padding: 40px 0 56px; }
     }
 
     /* ---------- Animasi state "tidak ada data" — identik pola Galeri. ---------- */
