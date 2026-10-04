@@ -123,6 +123,15 @@ const MAX_MOBILE_DOTS = 7;
          tengahnya. Dua siluet koran (besar di pojok kanan-bawah, kecil di
          kiri-atas) nempel ke section itu sendiri. ---------- -->
     <section class="section">
+      <!-- Wave hijau di tepi atas — menyambung LANGSUNG dari .hero-wave milik
+           app-page-hero di atasnya (path & viewBox PERSIS sama), supaya
+           wave-nya terasa terus mengalir warna tint -> hijau, bukan terpotong
+           garis lurus. -->
+      <div class="section-wave-top" aria-hidden="true">
+        <svg viewBox="0 0 2880 80" preserveAspectRatio="none">
+          <path d="M0,40 C240,70 480,10 720,40 C960,70 1200,10 1440,40 C1680,70 1920,10 2160,40 C2400,70 2640,10 2880,40 L2880,80 L0,80 Z" />
+        </svg>
+      </div>
       <span class="news-panel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="220" /></span>
       <span class="news-panel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="100" /></span>
       <div class="container pb-xl">
@@ -398,6 +407,19 @@ const MAX_MOBILE_DOTS = 7;
     }
     .section > .container { position: relative; z-index: 1; }
 
+    /* Wave penyambung — path & viewBox PERSIS sama dengan .hero-wave milik
+       app-page-hero (shared/page-hero.component.ts), diisi hijau (bukan
+       tint) dan ditumpuk tepat di tepi atas section ini (margin-top negatif
+       setebal garis agar tidak ada celah sub-piksel) supaya wave-nya terasa
+       satu alur yang terus mengalir dari hero ke section, bukan garis lurus
+       yang memotong wave hero secara tiba-tiba. */
+    .section-wave-top {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 0;
+      height: 70px; margin-top: -1px; line-height: 0; pointer-events: none;
+    }
+    .section-wave-top svg { display: block; width: 100%; height: 100%; }
+    .section-wave-top path { fill: var(--color-primary); }
+
     .news-section-head { margin-bottom: 28px; }
     .news-section-head h2 { margin: 14px 0 10px; color: #fff; }
     .news-section-subtitle { max-width: 560px; margin: 0 auto; color: rgba(255,255,255,.85); font-size: 1.02rem; line-height: 1.6; }
@@ -407,6 +429,15 @@ const MAX_MOBILE_DOTS = 7;
     .news-panel-slab { background: #fff; border-radius: var(--radius-md); }
 
     .news-toolbar { max-width: 900px; margin: 0 auto 32px; }
+    /* Tombol "Filter" bawaan app-search-filter-sort solid hijau (cocok di
+       atas latar terang) — di atas section hijau ini jadi nyaris melebur
+       dengan background-nya sendiri. Dibalik jadi putih (pola sama seperti
+       tombol "Urutkan" yang sudah putih) supaya tetap kontras; override di
+       sini (BUKAN di komponen globalnya) karena di halaman lain yang masih
+       berlatar terang warna solid hijau aslinya tetap benar. */
+    ::ng-deep .news-toolbar .sfs-btn-filter { background: #fff; color: var(--color-primary-dark); }
+    ::ng-deep .news-toolbar .sfs-btn-filter:hover { background: var(--color-primary-soft); }
+    ::ng-deep .news-toolbar .sfs-count { box-shadow: 0 0 0 2px var(--color-primary); }
 
     @media (max-width: 640px) {
       .section { padding: 40px 0 56px; }
@@ -597,6 +628,12 @@ const MAX_MOBILE_DOTS = 7;
       display: flex;
       justify-content: center;
     }
+    /* Teks "Menampilkan X-Y dari Z berita" bawaan app-pagination berwarna
+       abu-abu muted + hijau tua (dirancang untuk latar terang) — nyaris tak
+       terbaca di atas section hijau ini. Kartu nomor halaman (.pgn-card)
+       sendiri sudah putih jadi tetap kontras, tidak disentuh. */
+    ::ng-deep .pagination-wrapper .pgn-info { color: rgba(255,255,255,.8); }
+    ::ng-deep .pagination-wrapper .pgn-info strong { color: #fff; }
   `],
 })
 export class NewsPublicIndexPage implements OnInit, AfterViewInit {
