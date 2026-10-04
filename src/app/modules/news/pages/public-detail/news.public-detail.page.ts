@@ -14,14 +14,17 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
 const RELATED_COUNT = 3;
 
 /**
- * Public detail page for a single news article — konsep "hero foto
- * full-bleed + kartu mengambang", SENGAJA BEDA dari Galeri (foto kecil
- * dibingkai matte di samping hero gelap solid + bento sidebar "Ringkasan"):
- * di sini cover MENJADI background hero penuh lebar (judul & kategori
- * mengambang di atasnya, scrim gradasi di bawah), lalu kartu artikel
- * "mengambang" naik menimpa tepi bawah foto (floating overlap card) —
- * trik editorial klasik yang memberi kedalaman & irama, bukan sekadar
- * tumpukan blok rata.
+ * Public detail page for a single news article — konsep "masthead bertekstur
+ * tanpa foto + foto mengambang ala majalah di dalam artikel". Percobaan
+ * sebelumnya (hero foto full-bleed) rapuh terhadap kualitas foto berita yang
+ * sesungguhnya (sertifikat, tangkapan layar, foto rapat — bukan fotografi
+ * studio terkurasi): judul putih di atasnya gampang tidak terbaca apa pun
+ * scrim-nya. Di sini foto SAMA SEKALI tidak dipakai sebagai latar hero —
+ * masthead murni memakai bahasa visual kanvas publik (blob-drift + aksen
+ * jaringan kecil, sama seperti index Berita), dan foto cover (kalau ada)
+ * muncul sebagai figure kecil "polaroid" yang di-float di dalam alur
+ * artikel — perannya jadi sekadar ilustrasi, bukan taruhan utama hero,
+ * jadi kualitas foto apa pun tidak pernah merusak halaman.
  */
 @Component({
   selector: 'app-news-public-detail-page',
@@ -42,56 +45,61 @@ const RELATED_COUNT = 3;
       </div>
     } @else {
       @if (repo.currentNews(); as n) {
-        <!-- ---------- Hero foto full-bleed — cover JADI background hero
-             (bukan dibingkai kecil di samping seperti Galeri). Tanpa foto,
-             jatuh ke gradien bertekstur bermerk (bahasa sama app-page-hero)
-             supaya tidak pernah jadi kotak kosong. ---------- -->
-        <header class="article-hero" [class.has-image]="!!n.newsImage">
-          @if (n.newsImage) {
-            <img [src]="imgUrl(n.newsImage)" [alt]="n.newsTitle" class="article-hero-bg" />
-          }
-          <div class="article-hero-texture" aria-hidden="true"></div>
-          <div class="article-hero-scrim" aria-hidden="true"></div>
-          <div class="container article-hero-inner">
-            <nav class="crumb-row crumb-row-light" aria-label="Breadcrumb">
-              <a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a>
-              <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
-              <a routerLink="/berita" class="crumb-link"><app-icon name="newspaper" [size]="13" /> Berita</a>
-            </nav>
-            <div class="article-badges">
-              <span class="chip chip-green">{{ n.categoryName }}</span>
-              @if (n.isFeatured) {
-                <span class="chip chip-gold"><app-icon name="star" [size]="11" /> Unggulan</span>
-              }
-            </div>
-            <h1 class="article-hero-title">{{ n.newsTitle }}</h1>
-          </div>
-        </header>
-
         <section class="section section-blob-drift">
           <div class="container pb-xl">
             <div class="article-layout">
-              <!-- ---------- Kartu artikel mengambang — margin-top negatif
-                   menarik kartu ini naik menimpa tepi bawah foto hero,
-                   strip meta (icon-badge) jadi "jahitan" yang menyatukan
-                   foto & teks, drop-cap di paragraf pertama. ---------- -->
-              <article class="detail-card article-body">
-                <div class="article-meta-strip">
-                  <span class="meta-pill">
-                    <span class="icon-badge sm icon-badge-solid"><app-icon name="user-circle" [size]="14" /></span>
-                    {{ n.newsReporter || n.authorName }}
-                  </span>
-                  @if (n.publishedDate) {
-                    <span class="meta-pill">
-                      <span class="icon-badge sm icon-badge-gold"><app-icon name="calendar-days" [size]="14" /></span>
-                      {{ n.publishedDate | date: 'd MMMM yyyy' }}
-                    </span>
+              <nav class="crumb-row" aria-label="Breadcrumb">
+                <a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a>
+                <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
+                <a routerLink="/berita" class="crumb-link"><app-icon name="newspaper" [size]="13" /> Berita</a>
+                <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
+                <span class="crumb-current" aria-current="page">{{ n.newsTitle }}</span>
+              </nav>
+
+              <!-- ---------- Masthead — TANPA foto sama sekali, murni kanvas
+                   bertekstur (bahasa sama index Berita) + aksen jaringan kecil
+                   di pojok (bukan ilustrasi besar, cukup sentuhan "Peta
+                   Silaturahmi" supaya tetap terasa didesain). ---------- -->
+              <header class="article-masthead">
+                <svg class="masthead-accent" aria-hidden="true" viewBox="0 0 120 90">
+                  <path class="network-line thick" d="M25,72 L76,26" />
+                  <path class="network-line" d="M76,26 L106,42" />
+                  <circle class="network-node" cx="25" cy="72" r="6" />
+                  <circle class="network-ping gold" cx="76" cy="26" r="7" />
+                  <circle class="network-node gold" cx="76" cy="26" r="7" />
+                  <circle class="network-node ember" cx="106" cy="42" r="4" />
+                </svg>
+                <div class="article-badges">
+                  <span class="chip chip-green">{{ n.categoryName }}</span>
+                  @if (n.isFeatured) {
+                    <span class="chip chip-gold"><app-icon name="star" [size]="11" /> Unggulan</span>
                   }
-                  <span class="meta-pill">
-                    <span class="icon-badge sm icon-badge-ember"><app-icon name="eye" [size]="14" /></span>
-                    {{ n.viewCount }} kali dibaca
-                  </span>
                 </div>
+                <h1 class="article-title">{{ n.newsTitle }}</h1>
+                <div class="article-byline">
+                  <span class="byline-item"><app-icon name="user-circle" [size]="14" /> {{ n.newsReporter || n.authorName }}</span>
+                  @if (n.publishedDate) {
+                    <span class="byline-sep" aria-hidden="true">&middot;</span>
+                    <span class="byline-item"><app-icon name="calendar-days" [size]="14" /> {{ n.publishedDate | date: 'd MMMM yyyy' }}</span>
+                  }
+                  <span class="byline-sep" aria-hidden="true">&middot;</span>
+                  <span class="byline-item"><app-icon name="eye" [size]="14" /> {{ n.viewCount }} kali dibaca</span>
+                </div>
+              </header>
+
+              <!-- ---------- Satu kartu artikel mengalir, duduk normal (tidak
+                   perlu lagi "mengambang" menimpa apa pun — tidak ada foto
+                   besar di baliknya). Foto cover (kalau ada) jadi figure
+                   polaroid yang di-float di dalam .content, teks mengalir di
+                   sekelilingnya — trik majalah klasik yang membuat halaman
+                   tidak monoton TANPA menaruh taruhan besar pada kualitas
+                   foto (perannya kecil & kontekstual, bukan hero dramatis). ---------- -->
+              <article class="detail-card article-body">
+                @if (n.newsImage) {
+                  <figure class="article-figure">
+                    <img [src]="imgUrl(n.newsImage)" [alt]="n.newsTitle" />
+                  </figure>
+                }
 
                 <div class="content" [innerHTML]="sanitizeHtml(n.newsContent)"></div>
 
@@ -155,91 +163,25 @@ const RELATED_COUNT = 3;
     .crumb-row {
       display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
       font-size: 0.82rem; font-weight: 600; color: var(--color-text-secondary);
+      margin-bottom: 24px;
     }
     .crumb-link { display: inline-flex; align-items: center; gap: 5px; color: var(--color-text-secondary); text-decoration: none; transition: color var(--motion-fast) ease; }
     .crumb-link:hover { color: var(--color-primary-dark); text-decoration: none; }
     .crumb-sep { color: var(--color-border-strong); flex-shrink: 0; }
-    /* Varian breadcrumb terang — dipakai DI DALAM hero foto (duduk di atas
-       scrim gelap), beda dari .crumb-row biasa yang didesain untuk latar
-       terang (tidak dipakai lagi di halaman ini, hero sudah menyatukan
-       breadcrumb+judul). */
-    .crumb-row-light { margin-bottom: 18px; }
-    .crumb-row-light .crumb-link { color: rgba(255,255,255,.82); }
-    .crumb-row-light .crumb-link:hover { color: #fff; }
-    .crumb-row-light .crumb-sep { color: rgba(255,255,255,.4); }
-
-    /* ---------- Hero foto full-bleed — cover JADI background (bukan
-       dibingkai kecil di samping ala Galeri). Tanpa foto, jatuh ke gradien
-       bertekstur bermerk (persis bahasa app-page-hero) supaya tidak pernah
-       jadi kotak kosong. Tinggi dibuat generus (min-height) supaya terasa
-       sebagai hero sungguhan, bukan banner tipis. ---------- */
-    .article-hero {
-      position: relative; overflow: hidden;
-      min-height: 460px; display: flex; flex-direction: column; justify-content: flex-end;
-      padding: 90px 0 120px;
-      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
+    .crumb-current {
+      color: var(--color-primary-dark); font-weight: 700;
+      max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    /* Foto apa pun isinya (sertifikat, screenshot, foto rapat — bukan foto
-       studio yang dikurasi) digelapkan LEBIH DULU lewat filter sebelum scrim
-       gradasi ditumpuk di atasnya. Dilaporkan: judul & breadcrumb putih
-       tidak terbaca menimpa foto terang/ramai (mis. sertifikat putih penuh
-       teks) karena scrim lama cuma kuat di 40% bawah — filter brightness di
-       SELURUH foto ini yang menjamin kontras di mana pun teks jatuh,
-       berapa pun panjang judulnya (2-3 baris mendorong blok teks naik
-       melewati zona scrim terkuat). */
-    .article-hero-bg {
-      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0;
-      filter: brightness(.5) saturate(.85);
-    }
-    .article-hero-texture {
-      position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none;
-      background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 1.6px);
-      background-size: 26px 26px; background-position: 15% -10px;
-      mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
-      -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
-    }
-    /* Hanya tampil kalau TIDAK ada foto (tekstur dotted di atas foto asli
-       akan terlihat kotor) — foto sungguhan sudah digelapkan sendiri. */
-    .article-hero.has-image .article-hero-texture { display: none; }
-    .article-hero-scrim {
-      position: absolute; inset: 0; z-index: 1; pointer-events: none;
-      background: linear-gradient(to top, rgba(6,14,10,.6) 0%, rgba(6,14,10,.25) 55%, transparent 100%);
-    }
-    /* Wash hijau brand DI SELURUH foto (bukan cuma gradasi dari bawah) +
-       scrim gelap yang jauh lebih tinggi cakupannya — breadcrumb di PALING
-       ATAS hero pun tetap di atas lapisan gelap, bukan foto polos. */
-    .article-hero.has-image .article-hero-scrim {
-      background:
-        linear-gradient(160deg, rgba(4,100,40,.32) 0%, rgba(3,55,26,.58) 100%),
-        linear-gradient(to top, rgba(4,20,12,.78) 0%, rgba(4,20,12,.42) 55%, rgba(4,20,12,.12) 100%);
-    }
-
-    .article-hero-inner { position: relative; z-index: 2; max-width: 820px; }
-    .article-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    .chip-gold { background: var(--color-gold-soft); color: var(--color-gold-dark); display: inline-flex; align-items: center; gap: 5px; }
-
-    .article-hero-title {
-      font-family: var(--font-display, var(--font-heading));
-      font-size: clamp(1.7rem, 3.6vw, 2.6rem); font-weight: 800; letter-spacing: -.01em;
-      line-height: 1.28; color: #fff; margin: 0; text-shadow: 0 2px 14px rgba(0,0,0,.4);
-    }
-
-    .crumb-row-light, .article-badges, .article-hero-title { opacity: 0; animation: heroCopyFadeUp .7s var(--ease-out) forwards; }
-    .crumb-row-light { animation-delay: .05s; }
-    .article-badges { animation-delay: .15s; }
-    .article-hero-title { animation-delay: .25s; }
-    @keyframes heroCopyFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-
     @media (max-width: 640px) {
-      .article-hero { min-height: 340px; padding: 64px 0 90px; }
+      .crumb-row { font-size: 0.76rem; gap: 4px; margin-bottom: 16px; }
+      .crumb-current { max-width: 140px; }
     }
 
-    /* ---------- Kanvas setelah hero — identik .section-blob-drift Galeri/
-       Struktur/Kontak/Berita-index. TANPA .section-transition (yang
-       didesain untuk hero bergelombang ala app-page-hero) — hero foto ini
-       bertepi datar, iramanya datang dari kartu yang menimpanya, bukan dari
-       padding ekstra di sini. ---------- */
-    .section { background: var(--color-primary-tint); position: relative; }
+    /* ---------- Kanvas — identik .section-blob-drift Galeri/Struktur/
+       Kontak/Berita-index. TIDAK ADA hero foto apa pun di sini (beda
+       sengaja dari percobaan sebelumnya) — masthead murni kanvas
+       bertekstur + aksen jaringan kecil. ---------- */
+    .section { background: var(--color-primary-tint); position: relative; min-height: 70vh; }
     .section-blob-drift { overflow: hidden; }
     .section-blob-drift > .container { position: relative; z-index: 1; }
     .section-blob-drift::before {
@@ -257,23 +199,47 @@ const RELATED_COUNT = 3;
 
     /* ---------- Kolom baca sempit — 820px, BUKAN 1080px bento lebar ala
        Galeri. ---------- */
-    .article-layout { max-width: 820px; margin: 0 auto; }
+    .article-layout { max-width: 820px; margin: 0 auto; padding-top: 24px; }
+
+    .article-masthead { position: relative; text-align: center; margin-bottom: 28px; opacity: 0; animation: articleFadeUp .6s var(--ease-out) forwards; }
+    /* Aksen jaringan kecil — pojok kanan-atas masthead, sentuhan "Peta
+       Silaturahmi" (primitif global .network-line/.network-node/.network-ping,
+       styles.scss) tanpa jadi ilustrasi besar seperti hero index. */
+    .masthead-accent { position: absolute; top: -8px; right: 2%; width: 92px; height: auto; opacity: .85; }
+    @media (max-width: 760px) { .masthead-accent { display: none; } }
+
+    .article-badges { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .chip-gold { background: var(--color-gold-soft); color: var(--color-gold-dark); display: inline-flex; align-items: center; gap: 5px; }
+
+    .article-title {
+      font-family: var(--font-display, var(--font-heading));
+      font-size: clamp(1.7rem, 3.6vw, 2.5rem); font-weight: 800; letter-spacing: -.01em;
+      line-height: 1.3; color: var(--color-text); margin: 0 0 18px;
+    }
+
+    .article-byline { display: flex; justify-content: center; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .byline-item { display: inline-flex; align-items: center; gap: 6px; font-size: .86rem; font-weight: 600; color: var(--color-text-secondary); }
+    .byline-sep { color: var(--color-border-strong); font-weight: 700; }
+
+    @keyframes articleFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .article-masthead { animation: none; opacity: 1; transform: none; } }
 
     .detail-card { background: #fff; border-radius: 22px; padding: 36px; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }
-    /* Kartu "mengambang" naik menimpa tepi bawah hero — trik kedalaman
-       editorial, dan sumber utama irama halaman (bukan sekadar blok rata
-       berurutan). Shadow dinaikkan supaya kesan "terangkat dari foto"
-       terbaca jelas, bukan cuma shadow standar .detail-card. */
-    .article-body {
-      position: relative; z-index: 3; margin-top: -72px; margin-bottom: 24px;
-      box-shadow: 0 -4px 0 rgba(0,0,0,0), 0 28px 56px rgba(0,30,15,.22);
-    }
+    .article-body { margin-bottom: 24px; }
 
-    .article-meta-strip {
-      display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 24px; padding-bottom: 20px;
-      border-bottom: 1px solid var(--color-border);
+    /* ---------- Figure polaroid — foto cover di-float DI DALAM artikel
+       (bukan jadi latar hero), teks mengalir di sekelilingnya. Bingkai putih
+       tebal + sedikit miring = kesan "ditempel", bukan foto lurus biasa;
+       karena ukurannya kecil & kontekstual (bukan pusat perhatian dramatis),
+       foto apa pun kualitasnya (sertifikat, tangkapan layar) tidak pernah
+       merusak halaman seperti saat jadi hero penuh lebar. ---------- */
+    .article-figure {
+      float: right; width: 42%; max-width: 280px; margin: 4px 0 20px 28px;
+      background: #fff; padding: 10px 10px 14px; border-radius: 6px;
+      box-shadow: 0 16px 32px rgba(0,30,15,.18);
+      transform: rotate(2.5deg);
     }
-    .meta-pill { display: inline-flex; align-items: center; gap: 10px; font-size: .86rem; font-weight: 600; color: var(--color-text-secondary); }
+    .article-figure img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 2px; }
 
     .content { font-size: 1.08rem; line-height: 1.95; color: var(--color-text); }
     .content ::ng-deep p { margin: 0 0 1.2em; }
@@ -295,7 +261,7 @@ const RELATED_COUNT = 3;
 
     .article-credits {
       display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 28px 0 0; padding-top: 20px;
-      border-top: 1px solid var(--color-border);
+      border-top: 1px solid var(--color-border); clear: both;
       font-size: .82rem; color: var(--color-text-secondary);
     }
     .article-credits b { color: var(--color-text); font-weight: 700; }
@@ -305,6 +271,16 @@ const RELATED_COUNT = 3;
       font-size: .86rem; font-weight: 700; color: var(--color-primary-dark); text-decoration: none;
     }
     .back-link:hover { color: var(--color-primary); text-decoration: none; }
+
+    @media (max-width: 640px) {
+      .detail-card { padding: 24px; }
+      .article-title { text-align: left; }
+      .article-badges, .article-byline { justify-content: flex-start; }
+      .article-masthead { text-align: left; }
+      /* Float samping cuma masuk akal saat kolom lebar — di mobile foto
+         jadi elemen penuh lebar biasa di atas teks, tidak di-float. */
+      .article-figure { float: none; width: 100%; max-width: none; margin: 0 0 20px; transform: none; }
+    }
 
     /* ---------- Baca Juga — kartu ringkas, BUKAN di dalam .detail-card
        (kartu-dalam-kartu janggal karena tiap item sudah jadi kartu sendiri)
@@ -340,12 +316,6 @@ const RELATED_COUNT = 3;
 
     @media (max-width: 640px) {
       .related-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 640px) {
-      .detail-card { padding: 24px; }
-      .article-body { margin-top: -48px; }
-      .article-meta-strip { gap: 14px; }
     }
   `],
 })
