@@ -116,6 +116,19 @@ const MAX_MOBILE_DOTS = 7;
       </div>
     </app-page-hero>
 
+    <!-- ---------- Transisi hero -> section hijau. Bukan wave KEDUA yang
+         ditempel di tepi atas section (itu kebuat dua wave beda warna/bentuk
+         bertabrakan, makanya masih "putus"), tapi elemen ANTARA hero dan
+         section: 10px atasnya rata & berwarna tint PERSIS sama dengan warna
+         .hero-wave (jahitan tint-ke-tint tanpa garis), lalu wave hijau ada
+         di bawahnya yang jahitannya ke .section juga rata hijau-ke-hijau.
+         Satu-satunya wave yang tampak di zona ini. ---------- -->
+    <div class="hero-to-section-transition" aria-hidden="true">
+      <svg viewBox="0 0 2880 80" preserveAspectRatio="none">
+        <path d="M0,40 C240,70 480,10 720,40 C960,70 1200,10 1440,40 C1680,70 1920,10 2160,40 C2400,70 2640,10 2880,40 L2880,80 L0,80 Z" />
+      </svg>
+    </div>
+
     <!-- ---------- Section hijau penuh tepi-ke-tepi + siluet ikon raksasa
          pudar — pola sama persis dengan .agenda-panel (section Event) di
          Beranda, tapi di sini mewarnai SELURUH section (judul, toolbar,
@@ -123,15 +136,6 @@ const MAX_MOBILE_DOTS = 7;
          tengahnya. Dua siluet koran (besar di pojok kanan-bawah, kecil di
          kiri-atas) nempel ke section itu sendiri. ---------- -->
     <section class="section">
-      <!-- Wave hijau di tepi atas — menyambung LANGSUNG dari .hero-wave milik
-           app-page-hero di atasnya (path & viewBox PERSIS sama), supaya
-           wave-nya terasa terus mengalir warna tint -> hijau, bukan terpotong
-           garis lurus. -->
-      <div class="section-wave-top" aria-hidden="true">
-        <svg viewBox="0 0 2880 80" preserveAspectRatio="none">
-          <path d="M0,40 C240,70 480,10 720,40 C960,70 1200,10 1440,40 C1680,70 1920,10 2160,40 C2400,70 2640,10 2880,40 L2880,80 L0,80 Z" />
-        </svg>
-      </div>
       <span class="news-panel-silhouette" aria-hidden="true"><app-icon name="newspaper" [size]="220" /></span>
       <span class="news-panel-silhouette-2" aria-hidden="true"><app-icon name="newspaper" [size]="100" /></span>
       <div class="container pb-xl">
@@ -407,18 +411,27 @@ const MAX_MOBILE_DOTS = 7;
     }
     .section > .container { position: relative; z-index: 1; }
 
-    /* Wave penyambung — path & viewBox PERSIS sama dengan .hero-wave milik
-       app-page-hero (shared/page-hero.component.ts), diisi hijau (bukan
-       tint) dan ditumpuk tepat di tepi atas section ini (margin-top negatif
-       setebal garis agar tidak ada celah sub-piksel) supaya wave-nya terasa
-       satu alur yang terus mengalir dari hero ke section, bukan garis lurus
-       yang memotong wave hero secara tiba-tiba. */
-    .section-wave-top {
-      position: absolute; top: 0; left: 0; right: 0; z-index: 0;
-      height: 70px; margin-top: -1px; line-height: 0; pointer-events: none;
+    /* Elemen transisi hero -> section (sibling, BUKAN child .section) —
+       10px teratas rata & berwarna tint PERSIS sama dengan fill .hero-wave
+       (jahitan ke hero tanpa garis karena warnanya sama persis), lalu wave
+       hijau mengisi 80px di bawahnya yang tepi bawahnya rata hijau menyatu
+       dengan .section. Satu-satunya wave yang tampak di zona ini — tidak
+       menumpuk wave kedua di atas wave hero yang sudah ada (itu sebabnya
+       versi sebelumnya masih terlihat "putus": dua wave beda warna/bentuk
+       bertemu, bukan menyambung). */
+    .hero-to-section-transition {
+      position: relative; height: 90px; line-height: 0; pointer-events: none;
+      background: var(--color-primary-tint);
     }
-    .section-wave-top svg { display: block; width: 100%; height: 100%; }
-    .section-wave-top path { fill: var(--color-primary); }
+    .hero-to-section-transition svg {
+      position: absolute; left: 0; bottom: 0; display: block; width: 100%; height: 80px;
+    }
+    .hero-to-section-transition path { fill: var(--color-primary); }
+
+    @media (max-width: 640px) {
+      .hero-to-section-transition { height: 56px; }
+      .hero-to-section-transition svg { height: 50px; }
+    }
 
     .news-section-head { margin-bottom: 28px; }
     .news-section-head h2 { margin: 14px 0 10px; color: #fff; }
@@ -632,8 +645,8 @@ const MAX_MOBILE_DOTS = 7;
        abu-abu muted + hijau tua (dirancang untuk latar terang) — nyaris tak
        terbaca di atas section hijau ini. Kartu nomor halaman (.pgn-card)
        sendiri sudah putih jadi tetap kontras, tidak disentuh. */
-    ::ng-deep .pagination-wrapper .pgn-info { color: rgba(255,255,255,.8); }
-    ::ng-deep .pagination-wrapper .pgn-info strong { color: #fff; }
+    ::ng-deep .pagination-wrapper .pgn-info { color: rgba(255,255,255,.8) !important; }
+    ::ng-deep .pagination-wrapper .pgn-info strong { color: #fff !important; }
   `],
 })
 export class NewsPublicIndexPage implements OnInit, AfterViewInit {
