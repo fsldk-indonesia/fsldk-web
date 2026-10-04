@@ -14,17 +14,11 @@ import { resolveImageUrl, resolveThumbnailUrl } from '../../../../core/utils/ima
 const RELATED_COUNT = 3;
 
 /**
- * Public detail page for a single news article — konsep "masthead bertekstur
- * tanpa foto + foto mengambang ala majalah di dalam artikel". Percobaan
- * sebelumnya (hero foto full-bleed) rapuh terhadap kualitas foto berita yang
- * sesungguhnya (sertifikat, tangkapan layar, foto rapat — bukan fotografi
- * studio terkurasi): judul putih di atasnya gampang tidak terbaca apa pun
- * scrim-nya. Di sini foto SAMA SEKALI tidak dipakai sebagai latar hero —
- * masthead murni memakai bahasa visual kanvas publik (blob-drift + aksen
- * jaringan kecil, sama seperti index Berita), dan foto cover (kalau ada)
- * muncul sebagai figure kecil "polaroid" yang di-float di dalam alur
- * artikel — perannya jadi sekadar ilustrasi, bukan taruhan utama hero,
- * jadi kualitas foto apa pun tidak pernah merusak halaman.
+ * Public detail page for a single news article — pola sama persis dengan
+ * Galeri detail (hero gelap + cover dalam bingkai matte object-fit:contain
+ * di kolom kanan, bento 2-kolom "Isi Berita" + sidebar "Ringkasan" di
+ * bawahnya) atas permintaan eksplisit, plus "Baca Juga" & komentar sebagai
+ * kartu tambahan khusus Berita.
  */
 @Component({
   selector: 'app-news-public-detail-page',
@@ -45,9 +39,53 @@ const RELATED_COUNT = 3;
       </div>
     } @else {
       @if (repo.currentNews(); as n) {
-        <section class="section section-blob-drift">
-          <div class="container pb-xl">
-            <div class="article-layout">
+        <!-- ---------- Hero Header — gradien gelap + tekstur, cover berita
+             ditampilkan dalam bingkai kartu berukuran wajar (object-fit:contain,
+             BUKAN latar penuh-layar) supaya rasio/kualitas foto apa pun tidak
+             merusak tampilan hero — pola sama persis dengan Galeri. ---------- -->
+        <header class="hero-section">
+          <div class="hero-texture" aria-hidden="true"></div>
+          <div class="hero-glow" aria-hidden="true"></div>
+          <div class="container hero-grid">
+            <div class="hero-copy">
+              <div class="hero-badges">
+                <span class="hero-tag"><app-icon name="tags" [size]="13" /> {{ n.categoryName }}</span>
+                @if (n.isFeatured) {
+                  <span class="hero-tag hero-tag-featured"><app-icon name="star" [size]="13" /> Unggulan</span>
+                }
+              </div>
+
+              <span class="hero-event-name">Berita FSLDK Indonesia</span>
+              <h1 class="hero-title">{{ n.newsTitle }}</h1>
+
+              <div class="hero-meta-row">
+                <span class="hero-meta-item"><app-icon name="user-circle" [size]="14" /> {{ n.newsReporter || n.authorName }}</span>
+                @if (n.publishedDate) {
+                  <span class="hero-meta-item"><app-icon name="calendar-days" [size]="14" /> {{ n.publishedDate | date: 'd MMMM yyyy' }}</span>
+                }
+                <span class="hero-meta-item"><app-icon name="eye" [size]="14" /> {{ n.viewCount }} kali dibaca</span>
+              </div>
+            </div>
+
+            <div class="hero-visual">
+              <div class="hero-cover-frame">
+                @if (n.newsImage) {
+                  <img [src]="imgUrl(n.newsImage)" [alt]="n.newsTitle" class="hero-cover-img" />
+                } @else {
+                  <div class="hero-cover-fallback"><app-icon name="newspaper" [size]="40" /></div>
+                }
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- ---------- Bento 2-kolom: Isi Berita + Ringkasan berdampingan
+             (pola sama persis Galeri — "Tentang Kegiatan" + "Ringkasan"),
+             Baca Juga & Komentar jadi kartu tambahan khusus Berita di
+             bawahnya. ---------- -->
+        <main class="detail-main-section">
+          <div class="container">
+            <div class="content-layout">
               <nav class="crumb-row" aria-label="Breadcrumb">
                 <a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a>
                 <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
@@ -56,101 +94,82 @@ const RELATED_COUNT = 3;
                 <span class="crumb-current" aria-current="page">{{ n.newsTitle }}</span>
               </nav>
 
-              <!-- ---------- Masthead — TANPA foto sama sekali, murni kanvas
-                   bertekstur (bahasa sama index Berita) + aksen jaringan kecil
-                   di pojok (bukan ilustrasi besar, cukup sentuhan "Peta
-                   Silaturahmi" supaya tetap terasa didesain). ---------- -->
-              <header class="article-masthead">
-                <svg class="masthead-accent" aria-hidden="true" viewBox="0 0 120 90">
-                  <path class="network-line thick" d="M25,72 L76,26" />
-                  <path class="network-line" d="M76,26 L106,42" />
-                  <circle class="network-node" cx="25" cy="72" r="6" />
-                  <circle class="network-ping gold" cx="76" cy="26" r="7" />
-                  <circle class="network-node gold" cx="76" cy="26" r="7" />
-                  <circle class="network-node ember" cx="106" cy="42" r="4" />
-                </svg>
-                <div class="article-badges">
-                  <span class="chip chip-green">{{ n.categoryName }}</span>
-                  @if (n.isFeatured) {
-                    <span class="chip chip-gold"><app-icon name="star" [size]="11" /> Unggulan</span>
+              <div class="story-grid">
+                <section class="detail-card story-card-content">
+                  <span class="eyebrow"><app-icon name="info-circle" [size]="13" /> Isi Berita</span>
+                  <div class="story-lead-text mt-sm content" [innerHTML]="sanitizeHtml(n.newsContent)"></div>
+
+                  @if (n.newsEditor || n.newsPublisher) {
+                    <div class="article-credits">
+                      @if (n.newsEditor) { <span><b>Editor:</b> {{ n.newsEditor }}</span> }
+                      @if (n.newsPublisher) { <span><b>Penerbit:</b> {{ n.newsPublisher }}</span> }
+                    </div>
                   }
-                </div>
-                <h1 class="article-title">{{ n.newsTitle }}</h1>
-                <div class="article-byline">
-                  <span class="byline-item"><app-icon name="user-circle" [size]="14" /> {{ n.newsReporter || n.authorName }}</span>
-                  @if (n.publishedDate) {
-                    <span class="byline-sep" aria-hidden="true">&middot;</span>
-                    <span class="byline-item"><app-icon name="calendar-days" [size]="14" /> {{ n.publishedDate | date: 'd MMMM yyyy' }}</span>
-                  }
-                  <span class="byline-sep" aria-hidden="true">&middot;</span>
-                  <span class="byline-item"><app-icon name="eye" [size]="14" /> {{ n.viewCount }} kali dibaca</span>
-                </div>
-              </header>
-
-              <!-- ---------- Satu kartu artikel mengalir, duduk normal (tidak
-                   perlu lagi "mengambang" menimpa apa pun — tidak ada foto
-                   besar di baliknya). Foto cover (kalau ada) jadi figure
-                   polaroid yang di-float di dalam .content, teks mengalir di
-                   sekelilingnya — trik majalah klasik yang membuat halaman
-                   tidak monoton TANPA menaruh taruhan besar pada kualitas
-                   foto (perannya kecil & kontekstual, bukan hero dramatis). ---------- -->
-              <article class="detail-card article-body">
-                @if (n.newsImage) {
-                  <figure class="article-figure">
-                    <img [src]="imgUrl(n.newsImage)" [alt]="n.newsTitle" />
-                  </figure>
-                }
-
-                <div class="content" [innerHTML]="sanitizeHtml(n.newsContent)"></div>
-
-                @if (n.newsEditor || n.newsPublisher) {
-                  <div class="article-credits">
-                    @if (n.newsEditor) { <span><b>Editor:</b> {{ n.newsEditor }}</span> }
-                    @if (n.newsPublisher) { <span><b>Penerbit:</b> {{ n.newsPublisher }}</span> }
-                  </div>
-                }
-
-                <a routerLink="/berita" class="back-link mt-lg"><app-icon name="arrow-left" [size]="13" /> Kembali ke Berita</a>
-              </article>
-
-              <!-- ---------- Baca Juga — berita lain selain yang sedang
-                   dibaca, dorongan baca lanjut sebelum masuk ke komentar.
-                   Dipanggil langsung lewat NewsApiService (bukan lewat
-                   repo.loadPublic()) supaya TIDAK menimpa repo.loading()/
-                   repo.publicNews() yang dipakai index — sama pola dengan
-                   sheet preview Galeri. ---------- -->
-              @if (relatedNews().length > 0) {
-                <section class="related-section">
-                  <h2 class="related-heading"><app-icon name="newspaper" [size]="16" /> Baca Juga</h2>
-                  <div class="related-grid">
-                    @for (item of relatedNews(); track item.newsID) {
-                      <a [routerLink]="['/berita', item.newsSlug]" class="related-card">
-                        <div class="related-media">
-                          @if (item.newsImage) {
-                            <img [src]="thumbUrl(item.newsImage)" [alt]="item.newsTitle" loading="lazy" />
-                          } @else {
-                            <div class="related-media-fallback"><app-icon name="newspaper" [size]="22" /></div>
-                          }
-                        </div>
-                        <div class="related-body">
-                          <span class="related-cat">{{ item.categoryName }}</span>
-                          <h3 class="related-title">{{ item.newsTitle }}</h3>
-                          @if (item.publishedDate) {
-                            <span class="related-date"><app-icon name="calendar-days" [size]="11" /> {{ item.publishedDate | date: 'd MMM y' }}</span>
-                          }
-                        </div>
-                      </a>
-                    }
-                  </div>
                 </section>
-              }
 
-              <section class="detail-card article-comments">
+                <!-- ---------- Sidebar kanan — Ringkasan & Baca Juga
+                     bertumpuk sebagai dua kartu terpisah dalam SATU kolom
+                     grid (bukan dua kolom), item Baca Juga jadi list
+                     horizontal kompak karena ruangnya sempit. ---------- -->
+                <div class="story-sidebar">
+                  <aside class="detail-card story-card-info">
+                    <span class="eyebrow"><app-icon name="sparkles" [size]="13" /> Ringkasan</span>
+                    <ul class="info-rows mt-sm">
+                      <li class="info-row">
+                        <span class="info-row-icon"><app-icon name="user-circle" [size]="14" /></span>
+                        <span class="info-row-text"><b>Penulis</b>{{ n.newsReporter || n.authorName }}</span>
+                      </li>
+                      @if (n.publishedDate) {
+                        <li class="info-row">
+                          <span class="info-row-icon"><app-icon name="calendar-days" [size]="14" /></span>
+                          <span class="info-row-text"><b>Dipublikasikan</b>{{ n.publishedDate | date: 'd MMMM y' }}</span>
+                        </li>
+                      }
+                      <li class="info-row">
+                        <span class="info-row-icon"><app-icon name="eye" [size]="14" /></span>
+                        <span class="info-row-text"><b>Dibaca</b>{{ n.viewCount }} kali</span>
+                      </li>
+                    </ul>
+                    <a routerLink="/berita" class="info-cta"><app-icon name="arrow-left" [size]="13" /> Kembali ke Berita</a>
+                  </aside>
+
+                  <!-- ---------- Baca Juga — berita lain selain yang sedang
+                       dibaca. Dipanggil langsung lewat repo.publicList()
+                       (bukan repo.loadPublic()) supaya TIDAK menimpa
+                       repo.loading()/repo.publicNews() milik halaman index. ---------- -->
+                  @if (relatedNews().length > 0) {
+                    <aside class="detail-card story-card-related">
+                      <span class="eyebrow"><app-icon name="newspaper" [size]="13" /> Baca Juga</span>
+                      <div class="related-list mt-sm">
+                        @for (item of relatedNews(); track item.newsID) {
+                          <a [routerLink]="['/berita', item.newsSlug]" class="related-item">
+                            <div class="related-item-media">
+                              @if (item.newsImage) {
+                                <img [src]="thumbUrl(item.newsImage)" [alt]="item.newsTitle" loading="lazy" />
+                              } @else {
+                                <div class="related-item-media-fallback"><app-icon name="newspaper" [size]="16" /></div>
+                              }
+                            </div>
+                            <div class="related-item-body">
+                              <h3 class="related-item-title">{{ item.newsTitle }}</h3>
+                              @if (item.publishedDate) {
+                                <span class="related-item-date">{{ item.publishedDate | date: 'd MMM y' }}</span>
+                              }
+                            </div>
+                          </a>
+                        }
+                      </div>
+                    </aside>
+                  }
+                </div>
+              </div>
+
+              <section class="detail-card story-card-comments">
                 <app-comment-section contentType="news" [contentID]="n.newsID" />
               </section>
             </div>
           </div>
-        </section>
+        </main>
       } @else {
         <div class="container py-xl text-center">
           <h2>Berita tidak ditemukan</h2>
@@ -163,7 +182,7 @@ const RELATED_COUNT = 3;
     .crumb-row {
       display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
       font-size: 0.82rem; font-weight: 600; color: var(--color-text-secondary);
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
     .crumb-link { display: inline-flex; align-items: center; gap: 5px; color: var(--color-text-secondary); text-decoration: none; transition: color var(--motion-fast) ease; }
     .crumb-link:hover { color: var(--color-primary-dark); text-decoration: none; }
@@ -173,150 +192,170 @@ const RELATED_COUNT = 3;
       max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     @media (max-width: 640px) {
-      .crumb-row { font-size: 0.76rem; gap: 4px; margin-bottom: 16px; }
+      .crumb-row { font-size: 0.76rem; gap: 4px; margin-bottom: 14px; }
       .crumb-current { max-width: 140px; }
     }
 
-    /* ---------- Kanvas — identik .section-blob-drift Galeri/Struktur/
-       Kontak/Berita-index. TIDAK ADA hero foto apa pun di sini (beda
-       sengaja dari percobaan sebelumnya) — masthead murni kanvas
-       bertekstur + aksen jaringan kecil. ---------- */
-    .section { background: var(--color-primary-tint); position: relative; min-height: 70vh; }
-    .section-blob-drift { overflow: hidden; }
-    .section-blob-drift > .container { position: relative; z-index: 1; }
-    .section-blob-drift::before {
+    /* Latar gradasi + tekstur titik — pola sama dengan app-page-hero/Galeri
+       detail. Cover berita apa pun kualitasnya tidak bisa merusak tampilan
+       hero (object-fit:contain dalam bingkai, bukan latar penuh-layar). */
+    .hero-section {
+      position: relative;
+      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
+      color: #fff;
+      padding: 64px 0 56px;
+      overflow: hidden;
+    }
+    .hero-texture {
+      position: absolute; inset: 0; opacity: .5; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 1.6px);
+      background-size: 26px 26px; background-position: 15% -10px;
+      mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+      -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+    }
+    .hero-glow {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 55% 65% at 88% 30%, rgba(255,196,0,.18) 0%, transparent 70%);
+    }
+
+    .hero-grid {
+      position: relative; z-index: 2;
+      display: grid; grid-template-columns: 1.15fr 1fr; gap: 40px; align-items: center;
+    }
+    .hero-copy { position: relative; z-index: 2; }
+
+    .hero-badges { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-bottom: 16px; }
+    .hero-tag {
+      background: rgba(255,255,255,.15); backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.25); color: #fff;
+      font-size: .8rem; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .hero-tag-featured { background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark)); border-color: rgba(255,255,255,.3); }
+
+    .hero-event-name { display: block; font-size: 1.1rem; font-weight: 700; color: var(--color-primary-soft); letter-spacing: .03em; margin-bottom: 8px; }
+    .hero-title { font-size: 2.3rem; font-weight: 900; font-family: var(--font-heading); line-height: 1.3; color: #fff; margin: 0 0 20px; text-shadow: 0 2px 10px rgba(0,0,0,.4); }
+
+    .hero-meta-row { display: flex; flex-wrap: wrap; gap: 16px; }
+    .hero-meta-item { display: inline-flex; align-items: center; gap: 6px; font-size: .86rem; font-weight: 600; color: rgba(255,255,255,.88); }
+
+    .hero-badges, .hero-event-name, .hero-title, .hero-meta-row { opacity: 0; animation: heroCopyFadeUp .7s var(--ease-out) forwards; }
+    .hero-badges { animation-delay: .05s; }
+    .hero-event-name { animation-delay: .15s; }
+    .hero-title { animation-delay: .25s; }
+    .hero-meta-row { animation-delay: .4s; }
+    @keyframes heroCopyFadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hero-visual { position: relative; z-index: 2; display: flex; justify-content: center; }
+    .hero-cover-frame {
+      position: relative; width: 100%; max-width: 420px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25);
+      border-radius: 5%; padding: 10px; box-sizing: border-box; overflow: hidden;
+      box-shadow: 0 24px 50px rgba(0,0,0,.35);
+      opacity: 0; animation: heroCoverIn .7s var(--ease-out) .3s forwards;
+    }
+    @keyframes heroCoverIn { from { opacity: 0; transform: scale(.92) translateY(10px); } to { opacity: 1; transform: none; } }
+    .hero-cover-img { display: block; max-width: 100%; max-height: 380px; width: auto; height: auto; object-fit: contain; border-radius: 5%; }
+    .hero-cover-fallback { width: 100%; height: 220px; border-radius: 5%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.06); color: rgba(255,255,255,.6); }
+
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 28px; }
+      .hero-copy { text-align: center; }
+      .hero-badges, .hero-meta-row { justify-content: center; }
+      .hero-visual { order: -1; }
+      .hero-cover-frame { max-width: 340px; }
+    }
+
+    /* ---------- Kanvas konten — identik .section-blob-drift Galeri/
+       Struktur/Kontak/Berita-index. ---------- */
+    .detail-main-section {
+      position: relative; overflow: hidden; padding: 48px 0 80px;
+      background: var(--color-primary-tint);
+    }
+    .detail-main-section::before {
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
       background:
-        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
-        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
-      opacity: .8; animation: sectionBlobDrift 12s ease-in-out infinite alternate;
+        radial-gradient(ellipse 55% 45% at 92% 0%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 72%),
+        radial-gradient(ellipse 50% 45% at 4% 28%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 72%);
+      opacity: .75; animation: detailBlobDrift 12s ease-in-out infinite alternate;
     }
-    @keyframes sectionBlobDrift {
+    .detail-main-section::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom, var(--color-primary-tint) 0, rgba(243, 250, 245, 0) 70px);
+    }
+    .detail-main-section > .container { position: relative; z-index: 1; }
+    @keyframes detailBlobDrift {
       from { transform: translate(0, 0) scale(1); }
       to { transform: translate(-4%, 5%) scale(1.15); }
     }
-    @media (prefers-reduced-motion: reduce) { .section-blob-drift::before { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .detail-main-section::before { animation: none; } }
 
-    /* ---------- Kolom baca sempit — 820px, BUKAN 1080px bento lebar ala
-       Galeri. ---------- */
-    .article-layout { max-width: 820px; margin: 0 auto; padding-top: 24px; }
+    .content-layout { max-width: 1080px; margin: 0 auto; }
 
-    .article-masthead { position: relative; text-align: center; margin-bottom: 28px; opacity: 0; animation: articleFadeUp .6s var(--ease-out) forwards; }
-    /* Aksen jaringan kecil — pojok kanan-atas masthead, sentuhan "Peta
-       Silaturahmi" (primitif global .network-line/.network-node/.network-ping,
-       styles.scss) tanpa jadi ilustrasi besar seperti hero index. */
-    .masthead-accent { position: absolute; top: -8px; right: 2%; width: 92px; height: auto; opacity: .85; }
-    @media (max-width: 760px) { .masthead-accent { display: none; } }
+    .story-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .story-grid > * { min-width: 0; }
+    @media (max-width: 860px) { .story-grid { grid-template-columns: 1fr; } }
 
-    .article-badges { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    .chip-gold { background: var(--color-gold-soft); color: var(--color-gold-dark); display: inline-flex; align-items: center; gap: 5px; }
+    .detail-card { background: #fff; border-radius: 20px; padding: 32px; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); margin-bottom: 24px; }
+    .story-grid .detail-card { margin-bottom: 0; }
 
-    .article-title {
-      font-family: var(--font-display, var(--font-heading));
-      font-size: clamp(1.7rem, 3.6vw, 2.5rem); font-weight: 800; letter-spacing: -.01em;
-      line-height: 1.3; color: var(--color-text); margin: 0 0 18px;
-    }
+    /* Kolom kanan grid — Ringkasan & Baca Juga bertumpuk sebagai dua kartu
+       terpisah dalam satu kolom (bukan dua kolom grid), supaya "Baca Juga"
+       ada di sisi kanan seperti diminta, bukan kartu lebar penuh di bawah. */
+    .story-sidebar { display: flex; flex-direction: column; gap: 24px; }
 
-    .article-byline { display: flex; justify-content: center; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .byline-item { display: inline-flex; align-items: center; gap: 6px; font-size: .86rem; font-weight: 600; color: var(--color-text-secondary); }
-    .byline-sep { color: var(--color-border-strong); font-weight: 700; }
-
-    @keyframes articleFadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-    @media (prefers-reduced-motion: reduce) { .article-masthead { animation: none; opacity: 1; transform: none; } }
-
-    .detail-card { background: #fff; border-radius: 22px; padding: 36px; border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); }
-    .article-body { margin-bottom: 24px; }
-
-    /* ---------- Figure polaroid — foto cover di-float DI DALAM artikel
-       (bukan jadi latar hero), teks mengalir di sekelilingnya. Bingkai putih
-       tebal + sedikit miring = kesan "ditempel", bukan foto lurus biasa;
-       karena ukurannya kecil & kontekstual (bukan pusat perhatian dramatis),
-       foto apa pun kualitasnya (sertifikat, tangkapan layar) tidak pernah
-       merusak halaman seperti saat jadi hero penuh lebar. ---------- */
-    .article-figure {
-      float: right; width: 42%; max-width: 280px; margin: 4px 0 20px 28px;
-      background: #fff; padding: 10px 10px 14px; border-radius: 6px;
-      box-shadow: 0 16px 32px rgba(0,30,15,.18);
-      transform: rotate(2.5deg);
-    }
-    .article-figure img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 2px; }
-
-    .content { font-size: 1.08rem; line-height: 1.95; color: var(--color-text); }
+    .story-lead-text { font-size: 1.04rem; line-height: 1.9; color: var(--color-text-secondary); }
     .content ::ng-deep p { margin: 0 0 1.2em; }
     .content ::ng-deep img { max-width: 100%; border-radius: var(--radius-md); }
-    /* Drop-cap paragraf pertama — penanda editorial yang Galeri sama sekali
-       tidak punya (dokumentasi kegiatan tidak butuh "huruf besar pembuka"). */
-    .content ::ng-deep p:first-of-type::first-letter {
-      font-family: var(--font-display, var(--font-heading));
-      font-size: 3.4em; font-weight: 800; float: left; line-height: .82;
-      margin: 8px 10px 0 0; color: var(--color-primary-dark);
-    }
-    /* Pull-quote — kalau editor CMS menyisipkan blockquote, tampil sebagai
-       kutipan besar bergaya, bukan teks biasa berindentasi. */
-    .content ::ng-deep blockquote {
-      margin: 28px 0; padding: 2px 0 2px 24px; border-left: 4px solid var(--color-gold);
-      font-family: var(--font-accent, var(--font-heading)); font-style: italic;
-      font-size: 1.25rem; line-height: 1.6; color: var(--color-primary-dark);
-    }
 
     .article-credits {
-      display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 28px 0 0; padding-top: 20px;
-      border-top: 1px solid var(--color-border); clear: both;
+      display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 24px 0 0; padding-top: 18px;
+      border-top: 1px solid var(--color-border);
       font-size: .82rem; color: var(--color-text-secondary);
     }
     .article-credits b { color: var(--color-text); font-weight: 700; }
 
-    .back-link {
-      display: inline-flex; align-items: center; gap: 8px; margin-top: 20px;
-      font-size: .86rem; font-weight: 700; color: var(--color-primary-dark); text-decoration: none;
+    .info-rows { display: flex; flex-direction: column; gap: 14px; list-style: none; margin: 0; padding: 0; }
+    .info-row { display: flex; align-items: center; gap: 12px; }
+    .info-row-icon {
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 10px;
+      background: var(--color-primary-soft); color: var(--color-primary-dark);
     }
-    .back-link:hover { color: var(--color-primary); text-decoration: none; }
+    .info-row-text { display: flex; flex-direction: column; gap: 1px; font-size: 0.86rem; color: var(--color-text); }
+    .info-row-text b { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-muted); }
 
-    @media (max-width: 640px) {
-      .detail-card { padding: 24px; }
-      .article-title { text-align: left; }
-      .article-badges, .article-byline { justify-content: flex-start; }
-      .article-masthead { text-align: left; }
-      /* Float samping cuma masuk akal saat kolom lebar — di mobile foto
-         jadi elemen penuh lebar biasa di atas teks, tidak di-float. */
-      .article-figure { float: none; width: 100%; max-width: none; margin: 0 0 20px; transform: none; }
+    .info-cta {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border);
+      font-size: 0.84rem; font-weight: 700; color: var(--color-primary-dark);
+      text-decoration: none;
     }
+    .info-cta:hover { color: var(--color-primary); text-decoration: none; }
 
-    /* ---------- Baca Juga — kartu ringkas, BUKAN di dalam .detail-card
-       (kartu-dalam-kartu janggal karena tiap item sudah jadi kartu sendiri)
-       — duduk bebas di atas kanvas section-blob-drift. ---------- */
-    .related-section { margin-bottom: 24px; }
-    .related-heading {
-      display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
-      font-size: 1.05rem; font-weight: 800; color: var(--color-text);
+    /* ---------- Baca Juga — list kompak horizontal (thumbnail kecil + judul),
+       BUKAN grid kartu lebar — kolom sidebar-nya sendiri cuma ~1fr (sempit),
+       grid 3-kolom tidak akan muat. ---------- */
+    .related-list { display: flex; flex-direction: column; gap: 14px; }
+    .related-item {
+      display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;
+      padding: 6px; margin: -6px; border-radius: 12px;
+      transition: background var(--motion-fast) ease;
     }
-    .related-heading app-icon { color: var(--color-primary); }
-
-    .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .related-card {
-      display: flex; flex-direction: column; background: #fff; border-radius: 16px; overflow: hidden;
-      border: 1px solid var(--color-border); box-shadow: var(--shadow-sm); text-decoration: none; color: inherit;
-      transition: transform .3s cubic-bezier(.22,1,.36,1), box-shadow .3s cubic-bezier(.22,1,.36,1);
+    .related-item:hover { background: var(--color-bg-alt); text-decoration: none; }
+    .related-item-media {
+      position: relative; flex-shrink: 0; width: 56px; height: 56px; border-radius: 10px; overflow: hidden;
+      background: var(--color-bg-alt);
     }
-    .related-media { position: relative; aspect-ratio: 16 / 10; background: var(--color-bg-alt); overflow: hidden; }
-    .related-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s ease; }
-    .related-media-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--color-primary); background: var(--color-primary-soft); }
-    .related-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 6px; }
-    .related-cat { font-size: .68rem; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--color-primary-dark); }
-    .related-title {
-      margin: 0; font-size: .92rem; font-weight: 700; line-height: 1.4; color: var(--color-text);
+    .related-item-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .related-item-media-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--color-primary); background: var(--color-primary-soft); }
+    .related-item-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .related-item-title {
+      margin: 0; font-size: .86rem; font-weight: 700; line-height: 1.35; color: var(--color-text);
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
     }
-    .related-date { display: inline-flex; align-items: center; gap: 5px; font-size: .72rem; color: var(--color-muted); font-weight: 600; }
-
-    @media (hover: hover) and (pointer: fine) {
-      .related-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); text-decoration: none; }
-      .related-card:hover .related-media img { transform: scale(1.06); }
-    }
-
-    @media (max-width: 640px) {
-      .related-grid { grid-template-columns: 1fr; }
-    }
+    .related-item-date { font-size: .72rem; color: var(--color-muted); font-weight: 600; }
   `],
 })
 export class NewsPublicDetailPage implements OnInit {
