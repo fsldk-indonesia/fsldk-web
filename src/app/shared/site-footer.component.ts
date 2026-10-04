@@ -19,17 +19,28 @@ import { goodsPath } from '../modules/goods/goods.path';
            ke elemen ANAK (.foot-wave-clip) dari elemen yang pegang filter
            drop-shadow (.foot-wave) — overflow:hidden + filter di ELEMEN YANG
            SAMA bisa bikin browser gagal nge-clip dengan benar, muncul
-           sebagai celah/garis putih di tepi. Dipisah 2 lapis supaya aman. -->
-      <div class="foot-wave">
-        <div class="foot-wave-clip">
-          <!-- Path satu periode (lebar 1440) diulang persis sekali lagi
-               digeser +1440 dalam viewBox lebar 2880 — dua repetisi identik,
-               supaya svg-nya (lebar 200%, lihat CSS) bisa digeser
-               translateX(-50%) tepat satu periode penuh dan animasinya loop
-               mulus infinite. -->
-          <svg viewBox="0 0 2880 320" preserveAspectRatio="none" aria-hidden="true">
-            <path style="fill: var(--color-text)" d="M0,64C240,160,480,192,720,160C960,128,1200,32,1440,64C1680,160,1920,192,2160,160C2400,128,2640,32,2880,64L2880,320L0,320Z"></path>
-          </svg>
+           sebagai celah/garis putih di tepi. Dipisah 2 lapis supaya aman.
+           .foot-wave-backdrop JUGA dipisah ke elemen SENDIRI (sibling, bukan
+           background .foot-wave) — drop-shadow adalah filter yang membayangi
+           SELURUH konten elemennya (termasuk background), jadi kalau warna
+           backdrop ditaruh langsung di .foot-wave, bayangannya ikut
+           membayangi kotak backdrop itu sendiri (muncul garis gelap
+           melintang = warna "ketiga" yang tidak nyambung). Dengan backdrop
+           di lapisan terpisah DI BAWAH .foot-wave, filter cuma membayangi
+           bentuk wave SVG-nya saja. -->
+      <div class="foot-wave-stage">
+        <div class="foot-wave-backdrop" aria-hidden="true"></div>
+        <div class="foot-wave">
+          <div class="foot-wave-clip">
+            <!-- Path satu periode (lebar 1440) diulang persis sekali lagi
+                 digeser +1440 dalam viewBox lebar 2880 — dua repetisi identik,
+                 supaya svg-nya (lebar 200%, lihat CSS) bisa digeser
+                 translateX(-50%) tepat satu periode penuh dan animasinya loop
+                 mulus infinite. -->
+            <svg viewBox="0 0 2880 320" preserveAspectRatio="none" aria-hidden="true">
+              <path style="fill: var(--color-text)" d="M0,64C240,160,480,192,720,160C960,128,1200,32,1440,64C1680,160,1920,192,2160,160C2400,128,2640,32,2880,64L2880,320L0,320Z"></path>
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -102,7 +113,9 @@ import { goodsPath } from '../modules/goods/goods.path';
        terakhirnya berwarna solid (mis. News index, lihat ngOnInit-nya)
        men-set custom property ini di :root supaya ruang negatif wave tidak
        nembus ke warna body/putih, melainkan ke warna section itu sendiri. */
-    .foot-wave { position: relative; height: 60px; background: var(--footer-wave-backdrop, transparent); filter: drop-shadow(0 -12px 24px rgba(0,0,0,.22)); }
+    .foot-wave-stage { position: relative; height: 60px; }
+    .foot-wave-backdrop { position: absolute; inset: 0; background: var(--footer-wave-backdrop, transparent); pointer-events: none; }
+    .foot-wave { position: absolute; inset: 0; filter: drop-shadow(0 -12px 24px rgba(0,0,0,.22)); }
     .foot-wave-clip { width: 100%; height: 100%; overflow: hidden; }
     /* svg dua kali lebar kontainer (dua periode identik, lihat komentar di
        template) digeser translateX(-50%) — persis satu periode — supaya
@@ -148,7 +161,7 @@ import { goodsPath } from '../modules/goods/goods.path';
 
     .foot-copy { margin-top: 28px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.1); font-size: .8rem; color: var(--color-muted); }
 
-    @media (max-width: 600px) { .foot-wave { height: 36px; } }
+    @media (max-width: 600px) { .foot-wave-stage { height: 36px; } }
   `],
 })
 export class SiteFooterComponent {

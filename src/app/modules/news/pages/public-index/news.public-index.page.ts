@@ -414,8 +414,9 @@ const MAX_MOBILE_DOTS = 7;
        tombol "Urutkan" yang sudah putih) supaya tetap kontras; override di
        sini (BUKAN di komponen globalnya) karena di halaman lain yang masih
        berlatar terang warna solid hijau aslinya tetap benar. */
-    ::ng-deep .news-toolbar .sfs-btn-filter { background: #fff; color: var(--color-primary-dark); }
-    ::ng-deep .news-toolbar .sfs-btn-filter:hover { background: var(--color-primary-soft); }
+    ::ng-deep .news-toolbar .sfs-btn-filter { background: #fff !important; color: var(--color-primary-dark) !important; }
+    ::ng-deep .news-toolbar .sfs-btn-filter app-icon { color: var(--color-primary-dark) !important; }
+    ::ng-deep .news-toolbar .sfs-btn-filter:hover { background: var(--color-primary-soft) !important; }
     ::ng-deep .news-toolbar .sfs-count { box-shadow: 0 0 0 2px var(--color-primary); }
     /* Chip filter aktif (Kategori/Tahun Terbit/Penulis) bawaan sfs — pucat
        hijau-di-atas-hijau terhadap section ini, nyaris nyatu dengan
