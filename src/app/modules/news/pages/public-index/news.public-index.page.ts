@@ -412,26 +412,21 @@ const MAX_MOBILE_DOTS = 7;
     .section > .container { position: relative; z-index: 1; }
 
     /* Elemen transisi hero -> section (sibling, BUKAN child .section) —
-       10px teratas rata & berwarna tint PERSIS sama dengan fill .hero-wave
-       (jahitan ke hero tanpa garis karena warnanya sama persis), lalu wave
-       hijau mengisi 80px di bawahnya yang tepi bawahnya rata hijau menyatu
-       dengan .section. Satu-satunya wave yang tampak di zona ini — tidak
-       menumpuk wave kedua di atas wave hero yang sudah ada (itu sebabnya
-       versi sebelumnya masih terlihat "putus": dua wave beda warna/bentuk
-       bertemu, bukan menyambung). */
+       MENIMPA wave bawaan .hero-wave (warnanya tint/pucat, itu sebabnya
+       masih terlihat ada warna ketiga nongol di tengah) dengan wave hijau
+       bentuk identik di posisi PERSIS sama: margin-top negatif setinggi
+       .hero-wave (80px, lihat shared/page-hero.component.ts) + z-index di
+       atas .hero (z-index:5 di sana) supaya elemen ini digambar DI ATASNYA,
+       menutup penuh wave pucat itu. Hasilnya cuma satu wave hijau yang
+       kelihatan, langsung menyatu ke .section — tanpa jarak/warna pucat
+       tersisa di antaranya. Tinggi & margin SAMA (saling meniadakan) jadi
+       tidak menambah tinggi halaman. */
     .hero-to-section-transition {
-      position: relative; height: 90px; line-height: 0; pointer-events: none;
-      background: var(--color-primary-tint);
+      position: relative; z-index: 6;
+      height: 80px; margin-top: -80px; line-height: 0; pointer-events: none;
     }
-    .hero-to-section-transition svg {
-      position: absolute; left: 0; bottom: 0; display: block; width: 100%; height: 80px;
-    }
+    .hero-to-section-transition svg { display: block; width: 100%; height: 100%; }
     .hero-to-section-transition path { fill: var(--color-primary); }
-
-    @media (max-width: 640px) {
-      .hero-to-section-transition { height: 56px; }
-      .hero-to-section-transition svg { height: 50px; }
-    }
 
     .news-section-head { margin-bottom: 28px; }
     .news-section-head h2 { margin: 14px 0 10px; color: #fff; }
