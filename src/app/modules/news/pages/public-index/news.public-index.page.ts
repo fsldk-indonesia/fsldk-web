@@ -389,12 +389,17 @@ const MAX_MOBILE_DOTS = 7;
       background: var(--color-primary);
       min-height: 60vh; padding: 56px 0 72px;
     }
+    /* Inset POSITIF (bukan negatif menggantung keluar tepi) — .section
+       overflow:hidden sebelumnya memotong bentuk icon persis di tengah
+       lekukannya (apalagi dengan rotate, garis potongnya jadi miring &
+       kelihatan rusak, bukan memudar natural di pojok). Dengan inset
+       positif, seluruh bentuk icon utuh, cuma nempel dekat pojok. */
     .news-panel-silhouette {
-      position: absolute; right: -40px; bottom: -40px; z-index: 0; color: rgba(255,255,255,.12);
+      position: absolute; right: 8px; bottom: 8px; z-index: 0; color: rgba(255,255,255,.12);
       transform: rotate(-12deg); pointer-events: none;
     }
     .news-panel-silhouette-2 {
-      position: absolute; left: -24px; top: -24px; z-index: 0; color: rgba(255,255,255,.08);
+      position: absolute; left: 8px; top: 8px; z-index: 0; color: rgba(255,255,255,.08);
       transform: rotate(16deg); pointer-events: none;
     }
     .section > .container { position: relative; z-index: 1; }
