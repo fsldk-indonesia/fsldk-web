@@ -42,11 +42,11 @@ import { statisticPublicRoutes } from './modules/statistic/statistic.routes';
  * lalu diagregasikan di sini di bawah 2 layout shell: publik (termasuk
  * autentikasi, bersarang di dalamnya) dan CMS.
  *
- * Halaman autentikasi (login/daftar/dll) sengaja dipasang sebagai anak dari
- * PublicLayoutComponent, bukan shell terpisah â€” persis pola ldksyahid-app
- * (halaman auth memakai navbar & footer landing page yang sama) karena
- * halaman ini diperuntukkan bagi masyarakat umum, bukan hanya pengguna CMS.
- * AuthLayoutComponent kini hanya membingkai kartu form + panel visual.
+ * Halaman autentikasi (login/daftar/dll) dipasang sebagai shell SENDIRI
+ * (AuthLayoutComponent), BUKAN lagi anak dari PublicLayoutComponent — tanpa
+ * navbar/footer/WhatsApp FAB landing page, cuma kartu form di atas backdrop
+ * hero gelap (lihat AuthLayoutComponent). Jalan keluarnya adalah tombol
+ * "Kembali ke Beranda" di dalam kartu itu sendiri, bukan navbar.
  *
  * Tentang tidak lagi punya rute sendiri â€” kontennya digabung sebagai bagian
  * dari Beranda (lihat modules/home), diakses lewat anchor #tentang. Kontak
@@ -83,7 +83,6 @@ export const routes: Routes = [
       ...contactPublicRoutes(),
       ...subscriptionPublicRoutes(),
       ...statisticPublicRoutes(),
-      { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
       // Profil Saya — dipisah dari Portal Kader (sebelumnya /kader/profil,
       // jadi tidak bisa diakses akun non-Kader sama sekali karena link
       // menuju Portal Kader hanya muncul untuk akun Kader) supaya SEMUA akun
@@ -99,6 +98,9 @@ export const routes: Routes = [
       },
     ],
   },
+
+  // ---------- Autentikasi (shell sendiri, TANPA navbar/footer landing page) ----------
+  { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
 
   // ---------- CMS (terproteksi) ----------
   // 4 shell terpisah (miss-development-clarification.md poin 1-4): CMS Utama

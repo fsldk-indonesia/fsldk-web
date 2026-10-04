@@ -12,12 +12,13 @@ import { VerifyEmailView } from './verify-email.view';
   imports: [RouterLink],
   providers: [VerifyEmailPresenter],
   styles: [`
-    .center { text-align: center; padding: 40px 0; }
-    .icon { width: 72px; height: 72px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 20px; }
+    .center { text-align: center; padding: 16px 0; }
+    .icon { width: 60px; height: 60px; border-radius: 999px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin: 0 auto 14px; }
     .icon.ok { background: var(--color-primary-soft); color: var(--color-primary); }
     .icon.wait { background: var(--color-primary-soft); color: var(--color-primary-dark); }
-    h2 { text-align: center; } .subtitle { text-align: center; color: var(--color-text-secondary); margin: 0 0 24px; }
-    .foot { text-align: center; margin-top: 20px; font-size: .9rem; }
+    h2 { text-align: center; margin: 0 0 3px; font-size: 1.25rem; } .subtitle { text-align: center; color: var(--color-text-secondary); margin: 0 0 14px; font-size: .88rem; }
+    .btn-block { padding: 10px 22px; }
+    .foot { text-align: center; margin-top: 12px; font-size: .86rem; }
   `],
 })
 export class VerifyEmailPage implements OnInit, VerifyEmailView {

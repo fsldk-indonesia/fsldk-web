@@ -12,9 +12,12 @@ import { ResetPasswordView } from './reset-password.view';
   imports: [FormsModule, RouterLink, PasswordFieldComponent],
   providers: [ResetPasswordPresenter],
   styles: [`
-    h2 { margin-bottom: 4px; } .subtitle { color: var(--color-text-secondary); margin: 0 0 24px; }
-    .notice-error { background: var(--color-danger-soft); color: var(--color-danger); padding: 16px; border-radius: 12px; font-size: .9rem; }
-    .foot { text-align: center; margin-top: 24px; font-size: .9rem; }
+    h2 { margin: 0 0 3px; font-size: 1.3rem; } .subtitle { color: var(--color-text-secondary); margin: 0 0 14px; font-size: .88rem; }
+    .form-group { margin-bottom: 12px; }
+    .form-control { padding: 9px 12px; }
+    .btn-block { padding: 10px 22px; }
+    .notice-error { background: var(--color-danger-soft); color: var(--color-danger); padding: 14px; border-radius: 12px; font-size: .88rem; }
+    .foot { text-align: center; margin-top: 14px; font-size: .86rem; }
   `],
 })
 export class ResetPasswordPage implements OnInit, ResetPasswordView {

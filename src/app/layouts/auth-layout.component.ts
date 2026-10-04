@@ -1,68 +1,99 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
+import { IconComponent } from '../shared/icon.component';
 
 /**
- * Bingkai halaman autentikasi: dipasang bersarang di dalam PublicLayoutComponent
- * (navbar & footer landing page yang sama, persis pola ldksyahid-app) — bukan
- * shell terpisah. Panel kiri berisi ayat & poin komunitas dakwah yang bersifat
- * umum, bukan pesan "Panel CMS", karena halaman login/daftar diperuntukkan
- * bagi masyarakat umum, tidak hanya pengguna dengan akses CMS.
+ * Bingkai halaman autentikasi — shell SENDIRI di root routes (BUKAN lagi
+ * bersarang di dalam PublicLayoutComponent, lihat app.routes.ts), jadi
+ * tidak ada navbar/footer/WhatsApp FAB landing page sama sekali. Latar
+ * belakang memakai bahasa visual yang SAMA PERSIS dengan hero GELAP di
+ * halaman detail Galeri/Berita (gradien diagonal hijau tua + glow radial
+ * emas + tekstur titik, lihat .hero-section di gallery.public-detail.page.ts)
+ * — BUKAN gradien terang app-page-hero (itu untuk halaman index). Tidak
+ * ada mesin konten hero apa pun (badge/judul/kutipan/ilustrasi) — backdrop
+ * gelap ini murni jadi panggung untuk satu kartu putih yang di-tengah-kan.
+ * Panel kiri berisi ayat & poin komunitas dakwah yang sebelumnya ada
+ * DIHAPUS sepenuhnya — hanya kartu + isinya form, ditutup tautan "Kembali
+ * ke Beranda" di dalam kartu itu sendiri (satu-satunya jalan keluar karena
+ * tidak ada navbar lagi).
+ *
+ * Tekstur titik di background PERSIS sama dengan .hero-texture asli di
+ * detail Galeri/Berita (statis, dimask di pojok kanan-atas) — mengikuti
+ * mouse, drift bergeser, dan ripple mengembang-memudar semua sempat
+ * dicoba lalu dilepas; versi statis inilah yang dipakai final. Kartu juga
+ * statis (tanpa idle sway), gaya kartu putih polos.
  */
 @Component({
   selector: 'app-auth-layout',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink, IconComponent],
   template: `
     <div class="auth-wash">
-      <div class="container auth-shell">
-        <aside class="auth-visual">
-          <blockquote class="auth-ayat">
-            <p>"Dan hendaklah ada di antara kamu segolongan umat yang menyeru kepada kebajikan, menyuruh kepada yang ma'ruf dan mencegah dari yang munkar; merekalah orang-orang yang beruntung."</p>
-            <cite>QS. Ali 'Imran: 104</cite>
-          </blockquote>
-          <ul class="auth-points">
-            <li>Ratusan Lembaga Dakwah Kampus se-Indonesia</li>
-            <li>Pembinaan dan kaderisasi dai kampus</li>
-            <li>Jaringan ukhuwah lintas kampus dan daerah</li>
-          </ul>
-        </aside>
-        <div class="auth-card">
-          <router-outlet />
-        </div>
+      <div class="auth-texture" aria-hidden="true"></div>
+      <div class="auth-card">
+        <router-outlet />
+        <a routerLink="/" class="auth-back-home">
+          <app-icon name="arrow-left" [size]="13" /> Kembali ke Beranda
+        </a>
       </div>
     </div>
   `,
   styles: [`
-    /* Gradien di wrapper TERPISAH dari .container — sebelumnya class
-       "auth-shell container" dipasang di elemen yang sama sehingga padding
-       .auth-shell menimpa padding .container sepenuhnya (bug yang sama
-       persis dengan CTA band di beranda). */
-    .auth-wash { background: linear-gradient(180deg, var(--color-primary-soft) 0%, var(--color-primary-tint) 100%); }
-    /* align-items:start (bukan center) — sebelumnya panel kiri yang lebih
-       pendek dari kartu form malah mengambang di tengah tinggi kartu,
-       menyisakan jarak kosong besar di atasnya yang terlihat seperti
-       kontennya "terpotong"/hilang sebagian. */
-    .auth-shell { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; padding: 56px 24px; }
-    .auth-visual { padding: 8px; }
-    .auth-ayat { border-left: 3px solid var(--color-primary); padding-left: 20px; margin: 0 0 28px; }
-    .auth-ayat p { font-family: var(--font-heading); font-size: 1.15rem; color: var(--color-text); line-height: 1.6; margin: 0 0 10px; }
-    .auth-ayat cite { color: var(--color-primary); font-weight: 600; font-size: .88rem; font-style: normal; }
-    .auth-points { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-    .auth-points li { display: flex; align-items: center; gap: 10px; color: var(--color-text-secondary); font-size: .95rem; }
-    /* Titik simpul berdenyut bergantian hijau/emas/ember — gema motif
-       jaringan yang sama dipakai di hero & navbar, bukan bullet polos. */
-    .auth-points li::before { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--color-primary); flex-shrink: 0; animation: node-pulse 2.6s ease-in-out infinite; }
-    .auth-points li:nth-child(2)::before { background: var(--color-gold); animation-delay: .3s; }
-    .auth-points li:nth-child(3)::before { background: var(--color-ember); animation-delay: .6s; }
-    /* min-height + flex-center: tiap halaman auth (login/daftar/lupa-password/
-       reset-password/verifikasi-email) punya jumlah field/konten yang beda-beda,
-       sebelumnya kartu ikut memendek/memanjang mengikuti kontennya masing-masing
-       sehingga terasa "loncat" tinggi saat pindah halaman (miss-development-
-       prompt-3.md poin 7). Disamakan ke satu tinggi minimum (berdasar halaman
-       terpanjang, Daftar Akun) — halaman yang lebih pendek center secara vertikal
-       di dalamnya alih-alih menempel ke atas dengan sisa ruang kosong di bawah. */
-    .auth-card { width: 100%; max-width: 420px; min-height: 560px; display: flex; flex-direction: column; justify-content: center; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); padding: 36px; }
-    @media (max-width: 860px) { .auth-shell { grid-template-columns: 1fr; padding: 32px 20px; } .auth-visual { display: none; } .auth-card { max-width: 100%; margin: 0 auto; } }
+    /* Backdrop — gradien hijau tua diagonal + glow radial emas, disalin
+       PERSIS dari .hero-section/.hero-glow milik hero gelap di detail
+       Galeri/Berita (BUKAN gradien terang app-page-hero yang dipakai
+       halaman index) — di sini cuma jadi panggung gelap untuk satu kartu
+       putih di tengah. */
+    .auth-wash {
+      position: relative; overflow: hidden;
+      min-height: 100dvh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px 24px;
+      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
+    }
+    .auth-wash::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: radial-gradient(ellipse 55% 65% at 88% 30%, rgba(255,196,0,.18) 0%, transparent 70%);
+    }
+    /* Tekstur titik — PERSIS sama dengan .hero-texture asli di detail
+       Galeri/Berita (opacity, kerapatan, posisi mask di pojok kanan-atas),
+       statis tanpa animasi/mouse-follow/ripple (beberapa varian sudah
+       dicoba, ini yang dipakai final). */
+    .auth-texture {
+      position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 1.6px);
+      background-size: 26px 26px; background-position: 15% -10px;
+      mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+      -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+    }
+
+    /* view-transition-name — pindah halaman (login/daftar/dll) pakai grup
+       transisi SENDIRI (bukan "root"), lihat ::view-transition-old(auth-card)
+       di styles.scss untuk alasannya. */
+    .auth-card {
+      position: relative; z-index: 1; box-sizing: border-box;
+      width: 100%; max-width: 400px;
+      view-transition-name: auth-card;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+      box-shadow: 0 24px 50px rgba(0,0,0,.35); padding: 26px 28px;
+    }
+
+    /* Satu-satunya jalan keluar dari halaman auth sekarang (tidak ada
+       navbar lagi) — ditaruh di layout (bukan tiap page) supaya otomatis
+       muncul konsisten di kelima halaman (login/daftar/lupa-password/
+       reset-password/verifikasi-email) tanpa diulang manual. */
+    .auth-back-home {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border);
+      font-size: .82rem; font-weight: 700; color: var(--color-text-secondary);
+      text-decoration: none;
+    }
+    .auth-back-home:hover { color: var(--color-primary-dark); text-decoration: none; }
+
+    @media (max-width: 480px) {
+      .auth-wash { padding: 20px 16px; }
+      .auth-card { padding: 22px 22px 18px; }
+    }
   `],
 })
 export class AuthLayoutComponent {}

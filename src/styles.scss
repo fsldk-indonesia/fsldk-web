@@ -603,6 +603,25 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
 @keyframes page-fade-out { to { opacity: 0; transform: translateY(-6px) scale(.99); } }
 @keyframes page-fade-in { from { opacity: 0; transform: translateY(8px) scale(.995); } to { opacity: 1; transform: none; } }
 
+/* ---------- Transisi kartu auth (view-transition-name="auth-card", lihat
+   AuthLayoutComponent) — kartu login/daftar/lupa-password/dst. berbagi SATU
+   wrapper .auth-card yang persis sama secara DOM, cuma isinya (router-outlet)
+   yang berganti saat pindah halaman. Memberi nama transisi SENDIRI (beda
+   dari "root" di atas) membuat browser memotretnya sebagai grup terpisah:
+   kartu lama & baru saling cross-fade + sedikit morph tinggi (otomatis
+   kalau tingginya beda, mis. Login ke Daftar yang field-nya lebih banyak),
+   sementara backdrop gelap di baliknya TIDAK ikut ter-fade (sudah identik,
+   root-fade di sana tidak kelihatan) — jadi yang terasa "smooth" justru
+   fokus di kartunya, bukan transisi flash seluruh halaman. ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(auth-card) {
+    animation: page-fade-out var(--motion-slow) var(--ease-out) both;
+  }
+  ::view-transition-new(auth-card) {
+    animation: page-fade-in var(--motion-slow) var(--ease-out) both;
+  }
+}
+
 /* ---------- Stagger halus untuk grid kartu (berita/artikel/stat) ----------
    Dipasang lewat style.setProperty('--stagger-i', i) per elemen di template;
    fallback tanpa variabel itu tetap tampil (delay default 0). */

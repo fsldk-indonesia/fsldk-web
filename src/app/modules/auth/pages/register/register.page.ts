@@ -14,13 +14,16 @@ import { RegisterView } from './register.view';
   imports: [FormsModule, RouterLink, GoogleButtonComponent, PasswordFieldComponent],
   providers: [RegisterPresenter],
   styles: [`
-    h2 { margin-bottom: 4px; } .subtitle { color: var(--color-text-secondary); margin: 0 0 24px; }
-    .foot { text-align: center; margin-top: 24px; color: var(--color-text-secondary); font-size: .9rem; }
-    .divider { text-align: center; margin: 22px 0; position: relative; color: var(--color-muted); font-size: .85rem; }
+    h2 { margin: 0 0 3px; font-size: 1.3rem; } .subtitle { color: var(--color-text-secondary); margin: 0 0 14px; font-size: .88rem; }
+    .form-group { margin-bottom: 10px; }
+    .form-control { padding: 8px 12px; }
+    .foot { text-align: center; margin-top: 12px; color: var(--color-text-secondary); font-size: .86rem; }
+    .divider { text-align: center; margin: 12px 0; position: relative; color: var(--color-muted); font-size: .82rem; }
     .divider::before { content:''; position:absolute; top:50%; left:0; right:0; height:1px; background: var(--color-border); }
     .divider span { background: var(--color-bg-warm); padding: 0 12px; position: relative; }
     .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; }
     .g-icon { flex-shrink: 0; }
+    .btn-block { padding: 10px 22px; }
   `],
 })
 export class RegisterPage implements OnInit, RegisterView {
