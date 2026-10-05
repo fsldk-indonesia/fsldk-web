@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik berita — dipasang sebagai children dari PublicLayoutComponent. */
 export const newsPublicRoutes: () => Routes = () => [
@@ -11,21 +11,21 @@ export const newsPublicRoutes: () => Routes = () => [
 export const newsCmsRoutes: () => Routes = () => [
   {
     path: 'news',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'news.view' },
     title: 'Berita',
     loadComponent: () => import('./pages/index/news.index.page').then((m) => m.NewsIndexPage),
   },
   {
     path: 'news/form',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'news.create' },
     title: 'Tambah Berita',
     loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
   },
   {
     path: 'news/form/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'news.update' },
     title: 'Edit Berita',
     loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),
@@ -36,7 +36,7 @@ export const newsCmsRoutes: () => Routes = () => [
     // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
     // NewsIndexPage), bukan cuma dari ikon Edit.
     path: 'news/view/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'news.view', viewOnly: true },
     title: 'Detail Berita',
     loadComponent: () => import('./pages/form/news.form.page').then((m) => m.NewsFormPage),

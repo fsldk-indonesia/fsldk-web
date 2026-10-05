@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /** Public finance-format route — mounted as a child of PublicLayoutComponent. */
 export const financeformatPublicRoutes: () => Routes = () => [
@@ -10,21 +10,21 @@ export const financeformatPublicRoutes: () => Routes = () => [
 export const financeformatCmsRoutes: () => Routes = () => [
   {
     path: 'finance-formats',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'financeformat.view' },
     title: 'Format Keuangan',
     loadComponent: () => import('./pages/index/financeformat.index.page').then((m) => m.FinanceFormatIndexPage),
   },
   {
     path: 'finance-formats/form',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'financeformat.create' },
     title: 'Tambah Format Keuangan',
     loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
   },
   {
     path: 'finance-formats/form/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'financeformat.update' },
     title: 'Edit Format Keuangan',
     loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),
@@ -35,7 +35,7 @@ export const financeformatCmsRoutes: () => Routes = () => [
     // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
     // FinanceFormatIndexPage) — pola sama seperti Berita/Perpustakaan.
     path: 'finance-formats/view/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'financeformat.view', viewOnly: true },
     title: 'Detail Format Keuangan',
     loadComponent: () => import('./pages/form/financeformat.form.page').then((m) => m.FinanceFormatFormPage),

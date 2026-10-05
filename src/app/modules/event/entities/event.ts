@@ -1,5 +1,18 @@
 ﻿export type EventStatus = 'upcoming' | 'ongoing' | 'past';
 
+/** Label & ikon tampilan untuk EventStatus — dipakai bersama oleh index &
+ *  detail (badge kartu, badge hero, dsb.) supaya tidak duplikat per halaman. */
+export const EVENT_STATUS_LABEL: Record<EventStatus, string> = {
+  upcoming: 'Akan Datang',
+  ongoing: 'Berlangsung',
+  past: 'Telah Selesai',
+};
+export const EVENT_STATUS_ICON: Record<EventStatus, string> = {
+  upcoming: 'calendar-days',
+  ongoing: 'play-circle',
+  past: 'check-circle',
+};
+
 /** Lightweight event shape used in list views. */
 export interface EventListItem {
   eventID: number;

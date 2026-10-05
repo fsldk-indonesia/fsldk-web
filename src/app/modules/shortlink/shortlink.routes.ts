@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /**
  * Rute manajemen shortlink CMS — dipasang sebagai children dari
@@ -11,14 +11,14 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const shortlinkRoutes: () => Routes = () => [
   {
     path: 'shortlink/list',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'shortlink.view' },
     title: 'Daftar Shortlink',
     loadComponent: () => import('./pages/index/shortlink.index.page').then((m) => m.ShortlinkIndexPage),
   },
   {
     path: 'shortlink/permintaan',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'shortlink.view' },
     title: 'Permintaan Shortlink',
     loadComponent: () => import('./pages/request-index/shortlinkrequest.index.page').then((m) => m.ShortLinkRequestIndexPage),

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /**
  * Public routes for Contact Us module.
@@ -28,7 +28,7 @@ export const contactPublicRoutes: () => Routes = () => [
 export const contactCmsRoutes: () => Routes = () => [
   {
     path: 'contact-messages',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'contact.view' },
     title: 'Pesan Kontak',
     loadComponent: () =>

@@ -1,20 +1,113 @@
+<app-page-hero
+  badge="Kalender Kegiatan &middot; FSLDK Indonesia"
+  title="Satu Kalender,"
+  titleAccent="Seluruh Gerak Dakwah Kampus"
+  subtitle="Pantau kajian, musyawarah, daurah, dan agenda dakwah kampus se-Indonesia dalam satu kalender &mdash; arahkan kursor ke sebuah tanggal untuk melihat ringkasannya."
+  quoteSource="quran"
+  waveColor="var(--color-primary)">
+  <!-- Siluet sisi kanan hero: kartu kalender sebagai hub, garis jaringan
+       menjalar ke titik-titik simpul agenda — pola sama persis
+       "buku+jaringan" Perpustakaan, cuma motif tengahnya diganti kartu
+       kalender + titik "hari ini". -->
+  <div heroVisual class="hero-cal-visual">
+    <svg aria-hidden="true" viewBox="0 0 480 320" class="cal-svg">
+      <defs>
+        <linearGradient id="calHeaderFill" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="var(--color-primary-bright)" />
+          <stop offset="100%" stop-color="var(--color-primary)" />
+        </linearGradient>
+        <filter id="calSoftBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" />
+        </filter>
+      </defs>
+
+      <g class="cal-silhouette">
+        <ellipse class="cal-ground-shadow" cx="240" cy="276" rx="100" ry="10" filter="url(#calSoftBlur)" />
+
+        <!-- Kartu kalender -->
+        <rect x="140" y="130" width="200" height="150" rx="16" fill="#fff" stroke="var(--color-border)" stroke-width="1.5" />
+        <rect x="140" y="130" width="200" height="20" rx="16" fill="url(#calHeaderFill)" />
+        <rect x="140" y="146" width="200" height="18" fill="url(#calHeaderFill)" />
+        <rect x="168" y="118" width="10" height="24" rx="5" fill="var(--color-primary-dark)" />
+        <rect x="302" y="118" width="10" height="24" rx="5" fill="var(--color-primary-dark)" />
+        <circle cx="173" cy="120" r="4" fill="var(--color-gold)" />
+        <circle cx="307" cy="120" r="4" fill="var(--color-gold)" />
+
+        <!-- Grid titik hari -->
+        <g>
+          @for (d of calHeroDots; track $index) {
+            @if ($index === calHeroTodayIndex) {
+              <circle class="cal-hero-today-dot" [attr.cx]="d.cx" [attr.cy]="d.cy" r="7" />
+            } @else {
+              <circle class="cal-hero-day-dot" [attr.cx]="d.cx" [attr.cy]="d.cy" r="3.4" />
+            }
+          }
+        </g>
+      </g>
+
+      <!-- Garis "digambar sendiri" (lihat animateCalLines()) — dari titik
+           "hari ini" menjalar ke simpul-simpul agenda, identik mekanisme
+           Perpustakaan/Berita/Struktur. -->
+      <path #calLine class="cal-line thick" d="M240,120 L120,85" />
+      <path #calLine class="cal-line thick" d="M240,120 L240,45" />
+      <path #calLine class="cal-line thick" d="M240,120 L360,85" />
+      <path #calLine class="cal-line" d="M120,85 L55,70" />
+      <path #calLine class="cal-line" d="M120,85 L75,150" />
+      <path #calLine class="cal-line" d="M240,45 L190,15" />
+      <path #calLine class="cal-line" d="M240,45 L290,15" />
+      <path #calLine class="cal-line" d="M360,85 L425,70" />
+      <path #calLine class="cal-line" d="M360,85 L405,150" />
+
+      <g class="cal-tier cal-tier-0">
+        <circle class="network-ping" cx="240" cy="120" r="14" />
+        <circle class="network-node" cx="240" cy="120" r="14" />
+      </g>
+      <g class="cal-tier cal-tier-1">
+        <circle class="network-ping gold" cx="120" cy="85" r="10" style="animation-delay:.3s" />
+        <circle class="network-node gold" cx="120" cy="85" r="10" />
+        <circle class="network-ping gold" cx="240" cy="45" r="10" style="animation-delay:.6s" />
+        <circle class="network-node gold" cx="240" cy="45" r="10" />
+        <circle class="network-ping gold" cx="360" cy="85" r="10" style="animation-delay:.9s" />
+        <circle class="network-node gold" cx="360" cy="85" r="10" />
+      </g>
+      <g class="cal-tier cal-tier-2">
+        <circle class="network-node ember" cx="55" cy="70" r="6" />
+        <circle class="network-node ember" cx="75" cy="150" r="6" />
+        <circle class="network-node ember" cx="190" cy="15" r="6" />
+        <circle class="network-node ember" cx="290" cy="15" r="6" />
+        <circle class="network-node ember" cx="425" cy="70" r="6" />
+        <circle class="network-node ember" cx="405" cy="150" r="6" />
+      </g>
+
+      <!-- Penanda "agenda terkonfirmasi" — pop-in setelah jaringan tergambar. -->
+      <g class="cal-badge">
+        <circle cx="315" cy="150" r="15" fill="#fff" stroke="var(--color-gold)" stroke-width="3" />
+        <path d="M308,150 L313,156 L324,144" fill="none" stroke="var(--color-gold-dark)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+    </svg>
+  </div>
+</app-page-hero>
+
+<!-- ---------- Section hijau penuh tepi-ke-tepi + siluet ikon raksasa pudar
+     — pola sama persis Berita/Perpustakaan. ---------- -->
 <section class="section">
+  <span class="jadwal-panel-silhouette" aria-hidden="true"><app-icon name="calendar-days" [size]="220" /></span>
+  <span class="jadwal-panel-silhouette-2" aria-hidden="true"><app-icon name="clock" [size]="100" /></span>
   <div class="container">
-    <div class="text-center cal-head">
-      <span class="eyebrow">Jadwal</span>
-      <h1>Kalender Kegiatan</h1>
-      <p class="text-muted">Agenda kegiatan LDK. Arahkan kursor ke sebuah tanggal untuk melihat ringkasan kegiatan hari itu.</p>
+    <div class="jadwal-section-head text-center reveal">
+      <h2>Kalender Kegiatan {{ periodLabel() }}</h2>
+      <p class="jadwal-section-subtitle">Agenda kajian, musyawarah, daurah, dan kegiatan dakwah kampus LDK se-Indonesia. Arahkan kursor ke sebuah tanggal untuk melihat ringkasan kegiatan hari itu.</p>
     </div>
 
-    <div class="cal-toolbar">
-      <button type="button" class="btn btn-outline btn-sm nav-btn" (click)="prev()" aria-label="Bulan sebelumnya">‹</button>
-      <span class="cal-period">{{ periodLabel() }}</span>
-      <button type="button" class="btn btn-outline btn-sm nav-btn" (click)="next()" aria-label="Bulan berikutnya">›</button>
+    <div class="jadwal-toolbar">
+      <button type="button" class="btn btn-outline btn-sm nav-btn" (click)="prev()" aria-label="Bulan sebelumnya">&lsaquo;</button>
+      <span class="jadwal-period">{{ periodLabel() }}</span>
+      <button type="button" class="btn btn-outline btn-sm nav-btn" (click)="next()" aria-label="Bulan berikutnya">&rsaquo;</button>
       <button type="button" class="btn btn-ghost btn-sm" (click)="today()">Hari Ini</button>
     </div>
 
     @if (error()) {
-      <div class="cal-error">
+      <div class="jadwal-error">
         <span>{{ error() }}</span>
         <button type="button" class="btn btn-sm btn-outline" (click)="reload()">Coba lagi</button>
       </div>
@@ -39,8 +132,14 @@
                    [attr.tabindex]="cell.items.length ? 0 : null"
                    (mouseenter)="openPopup(cell.iso)" (mouseleave)="closePopup()"
                    (focus)="openPopup(cell.iso)" (blur)="closePopup()"
-                   (click)="togglePopup(cell.iso)">
+                   (click)="onCellClick(cell)">
                 <span class="cal-date">{{ cell.day }}</span>
+
+                <div class="cal-dots">
+                  @for (it of cell.items.slice(0, 4); track it.scheduleID) {
+                    <span class="cal-dot" [style.background]="cat(it.category).color"></span>
+                  }
+                </div>
 
                 <div class="cal-chips">
                   @for (it of cell.items.slice(0, 3); track it.scheduleID) {
@@ -53,16 +152,25 @@
 
                 @if (popupIso() === cell.iso && cell.items.length) {
                   <div class="cal-pop" role="tooltip" (click)="$event.stopPropagation()">
-                    <p class="cal-pop-date">{{ longDate(cell.date) }}</p>
+                    <span class="cal-pop-arrow" aria-hidden="true"></span>
+                    <div class="cal-pop-head">
+                      <app-icon name="calendar-days" [size]="13" />
+                      <p class="cal-pop-date">{{ longDate(cell.date) }}</p>
+                    </div>
                     <ul>
                       @for (it of cell.items; track it.scheduleID) {
-                        <li>
-                          <span class="cal-pop-time">{{ timeRange(it) }}</span>
-                          <span class="cal-pop-title">{{ it.title }}</span>
-                          <span class="cat-badge" [style.background]="cat(it.category).color + '1f'" [style.color]="cat(it.category).color">{{ cat(it.category).label }}</span>
-                          @if (it.location) {
-                            <span class="cal-pop-loc"><app-icon name="building" [size]="11" /> {{ it.location }}</span>
-                          }
+                        <li [style.--jadwal-pop-accent]="cat(it.category).color">
+                          <span class="cal-pop-dot" [style.background]="cat(it.category).color"></span>
+                          <div class="cal-pop-body">
+                            <span class="cal-pop-title">{{ it.title }}</span>
+                            <span class="cal-pop-meta">
+                              <span class="cal-pop-time">{{ timeRange(it) }}</span>
+                              <span class="cat-badge" [style.background]="cat(it.category).color + '1f'" [style.color]="cat(it.category).color">{{ cat(it.category).label }}</span>
+                            </span>
+                            @if (it.location) {
+                              <span class="cal-pop-loc"><app-icon name="building" [size]="11" /> {{ it.location }}</span>
+                            }
+                          </div>
                         </li>
                       }
                     </ul>
@@ -75,48 +183,73 @@
       }
     </div>
 
-    <div class="agenda">
+    <div class="jadwal-agenda">
       <h2>Agenda {{ periodLabel() }}</h2>
 
       @if (loading()) {
-        @for (i of [1,2,3]; track i) {
-          <div class="agenda-item">
-            <div class="agenda-when"><span class="skel skel-line" style="width:90px"></span></div>
-            <div class="agenda-body" style="flex:1">
-              <span class="skel skel-title" style="width:60%"></span>
-              <span class="skel skel-line" style="width:80%"></span>
+        <div class="agenda-list">
+          @for (i of [1,2,3]; track i) {
+            <div class="agenda-item">
+              <div class="agenda-when"><span class="skel skel-line" style="width:90px"></span></div>
+              <div class="agenda-body" style="flex:1">
+                <span class="skel skel-title" style="width:60%"></span>
+                <span class="skel skel-line" style="width:80%"></span>
+              </div>
             </div>
-          </div>
-        }
+          }
+        </div>
       } @else {
-        @for (it of agenda(); track it.scheduleID) {
-          <article class="agenda-item">
-            <div class="agenda-when">
-              <span class="agenda-date">{{ dateRange(it) }}</span>
-              <span class="agenda-time">{{ timeRange(it) }}</span>
+        <div class="agenda-list">
+          @for (it of agenda(); track it.scheduleID) {
+            <article class="agenda-item">
+              <div class="agenda-when">
+                <span class="agenda-date">{{ dateRange(it) }}</span>
+                <span class="agenda-time">{{ timeRange(it) }}</span>
+              </div>
+              <div class="agenda-body">
+                <span class="cat-badge" [style.background]="cat(it.category).color + '1f'" [style.color]="cat(it.category).color">{{ cat(it.category).label }}</span>
+                <h3>{{ it.title }}</h3>
+                @if (it.description) { <p class="agenda-desc">{{ it.description }}</p> }
+                <p class="agenda-meta">
+                  @if (it.location) { <span><app-icon name="building" [size]="12" /> {{ it.location }}</span> }
+                  @if (it.organizer) { <span><app-icon name="users" [size]="12" /> {{ it.organizer }}</span> }
+                  @if (it.contactPerson) { <span><app-icon name="phone" [size]="12" /> {{ it.contactPerson }}</span> }
+                </p>
+                @if (it.url) {
+                  <a class="btn btn-sm btn-outline" [href]="it.url" target="_blank" rel="noopener">Info &amp; Pendaftaran</a>
+                }
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state jadwal-empty-panel">
+              <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="calendar-days" [size]="26" /></span>
+              <h4>Belum ada jadwal pada bulan ini</h4>
+              <p>Coba geser ke bulan lain lewat panah di atas.</p>
             </div>
-            <div class="agenda-body">
-              <span class="cat-badge" [style.background]="cat(it.category).color + '1f'" [style.color]="cat(it.category).color">{{ cat(it.category).label }}</span>
-              <h3>{{ it.title }}</h3>
-              @if (it.description) { <p class="agenda-desc">{{ it.description }}</p> }
-              <p class="agenda-meta">
-                @if (it.location) { <span><app-icon name="building" [size]="12" /> {{ it.location }}</span> }
-                @if (it.organizer) { <span><app-icon name="users" [size]="12" /> {{ it.organizer }}</span> }
-                @if (it.contactPerson) { <span><app-icon name="phone" [size]="12" /> {{ it.contactPerson }}</span> }
-              </p>
-              @if (it.url) {
-                <a class="btn btn-sm btn-outline" [href]="it.url" target="_blank" rel="noopener">Info &amp; Pendaftaran</a>
-              }
-            </div>
-          </article>
-        } @empty {
-          <div class="empty-state">
-            <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="calendar-days" [size]="26" /></span>
-            <h4>Belum ada jadwal pada bulan ini</h4>
-            <p>Coba geser ke bulan lain lewat panah di atas.</p>
-          </div>
-        }
+          }
+        </div>
       }
     </div>
   </div>
 </section>
+
+<!-- ---------- Sheet mobile: tap satu tanggal di grid kalender ---------- -->
+<app-bottom-sheet [open]="!!daySheet()" (closed)="daySheet.set(null)">
+  @if (daySheet(); as cell) {
+    <h3 class="sheet-title">{{ longDate(cell.date) }}</h3>
+    <div class="jadwal-daysheet-list">
+      @for (it of cell.items; track it.scheduleID) {
+        <div class="jadwal-daysheet-item">
+          <span class="cat-badge" [style.background]="cat(it.category).color + '1f'" [style.color]="cat(it.category).color">{{ cat(it.category).label }}</span>
+          <h4>{{ it.title }}</h4>
+          <p class="jadwal-daysheet-meta">
+            <span><app-icon name="clock" [size]="12" /> {{ timeRange(it) }}</span>
+            @if (it.location) { <span><app-icon name="building" [size]="12" /> {{ it.location }}</span> }
+            @if (it.organizer) { <span><app-icon name="users" [size]="12" /> {{ it.organizer }}</span> }
+          </p>
+          @if (it.description) { <p class="jadwal-daysheet-desc">{{ it.description }}</p> }
+        </div>
+      }
+    </div>
+  }
+</app-bottom-sheet>

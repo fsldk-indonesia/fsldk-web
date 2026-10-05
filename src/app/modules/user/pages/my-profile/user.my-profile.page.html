@@ -1,0 +1,216 @@
+<app-page-hero
+  badge="Akun Saya · FSLDK Indonesia"
+  title="Profil &amp;"
+  titleAccent="Identitas Anda"
+  subtitle="Kelola identitas, kontak, dan keamanan akun Anda di satu tempat yang sama."
+  quoteSource="hadith">
+  <!-- Siluet sisi kanan hero: kartu identitas melayang + badge centang,
+       memakai primitif global .network-line/.network-node/.network-ping
+       yang sama dipakai Galeri/Struktur — komposisinya sendiri (bukan
+       salinan kamera Galeri), supaya tetap satu bahasa visual tapi relevan
+       dengan konteks halaman (identitas, bukan dokumentasi foto). -->
+  <div heroVisual class="hero-id-illustration">
+    <svg aria-hidden="true" viewBox="0 0 560 320" class="id-illustration-svg">
+      <defs>
+        <linearGradient id="profileCardFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--color-primary-bright)" />
+          <stop offset="100%" stop-color="var(--color-primary-dark)" />
+        </linearGradient>
+        <radialGradient id="profileBadgeFill" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="var(--color-gold)" stop-opacity=".95" />
+          <stop offset="100%" stop-color="var(--color-gold-dark)" stop-opacity=".9" />
+        </radialGradient>
+      </defs>
+
+      <g class="id-card-group" transform="rotate(-6 280 180)">
+        <rect x="150" y="90" width="260" height="170" rx="20" fill="#fff" stroke="var(--color-border)" />
+        <rect x="150" y="90" width="260" height="46" rx="20" fill="url(#profileCardFill)" />
+        <rect x="150" y="116" width="260" height="20" fill="url(#profileCardFill)" />
+        <circle cx="200" cy="136" r="30" fill="#fff" />
+        <circle cx="200" cy="136" r="24" fill="var(--color-primary-soft)" />
+        <path d="M186,144 a14,14 0 0 1 28,0 Z" fill="var(--color-primary-dark)" opacity=".55" />
+        <circle cx="200" cy="128" r="7" fill="var(--color-primary-dark)" opacity=".55" />
+        <rect x="246" y="152" width="100" height="10" rx="5" fill="var(--color-text)" opacity=".85" />
+        <rect x="246" y="170" width="70" height="8" rx="4" fill="var(--color-muted)" opacity=".7" />
+        <rect x="172" y="200" width="212" height="1.5" fill="var(--color-border)" />
+        <rect x="172" y="216" width="80" height="8" rx="4" fill="var(--color-primary-soft)" />
+        <rect x="172" y="232" width="120" height="7" rx="3.5" fill="var(--color-border-strong)" />
+        <rect x="268" y="216" width="80" height="8" rx="4" fill="var(--color-gold-soft)" />
+        <rect x="268" y="232" width="100" height="7" rx="3.5" fill="var(--color-border-strong)" />
+      </g>
+
+      <path class="network-line thick" d="M392,232 L280,180" />
+      <path class="network-line" d="M392,232 L446,150" />
+
+      <g class="id-card-badge">
+        <circle cx="392" cy="232" r="30" fill="url(#profileBadgeFill)" />
+        <path d="M378,232 L388,243 L408,219" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+        <circle class="network-ping gold" cx="392" cy="232" r="30" />
+      </g>
+
+      <g class="id-card-tier">
+        <circle class="network-node" cx="446" cy="150" r="6" />
+        <circle class="network-node ember" cx="196" cy="88" r="6" />
+      </g>
+    </svg>
+  </div>
+</app-page-hero>
+
+<section class="section section-transition section-blob-drift">
+  <div class="container pb-xl">
+    <div class="profile-grid">
+      <!-- Kolom kiri: kartu identitas ala "ID card" — sticky supaya tetap
+           terlihat saat kolom kanan (lebih panjang) di-scroll. Avatar + tombol
+           ubah foto; aksi ubah foto SELALU lewat app-bottom-sheet (bukan
+           dropzone inline) supaya satu pola interaksi dipakai di semua
+           ukuran layar, bukan cuma "ditambahkan" khusus mobile. -->
+      <div class="profile-side">
+        <div class="card profile-id-card">
+          <div class="id-card-banner">
+            <div class="id-card-avatar-wrap">
+              @if (auth.user()?.photoURL) {
+                <img class="id-card-avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
+              } @else {
+                <span class="id-card-avatar id-card-avatar-initials">{{ initials() }}</span>
+              }
+              <button type="button" class="id-card-avatar-edit" (click)="openPhotoSheet()" aria-label="Ubah foto profil">
+                @if (photoSaving()) { <span class="spinner spinner-xs"></span> } @else { <app-icon name="image" [size]="13" /> }
+              </button>
+            </div>
+          </div>
+          <div class="id-card-body">
+            <h3 class="id-card-name">{{ auth.user()?.fullName }}</h3>
+            <p class="id-card-email">{{ auth.user()?.email }}</p>
+            <div class="id-card-chips">
+              @if (auth.isVerified()) {
+                <span class="chip chip-green"><app-icon name="check-circle" [size]="12" /> Terverifikasi</span>
+              } @else {
+                <span class="chip chip-red"><app-icon name="alert-triangle" [size]="12" /> Belum Verifikasi</span>
+              }
+              @if (auth.user()?.role) {
+                <span class="chip"><app-icon name="id-card" [size]="12" /> {{ auth.user()?.role }}</span>
+              }
+            </div>
+            <button type="button" class="id-card-change-photo-btn" (click)="openPhotoSheet()">
+              <app-icon name="image" [size]="13" /> Ubah Foto Profil
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom kanan: Info Kekaderan (jika ada) + Kontak + Keamanan Akun,
+           tiap kartu punya aksen & gaya visual berbeda supaya tidak terasa
+           seperti 1 kartu putih yang diulang-ulang. -->
+      <div class="profile-main">
+        @if (kader(); as k) {
+          @if (k.status === 'ACTIVE') {
+            <div class="card profile-kader-card">
+              <div class="profile-card-head head-gold">
+                <span class="icon-badge md icon-badge-gold"><app-icon name="award" [size]="18" /></span>
+                <div class="profile-card-head-text">
+                  <h3>Info Kekaderan</h3>
+                  <p class="text-muted">Status keanggotaan Anda sebagai Kader FSLDK Indonesia.</p>
+                </div>
+                @if (k.uniqueCode) { <span class="kader-code-badge">{{ k.uniqueCode }}</span> }
+              </div>
+              <div class="profile-card-body">
+                <div class="kader-meta-rows">
+                  <div class="kader-meta-row">
+                    <span class="kader-meta-icon"><app-icon name="sitemap" [size]="13" /></span>
+                    <span class="kader-meta-text">
+                      <span class="kader-meta-label">Nama LDK</span>
+                      <span class="kader-meta-value">{{ k.organizationName ?? '—' }}</span>
+                    </span>
+                  </div>
+                  <div class="kader-meta-row">
+                    <span class="kader-meta-icon"><app-icon name="landmark" [size]="13" /></span>
+                    <span class="kader-meta-text">
+                      <span class="kader-meta-label">Nama Puskomda</span>
+                      <span class="kader-meta-value">{{ k.parentOrganizationName ?? '—' }}</span>
+                    </span>
+                  </div>
+                  @if (k.issuedDate) {
+                    <div class="kader-meta-row">
+                      <span class="kader-meta-icon"><app-icon name="calendar-days" [size]="13" /></span>
+                      <span class="kader-meta-text">
+                        <span class="kader-meta-label">Kader Sejak</span>
+                        <span class="kader-meta-value">{{ k.issuedDate | date: 'd MMMM y' }}</span>
+                      </span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        }
+
+        <div class="card profile-form-card">
+          <div class="profile-card-head head-primary">
+            <span class="icon-badge md icon-badge-soft"><app-icon name="phone" [size]="17" /></span>
+            <div class="profile-card-head-text">
+              <h3>Kontak</h3>
+              <p class="text-muted">Informasi ini dipakai untuk notifikasi & korespondensi.</p>
+            </div>
+          </div>
+          <div class="profile-card-body">
+            <form (ngSubmit)="submitContact()">
+              <div class="grid-cols-2">
+                <div class="form-group">
+                  <label class="form-label">No Whatsapp</label>
+                  <app-phone-input name="phoneNumber" [(ngModel)]="phoneNumber" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Alamat</label>
+                  <textarea class="form-control" name="address" rows="1" [(ngModel)]="address" placeholder="Alamat domisili"></textarea>
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit" [disabled]="contactSaving()">
+                @if (contactSaving()) { <span class="spinner"></span> } @else { Simpan Kontak }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card profile-form-card">
+          <div class="profile-card-head head-ember">
+            <span class="icon-badge md icon-badge-ember"><app-icon name="lock" [size]="17" /></span>
+            <div class="profile-card-head-text">
+              <h3>Keamanan Akun</h3>
+              <p class="text-muted">Perbarui kata sandi secara berkala untuk menjaga keamanan akun.</p>
+            </div>
+          </div>
+          <div class="profile-card-body">
+            <form (ngSubmit)="submit()">
+              <div class="grid-cols-2">
+                <div class="form-group">
+                  <label class="form-label">Kata Sandi Lama</label>
+                  <app-password-field name="old" [(ngModel)]="oldPassword" placeholder="Kata sandi saat ini" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Kata Sandi Baru</label>
+                  <app-password-field name="new" [(ngModel)]="newPassword" placeholder="Minimal 8 karakter" />
+                </div>
+              </div>
+              <p class="form-hint security-hint"><app-icon name="info-circle" [size]="12" /> Minimal 8 karakter — kombinasi huruf & angka lebih aman.</p>
+              <button class="btn btn-primary" type="submit" [disabled]="saving()">
+                @if (saving()) { <span class="spinner"></span> } @else { Simpan Kata Sandi }
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Ubah foto profil — popup terpusat di desktop, otomatis jadi bottom
+     sheet di mobile ([mobileSheet]) lewat satu komponen yang sama
+     (app-popup-modal), bukan dua implementasi terpisah per breakpoint. -->
+<app-popup-modal [open]="sheetOpen()" [mobileSheet]="true" label="Ubah Foto Profil" (closed)="closePhotoSheet()">
+  <div class="photo-sheet">
+    <span class="photo-sheet-icon icon-badge lg icon-badge-soft"><app-icon name="image" [size]="22" /></span>
+    <h3 class="photo-sheet-title">Ubah Foto Profil</h3>
+    <p class="photo-sheet-desc">Foto profil bersifat opsional. Jika tidak diunggah, sistem akan menggunakan foto profil Google Anda atau menampilkan inisial nama secara otomatis.</p>
+    <app-image-upload [value]="auth.user()?.photoURL ?? null" (valueChange)="onPhotoChange($event)" />
+  </div>
+</app-popup-modal>
