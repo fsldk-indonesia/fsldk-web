@@ -6,9 +6,13 @@ import { GoodsPublicIndexView } from './goods.public-index.view';
 export interface GoodsPublicFilter {
   categoryID: number;
   availability: string;
+  /** Mem-filter `featured=1` ke backend (goods_dto.Filter.FeaturedOnly sudah
+   *  didukung sejak awal, cuma belum pernah dipakai UI publik — lihat
+   *  goods_handler_impl.go parseFilter). */
+  featured: boolean;
 }
 
-export const emptyGoodsPublicFilter: GoodsPublicFilter = { categoryID: 0, availability: '' };
+export const emptyGoodsPublicFilter: GoodsPublicFilter = { categoryID: 0, availability: '', featured: false };
 
 @Injectable()
 export class GoodsPublicIndexPresenter extends BasePresenter<GoodsPublicIndexView> {
@@ -24,6 +28,7 @@ export class GoodsPublicIndexPresenter extends BasePresenter<GoodsPublicIndexVie
       page, limit, search, sort,
       categoryID: filter.categoryID || undefined,
       availability: filter.availability || undefined,
+      featured: filter.featured ? 1 : undefined,
     };
     this.goodsRepo.publicList(q).subscribe({
       next: (p) => { this.view.setGoods(p.data, p.count); this.view.setLoading(false); },

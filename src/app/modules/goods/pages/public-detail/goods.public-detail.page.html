@@ -1,73 +1,164 @@
-<article class="section">
-  <div class="container">
-    @if (loading()) {
-      <div class="layout">
-        <span class="skel skel-thumb" style="aspect-ratio:1/1;border-radius:22px"></span>
-        <div>
-          <span class="skel skel-line" style="width:100px;height:24px;border-radius:999px"></span>
-          <span class="skel skel-line" style="width:75%;height:38px;margin-top:18px"></span>
-          <span class="skel skel-line" style="width:35%;height:28px;margin-top:8px"></span>
-          <span class="skel skel-line" style="width:60%;margin-top:14px"></span>
-          <span class="skel skel-line" style="width:220px;height:46px;border-radius:12px;margin-top:24px"></span>
-        </div>
+@if (loading()) {
+  <header class="hero-section">
+    <div class="hero-texture" aria-hidden="true"></div>
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <span class="skel skel-line" style="width:120px;height:26px;border-radius:999px;background:rgba(255,255,255,.18)"></span>
+        <span class="skel skel-line" style="width:80%;height:38px;margin-top:18px;background:rgba(255,255,255,.18)"></span>
+        <span class="skel skel-line" style="width:35%;height:28px;margin-top:10px;background:rgba(255,255,255,.18)"></span>
       </div>
-    } @else {
-      @if (item(); as g) {
-        <nav class="crumb"><a routerLink="/">Beranda</a> <span>/</span> <a routerLink="/fsldk-goods">FSLDK Goods</a> <span>/</span> <span>{{ g.goodsName }}</span></nav>
+      <div class="hero-visual">
+        <div class="hero-cover-frame"><span class="skel skel-thumb" style="aspect-ratio:1/1;border-radius:12px"></span></div>
+      </div>
+    </div>
+  </header>
+  <section class="detail-main-section">
+    <div class="container"><div class="content-layout">
+      <div class="story-grid">
+        <div class="detail-card"><span class="skel skel-line" style="width:90%"></span><span class="skel skel-line" style="width:75%"></span><span class="skel skel-line" style="width:60%"></span></div>
+        <div class="detail-card"><span class="skel skel-line" style="width:70%"></span><span class="skel skel-line" style="width:55%"></span></div>
+      </div>
+    </div></div>
+  </section>
+} @else {
+  @if (item(); as g) {
+    <header class="hero-section">
+      <div class="hero-texture" aria-hidden="true"></div>
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <div class="hero-badges">
+            <span class="hero-tag"><app-icon name="tags" [size]="13" /> {{ g.categoryName }}</span>
+            @if (g.isFeatured) { <span class="hero-tag hero-tag-gold"><app-icon name="award" [size]="13" /> Produk Unggulan</span> }
+            @if (g.availabilityStatus !== 'available') {
+              <span class="hero-tag hero-tag-unavailable"><app-icon name="x-circle" [size]="13" /> {{ availabilityLabels[g.availabilityStatus] }}</span>
+            }
+          </div>
 
-        <div class="layout">
-          <div>
+          <span class="hero-event-name">FSLDK Goods &middot; Merchandise Resmi</span>
+          <h1 class="hero-title">{{ g.goodsName }}</h1>
+          <p class="hero-price">{{ formatRupiah(g.price) }}</p>
+
+          <div class="hero-meta-row">
+            <span class="hero-meta-item"><app-icon name="check-circle" [size]="14" /> {{ availabilityLabels[g.availabilityStatus] }}</span>
+            @if (g.skuCode) { <span class="hero-meta-item">SKU <code>{{ g.skuCode }}</code></span> }
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-cover-frame">
             <app-image-gallery [images]="galleryImages()" [alt]="g.goodsName" />
           </div>
+        </div>
+      </div>
+    </header>
 
-          <div>
-            <div class="badge-row">
-              <span class="chip chip-green">{{ g.categoryName }}</span>
-              @if (g.isFeatured) { <span class="chip chip-gold"><app-icon name="award" [size]="12" /> Unggulan</span> }
-            </div>
+    <main class="detail-main-section">
+      <div class="container">
+        <div class="content-layout">
+          <nav class="crumb-row" aria-label="Breadcrumb">
+            <a routerLink="/" class="crumb-link"><app-icon name="home" [size]="13" /> Beranda</a>
+            <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
+            <a [routerLink]="goodsPath.publicIndex" class="crumb-link"><app-icon name="shopping-bag" [size]="13" /> FSLDK Goods</a>
+            <app-icon name="chevron-right" [size]="11" class="crumb-sep" />
+            <span class="crumb-current" aria-current="page">{{ g.goodsName }}</span>
+          </nav>
 
-            <h1 class="product-title">{{ g.goodsName }}</h1>
-            <p class="price">{{ formatRupiah(g.price) }}</p>
-            @if (g.shortDescription) { <p class="lead">{{ g.shortDescription }}</p> }
+          <div class="story-grid">
+            <section class="detail-card story-card-content">
+              <span class="eyebrow"><app-icon name="info-circle" [size]="13" /> Deskripsi Produk</span>
+              @if (g.shortDescription) { <p class="story-lead-text mt-sm">{{ g.shortDescription }}</p> }
 
-            <div class="status-row">
-              <span class="badge" [ngClass]="availabilityBadgeClass[g.availabilityStatus]">
-                <span class="status-dot"></span>{{ availabilityLabels[g.availabilityStatus] }}
-              </span>
-              @if (g.skuCode) { <span class="sku">SKU <code>{{ g.skuCode }}</code></span> }
-            </div>
-
-            <div class="actions">
-              @if (g.purchaseUrl) {
-                <a [href]="g.purchaseUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg btn-block">
-                  <app-icon name="link" [size]="16" /> {{ g.purchaseButtonLabel }}
-                </a>
-                <p class="purchase-hint">Anda akan diarahkan ke tautan eksternal untuk menyelesaikan pembelian.</p>
-              } @else {
-                <button type="button" class="btn btn-outline btn-lg btn-block" disabled>
-                  <app-icon name="lock" [size]="16" /> {{ g.purchaseButtonLabel || 'Beli Sekarang' }}
-                </button>
-                @if (isLoggedIn()) {
-                  <p class="purchase-hint">Tautan pembelian khusus untuk Kader dan anggota jaringan FSLDK (LDK/Puskomda/Puskomnas).</p>
+              <!-- ---------- CTA beli — pola sama persis tombol "Baca Buku
+                   (PDF)" Perpustakaan / "Baca Naskah Lengkap" Artikel: di
+                   dalam kartu konten utama, bukan tombol lebar penuh
+                   terpisah seperti versi lama. ---------- -->
+              <div class="actions-row">
+                @if (g.purchaseUrl) {
+                  <a [href]="g.purchaseUrl" target="_blank" rel="noopener noreferrer" class="action-btn action-btn-primary">
+                    <app-icon name="link" [size]="16" /> {{ g.purchaseButtonLabel }}
+                  </a>
+                  <p class="purchase-hint">Anda akan diarahkan ke tautan eksternal untuk menyelesaikan pembelian.</p>
                 } @else {
-                  <p class="purchase-hint">Tautan pembelian khusus untuk Kader dan anggota jaringan FSLDK. <a routerLink="/login">Masuk</a> jika Anda sudah terdaftar.</p>
+                  <button type="button" class="action-btn action-btn-disabled" disabled>
+                    <app-icon name="lock" [size]="16" /> {{ g.purchaseButtonLabel || 'Beli Sekarang' }}
+                  </button>
+                  @if (isLoggedIn()) {
+                    <p class="purchase-hint">Tautan pembelian khusus untuk Kader dan anggota jaringan FSLDK (LDK/Puskomda/Puskomnas).</p>
+                  } @else {
+                    <p class="purchase-hint">Tautan pembelian khusus untuk Kader dan anggota jaringan FSLDK. <a routerLink="/login">Masuk</a> jika Anda sudah terdaftar.</p>
+                  }
                 }
+              </div>
+
+              @if (g.fullDescription) {
+                <div class="description">
+                  <h2>Selengkapnya</h2>
+                  <div class="prose" [innerHTML]="g.fullDescription"></div>
+                </div>
+              }
+            </section>
+
+            <div class="story-sidebar">
+              <aside class="detail-card story-card-info">
+                <span class="eyebrow"><app-icon name="sparkles" [size]="13" /> Info Produk</span>
+                <ul class="info-rows mt-sm">
+                  <li class="info-row">
+                    <span class="info-row-icon"><app-icon name="tags" [size]="14" /></span>
+                    <span class="info-row-text"><b>Kategori</b>{{ g.categoryName }}</span>
+                  </li>
+                  <li class="info-row">
+                    <span class="info-row-icon"><app-icon name="check-circle" [size]="14" /></span>
+                    <span class="info-row-text">
+                      <b>Ketersediaan</b>
+                      <span class="badge" [ngClass]="availabilityBadgeClass[g.availabilityStatus]">{{ availabilityLabels[g.availabilityStatus] }}</span>
+                    </span>
+                  </li>
+                  @if (g.skuCode) {
+                    <li class="info-row">
+                      <span class="info-row-icon"><app-icon name="id-card" [size]="14" /></span>
+                      <span class="info-row-text"><b>Kode SKU</b>{{ g.skuCode }}</span>
+                    </li>
+                  }
+                </ul>
+
+                <a [routerLink]="goodsPath.publicIndex" class="info-cta"><app-icon name="arrow-left" [size]="13" /> Kembali ke FSLDK Goods</a>
+              </aside>
+
+              @if (relatedGoods().length > 0) {
+                <aside class="detail-card story-card-related">
+                  <span class="eyebrow"><app-icon name="shopping-bag" [size]="13" /> Produk Lainnya</span>
+                  <div class="related-list mt-sm">
+                    @for (r of relatedGoods(); track r.goodsID) {
+                      <a [routerLink]="goodsPath.publicDetail(r.goodsSlug)" class="related-item">
+                        <div class="related-item-media">
+                          @if (r.mainImageUrl) {
+                            <img [src]="r.mainImageUrl" [alt]="r.goodsName" loading="lazy">
+                          } @else {
+                            <div class="related-item-media-fallback"><app-icon name="shopping-bag" [size]="16" /></div>
+                          }
+                        </div>
+                        <div class="related-item-body">
+                          <h3 class="related-item-title">{{ r.goodsName }}</h3>
+                          <span class="related-item-price">{{ formatRupiah(r.price) }}</span>
+                        </div>
+                      </a>
+                    }
+                  </div>
+                </aside>
               }
             </div>
-
-            @if (g.fullDescription) {
-              <div class="description">
-                <h2>Deskripsi Produk</h2>
-                <div class="prose" [innerHTML]="g.fullDescription"></div>
-              </div>
-            }
-
-            <a routerLink="/fsldk-goods" class="back-link">← Kembali ke FSLDK Goods</a>
           </div>
         </div>
-      } @else {
-        <div class="text-center"><h2>Produk tidak ditemukan</h2><a routerLink="/fsldk-goods" class="btn btn-primary mt">Kembali</a></div>
-      }
-    }
-  </div>
-</article>
+      </div>
+    </main>
+  } @else {
+    <section class="detail-main-section" style="padding-top:80px">
+      <div class="container text-center">
+        <h2>Produk tidak ditemukan</h2>
+        <a [routerLink]="goodsPath.publicIndex" class="btn btn-primary mt">Kembali ke FSLDK Goods</a>
+      </div>
+    </section>
+  }
+}
