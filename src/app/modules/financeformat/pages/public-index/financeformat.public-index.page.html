@@ -1,63 +1,229 @@
+<app-page-hero
+  badge="Format Keuangan &middot; FSLDK Indonesia"
+  title="Satu Template,"
+  titleAccent="Laporan Keuangan Rapi &amp; Akuntabel"
+  subtitle="Unduh template Excel resmi sesuai jenis laporan keuangan LDK Anda &mdash; isi, catat, dan pertanggungjawabkan dana dakwah dengan format yang seragam."
+  quoteSource="hadith"
+  waveColor="var(--color-primary)">
+  <!-- Siluet sisi kanan hero: lembar spreadsheet sebagai hub, garis jaringan
+       menjalar ke titik-titik simpul — pola sama persis Kalender/Perpustakaan,
+       motif tengahnya diganti lembar spreadsheet + tumpukan uang, selaras
+       tema Format Keuangan. -->
+  <div heroVisual class="hero-fmt-visual">
+    <svg aria-hidden="true" viewBox="0 0 480 320" class="fmt-svg">
+      <defs>
+        <linearGradient id="fmtHeaderFill" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="var(--color-primary-bright)" />
+          <stop offset="100%" stop-color="var(--color-primary)" />
+        </linearGradient>
+        <linearGradient id="fmtCashFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--color-gold)" />
+          <stop offset="100%" stop-color="var(--color-gold-dark)" />
+        </linearGradient>
+        <filter id="fmtSoftBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" />
+        </filter>
+      </defs>
+
+      <g class="fmt-silhouette">
+        <ellipse class="fmt-ground-shadow" cx="240" cy="276" rx="100" ry="10" filter="url(#fmtSoftBlur)" />
+
+        <!-- Lembar spreadsheet -->
+        <rect x="140" y="128" width="190" height="148" rx="14" fill="#fff" stroke="var(--color-border)" stroke-width="1.5" />
+        <rect x="140" y="128" width="190" height="26" rx="14" fill="url(#fmtHeaderFill)" />
+        <rect x="140" y="146" width="190" height="10" fill="url(#fmtHeaderFill)" />
+        <line x1="196" y1="154" x2="196" y2="276" stroke="var(--color-border)" stroke-width="1.2" />
+        <line x1="252" y1="154" x2="252" y2="276" stroke="var(--color-border)" stroke-width="1.2" />
+        <line x1="140" y1="186" x2="330" y2="186" stroke="var(--color-border)" stroke-width="1.2" />
+        <line x1="140" y1="218" x2="330" y2="218" stroke="var(--color-border)" stroke-width="1.2" />
+        <line x1="140" y1="250" x2="330" y2="250" stroke="var(--color-border)" stroke-width="1.2" />
+        <rect x="146" y="192" width="44" height="20" rx="4" fill="var(--color-primary-soft)" />
+        <rect x="202" y="224" width="44" height="20" rx="4" fill="var(--color-gold-soft)" />
+        <rect x="258" y="256" width="66" height="14" rx="4" fill="var(--color-primary-soft)" />
+
+        <!-- Tumpukan uang di pojok kanan-bawah -->
+        <g transform="translate(300,210)">
+          <rect x="0" y="18" width="58" height="34" rx="6" fill="url(#fmtCashFill)" stroke="var(--color-gold-dark)" stroke-width="1.2" />
+          <rect x="6" y="8" width="58" height="34" rx="6" fill="url(#fmtCashFill)" stroke="var(--color-gold-dark)" stroke-width="1.2" />
+          <rect x="12" y="-2" width="58" height="34" rx="6" fill="url(#fmtCashFill)" stroke="var(--color-gold-dark)" stroke-width="1.2" />
+          <circle cx="41" cy="15" r="9" fill="none" stroke="#fff" stroke-width="2" />
+        </g>
+      </g>
+
+      <!-- Garis "digambar sendiri" (lihat animateFmtLines()) — identik
+           mekanisme Kalender/Perpustakaan/Berita/Struktur. -->
+      <path #fmtLine class="fmt-line thick" d="M240,120 L120,85" />
+      <path #fmtLine class="fmt-line thick" d="M240,120 L240,45" />
+      <path #fmtLine class="fmt-line thick" d="M240,120 L360,85" />
+      <path #fmtLine class="fmt-line" d="M120,85 L55,70" />
+      <path #fmtLine class="fmt-line" d="M120,85 L75,150" />
+      <path #fmtLine class="fmt-line" d="M240,45 L190,15" />
+      <path #fmtLine class="fmt-line" d="M240,45 L290,15" />
+      <path #fmtLine class="fmt-line" d="M360,85 L425,70" />
+      <path #fmtLine class="fmt-line" d="M360,85 L405,150" />
+
+      <g class="fmt-tier fmt-tier-0">
+        <circle class="network-ping" cx="240" cy="120" r="14" />
+        <circle class="network-node" cx="240" cy="120" r="14" />
+      </g>
+      <g class="fmt-tier fmt-tier-1">
+        <circle class="network-ping gold" cx="120" cy="85" r="10" style="animation-delay:.3s" />
+        <circle class="network-node gold" cx="120" cy="85" r="10" />
+        <circle class="network-ping gold" cx="240" cy="45" r="10" style="animation-delay:.6s" />
+        <circle class="network-node gold" cx="240" cy="45" r="10" />
+        <circle class="network-ping gold" cx="360" cy="85" r="10" style="animation-delay:.9s" />
+        <circle class="network-node gold" cx="360" cy="85" r="10" />
+      </g>
+      <g class="fmt-tier fmt-tier-2">
+        <circle class="network-node ember" cx="55" cy="70" r="6" />
+        <circle class="network-node ember" cx="75" cy="150" r="6" />
+        <circle class="network-node ember" cx="190" cy="15" r="6" />
+        <circle class="network-node ember" cx="290" cy="15" r="6" />
+        <circle class="network-node ember" cx="425" cy="70" r="6" />
+        <circle class="network-node ember" cx="405" cy="150" r="6" />
+      </g>
+
+      <!-- Penanda "template terverifikasi" — pop-in setelah jaringan tergambar. -->
+      <g class="fmt-badge">
+        <circle cx="315" cy="150" r="15" fill="#fff" stroke="var(--color-gold)" stroke-width="3" />
+        <path d="M308,150 L313,156 L324,144" fill="none" stroke="var(--color-gold-dark)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+      </g>
+    </svg>
+  </div>
+</app-page-hero>
+
+<!-- ---------- Section hijau penuh tepi-ke-tepi + siluet ikon raksasa pudar
+     — pola sama persis Jadwal/Berita/Perpustakaan. ---------- -->
 <section class="section">
+  <span class="fmt-panel-silhouette" aria-hidden="true"><app-icon name="file-spreadsheet" [size]="220" /></span>
+  <span class="fmt-panel-silhouette-2" aria-hidden="true"><app-icon name="banknote" [size]="100" /></span>
   <div class="container">
-    <div class="text-center" style="margin-bottom:32px">
-      <span class="eyebrow">Format Keuangan</span>
-      <h1>Template Laporan Keuangan</h1>
-      <p class="text-muted" style="max-width:640px;margin:8px auto 0">
-        Unduh template Excel (.xlsx) sesuai jenis laporan yang Anda butuhkan, lalu isi sesuai kegiatan LDK Anda.
-      </p>
+    <div class="fmt-section-head text-center reveal">
+      <h2>Template Laporan Keuangan</h2>
+      <p class="fmt-section-subtitle">Pilih kategori format yang sesuai, unduh berkas Excel-nya, lalu isi sesuai kegiatan dan transaksi LDK Anda.</p>
+    </div>
+
+    <div class="fmt-toolbar">
+      <app-search-filter-sort
+        searchPlaceholder="Cari nama file template..."
+        [searchValue]="searchText()"
+        [filterFields]="filterFields()"
+        [filterValues]="filterValues()"
+        [sortOptions]="sortOptions"
+        [sortValue]="currentSort()"
+        [filterMobileSheet]="true"
+        filterTitle="Filter Format Keuangan"
+        filterSubtitle="Pilih kategori atau status ketersediaan untuk menyaring template."
+        (searchChange)="onSearchChange($event)"
+        (filterApply)="onFilterApply($event)"
+        (sortChange)="onSortChange($event)"
+      />
     </div>
 
     @if (loading()) {
-      <div class="grid-cards">
+      <div class="fmt-grid" aria-hidden="true">
         @for (i of [1,2,3,4,5,6]; track i) {
-          <div class="card" style="padding:18px">
-            <span class="skel skel-title"></span>
-            <span class="skel skel-line" style="width:60%"></span>
-            <span class="skel skel-line" style="width:80%;margin-top:12px"></span>
+          <div class="fmt-card-skel">
+            <span class="skel skel-title" style="width:60%;margin:22px 0 0 20px"></span>
+            <div style="padding:4px 20px 22px">
+              <span class="skel skel-line" style="width:90%"></span>
+              <span class="skel skel-line" style="width:70%"></span>
+            </div>
           </div>
         }
       </div>
     } @else {
-      <div class="grid-cards">
-        @for (g of groups(); track g.type.formatTypeID) {
-          <div class="fmt-card">
-            <div class="fmt-head">
-              <span class="icon-badge sm icon-badge-soft"><app-icon name="file-spreadsheet" [size]="16" /></span>
-              <h3>{{ g.type.formatTypeName }}</h3>
-              @if (g.files.length > 0) { <span class="chip chip-green count">{{ g.files.length }}</span> }
-            </div>
-            @if (g.files.length > 0) {
-              <ul class="fmt-files">
-                @for (f of g.files; track f.financeFormatID) {
-                  <li class="fmt-file">
-                    <span class="icon-badge sm icon-badge-neutral"><app-icon name="file-spreadsheet" [size]="14" /></span>
-                    <span class="fmt-file-info">
-                      <span class="name">{{ f.fileName }}</span>
-                      <span class="date">Diunggah {{ f.createdDate | date:'d MMM y' }}</span>
-                    </span>
-                    <span class="fmt-file-actions">
-                      <a class="btn btn-primary btn-sm" [href]="downloadUrl(f)">
-                        <app-icon name="download" [size]="13" /> Unduh
-                      </a>
-                      <button type="button" class="btn btn-outline btn-sm" (click)="copy(downloadUrl(f))" title="Salin URL berkas">
-                        <app-icon name="copy" [size]="13" />
-                      </button>
-                    </span>
-                  </li>
-                }
-              </ul>
-            } @else {
-              <div class="fmt-empty">Belum ada file untuk kategori ini.</div>
+      @if (filteredGroups().length === 0 && hasActiveSearchOrFilter()) {
+        <div class="empty-state fmt-panel-slab">
+          <span class="icon-badge lg icon-badge-soft"><app-icon name="search" [size]="26" /></span>
+          <h4>Kategori Tidak Ditemukan</h4>
+          <p>Coba ubah kata kunci atau hapus filter yang aktif.</p>
+          <div class="fmt-empty-actions">
+            @if (searchText()) {
+              <button type="button" class="chip" (click)="onSearchChange('')"><app-icon name="search" [size]="12" /> Hapus kata kunci</button>
+            }
+            @if (activeFilterCount() > 0) {
+              <button type="button" class="chip" (click)="onFilterApply({})"><app-icon name="x" [size]="12" /> Hapus filter</button>
+            }
+            @if (searchText() && activeFilterCount() > 0) {
+              <button type="button" class="chip" (click)="resetSearchAndFilter()"><app-icon name="rotate-ccw" [size]="12" /> Reset semua</button>
             }
           </div>
-        }
-      </div>
-
-      @if (totalFiles() === 0) {
-        <div class="empty-state" style="margin-top:24px">
-          <p>Belum ada template yang tersedia untuk saat ini. Silakan cek kembali nanti.</p>
         </div>
+      } @else {
+        <!-- ---------- Desktop/tablet: grid kartu "folder dokumen" — tab
+             warna di atas kartu + badge ikon bertumpuk, BUKAN ribbon diagonal
+             (Perpustakaan) atau thumbnail produk (Goods). ---------- -->
+        <div class="fmt-grid">
+          @for (g of filteredGroups(); track g.type.formatTypeID; let i = $index) {
+            <div class="fmt-card stagger-in" [style.--stagger-i]="i">
+              <div class="fmt-head">
+                <span class="fmt-icon-stack">
+                  <span class="fmt-icon-badge"><app-icon name="file-spreadsheet" [size]="18" /></span>
+                </span>
+                <span class="fmt-head-text">
+                  <h3>{{ g.type.formatTypeName }}</h3>
+                  @if (g.files.length > 0) {
+                    <span class="chip chip-green count">{{ g.files.length }} file</span>
+                  } @else {
+                    <span class="chip">Kosong</span>
+                  }
+                </span>
+              </div>
+              @if (g.files.length > 0) {
+                <ul class="fmt-files">
+                  @for (f of g.files; track f.financeFormatID) {
+                    <li class="fmt-file">
+                      <span class="icon-badge sm icon-badge-neutral"><app-icon name="file-spreadsheet" [size]="14" /></span>
+                      <span class="fmt-file-info">
+                        <span class="name">{{ f.fileName }}</span>
+                        <span class="date">Diunggah {{ f.createdDate | date:'d MMM y' }}</span>
+                      </span>
+                      <span class="fmt-file-actions">
+                        <a class="btn btn-primary btn-sm" [href]="downloadUrl(f)">
+                          <app-icon name="download" [size]="13" /> Unduh
+                        </a>
+                        <button type="button" class="btn btn-outline btn-sm" (click)="copy(downloadUrl(f))" title="Salin URL berkas">
+                          <app-icon name="copy" [size]="13" />
+                        </button>
+                      </span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <div class="fmt-empty">
+                  <app-icon name="inbox" [size]="18" />
+                  <span>Belum ada file untuk kategori ini.</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- ---------- Mobile: tile ringkas, tap buka bottom sheet berisi
+             daftar file lengkap — supaya 9 kategori tidak membuat halaman
+             mobile kepanjangan. ---------- -->
+        <div class="fmt-tile-grid">
+          @for (g of filteredGroups(); track g.type.formatTypeID; let i = $index) {
+            <button type="button" class="fmt-tile stagger-in" [class.is-empty]="g.files.length === 0" [style.--stagger-i]="i" (click)="openSheet(g)">
+              <span class="fmt-tile-icon"><app-icon name="file-spreadsheet" [size]="18" /></span>
+              <h4>{{ g.type.formatTypeName }}</h4>
+              <span class="fmt-tile-meta">
+                @if (g.files.length > 0) {
+                  <app-icon name="check-circle" [size]="11" /> {{ g.files.length }} file
+                } @else {
+                  <app-icon name="x-circle" [size]="11" /> Kosong
+                }
+              </span>
+            </button>
+          }
+        </div>
+
+        @if (totalFiles() === 0) {
+          <div class="empty-state fmt-panel-slab" style="margin-top:24px">
+            <p>Belum ada template yang tersedia untuk saat ini. Silakan cek kembali nanti.</p>
+          </div>
+        }
       }
 
       @if (cpPhone()) {
@@ -75,3 +241,37 @@
     }
   </div>
 </section>
+
+<!-- ---------- Bottom sheet mobile: daftar file lengkap satu kategori ---------- -->
+<app-bottom-sheet [open]="sheetGroup() !== null" (closed)="closeSheet()">
+  @if (sheetGroup(); as g) {
+    <span class="chip chip-green"><app-icon name="tags" [size]="12" /> {{ g.type.formatTypeName }}</span>
+    <h3 class="sheet-title">{{ g.type.formatTypeName }}</h3>
+    @if (g.files.length > 0) {
+      <ul class="fmt-sheet-files">
+        @for (f of g.files; track f.financeFormatID) {
+          <li class="fmt-file">
+            <span class="icon-badge sm icon-badge-neutral"><app-icon name="file-spreadsheet" [size]="14" /></span>
+            <span class="fmt-file-info">
+              <span class="name">{{ f.fileName }}</span>
+              <span class="date">Diunggah {{ f.createdDate | date:'d MMM y' }}</span>
+            </span>
+            <span class="fmt-file-actions">
+              <a class="btn btn-primary btn-sm" [href]="downloadUrl(f)">
+                <app-icon name="download" [size]="13" /> Unduh
+              </a>
+              <button type="button" class="btn btn-outline btn-sm" (click)="copy(downloadUrl(f))" title="Salin URL berkas">
+                <app-icon name="copy" [size]="13" />
+              </button>
+            </span>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="fmt-sheet-empty">
+        <span class="icon-badge lg icon-badge-soft"><app-icon name="inbox" [size]="22" /></span>
+        <p>Belum ada file untuk kategori ini.</p>
+      </div>
+    }
+  }
+</app-bottom-sheet>
