@@ -25,14 +25,16 @@ import { AfterViewInit, Component, ElementRef, QueryList, ViewChildren } from '@
 
       <ellipse class="qhv-ground-shadow" cx="240" cy="246" rx="95" ry="10" filter="url(#qhvSoftBlur)" />
 
-      <g class="qhv-silhouette" transform="translate(240,120)">
-        <rect x="-38" y="-38" width="76" height="76" rx="16" fill="none" stroke="url(#qhvFill)" stroke-width="7" />
-        <rect x="-32" y="-32" width="20" height="20" rx="5" fill="url(#qhvFill)" />
-        <rect x="12" y="-32" width="20" height="20" rx="5" fill="url(#qhvFill)" />
-        <rect x="-32" y="12" width="20" height="20" rx="5" fill="url(#qhvFill)" />
-        <rect x="10" y="10" width="9" height="9" rx="2" fill="url(#qhvFill)" />
-        <rect x="10" y="22" width="9" height="9" rx="2" fill="url(#qhvFill)" />
-        <rect x="22" y="10" width="9" height="9" rx="2" fill="url(#qhvFill)" />
+      <g transform="translate(240,120)">
+        <g class="qhv-silhouette">
+          <rect x="-38" y="-38" width="76" height="76" rx="16" fill="none" stroke="url(#qhvFill)" stroke-width="7" />
+          <rect x="-32" y="-32" width="20" height="20" rx="5" fill="url(#qhvFill)" />
+          <rect x="12" y="-32" width="20" height="20" rx="5" fill="url(#qhvFill)" />
+          <rect x="-32" y="12" width="20" height="20" rx="5" fill="url(#qhvFill)" />
+          <rect x="10" y="10" width="9" height="9" rx="2" fill="url(#qhvFill)" />
+          <rect x="10" y="22" width="9" height="9" rx="2" fill="url(#qhvFill)" />
+          <rect x="22" y="10" width="9" height="9" rx="2" fill="url(#qhvFill)" />
+        </g>
       </g>
 
       <path #qhvLine class="qhv-line thick" d="M240,120 L120,85" />
