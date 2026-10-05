@@ -1,11 +1,15 @@
 <div class="wrap">
   @switch (state()) {
     @case ('loading') {
-      <p>Memuat formulir…</p>
+      <div class="loading-wrap">
+        <span class="spinner spinner-lg"></span>
+        <p>Memuat formulir…</p>
+      </div>
     }
 
     @case ('closed') {
-      <div class="closed-card">
+      <div class="done-card closed-card">
+        <div class="icon-badge lg" [ngClass]="closedVisual().badge"><app-icon [name]="closedVisual().icon" [size]="26" /></div>
         @switch (closedReason()) {
           @case ('needs_login') {
             <h2>Masuk untuk Mengisi</h2>
@@ -42,6 +46,7 @@
 
     @case ('done') {
       <div class="done-card">
+        <div class="icon-badge lg icon-badge-soft"><app-icon name="check-circle" [size]="26" /></div>
         <h2>Jazakallah khair! 🤍</h2>
         <p [innerHTML]="(submitResult()?.confirmationMessage || 'Tanggapan Anda telah kami terima.') | linkifyText"></p>
         @if (submitResult()?.isMultipleSubmit) {
@@ -62,15 +67,21 @@
           @if (isMultiStep() || draftEnabled()) {
             <div class="head-top">
               @if (isMultiStep()) {
-                <span class="step-chip">
-                  {{ stepLabel() }}@if (sectionIdx() > 0 && currentSection()?.title) { <span class="step-chip-name">— {{ currentSection()?.title }}</span> }
-                </span>
+                <div class="step-meta">
+                  <span class="step-chip"><app-icon name="list-checks" [size]="12" /> {{ stepLabel() }}</span>
+                  @if (sectionIdx() > 0 && currentSection()?.title) {
+                    <span class="step-chip-name">{{ currentSection()?.title }}</span>
+                  }
+                </div>
               }
-              @if (draftEnabled()) { <span class="autosave">Tersimpan otomatis</span> }
+              @if (draftEnabled()) { <span class="autosave"><app-icon name="check" [size]="11" /> Tersimpan otomatis</span> }
             </div>
           }
 
-          <h1>{{ f.title }}</h1>
+          <div class="head-title-row">
+            <div class="icon-badge md icon-badge-solid"><app-icon name="clipboard-list" [size]="19" /></div>
+            <h1>{{ f.title }}</h1>
+          </div>
 
           @if (f.description) {
             @if (isMultiStep() && sectionIdx() > 0 && !descExpanded()) {
@@ -87,7 +98,7 @@
           @if (f.isPreview) { <p class="preview-note">Mode pratinjau — pengiriman tidak akan disimpan sebagai tanggapan publik biasa.</p> }
 
           @if (isMultiStep()) {
-            <div class="progress"><span [style.width.%]="progressPct()"></span></div>
+            <div class="progress"><span [style.transform]="'scaleX(' + (progressPct() / 100) + ')'"></span></div>
             <div class="dots">
               @for (s of sections(); track $index) { <i [class]="dotState($index)"></i> }
             </div>
@@ -96,8 +107,11 @@
 
         @if (isMultiStep() && sectionIdx() > 0 && currentSection(); as sec) {
           <div class="section-head">
-            <h2>{{ sec.title }}</h2>
-            @if (sec.description) { <div class="help" [innerHTML]="sec.description | linkifyText"></div> }
+            <div class="icon-badge sm icon-badge-soft"><app-icon name="chevron-right" [size]="13" /></div>
+            <div>
+              <h2>{{ sec.title }}</h2>
+              @if (sec.description) { <div class="help" [innerHTML]="sec.description | linkifyText"></div> }
+            </div>
           </div>
         }
 
@@ -237,14 +251,22 @@
 
           <div class="nav-row">
             @if (isMultiStep() && (sectionIdx() > 0)) {
-              <button type="button" class="btn btn-ghost" (click)="prev()">Sebelumnya</button>
+              <button type="button" class="btn btn-ghost" (click)="prev()">
+                <app-icon name="chevron-left" [size]="12" /> Sebelumnya
+              </button>
             }
             <span class="grow"></span>
             @if (isMultiStep() && hasNextSection()) {
-              <button type="button" class="btn btn-primary" (click)="next()">Selanjutnya</button>
+              <button type="button" class="btn btn-primary" (click)="next()">
+                Selanjutnya <app-icon name="chevron-right" [size]="12" />
+              </button>
             } @else {
               <button type="submit" class="btn btn-primary submit-btn" [disabled]="submitting()">
-                {{ submitting() ? 'Mengirim…' : 'Kirim' }}
+                @if (submitting()) {
+                  Mengirim…
+                } @else {
+                  Kirim <app-icon name="paper-plane" [size]="13" />
+                }
               </button>
             }
           </div>

@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -6,6 +7,7 @@ import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { FieldError } from '../../../../core/entities/api-response';
 import { SelectComponent } from '../../../../shared/select.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
+import { IconComponent } from '../../../../shared/icon.component';
 import { LinkifyTextPipe } from '../../linkify-text.pipe';
 import { PublicDynamicForm, SubmitResult } from '../../entities/dynamic-form';
 import { DynamicFormField } from '../../entities/dynamic-form-field';
@@ -21,77 +23,137 @@ type FillState = 'loading' | 'form' | 'closed' | 'done';
   selector: 'app-dynamicform-public-fill-page',
   standalone: true,
   templateUrl: './dynamicform.public-fill.page.html',
-  imports: [FormsModule, LinkifyTextPipe, SelectComponent, DateTimePickerComponent],
+  imports: [FormsModule, NgClass, LinkifyTextPipe, SelectComponent, DateTimePickerComponent, IconComponent],
   providers: [DynamicFormPublicFillPresenter],
   styles: [`
-    .wrap { max-width: 720px; margin: 32px auto; padding: 0 16px; }
+    .wrap { width: 100%; }
+
+    /* Loading state — sits directly on the dark wash backdrop (see
+       FormLayoutComponent), so it needs light text + the light-bordered
+       .spinner variant (global), not the page's usual dark text colors. */
+    .loading-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 80px 0; color: rgba(255,255,255,.85); font-weight: 600; }
 
     /* Header image — its own elevated card, separate from the title card. */
-    .header-image-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 16px; }
+    .header-image-card { background: #fff; border-radius: var(--radius-sm); box-shadow: 0 20px 45px rgba(0,0,0,.22); overflow: hidden; margin-bottom: 18px; }
     .header-image-card img { width: 100%; max-height: 240px; object-fit: cover; display: block; }
 
-    /* Title card — white with a rounded green top strip; dark title for contrast. */
-    .head-card { position: relative; background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 26px 28px 24px; margin-bottom: 16px; }
-    .head-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 6px;
-      background: var(--color-primary); border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
-    .head-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-    .autosave { margin-left: auto; font-size: .8rem; color: var(--color-muted); white-space: nowrap; }
-    .step-chip { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700;
-      color: #fff; background: var(--color-primary); padding: 5px 12px; border-radius: var(--radius-full); }
-    .step-chip-name { font-weight: 500; opacity: .92; }
-    .head-card h1 { margin: 0 0 8px; font-size: 1.6rem; font-weight: 800; color: var(--color-text); line-height: 1.25; }
+    /* Title card — elevated white card reading cleanly on the dark backdrop,
+       icon-badge + title replaces the old flat green top-strip. */
+    .head-card { position: relative; background: #fff; border-radius: var(--radius-sm); box-shadow: 0 20px 45px rgba(0,0,0,.22); padding: 30px 32px 26px; margin-bottom: 18px; }
+    .head-top { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+    .autosave { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 600; color: var(--color-primary-dark); white-space: nowrap; }
+    /* Chip (short "Bagian X dari Y") + section name kept as two SEPARATE
+       pieces (not one pill with the name appended inside) — a long section
+       title inside a full-pill chip used to force a two-line wrap that read
+       as a broken, oversized blob on narrow mobile widths. */
+    .step-meta { display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+    .step-chip { display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0; font-size: .78rem; font-weight: 700;
+      color: #fff; background: linear-gradient(135deg, var(--color-primary-bright), var(--color-primary-dark)); padding: 6px 14px; border-radius: var(--radius-full);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--color-primary) 35%, transparent); white-space: nowrap; }
+    .step-chip-name { min-width: 0; max-width: 100%; font-size: .82rem; font-weight: 600; color: var(--color-text-secondary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .head-title-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+    .head-card h1 { margin: 0; flex: 1; min-width: 0; font-size: 1.55rem; font-weight: 800; color: var(--color-text); line-height: 1.25; }
     .form-desc { color: var(--color-text-secondary); line-height: 1.7; }
     .form-desc.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .form-desc a, .help a, .done-card a { color: var(--color-primary-dark); text-decoration: underline; }
     .desc-toggle { margin-top: 6px; padding: 0; background: none; border: 0; color: var(--color-primary-dark); font-size: .82rem;
       font-weight: 600; text-decoration: underline; cursor: pointer; }
     .preview-note { margin-top: 10px; font-size: .85rem; color: var(--color-muted); background: var(--color-bg-alt); border-radius: var(--radius-xs); padding: 8px 12px; }
-    .progress { height: 6px; border-radius: 999px; background: var(--color-bg-alt); margin: 18px 0 10px; overflow: hidden; }
-    .progress > span { display: block; height: 100%; background: var(--color-primary); transition: width var(--motion-base) ease; }
+    .progress { height: 8px; border-radius: var(--radius-full); background: var(--color-bg-alt); margin: 20px 0 10px; overflow: hidden; }
+    /* transform: scaleX(), not width — avoids layout thrash on every step
+       change (width/height/padding/margin transitions force reflow). */
+    .progress > span { display: block; width: 100%; height: 100%; border-radius: var(--radius-full);
+      background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
+      transform-origin: left center; transform: scaleX(0); transition: transform var(--motion-base) var(--ease-out); }
     .dots { display: flex; gap: 6px; }
-    .dots > i { width: 8px; height: 8px; border-radius: 50%; background: var(--color-border-strong); }
+    .dots > i { width: 8px; height: 8px; border-radius: 50%; background: var(--color-border-strong); transition: transform var(--motion-fast) var(--ease-out), background var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
     .dots > i.done { background: var(--color-primary); }
-    .dots > i.active { background: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    .dots > i.active { background: var(--color-primary); transform: scale(1.3); box-shadow: 0 0 0 3px var(--color-primary-soft); }
     .dots > i.skipped { background: var(--color-bg-alt); border: 1px solid var(--color-border-strong); }
-    .section-head { background: #fff; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 16px 22px; margin-bottom: 12px; }
-    .section-head h2 { margin: 0 0 4px; font-size: 1.1rem; }
-    .fld { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px; box-shadow: var(--shadow-sm); }
-    label.q { display: block; font-weight: 600; margin-bottom: 6px; color: var(--color-text); }
+
+    .section-head { display: flex; align-items: flex-start; gap: 14px; background: #fff; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); padding: 18px 22px; margin-bottom: 14px; }
+    .section-head h2 { margin: 0 0 4px; font-size: 1.1rem; font-weight: 800; color: var(--color-text); }
+
+    .fld { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 22px 24px; margin-bottom: 14px; box-shadow: var(--shadow-sm);
+      transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease; }
+    .fld:focus-within { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    label.q { display: block; font-weight: 700; font-size: .95rem; margin-bottom: 8px; color: var(--color-text); }
     .req { color: var(--color-danger); }
-    .help { color: var(--color-muted); font-size: .85rem; margin: 2px 0 10px; }
-    .opt { display: flex; align-items: center; gap: 12px; margin: 8px 0; font-weight: 400;
-      padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-xs);
-      cursor: pointer; transition: border-color var(--motion-fast) ease, background var(--motion-fast) ease; }
-    .opt:hover { border-color: var(--color-primary-dark); }
+    .help { color: var(--color-muted); font-size: .85rem; margin: 2px 0 12px; line-height: 1.55; }
+
+    .opt { position: relative; display: flex; align-items: center; gap: 12px; margin: 8px 0; font-weight: 400;
+      padding: 13px 44px 13px 16px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      cursor: pointer; transition: border-color var(--motion-fast) ease, background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .opt:hover { border-color: var(--color-primary-dark); transform: translateY(-1px); }
     .opt:has(input:checked) { border-color: var(--color-primary); background: var(--color-primary-soft); }
+    .opt::after { content: "\\2713"; position: absolute; right: 14px; top: 50%; width: 18px; height: 18px; line-height: 18px;
+      transform: translateY(-50%) scale(.5); border-radius: 50%; background: var(--color-primary); color: #fff;
+      font-size: 11px; text-align: center; opacity: 0; transition: opacity var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .opt:has(input:checked)::after { opacity: 1; transform: translateY(-50%) scale(1); }
+
     .err { color: var(--color-danger); font-size: .82rem; margin-top: 6px; }
     .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
     .file-chip { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; padding: 8px 10px 8px 14px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-bg-alt); }
+      border: 1px solid var(--color-border); border-radius: var(--radius-full); background: var(--color-bg-alt); box-shadow: var(--shadow-sm); }
     .file-chip > i { color: var(--color-primary-dark); font-size: .85rem; flex-shrink: 0; }
     .file-chip-name { font-size: .88rem; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .file-chip-remove { flex-shrink: 0; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;
-      border: none; border-radius: 50%; background: transparent; color: var(--color-muted); cursor: pointer; }
+      border: none; border-radius: 50%; background: transparent; color: var(--color-muted); cursor: pointer; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
     .file-chip-remove:hover { background: rgba(0,0,0,.08); color: var(--color-text); }
     .datetime-split { display: flex; gap: 8px; }
     .datetime-split > * { flex: 1; min-width: 0; }
-    .banner { background: var(--color-warning-soft); color: var(--color-warning); border-radius: var(--radius-xs); padding: 12px 16px; margin-bottom: 12px; font-size: .9rem; }
-    .done-card, .closed-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 40px 28px; text-align: center; box-shadow: var(--shadow-sm); }
-    .stars { font-size: 1.6rem; cursor: pointer; user-select: none; color: var(--color-primary); }
+    .banner { background: var(--color-warning-soft); color: var(--color-warning); border-radius: var(--radius-xs); padding: 12px 16px; margin-bottom: 14px; font-size: .9rem; }
+
+    .done-card, .closed-card { display: flex; flex-direction: column; align-items: center; background: #fff; border-radius: var(--radius-sm);
+      padding: 48px 32px; text-align: center; box-shadow: 0 20px 45px rgba(0,0,0,.22); }
+    .done-card .icon-badge, .closed-card .icon-badge { margin-bottom: 8px; }
+    .done-card h2, .closed-card h2 { margin: 4px 0 8px; font-size: 1.5rem; font-weight: 800; color: var(--color-text); }
+    .done-card p, .closed-card p { max-width: 420px; margin: 0 auto 18px; color: var(--color-text-secondary); line-height: 1.6; }
+    .done-card .btn, .closed-card .btn { padding: 12px 28px; border-radius: var(--radius-full); font-weight: 700;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary) 28%, transparent); }
+
+    .stars { font-size: 1.8rem; cursor: pointer; user-select: none; color: var(--color-primary); display: flex; gap: 2px; }
+    .stars > span { transition: transform var(--motion-fast) var(--ease-out); }
+    .stars > span:hover { transform: scale(1.15); }
     .scale { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
     .scale-label { font-size: .82rem; color: var(--color-muted); }
     .scale-item { position: relative; display: inline-flex; }
     .scale-item input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
     .scale-num { display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 6px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-xs); font-weight: 600; color: var(--color-text);
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); font-weight: 700; color: var(--color-text);
       pointer-events: none; /* clicks pass through to the full-size hidden radio */
-      transition: border-color var(--motion-fast) ease, background var(--motion-fast) ease, color var(--motion-fast) ease; }
-    .scale-item:hover .scale-num { border-color: var(--color-primary-dark); }
-    .scale-item.checked .scale-num { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+      transition: border-color var(--motion-fast) ease, background var(--motion-fast) ease, color var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
+    .scale-item:hover .scale-num { border-color: var(--color-primary-dark); transform: translateY(-1px); }
+    .scale-item.checked .scale-num { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 0 0 3px var(--color-primary-soft); }
     .video-frame { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: 8px; }
-    .nav-row { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+
+    .nav-row { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
     .nav-row .grow { flex: 1; }
-    .footer-meta { margin-top: 14px; font-size: .8rem; color: var(--color-muted); text-align: center; }
+    /* Selanjutnya/Kirim: same translucent/bordered "glass pill" language as
+       .form-back-home (FormLayoutComponent) — tinted with primary green
+       instead of white since these sit on a white card, not the dark
+       backdrop (a literal white-on-white glass fill would be invisible
+       here). Sebelumnya (.btn-ghost) is EXCLUDED on purpose — keeps the
+       plain global .btn-ghost look, not this green glass treatment. */
+    .nav-row .btn-primary {
+      padding: 11px 22px; border-radius: var(--radius-full); font-weight: 700;
+      background: color-mix(in srgb, var(--color-primary) 10%, #fff);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 24%, #fff);
+      color: var(--color-primary-dark); box-shadow: none;
+    }
+    .nav-row .btn-primary:hover { background: color-mix(in srgb, var(--color-primary) 18%, #fff); color: var(--color-primary-dark); text-decoration: none; }
+    .submit-btn { padding: 13px 30px; }
+
+    /* Footer meta sits directly on the dark wash backdrop (not inside a
+       card) — needs light text, unlike the rest of the page's white cards. */
+    .footer-meta { margin-top: 16px; font-size: .8rem; color: rgba(255,255,255,.7); text-align: center; }
+
+    @media (max-width: 640px) {
+      .head-card { padding: 24px 22px 22px; }
+      .head-title-row .icon-badge { display: none; }
+      .done-card, .closed-card { padding: 38px 22px; }
+    }
   `],
 })
 export class DynamicFormPublicFillPage implements OnInit, OnDestroy, DynamicFormPublicFillView {
@@ -430,6 +492,18 @@ export class DynamicFormPublicFillPage implements OnInit, OnDestroy, DynamicForm
   remainingQuota(): number | null {
     const f = this.form();
     return f?.maxSubmission != null ? Math.max(0, f.maxSubmission - f.totalSubmission) : null;
+  }
+
+  closedVisual(): { icon: string; badge: string } {
+    switch (this.closedReason()) {
+      case 'needs_login': return { icon: 'lock', badge: 'icon-badge-info' };
+      case 'already_submitted': return { icon: 'check-circle', badge: 'icon-badge-soft' };
+      case 'quota_full': return { icon: 'alert-triangle', badge: 'icon-badge-ember' };
+      case 'ended': return { icon: 'clock', badge: 'icon-badge-neutral' };
+      case 'not_started': return { icon: 'clock', badge: 'icon-badge-gold' };
+      case 'draft': return { icon: 'lock', badge: 'icon-badge-neutral' };
+      default: return { icon: 'info-circle', badge: 'icon-badge-neutral' };
+    }
   }
 
   showClosed(message: string, reason?: ClosedReason): void {

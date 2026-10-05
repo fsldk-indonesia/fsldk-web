@@ -1,8 +1,9 @@
 import { Routes } from '@angular/router';
 import { permissionGuard } from '../../core/guards/guards';
 
-/** Public fill route — mounted as a child of PublicLayoutComponent. The static
- *  `form/` prefix keeps it clear of the shortlink catch-all `:key`. */
+/** Public fill route — mounted as a child of FormLayoutComponent (own shell,
+ *  no navbar/footer — see app.routes.ts), not PublicLayoutComponent. The
+ *  static `form/` prefix keeps it clear of the shortlink catch-all `:key`. */
 export const dynamicFormPublicRoutes: () => Routes = () => [
   {
     path: 'form/:slug',
