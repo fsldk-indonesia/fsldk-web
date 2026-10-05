@@ -6,6 +6,7 @@ import { Donation, DonationStatus } from '../../entities/donation';
 import { IconComponent } from '../../../../shared/icon.component';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
+import { KantongAmalDonationFlowBackLinkService } from '../../../../layouts/kantong-amal-donation-flow-back-link.service';
 import { KantongAmalPaymentStatusPresenter } from './kantong-amal.payment-status.presenter';
 import { KantongAmalPaymentStatusView } from './kantong-amal.payment-status.view';
 
@@ -26,7 +27,7 @@ const BRAND_GREEN_DARK = '#046428';
   imports: [RouterLink, DatePipe, IconComponent],
   providers: [KantongAmalPaymentStatusPresenter],
   styles: [`
-    .status-card { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 32px; text-align: center; }
+    .status-card { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 32px; text-align: center; box-shadow: 0 24px 50px rgba(0,0,0,.3); }
 
     .status-icon { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
     .status-icon.status-pending { background: var(--color-primary-soft); color: var(--color-primary-dark); position: relative; }
@@ -72,6 +73,7 @@ export class KantongAmalPaymentStatusPage implements OnInit, OnDestroy, KantongA
   private presenter = inject(KantongAmalPaymentStatusPresenter);
   private route = inject(ActivatedRoute);
   private platformId = inject(PLATFORM_ID);
+  private backLink = inject(KantongAmalDonationFlowBackLinkService);
 
   donation = signal<Donation | null>(null);
   loading = signal(true);
@@ -182,6 +184,9 @@ export class KantongAmalPaymentStatusPage implements OnInit, OnDestroy, KantongA
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setDonation(donation: Donation | null): void {
     this.donation.set(donation);
+    if (donation) {
+      this.backLink.set('Kembali ke Detail Campaign', kantongAmalPath.detail(donation.campaignSlug));
+    }
     if (donation && donation.paymentStatus === 'PENDING') {
       this.startPolling();
       // qrPayload adalah string EMVCo QRIS mentah (bukan gambar) — dirender

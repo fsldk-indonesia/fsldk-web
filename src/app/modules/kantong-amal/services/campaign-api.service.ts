@@ -14,6 +14,7 @@ export class CampaignApiService {
   publicList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.get('/public/campaigns', q); }
   publicDetail(slug: string): Observable<CampaignDetail> { return this.api.get(`/public/campaigns/${slug}`); }
   categories(): Observable<CampaignCategory[]> { return this.api.get('/public/campaign-categories'); }
+  provinces(): Observable<string[]> { return this.api.get('/public/campaign-provinces'); }
   publicStats(): Observable<CampaignPublicStats> { return this.api.get('/public/campaign-stats'); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.get('/campaigns', q); }

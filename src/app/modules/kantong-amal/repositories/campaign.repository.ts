@@ -11,6 +11,7 @@ export class CampaignRepository {
   publicList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.publicList(q); }
   publicDetail(slug: string): Observable<CampaignDetail> { return this.api.publicDetail(slug); }
   categories(): Observable<CampaignCategory[]> { return this.api.categories(); }
+  provinces(): Observable<string[]> { return this.api.provinces(); }
   publicStats(): Observable<CampaignPublicStats> { return this.api.publicStats(); }
 
   cmsList(q: Record<string, unknown>): Observable<Pagination<Campaign>> { return this.api.cmsList(q); }

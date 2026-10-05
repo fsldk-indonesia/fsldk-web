@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { PublicLayoutComponent } from './layouts/public-layout.component';
 import { AuthLayoutComponent } from './layouts/auth-layout.component';
 import { FormLayoutComponent } from './layouts/form-layout.component';
+import { KantongAmalDonationFlowLayoutComponent } from './layouts/kantong-amal-donation-flow-layout.component';
 import { CmsLayoutComponent } from './layouts/cms-layout.component';
 import { KaderLayoutComponent } from './layouts/kader-layout.component';
 import { authGuard } from './core/guards/guards';
@@ -25,7 +26,7 @@ import { reportRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 import { qrcodeRoutes, qrcodePublicRoutes, qrcodeDetailRoutes } from './modules/qrcode/qrcode.routes';
-import { kantongAmalPublicRoutes, kantongAmalAdminRoutes } from './modules/kantong-amal/kantong-amal.routes';
+import { kantongAmalPublicRoutes, kantongAmalDonationFlowRoutes, kantongAmalAdminRoutes } from './modules/kantong-amal/kantong-amal.routes';
 import { zakatPublicRoutes } from './modules/zakat/zakat.routes';
 import { kaderRoutes } from './modules/submission/kader.routes';
 import { commentCmsRoutes } from './modules/comment/comment.routes';
@@ -103,6 +104,9 @@ export const routes: Routes = [
 
   // ---------- Formulir Dinamis publik (shell sendiri, TANPA navbar/footer — lihat FormLayoutComponent) ----------
   { path: '', component: FormLayoutComponent, children: [...dynamicFormPublicRoutes()] },
+
+  // ---------- Alur Donasi Kantong Amal (shell sendiri, TANPA navbar/footer — lihat KantongAmalDonationFlowLayoutComponent) ----------
+  { path: '', component: KantongAmalDonationFlowLayoutComponent, children: [...kantongAmalDonationFlowRoutes()] },
 
   // ---------- Detail QR Code (tanpa shell — halaman sendiri yang memikul backdrop penuh-layar, TANPA navbar/footer) ----------
   ...qrcodeDetailRoutes(),

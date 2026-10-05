@@ -11,9 +11,18 @@ export class KantongAmalCampaignListPresenter extends BasePresenter<KantongAmalC
     this.campaignRepo.categories().subscribe({ next: (c) => this.view.setCategories(c), error: () => {} });
   }
 
-  load(page: number, limit: number, search: string, categoryID: number, sort: string): void {
+  loadProvinces(): void {
+    this.campaignRepo.provinces().subscribe({ next: (p) => this.view.setProvinces(p), error: () => {} });
+  }
+
+  load(page: number, limit: number, search: string, categoryID: number, sort: string, province?: string, featured?: boolean): void {
     this.view.setLoading(true);
-    this.campaignRepo.publicList({ page, limit, search, categoryID: categoryID || undefined, sort }).subscribe({
+    this.campaignRepo.publicList({
+      page, limit, search, sort,
+      categoryID: categoryID || undefined,
+      province: province || undefined,
+      featured: featured ? 1 : undefined,
+    }).subscribe({
       next: (p) => { this.view.setCampaigns(p.data, p.count); this.view.setLoading(false); },
       error: () => this.view.setLoading(false),
     });

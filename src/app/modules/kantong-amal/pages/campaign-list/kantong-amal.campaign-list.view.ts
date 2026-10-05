@@ -4,4 +4,5 @@ export interface KantongAmalCampaignListView {
   setLoading(loading: boolean): void;
   setCampaigns(campaigns: Campaign[], count: number): void;
   setCategories(categories: CampaignCategory[]): void;
+  setProvinces(provinces: string[]): void;
 }
