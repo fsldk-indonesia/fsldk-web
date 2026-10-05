@@ -1,9 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DatePipe } from '@angular/common';
 import { AuthRepository } from '../../repositories/auth.repository';
 import { PasswordFieldComponent } from '../../../../shared/password-field.component';
+import { PhoneInputComponent } from '../../../../shared/phone-input.component';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { PageHeroComponent } from '../../../../shared/page-hero.component';
+import { PopupModalComponent } from '../../../../shared/popup-modal.component';
 import { KaderInfo } from '../../../submission/entities/submission';
 import { UserMyProfilePresenter } from './user.my-profile.presenter';
 import { UserMyProfileView } from './user.my-profile.view';
@@ -11,114 +15,165 @@ import { UserMyProfileView } from './user.my-profile.view';
 @Component({
   selector: 'app-user-my-profile-page',
   standalone: true,
-  imports: [FormsModule, PasswordFieldComponent, IconComponent, ImageUploadComponent],
+  templateUrl: './user.my-profile.page.html',
+  imports: [FormsModule, DatePipe, PasswordFieldComponent, PhoneInputComponent, IconComponent, ImageUploadComponent, PageHeroComponent, PopupModalComponent],
   providers: [UserMyProfilePresenter],
-  template: `
-    <div class="container profile-page">
-      <div class="page-head">
-        <h1>Profil Saya</h1>
-        <p class="text-muted">Kelola identitas akun & kata sandi Anda.</p>
-      </div>
-
-      <div class="profile-grid">
-        <!-- Kolom kiri: identitas + foto — sticky supaya tetap terlihat saat
-             kolom kanan (yang lebih panjang) di-scroll pada layar lebar. -->
-        <div class="card card-pad profile-side">
-          <div class="identity-row">
-            @if (auth.user()?.photoURL) {
-              <img class="avatar" [src]="auth.user()?.photoURL" alt="" referrerpolicy="no-referrer">
-            } @else {
-              <span class="avatar">{{ initials() }}</span>
-            }
-            <div>
-              <h3 style="margin-bottom:2px">{{ auth.user()?.fullName }}</h3>
-              <p class="text-muted" style="margin:0;word-break:break-all">{{ auth.user()?.email }}</p>
-            </div>
-          </div>
-
-          <div class="form-group photo-upload">
-            <label class="form-label">
-              Foto Profil
-              @if (photoSaving()) { <span class="spinner spinner-xs"></span> }
-            </label>
-            <app-image-upload [value]="auth.user()?.photoURL ?? null" (valueChange)="onPhotoChange($event)" />
-            <p class="form-hint">Foto profil bersifat opsional. Jika tidak diunggah, sistem akan menggunakan foto profil Google Anda atau menampilkan inisial nama secara otomatis.</p>
-          </div>
-        </div>
-
-        <!-- Kolom kanan: seluruh section informasi & pengaturan, mengisi
-             sisa ruang (1fr) supaya tidak ada celah kosong lebar di kanan. -->
-        <div class="profile-main">
-          @if (kader(); as k) {
-            @if (k.status === 'ACTIVE') {
-              <div class="card card-pad">
-                <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="id-card" [size]="16" /> Info Kekaderan</h3>
-                <div class="grid-cols-2">
-                  <div class="form-group"><label class="form-label">Nama LDK</label>
-                    <input class="form-control" [value]="k.organizationName ?? '—'" readonly></div>
-                  <div class="form-group"><label class="form-label">Nama Puskomda</label>
-                    <input class="form-control" [value]="k.parentOrganizationName ?? '—'" readonly></div>
-                </div>
-              </div>
-            }
-          }
-
-          <div class="card card-pad">
-            <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="phone" [size]="16" /> Kontak</h3>
-            <form (ngSubmit)="submitContact()">
-              <div class="grid-cols-2">
-                <div class="form-group"><label class="form-label">No Whatsapp</label>
-                  <input class="form-control" name="phoneNumber" [(ngModel)]="phoneNumber" placeholder="08xxxxxxxxxx"></div>
-                <div class="form-group"><label class="form-label">Alamat</label>
-                  <textarea class="form-control" name="address" rows="1" [(ngModel)]="address" placeholder="Alamat domisili"></textarea></div>
-              </div>
-              <button class="btn btn-primary" type="submit" [disabled]="contactSaving()">
-                @if (contactSaving()) { <span class="spinner"></span> } @else { Simpan Kontak }
-              </button>
-            </form>
-          </div>
-
-          <div class="card card-pad">
-            <h3 style="display:flex;align-items:center;gap:8px"><app-icon name="lock" [size]="16" /> Ubah Kata Sandi</h3>
-            <form (ngSubmit)="submit()">
-              <div class="grid-cols-2">
-                <div class="form-group"><label class="form-label">Kata Sandi Lama</label>
-                  <app-password-field name="old" [(ngModel)]="oldPassword" placeholder="Kata sandi saat ini" /></div>
-                <div class="form-group"><label class="form-label">Kata Sandi Baru</label>
-                  <app-password-field name="new" [(ngModel)]="newPassword" placeholder="Minimal 8 karakter" /></div>
-              </div>
-              <button class="btn btn-primary" type="submit" [disabled]="saving()">
-                @if (saving()) { <span class="spinner"></span> } @else { Simpan Kata Sandi }
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
   styles: [`
-    /* Dibungkus .container (max-width 1180px, sama dengan halaman publik
-       lain) supaya konten tetap center & tidak mepet kiri di layar lebar —
-       sebelumnya halaman ini sama sekali tidak punya pembatas lebar/center,
-       jadi rata kiri dengan celah kosong raksasa di kanan. */
-    .profile-page { padding: 40px 20px 64px; }
-    .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
-    /* Dua kolom: identitas+foto (kiri, tetap) mengisi ruang bersama kolom
-       kanan (1fr, section info/kontak/password) — mengisi lebar container,
-       bukan satu kartu sempit sendirian yang menyisakan banyak ruang kosong. */
+    /* ---------- Siluet hero: kartu identitas + badge centang ----------
+       Kartu "tumbuh" dulu (scale+fade dari bawah, pola sama dengan
+       .gallery-cam-group), badge centang pop-in menyusul dengan delay, lalu
+       titik sudut (.id-card-tier) muncul terakhir — urutan animasi yang sama
+       dipakai Galeri/Struktur, komposisi ilustrasinya sendiri. */
+    .hero-id-illustration { position: relative; width: 100%; }
+    .id-illustration-svg { position: relative; z-index: 1; width: 100%; height: 240px; overflow: visible; }
+
+    .id-card-group {
+      transform-box: fill-box; transform-origin: 50% 100%; opacity: 0;
+      animation: profileCardGrow .9s cubic-bezier(.34,1.4,.64,1) forwards;
+      filter: drop-shadow(0 10px 18px rgba(0,147,59,.18));
+    }
+    @keyframes profileCardGrow { from { opacity: 0; transform: scale(.75) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+    .id-card-badge { opacity: 0; transform-box: fill-box; animation: profileBadgePop .5s var(--ease-out) .5s forwards; }
+    @keyframes profileBadgePop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+
+    .id-card-tier { opacity: 0; animation: profileTierFadeIn .4s ease-out .9s forwards; }
+    @keyframes profileTierFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .id-card-group, .id-card-badge, .id-card-tier { animation: none; opacity: 1; transform: none; }
+    }
+
+    /* ---------- Kanvas setelah hero — sama persis dengan Galeri/Struktur
+       (.section + .section-transition + .section-blob-drift). ---------- */
+    .section { background: var(--color-primary-tint); position: relative; min-height: 60vh; }
+    .section-transition { position: relative; padding-top: 48px; }
+    .section-blob-drift { overflow: hidden; }
+    .section-blob-drift > .container { position: relative; z-index: 1; }
+    .section-blob-drift::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
+        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
+      opacity: .8; animation: sectionBlobDrift 12s ease-in-out infinite alternate;
+    }
+    .section-blob-drift::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(to bottom,
+        var(--color-primary-tint) 0, transparent 70px,
+        transparent calc(100% - 70px), var(--color-primary-tint) 100%);
+    }
+    @keyframes sectionBlobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-4%, 5%) scale(1.15); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .section-blob-drift::before { animation: none; }
+    }
+
+    /* ---------- Grid 2 kolom: identitas (kiri, sticky) + kartu info/kontak/
+       keamanan (kanan, 1fr). ---------- */
+    /* profile-side SENGAJA tidak sticky — dicoba sebelumnya (position:sticky;
+       top:100px), tapi begitu di-scroll kartu ini "tertinggal" 100px dari
+       puncak viewport sementara kartu Kontak di sebelahnya (tidak sticky)
+       terus scroll normal ke atas, jadi kedua kolom kelihatan tidak sejajar.
+       Statis + align-items:start sudah cukup supaya kedua kolom selalu rata
+       di baris grid yang sama, apa pun posisi scroll-nya. */
     .profile-grid { display: grid; grid-template-columns: minmax(260px, 320px) 1fr; gap: 24px; align-items: start; }
-    .profile-side { position: sticky; top: 100px; }
     .profile-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
     @media (max-width: 860px) {
       .profile-grid { grid-template-columns: 1fr; }
-      .profile-side { position: static; }
     }
-    .identity-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-    .avatar { width: 52px; height: 52px; border-radius: var(--radius-full); background: var(--color-primary-soft); color: var(--color-primary-dark); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-family: var(--font-heading); flex-shrink: 0; font-size: 1.1rem; }
-    img.avatar { object-fit: cover; }
-    .photo-upload app-image-upload { display: block; }
+
+    /* ---------- Kartu Identitas ala "ID card" ----------
+       Banner gradient di atas + avatar besar menumpang di atasnya (bukan
+       avatar kecil sebaris seperti sebelumnya) supaya kartu ini punya
+       identitas visual sendiri, beda dari kartu form di kolom kanan. */
+    .profile-id-card { padding: 0; overflow: hidden; }
+    .id-card-banner {
+      height: 72px; background: linear-gradient(135deg, var(--color-primary-bright), var(--color-primary-dark));
+      position: relative;
+    }
+    .id-card-avatar-wrap { position: absolute; left: 24px; bottom: -34px; }
+    .id-card-avatar {
+      width: 84px; height: 84px; border-radius: var(--radius-full); border: 4px solid #fff;
+      background: var(--color-primary-soft); color: var(--color-primary-dark);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-family: var(--font-heading); font-size: 1.5rem; box-shadow: var(--shadow-sm);
+    }
+    .id-card-avatar.id-card-avatar-initials { display: flex; }
+    img.id-card-avatar { object-fit: cover; }
+    .id-card-avatar-edit {
+      position: absolute; right: -2px; bottom: -2px; width: 28px; height: 28px; border-radius: var(--radius-full);
+      background: var(--color-gold); color: #fff; border: 2px solid #fff; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: transform var(--motion-fast) var(--ease-out), background var(--motion-fast) ease;
+    }
+    .id-card-avatar-edit:hover { transform: scale(1.08); background: var(--color-gold-dark); }
+    .id-card-body { padding: 46px 24px 24px; }
+    .id-card-name { margin: 0 0 2px; }
+    .id-card-email { margin: 0 0 14px; color: var(--color-muted); font-size: .86rem; word-break: break-all; }
+    .id-card-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .id-card-chips .chip { cursor: default; font-size: .76rem; padding: 5px 12px; gap: 6px; }
+
+    /* Tombol teks eksplisit "Ubah Foto Profil" — selain badge pensil kecil
+       di atas avatar, supaya aksi ganti foto tetap jelas terlihat & tidak
+       cuma bergantung pada ikon kecil yang mudah terlewat. */
+    .id-card-change-photo-btn {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
+      background: none; border: none; padding: 0; cursor: pointer;
+      font-size: .82rem; font-weight: 700; color: var(--color-primary-dark);
+      transition: color var(--motion-fast) ease;
+    }
+    .id-card-change-photo-btn:hover { color: var(--color-gold-dark); text-decoration: underline; }
+
+    /* ---------- Header seragam untuk kartu kanan (ikon + judul + deskripsi
+       singkat), dipakai Info Kekaderan/Kontak/Keamanan — SEKARANG berupa pita
+       warna penuh (gradient tint -> putih) yang menutupi lebar kartu, BUKAN
+       lagi garis tipis border-top 3px. Garis tipis di atas kartu putih polos
+       terasa seperti "ditempel", warnanya cuma kelihatan di satu sisi super
+       sempit; pita penuh ini membuat aksen warnanya benar-benar terasa jadi
+       bagian desain kartu (echo dari banner gradient Kartu Identitas),
+       bukan dekorasi tipis yang gampang terlewat/terlihat asal tempel. ---------- */
+    .profile-kader-card, .profile-form-card { overflow: hidden; }
+    .profile-card-head { display: flex; align-items: flex-start; gap: 14px; padding: 20px 24px; border-bottom: 1px solid var(--color-border); }
+    .profile-card-head.head-primary { background: linear-gradient(135deg, var(--color-primary-soft) 0%, #fff 100%); }
+    .profile-card-head.head-ember { background: linear-gradient(135deg, var(--color-ember-soft) 0%, #fff 100%); }
+    .profile-card-head.head-gold { background: linear-gradient(135deg, var(--color-gold-soft) 0%, #fff 100%); }
+    .profile-card-head-text { flex: 1; min-width: 0; }
+    .profile-card-head-text h3 { margin: 0 0 2px; }
+    .profile-card-head-text p.text-muted { margin: 0; font-size: .86rem; }
+    .profile-card-body { padding: 24px; }
+
+    /* ---------- Kartu Info Kekaderan — aksen emas, baris readonly ala
+       "sheet-meta-row" (ikon + label + value) alih-alih <input readonly>,
+       supaya terasa seperti kartu keanggotaan/badge, bukan form biasa. ---------- */
+    .kader-code-badge {
+      flex-shrink: 0; font-family: var(--font-heading); font-weight: 800; font-size: .76rem; letter-spacing: .04em;
+      background: var(--color-gold-soft); color: var(--color-gold-dark); padding: 5px 12px; border-radius: var(--radius-full);
+      align-self: flex-start;
+    }
+    .kader-meta-rows { display: flex; flex-direction: column; gap: 14px; }
+    .kader-meta-row { display: flex; align-items: flex-start; gap: 10px; }
+    .kader-meta-icon {
+      display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0;
+      border-radius: 8px; background: var(--color-gold-soft); color: var(--color-gold-dark);
+    }
+    .kader-meta-text { display: flex; flex-direction: column; min-width: 0; }
+    .kader-meta-label { font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--color-muted); }
+    .kader-meta-value { font-size: .9rem; font-weight: 600; color: var(--color-text); }
+
+    .security-hint { margin: -6px 0 18px; display: flex; align-items: center; gap: 6px; }
+
     .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
     @media (max-width: 640px) { .grid-cols-2 { grid-template-columns: 1fr; } }
+
+    /* ---------- Bottom sheet ubah foto ---------- */
+    .photo-sheet { text-align: center; }
+    .photo-sheet-icon { margin: 0 auto 14px; }
+    .photo-sheet-title { margin: 0 0 8px; }
+    .photo-sheet-desc { margin: 0 0 20px; color: var(--color-text-secondary); font-size: .88rem; line-height: 1.6; }
+    .photo-sheet app-image-upload { display: block; text-align: left; }
   `],
 })
 export class UserMyProfilePage implements OnInit, UserMyProfileView {
@@ -135,6 +190,8 @@ export class UserMyProfilePage implements OnInit, UserMyProfileView {
   photoSaving = signal(false);
 
   kader = signal<KaderInfo | null>(null);
+
+  sheetOpen = signal(false);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
@@ -155,8 +212,17 @@ export class UserMyProfilePage implements OnInit, UserMyProfileView {
     this.presenter.updateContact(this.phoneNumber.trim(), this.address.trim());
   }
 
+  openPhotoSheet(): void {
+    this.sheetOpen.set(true);
+  }
+
+  closePhotoSheet(): void {
+    this.sheetOpen.set(false);
+  }
+
   onPhotoChange(url: string): void {
     this.presenter.updatePhoto(url);
+    this.sheetOpen.set(false);
   }
 
   setSaving(saving: boolean): void { this.saving.set(saving); }
