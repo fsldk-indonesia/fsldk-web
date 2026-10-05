@@ -22,21 +22,26 @@
   </div>
 
   <div class="builder">
-    <!-- Column 1 — palette -->
-    <div class="palette">
-      <div class="card card-pad">
-        <span class="col-title"><app-icon name="list-checks" [size]="16" /> Tambah Field</span>
-        @for (g of groups; track g) {
-          <div class="palette-group">
-            <h4>{{ g }}</h4>
-            @for (t of typesInGroup(g); track t.value) {
-              <button type="button" class="tool-btn" (click)="openCreate(t.value, $event)">
-                <span class="tool-icon"><app-icon [name]="t.icon" [size]="14" /></span>
-                {{ t.label }}
-              </button>
-            }
-          </div>
-        }
+    <!-- Column 1 — palette. #paletteAnchor stays in the grid flow (reserves
+         the column's width/height); #paletteInner is what actually toggles
+         fixed/static — see component comment on why (position: sticky
+         silently fails to stay pinned in this CMS shell). -->
+    <div class="palette" #paletteAnchor>
+      <div #paletteInner [ngStyle]="paletteStyle()">
+        <div class="card card-pad">
+          <span class="col-title"><app-icon name="list-checks" [size]="16" /> Tambah Field</span>
+          @for (g of groups; track g) {
+            <div class="palette-group">
+              <h4>{{ g }}</h4>
+              @for (t of typesInGroup(g); track t.value) {
+                <button type="button" class="tool-btn" (click)="openCreate(t.value, $event)">
+                  <span class="tool-icon"><app-icon [name]="t.icon" [size]="14" /></span>
+                  {{ t.label }}
+                </button>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
 
@@ -107,39 +112,43 @@
       }
     </div>
 
-    <!-- Column 3 — sidebar -->
-    <div class="sidebar">
-      <div class="card sidebar-card">
-        <p class="sidebar-title"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-spreadsheet" [size]="14" /></span>Google Drive</p>
-        @if (f.gsheetSpreadsheetUrl) {
-          <a class="drive-row" [href]="f.gsheetSpreadsheetUrl" target="_blank" rel="noopener">
-            <span class="tool-icon"><app-icon name="file-spreadsheet" [size]="14" /></span>
-            <span><strong>Spreadsheet Tanggapan</strong><span>Semua tanggapan ditulis di sini sebagai baris.</span></span>
-          </a>
-          @if (f.gdriveAttachmentsUrl) {
-            <a class="drive-row" [href]="f.gdriveAttachmentsUrl" target="_blank" rel="noopener">
-              <span class="tool-icon"><app-icon name="download" [size]="14" /></span>
-              <span><strong>Folder Lampiran</strong><span>Berkas yang diunggah responden.</span></span>
-            </a>
-          }
-          @if (f.gdriveAssetsUrl) {
-            <a class="drive-row" [href]="f.gdriveAssetsUrl" target="_blank" rel="noopener">
-              <span class="tool-icon"><app-icon name="book-open" [size]="14" /></span>
-              <span><strong>Folder Aset</strong><span>Gambar yang dipakai di builder.</span></span>
-            </a>
-          }
-        } @else {
-          <p class="form-hint">Sinkronisasi Google Sheets belum aktif. Aktifkan di <a [routerLink]="path.edit(f.formID)">Setelan</a> untuk mendapat spreadsheet & folder Drive otomatis.</p>
-        }
-      </div>
+    <!-- Column 3 — sidebar. Same fixed/static toggle mechanism as #paletteAnchor. -->
+    <div class="sidebar" #sidebarAnchor>
+      <div #sidebarInner [ngStyle]="sidebarStyle()">
+        <div class="sidebar-stack">
+          <div class="card sidebar-card">
+            <p class="sidebar-title"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-spreadsheet" [size]="14" /></span>Google Drive</p>
+            @if (f.gsheetSpreadsheetUrl) {
+              <a class="drive-row" [href]="f.gsheetSpreadsheetUrl" target="_blank" rel="noopener">
+                <span class="tool-icon"><app-icon name="file-spreadsheet" [size]="14" /></span>
+                <span><strong>Spreadsheet Tanggapan</strong><span>Semua tanggapan ditulis di sini sebagai baris.</span></span>
+              </a>
+              @if (f.gdriveAttachmentsUrl) {
+                <a class="drive-row" [href]="f.gdriveAttachmentsUrl" target="_blank" rel="noopener">
+                  <span class="tool-icon"><app-icon name="download" [size]="14" /></span>
+                  <span><strong>Folder Lampiran</strong><span>Berkas yang diunggah responden.</span></span>
+                </a>
+              }
+              @if (f.gdriveAssetsUrl) {
+                <a class="drive-row" [href]="f.gdriveAssetsUrl" target="_blank" rel="noopener">
+                  <span class="tool-icon"><app-icon name="book-open" [size]="14" /></span>
+                  <span><strong>Folder Aset</strong><span>Gambar yang dipakai di builder.</span></span>
+                </a>
+              }
+            } @else {
+              <p class="form-hint">Sinkronisasi Google Sheets belum aktif. Aktifkan di <a [routerLink]="path.edit(f.formID)">Setelan</a> untuk mendapat spreadsheet & folder Drive otomatis.</p>
+            }
+          </div>
 
-      <div class="card sidebar-card">
-        <p class="sidebar-title"><span class="icon-badge sm icon-badge-info"><app-icon name="info-circle" [size]="14" /></span>Tips</p>
-        <ul class="tips-list">
-          <li><app-icon name="lock" [size]="14" /> Field Alamat Email tidak bisa dihapus — wajib ada di setiap formulir.</li>
-          <li><app-icon name="chevrons-up-down" [size]="14" /> Seret kartu atau pakai tombol naik/turun untuk mengurutkan field.</li>
-          <li><app-icon name="refresh" [size]="14" /> Perubahan tersimpan otomatis ke database.</li>
-        </ul>
+          <div class="card sidebar-card">
+            <p class="sidebar-title"><span class="icon-badge sm icon-badge-info"><app-icon name="info-circle" [size]="14" /></span>Tips</p>
+            <ul class="tips-list">
+              <li><app-icon name="lock" [size]="14" /> Field Alamat Email tidak bisa dihapus — wajib ada di setiap formulir.</li>
+              <li><app-icon name="chevrons-up-down" [size]="14" /> Seret kartu atau pakai tombol naik/turun untuk mengurutkan field.</li>
+              <li><app-icon name="refresh" [size]="14" /> Perubahan tersimpan otomatis ke database.</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
