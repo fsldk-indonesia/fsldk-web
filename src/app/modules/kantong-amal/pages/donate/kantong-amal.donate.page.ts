@@ -22,12 +22,7 @@ const QUICK_AMOUNTS = [20_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
     .form-head { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
     .form-head h1 { margin: 6px 0 0; font-size: clamp(1.3rem, 3vw, 1.7rem); }
 
-    /* align-items default (stretch, bukan start) — .side-card jadi setinggi
-       .form-card di sebelahnya (align top SAMA PERSIS, lihat juga fix
-       overflow-x:clip di KantongAmalDonationFlowLayoutComponent), sementara
-       konten di dalamnya (.side-card-inner) yang sticky mengikuti scroll —
-       lihat komentar lengkap di .side-card/.side-card-inner. */
-    .layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; }
+    .layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }
     @media (max-width: 900px) { .layout-grid { grid-template-columns: 1fr; } }
     .form-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px; box-shadow: 0 24px 50px rgba(0,0,0,.22); }
 
@@ -60,18 +55,16 @@ const QUICK_AMOUNTS = [20_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
     .anon-hint { display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 0; font-size: .82rem; color: var(--color-text-secondary); background: var(--color-primary-tint); border-radius: var(--radius-sm); padding: 10px 12px; }
     .anon-hint app-icon { color: var(--color-primary); flex-shrink: 0; margin-top: 1px; }
 
-    /* .side-card: box putih yang menyamai tinggi .form-card (align-items
-       default/stretch di .layout-grid) — TIDAK sticky di box ini sendiri.
-       .side-card-inner di dalamnya yang sticky (top:24), supaya yang
-       "mengikuti scroll" adalah KONTEN (foto+chip+catatan), sementara
-       box putihnya sendiri tetap mengisi penuh tinggi kolom kiri (tidak
-       berhenti pendek menyisakan latar hijau kosong di bawahnya). Di
-       mobile (<=900px, lihat @media .layout-grid di bawah) grid jadi
-       1 kolom — stretch tidak berefek apa-apa di sana (tiap item baris
-       sendiri), sticky pun otomatis tidak terasa karena tidak ada
-       kolom tinggi untuk diikuti. */
-    .side-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 24px 50px rgba(0,0,0,.22); overflow: hidden; }
-    .side-card-inner { position: sticky; top: 24px; padding: 22px; }
+    /* .side-card: tinggi mengikuti konten sendiri (align-items:start di
+       .layout-grid, BUKAN stretch) — tidak lagi dipaksa setinggi .form-card
+       (itu bikin box putih memanjang kosong ke bawah, ditolak). Tetap
+       position:sticky supaya kartu ini mengikuti scroll selama masih ada
+       ruang di kolom kiri yang lebih tinggi; top-nya sejajar persis dengan
+       .form-card sejak fix overflow-x:clip di KantongAmalDonationFlowLayoutComponent
+       (overflow-x:hidden tanpa overflow-y eksplisit dulu diam-diam membuat
+       .flow-wash jadi scroll-container sendiri, bikin sticky salah hitung). */
+    .side-card { position: sticky; top: 24px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 24px 50px rgba(0,0,0,.22); overflow: hidden; }
+    .side-card-inner { padding: 22px; }
     .side-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 14px; }
     .side-note { display: flex; align-items: flex-start; gap: 8px; margin: 14px 0 0; font-size: .88rem; color: var(--color-text-secondary); }
     .side-note app-icon { color: var(--color-primary); margin-top: 2px; flex-shrink: 0; }

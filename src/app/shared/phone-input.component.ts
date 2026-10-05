@@ -37,22 +37,10 @@ const COUNTRY_OPTIONS: SelectOption[] = [
     </div>
   `,
   styles: [`
-    /* flex-basis 168px dulu RIGID (flex: 0 0 168px) — di kolom sempit (mis.
-       grid-2 berdampingan dengan field Email, lihat kantong-amal.donate.page.html)
-       itu memaksa .phone-local menyusut jadi beberapa karakter saja, nyaris
-       tidak terpakai. Sekarang .phone-code BOLEH menyusut (flex-shrink:1)
-       sampai batas wajar (min-width 108px, cukup untuk "🇮🇩 +62" + chevron
-       tanpa label negara terpotong aneh — app-select sendiri yang
-       men-truncate teks opsi terpilih via ellipsis), dan .phone-local diberi
-       flex-grow lebih besar (1.4) supaya ia yang dapat porsi ruang sisa
-       lebih banyak, bukan dibagi rata. flex-wrap jadi jaring pengaman
-       terakhir untuk kontainer yang BENAR-BENAR sempit (mis. layar sangat
-       kecil) — kedua field jatuh ke baris terpisah alih-alih saling
-       mendesak sampai tidak terbaca. */
-    .phone-input { display: flex; flex-wrap: wrap; gap: 8px; }
-    .phone-code { flex: 0 1 140px; min-width: 108px; }
-    .phone-custom-code { flex: 0 1 64px; min-width: 56px; }
-    .phone-local { flex: 1.4 1 120px; min-width: 100px; }
+    .phone-input { display: flex; gap: 8px; }
+    .phone-code { flex: 0 0 168px; }
+    .phone-custom-code { flex: 0 0 64px; }
+    .phone-local { flex: 1; min-width: 0; }
   `],
   providers: [{ provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => PhoneInputComponent), multi: true }],
 })

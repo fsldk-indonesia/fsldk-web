@@ -63,15 +63,17 @@
           <input class="form-control" [(ngModel)]="donorName" placeholder="Nama lengkap">
         </div>
 
-        <div class="grid grid-2">
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input class="form-control" type="email" [(ngModel)]="donorEmail" placeholder="email@contoh.com">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nomor WhatsApp</label>
-            <app-phone-input [(ngModel)]="donorPhone" />
-          </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" type="email" [(ngModel)]="donorEmail" placeholder="email@contoh.com">
+        </div>
+
+        <!-- Baris sendiri (bukan lagi berdampingan dengan Email di grid-2) —
+             app-phone-input punya 2 sub-field (kode negara + nomor), berbagi
+             setengah lebar dengan Email membuat nomor jadi sempit. -->
+        <div class="form-group">
+          <label class="form-label">Nomor WhatsApp</label>
+          <app-phone-input [(ngModel)]="donorPhone" />
         </div>
 
         @if (campaign()!.isAnonymousAllowed) {
