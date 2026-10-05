@@ -27,17 +27,26 @@ import { IconComponent } from '../shared/icon.component';
       <div class="kader-texture" aria-hidden="true"></div>
       <div class="kader-body">
         <aside class="kader-sidebar">
-          <nav class="kader-nav">
-            <a routerLink="/kader/ringkasan" routerLinkActive="active">
-              <app-icon name="dashboard" [size]="16" /> Ringkasan
-            </a>
-            <a routerLink="/kader/pendataan" routerLinkActive="active">
-              <app-icon name="clipboard-list" [size]="16" /> Formulir Pendataan
-            </a>
-            <a routerLink="/kader/status" routerLinkActive="active">
-              <app-icon name="list-checks" [size]="16" /> Status Pendataan
-            </a>
-          </nav>
+          <div class="kader-sidebar-chrome">
+            <div class="kader-sidebar-head">
+              <span class="kader-sidebar-badge"><app-icon name="shield-check" [size]="15" /></span>
+              <div>
+                <p class="kader-sidebar-title">Portal Kader</p>
+                <p class="kader-sidebar-subtitle">FSLDK Indonesia</p>
+              </div>
+            </div>
+            <nav class="kader-nav">
+              <a routerLink="/kader/ringkasan" routerLinkActive="active">
+                <app-icon name="dashboard" [size]="16" /> Ringkasan
+              </a>
+              <a routerLink="/kader/pendataan" routerLinkActive="active">
+                <app-icon name="clipboard-list" [size]="16" /> Formulir Pendataan
+              </a>
+              <a routerLink="/kader/status" routerLinkActive="active">
+                <app-icon name="list-checks" [size]="16" /> Status Pendataan
+              </a>
+            </nav>
+          </div>
           <a routerLink="/" class="kader-back"><app-icon name="arrow-left" [size]="13" /> Kembali ke Beranda</a>
         </aside>
         <main class="kader-content"><div class="kader-page-shell"><router-outlet /></div></main>
@@ -80,6 +89,14 @@ import { IconComponent } from '../shared/icon.component';
       background: rgba(255,255,255,.1); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
       border: 1px solid rgba(255,255,255,.18); border-radius: var(--radius-lg); padding: 18px;
     }
+    /* Label identitas — layout ini tidak punya navbar sama sekali (lihat
+       komentar kelas di atas), jadi tanpa ini tidak ada penanda "lagi di
+       portal mana" ketika user masuk langsung ke salah satu halaman. */
+    .kader-sidebar-head { display: flex; align-items: center; gap: 10px; padding: 2px 4px 14px; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.14); }
+    .kader-sidebar-badge { display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%; background: rgba(255,255,255,.16); color: #fff; }
+    .kader-sidebar-title { margin: 0; font-size: .82rem; font-weight: 700; color: #fff; }
+    .kader-sidebar-subtitle { margin: 0; font-size: .68rem; color: rgba(255,255,255,.6); }
+
     .kader-nav { display: flex; flex-direction: column; gap: 4px; }
     .kader-nav a { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 12px; border-radius: var(--radius-md); color: rgba(255,255,255,.82); font-weight: 600; font-size: .92rem; transition: background var(--motion-fast) ease, color var(--motion-fast) ease; }
     .kader-nav a:hover { background: rgba(255,255,255,.14); color: #fff; text-decoration: none; }
@@ -102,20 +119,27 @@ import { IconComponent } from '../shared/icon.component';
 
     @media (max-width: 900px) {
       .kader-body { flex-direction: column; padding: 24px 16px 40px; }
-      /* Sidebar berhenti jadi panel kaca di mobile — nav-nya sendiri yang
-         jadi floating tab bar (fixed, lihat .kader-nav di bawah), jadi
-         bungkus panel lama cuma bikin kotak kaca kosong di sekeliling
-         "Kembali ke Beranda" saja. */
+      /* Sidebar berhenti jadi panel kaca di mobile — label + nav-nya
+         (.kader-sidebar-chrome di bawah) yang jadi floating bar sendiri
+         (fixed), jadi bungkus panel lama cuma bikin kotak kaca kosong di
+         sekeliling "Kembali ke Beranda" saja. */
       .kader-sidebar {
         width: 100%; position: static; padding: 0; background: none; border: none;
         backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none;
       }
-      .kader-nav {
+      /* Label + tab nav sekarang satu unit floating (fixed) yang sama, jadi
+         keduanya ikut mengambang bareng saat scroll, bukan cuma nav-nya. */
+      .kader-sidebar-chrome {
         position: fixed; top: 12px; left: 16px; right: 16px; z-index: 40;
-        flex-direction: row; flex-wrap: nowrap; gap: 4px; padding: 6px;
         background: rgba(10,54,36,.75); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,.22); border-radius: var(--radius-md); box-shadow: var(--shadow-md);
       }
+      /* Dipadatkan dari versi desktop — baris tipis di atas tab, tanpa subtitle. */
+      .kader-sidebar-head { gap: 8px; padding: 7px 10px; margin-bottom: 0; }
+      .kader-sidebar-badge { width: 22px; height: 22px; }
+      .kader-sidebar-title { font-size: .72rem; }
+      .kader-sidebar-subtitle { display: none; }
+      .kader-nav { flex-direction: row; flex-wrap: nowrap; gap: 4px; padding: 6px; }
       /* 3 tab lebar sama rata (flex:1, bukan scroll horizontal) supaya label
          selalu utuh kebaca, tak pernah kepotong di tepi layar — ikon di atas,
          label boleh patah 2 baris ("Formulir Pendataan" dsb), bukan nowrap. */
@@ -124,9 +148,9 @@ import { IconComponent } from '../shared/icon.component';
         text-align: center; white-space: normal; font-size: .72rem; line-height: 1.2;
         padding: 8px 4px; min-height: 56px;
       }
-      /* Beri jarak sebesar tinggi nav fixed (padding 12 + tab 56 + top-offset 12 + napas),
-         supaya back-link tidak ketutup nav yang mengambang di atasnya. */
-      .kader-back { margin-top: 88px; border-top: none; padding-top: 0; }
+      /* Beri jarak sebesar tinggi chrome fixed (head ~37 + tab-row 68 +
+         top-offset 12 + napas), supaya back-link tidak ketutup. */
+      .kader-back { margin-top: 130px; border-top: none; padding-top: 0; }
     }
     @media (max-width: 640px) { .kader-page-shell { padding: 18px; } }
   `],
