@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/icon.component';
@@ -49,6 +49,7 @@ type FormField = 'requesterName' | 'requesterEmail' | 'requesterWhatsapp' | 'des
     .qr-panel-silhouette { position: absolute; right: 8px; bottom: 8px; z-index: 0; color: rgba(255,255,255,.12); transform: rotate(-12deg); pointer-events: none; }
     .qr-panel-silhouette-2 { position: absolute; left: 8px; top: 8px; z-index: 0; color: rgba(255,255,255,.08); transform: rotate(16deg); pointer-events: none; }
     .section > .container { position: relative; z-index: 1; }
+    @media (max-width: 640px) { .section { padding: 40px 0 56px; } }
 
     .qr-grid { display: grid; grid-template-columns: 320px 1fr; gap: 28px; align-items: start; padding-top: 8px; }
     @media (max-width: 900px) { .qr-grid { grid-template-columns: 1fr; } }
@@ -132,13 +133,13 @@ type FormField = 'requesterName' | 'requesterEmail' | 'requesterWhatsapp' | 'des
     .qr-submit-btn { padding: 12px 28px; font-size: .95rem; font-weight: 700; border-radius: var(--radius-full); box-shadow: 0 4px 14px rgba(0,147,59,.25); cursor: pointer; display: inline-flex; align-items: center; }
 
     .qr-success-screen { padding: 40px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-    .qr-success-icon { margin-bottom: 16px; animation: qrPopIn .35s cubic-bezier(.175,.885,.32,1.275); }
+    .qr-success-icon { margin-bottom: 16px; animation: qrPopIn .4s cubic-bezier(.22,1,.36,1); }
     @keyframes qrPopIn { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     .qr-success-screen h2 { margin: 0 0 8px; font-size: 1.5rem; color: var(--color-text); }
     .qr-success-text { max-width: 440px; color: var(--color-text-secondary); line-height: 1.5; font-size: .95rem; }
   `],
 })
-export class QrcodeRequestSubmitPage implements OnInit, QRCodeRequestSubmitView {
+export class QrcodeRequestSubmitPage implements OnInit, OnDestroy, QRCodeRequestSubmitView {
   private presenter = inject(QrcodeRequestSubmitPresenter);
   private fb = inject(FormBuilder);
 
@@ -163,6 +164,13 @@ export class QrcodeRequestSubmitPage implements OnInit, QRCodeRequestSubmitView 
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadPIC();
+    // Section halaman ini berakhir hijau solid — ruang negatif wave footer
+    // perlu diisi hijau khusus di sini, pola sama persis Format Keuangan/Jadwal/Berita/Goods.
+    document.documentElement.style.setProperty('--footer-wave-backdrop', 'var(--color-primary)');
+  }
+
+  ngOnDestroy(): void {
+    document.documentElement.style.removeProperty('--footer-wave-backdrop');
   }
 
   onStyleChange(value: QrcodeStyleValue): void {
