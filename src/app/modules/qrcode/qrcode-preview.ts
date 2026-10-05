@@ -27,17 +27,20 @@ export const FSLDK_LOGO_URL = '/assets/logo-fsldk-removebg.png';
 
 export type QrIconPreset = 'fsldk' | 'link' | 'browser' | 'instagram' | 'tiktok' | 'youtube' | 'x' | 'facebook';
 
+export type QrIconPresetCategory = 'umum' | 'sosial';
+
 /** Daftar preset ikon tengah untuk tombol pilihan cepat. `icon` = nama di
- *  shared IconComponent (untuk 'fsldk' pakai gambar logo). */
-export const QR_ICON_PRESETS: { key: QrIconPreset; label: string; icon: string }[] = [
-  { key: 'fsldk', label: 'FSLDK', icon: '' },
-  { key: 'link', label: 'Tautan', icon: 'link' },
-  { key: 'browser', label: 'Browser', icon: 'globe' },
-  { key: 'instagram', label: 'Instagram', icon: 'instagram' },
-  { key: 'tiktok', label: 'TikTok', icon: 'tiktok' },
-  { key: 'youtube', label: 'YouTube', icon: 'youtube' },
-  { key: 'x', label: 'X', icon: 'x-twitter' },
-  { key: 'facebook', label: 'Facebook', icon: 'facebook' },
+ *  shared IconComponent (untuk 'fsldk' pakai gambar logo). `category` dipakai
+ *  filter chip di editor gaya (Semua / Umum / Media Sosial). */
+export const QR_ICON_PRESETS: { key: QrIconPreset; label: string; icon: string; category: QrIconPresetCategory }[] = [
+  { key: 'fsldk', label: 'FSLDK', icon: '', category: 'umum' },
+  { key: 'link', label: 'Tautan', icon: 'link', category: 'umum' },
+  { key: 'browser', label: 'Browser', icon: 'globe', category: 'umum' },
+  { key: 'instagram', label: 'Instagram', icon: 'instagram', category: 'sosial' },
+  { key: 'tiktok', label: 'TikTok', icon: 'tiktok', category: 'sosial' },
+  { key: 'youtube', label: 'YouTube', icon: 'youtube', category: 'sosial' },
+  { key: 'x', label: 'X', icon: 'x-twitter', category: 'sosial' },
+  { key: 'facebook', label: 'Facebook', icon: 'facebook', category: 'sosial' },
 ];
 
 /**

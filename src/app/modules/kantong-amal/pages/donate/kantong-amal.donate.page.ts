@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CampaignDetail } from '../../entities/campaign';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
+import { KantongAmalDonationFlowBackLinkService } from '../../../../layouts/kantong-amal-donation-flow-back-link.service';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PhoneInputComponent } from '../../../../shared/phone-input.component';
 import { KantongAmalDonatePresenter } from './kantong-amal.donate.presenter';
@@ -18,9 +19,12 @@ const QUICK_AMOUNTS = [20_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
   imports: [RouterLink, FormsModule, IconComponent, PhoneInputComponent],
   providers: [KantongAmalDonatePresenter],
   styles: [`
+    .form-head { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--color-border); }
+    .form-head h1 { margin: 6px 0 0; font-size: clamp(1.3rem, 3vw, 1.7rem); }
+
     .layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 32px; align-items: start; }
     @media (max-width: 900px) { .layout-grid { grid-template-columns: 1fr; } }
-    .form-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px; }
+    .form-card { background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 28px; box-shadow: 0 24px 50px rgba(0,0,0,.22); }
 
     .form-section + .form-section { margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--color-border); }
     .section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; color: var(--color-primary-dark); }
@@ -51,14 +55,26 @@ const QUICK_AMOUNTS = [20_000, 50_000, 100_000, 250_000, 500_000, 1_000_000];
     .anon-hint { display: flex; align-items: flex-start; gap: 6px; margin: 8px 0 0; font-size: .82rem; color: var(--color-text-secondary); background: var(--color-primary-tint); border-radius: var(--radius-sm); padding: 10px 12px; }
     .anon-hint app-icon { color: var(--color-primary); flex-shrink: 0; margin-top: 1px; }
 
-    .side-card { position: sticky; top: 88px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 22px; }
+    /* .side-card: tinggi mengikuti konten sendiri (align-items:start di
+       .layout-grid, BUKAN stretch) — tidak lagi dipaksa setinggi .form-card
+       (itu bikin box putih memanjang kosong ke bawah, ditolak). Tetap
+       position:sticky supaya kartu ini mengikuti scroll selama masih ada
+       ruang di kolom kiri yang lebih tinggi; top-nya sejajar persis dengan
+       .form-card sejak fix overflow-x:clip di KantongAmalDonationFlowLayoutComponent
+       (overflow-x:hidden tanpa overflow-y eksplisit dulu diam-diam membuat
+       .flow-wash jadi scroll-container sendiri, bikin sticky salah hitung). */
+    .side-card { position: sticky; top: 24px; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: 0 24px 50px rgba(0,0,0,.22); overflow: hidden; }
+    .side-card-inner { padding: 22px; }
     .side-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: var(--radius-md); margin-bottom: 14px; }
+    .side-note { display: flex; align-items: flex-start; gap: 8px; margin: 14px 0 0; font-size: .88rem; color: var(--color-text-secondary); }
+    .side-note app-icon { color: var(--color-primary); margin-top: 2px; flex-shrink: 0; }
   `],
 })
 export class KantongAmalDonatePage implements OnInit, KantongAmalDonateView {
   private presenter = inject(KantongAmalDonatePresenter);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private backLink = inject(KantongAmalDonationFlowBackLinkService);
 
   campaign = signal<CampaignDetail | null>(null);
   loading = signal(true);
@@ -87,6 +103,7 @@ export class KantongAmalDonatePage implements OnInit, KantongAmalDonateView {
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.slug = this.route.snapshot.paramMap.get('slug')!;
+    this.backLink.set('Kembali ke Detail Campaign', kantongAmalPath.detail(this.slug));
     this.presenter.loadCampaign(this.slug);
   }
 

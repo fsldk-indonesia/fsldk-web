@@ -4,6 +4,7 @@ import { DatePipe } from '@angular/common';
 import { Donation } from '../../entities/donation';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { kantongAmalPath } from '../../kantong-amal.path';
+import { KantongAmalDonationFlowBackLinkService } from '../../../../layouts/kantong-amal-donation-flow-back-link.service';
 import { KantongAmalDonationReceiptPresenter } from './kantong-amal.donation-receipt.presenter';
 import { KantongAmalDonationReceiptView } from './kantong-amal.donation-receipt.view';
 
@@ -14,7 +15,7 @@ import { KantongAmalDonationReceiptView } from './kantong-amal.donation-receipt.
   imports: [RouterLink, DatePipe],
   providers: [KantongAmalDonationReceiptPresenter],
   styles: [`
-    .receipt-card { max-width: 520px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 32px; }
+    .receipt-card { max-width: 520px; margin: 0 auto; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 32px; box-shadow: 0 24px 50px rgba(0,0,0,.3); }
     .receipt-head { text-align: center; padding-bottom: 20px; border-bottom: 1px dashed var(--color-border); margin-bottom: 20px; }
     .receipt-head .amount { font-size: 1.7rem; font-weight: 800; color: var(--color-primary-dark); margin-top: 6px; }
     .receipt-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: .9rem; border-bottom: 1px solid var(--color-border); }
@@ -22,7 +23,7 @@ import { KantongAmalDonationReceiptView } from './kantong-amal.donation-receipt.
     .receipt-row span:first-child { color: var(--color-text-secondary); }
     .receipt-actions { display: flex; gap: 10px; margin-top: 24px; }
     @media print {
-      app-site-header, app-site-footer, .receipt-actions, .no-print { display: none !important; }
+      .receipt-actions, .no-print { display: none !important; }
       .receipt-card { border: none; box-shadow: none; }
     }
   `],
@@ -30,6 +31,7 @@ import { KantongAmalDonationReceiptView } from './kantong-amal.donation-receipt.
 export class KantongAmalDonationReceiptPage implements OnInit, KantongAmalDonationReceiptView {
   private presenter = inject(KantongAmalDonationReceiptPresenter);
   private route = inject(ActivatedRoute);
+  private backLink = inject(KantongAmalDonationFlowBackLinkService);
 
   donation = signal<Donation | null>(null);
   loading = signal(true);
@@ -49,6 +51,11 @@ export class KantongAmalDonationReceiptPage implements OnInit, KantongAmalDonati
   }
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
-  setDonation(donation: Donation | null): void { this.donation.set(donation); }
+  setDonation(donation: Donation | null): void {
+    this.donation.set(donation);
+    if (donation) {
+      this.backLink.set('Kembali ke Detail Campaign', kantongAmalPath.detail(donation.campaignSlug));
+    }
+  }
   setDownloading(downloading: boolean): void { this.downloading.set(downloading); }
 }

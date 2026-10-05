@@ -57,7 +57,7 @@ const RELATED_COUNT = 3;
 
               <div class="hero-meta-row">
                 @if (e.startDate) {
-                  <span class="hero-meta-item"><app-icon name="calendar-days" [size]="14" /> {{ e.startDate | date: 'd MMM yyyy' }}{{ e.endDate && e.endDate !== e.startDate ? ' – ' + (e.endDate | date: 'd MMM yyyy') : '' }}</span>
+                  <span class="hero-meta-item"><app-icon name="calendar-days" [size]="14" /> {{ e.startDate | date: 'd MMM yyyy':'':'id-ID' }}{{ e.endDate && e.endDate !== e.startDate ? ' – ' + (e.endDate | date: 'd MMM yyyy':'':'id-ID') : '' }}</span>
                 }
                 @if (e.location) {
                   <span class="hero-meta-item"><app-icon name="map-pin" [size]="14" /> {{ e.location }}{{ e.place ? ', ' + e.place : '' }}</span>
@@ -163,7 +163,7 @@ const RELATED_COUNT = 3;
                     <span class="eyebrow"><app-icon name="clipboard-check" [size]="13" /> Pendaftaran</span>
                     @if (e.closeRegistDate) {
                       <div class="regist-deadline mt-sm">
-                        <span class="regist-deadline-text">Batas: {{ e.closeRegistDate | date: 'd MMM yyyy, HH:mm' }}</span>
+                        <span class="regist-deadline-text">Batas: {{ e.closeRegistDate | date: 'd MMM yyyy, HH:mm':'':'id-ID' }}</span>
                         @if (isUrgent()) {
                           <span class="urgent-badge"><app-icon name="alert-triangle" [size]="11" /> {{ deadlineDaysLeft() }} hari lagi</span>
                         }
@@ -188,7 +188,7 @@ const RELATED_COUNT = 3;
                           <span class="info-row-icon"><app-icon name="calendar-days" [size]="14" /></span>
                           <span class="info-row-text">
                             <b>Waktu</b>
-                            <span>{{ e.startDate | date: 'EEEE, d MMMM yyyy' }}{{ e.endDate && e.endDate !== e.startDate ? ' s/d ' + (e.endDate | date: 'd MMMM yyyy') : '' }}</span>
+                            <span>{{ e.startDate | date: 'EEEE, d MMMM yyyy':'':'id-ID' }}{{ e.endDate && e.endDate !== e.startDate ? ' s/d ' + (e.endDate | date: 'd MMMM yyyy':'':'id-ID') : '' }}</span>
                           </span>
                         </li>
                       }
@@ -261,7 +261,7 @@ const RELATED_COUNT = 3;
                             <div class="related-item-body">
                               <h3 class="related-item-title">{{ item.eventTitle }}</h3>
                               @if (item.startDate) {
-                                <span class="related-item-date">{{ item.startDate | date: 'd MMM y' }}</span>
+                                <span class="related-item-date">{{ item.startDate | date: 'd MMM y':'':'id-ID' }}</span>
                               }
                             </div>
                           </a>

@@ -1,35 +1,46 @@
-<section class="section">
-  <div class="container">
+<div class="qr-wash">
+  <div class="qr-wash-texture" aria-hidden="true"></div>
+  <div class="qr-wash-glow" aria-hidden="true"></div>
+
+  <div class="qr-wash-content">
     @if (loading()) {
-      <div class="center-screen"><app-page-loader label="Memuat QR Code…" /></div>
+      <div class="card center-screen-card">
+        <app-page-loader label="Memuat QR Code…" />
+      </div>
     } @else if (notFound()) {
-      <div class="center-screen text-center">
-        <div class="empty-state">
-          <span class="icon-badge lg icon-badge-danger" style="margin:0 auto 14px"><app-icon name="error" [size]="28" /></span>
-          <h4>QR Code Tidak Ditemukan</h4>
-          <p>Tautan ini tidak valid atau QR Code-nya sudah dihapus.</p>
-          <a routerLink="/" class="btn btn-primary btn-sm">Kembali ke Beranda</a>
-        </div>
+      <div class="card center-screen-card">
+        <span class="icon-badge lg icon-badge-danger" style="margin:0 auto 14px"><app-icon name="error" [size]="28" /></span>
+        <h4>QR Code Tidak Ditemukan</h4>
+        <p>Tautan ini tidak valid atau QR Code-nya sudah dihapus.</p>
+        <a routerLink="/" class="btn btn-primary btn-sm">Kembali ke Beranda</a>
       </div>
     } @else {
       @if (qr(); as q) {
-      <div class="wrap">
         <div class="card qr-card">
           <h1>{{ q.label || 'QR Code FSLDK' }}</h1>
-          <p class="created">Dibuat {{ q.createdDate | date:'d MMMM yyyy' }}</p>
+          <p class="created"><app-icon name="calendar-days" [size]="13" /> Dibuat {{ q.createdDate | date:'d MMMM yyyy' }}</p>
 
-          <div class="qr-frame">
-            <img [src]="q.imageURL + '?size=512'" [alt]="'QR Code ' + (q.label || q.qrCodeID)">
+          <div class="qr-frame-wrap">
+            <span class="qr-corner tl"></span>
+            <span class="qr-corner tr"></span>
+            <span class="qr-corner bl"></span>
+            <span class="qr-corner br"></span>
+            <div class="qr-frame">
+              <img [src]="q.imageURL + '?size=512'" [alt]="'QR Code ' + (q.label || q.qrCodeID)">
+            </div>
           </div>
-          @if (q.captionText) { <p class="caption">{{ q.captionText }}</p> }
+          @if (q.captionText) { <span class="caption-chip"><app-icon name="align-left" [size]="12" /> {{ q.captionText }}</span> }
 
-          <p class="dest">
-            Kode QR ini mengarah ke:<br>
-            <a [href]="q.destinationURL" target="_blank" rel="noopener">{{ q.destinationURL }}</a>
-          </p>
+          <div class="dest-chip">
+            <app-icon name="external-link" [size]="15" />
+            <div class="dest-chip-text">
+              <span class="dest-chip-label">Mengarah ke</span>
+              <a [href]="q.destinationURL" target="_blank" rel="noopener">{{ q.destinationURL }}</a>
+            </div>
+          </div>
 
           <div class="size-picker">
-            <label class="form-label">Ukuran unduhan</label>
+            <span class="qse-label">Ukuran Unduhan</span>
             <div class="size-row">
               @for (s of presetSizes; track s) {
                 <button type="button" class="size-opt" [class.active]="size() === s" (click)="setSize(s)">{{ s }} px</button>
@@ -41,8 +52,8 @@
           </div>
 
           <div class="actions">
-            <button class="btn btn-primary btn-block" (click)="download()" [disabled]="downloading()">
-              @if (downloading()) { <span class="spinner"></span> } @else { <app-icon name="download" [size]="15" />&nbsp; Unduh Gambar QR (PNG {{ size() }} px) }
+            <button class="btn btn-primary qr-download-btn" (click)="download()" [disabled]="downloading()">
+              @if (downloading()) { <span class="spinner spinner-sm"></span> } @else { <app-icon name="download" [size]="15" /> Unduh Gambar QR (PNG {{ size() }} px) }
             </button>
             <button class="btn btn-ghost btn-block" (click)="copyImageLink()">Salin Tautan Gambar</button>
           </div>
@@ -53,11 +64,20 @@
           </p>
         </div>
 
-        <p class="text-center" style="margin-top:16px">
-          <a routerLink="/" class="text-muted">&larr; Kembali ke Beranda FSLDK Indonesia</a>
-        </p>
-      </div>
+        <div class="card next-cta">
+          <div class="next-cta-text">
+            <strong>Butuh QR Code lain?</strong>
+            <p>Ajukan kode QR baru untuk program atau acara Anda berikutnya.</p>
+          </div>
+          <a routerLink="/qrcode/ajukan" class="btn btn-primary btn-sm">
+            <app-icon name="qr-code" [size]="13" class="mr-xs" /> Ajukan QR Code
+          </a>
+        </div>
       }
     }
+
+    <a routerLink="/" class="qr-back-home">
+      <app-icon name="arrow-left" [size]="13" /> Kembali ke Beranda
+    </a>
   </div>
-</section>
+</div>

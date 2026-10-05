@@ -110,8 +110,13 @@ html, body {
      horizontal yang muncul akibat itu memakan tinggi viewport vertikal dan
      terasa seperti "scroll tidak bisa mentok ke bawah". Halaman ini tidak
      pernah butuh scroll horizontal di level manapun (tabel sudah punya
-     overflow-x:auto sendiri), jadi ini aman sebagai pengaman. */
-  overflow-x: hidden;
+     overflow-x:auto sendiri), jadi ini aman sebagai pengaman.
+     Sengaja `clip`, BUKAN `hidden` — overflow-x:hidden di html/body memaksa
+     overflow-y jadi `auto` (computed value), yang bikin body sendiri jadi
+     scroll container alih-alih viewport asli dan mematahkan semua
+     position:sticky di halaman (mis. .kader-sidebar). `clip` mencegah
+     scrollbar horizontal yang sama tanpa efek samping itu. */
+  overflow-x: clip;
 }
 
 h1, h2, h3, h4, h5 { font-family: var(--font-heading); font-weight: 700; color: var(--color-text); margin: 0 0 .5em; line-height: 1.2; }

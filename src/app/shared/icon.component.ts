@@ -170,6 +170,9 @@ const ICONS: Record<string, string> = {
   briefcase: 'fas fa-briefcase',
   venus: 'fas fa-venus',
   coins: 'fas fa-coins',
+  // Jenis zakat pertanian & peternakan (zakat.calculator.page — kartu pemilih jenis zakat).
+  seedling: 'fas fa-seedling',
+  paw: 'fas fa-paw',
 };
 
 /**

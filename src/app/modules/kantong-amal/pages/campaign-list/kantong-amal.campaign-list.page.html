@@ -1,74 +1,224 @@
-<section class="section">
-  <div class="container">
-    <div class="text-center" style="margin-bottom:32px">
-      <span class="eyebrow">Kantong Amal</span>
-      <h1>Salurkan Kebaikan, Bantu Sesama</h1>
+<app-page-hero
+  badge="Kantong Amal &middot; FSLDK Indonesia"
+  title="Salurkan Kebaikan,"
+  titleAccent="Bantu Sesama Lewat Dakwah"
+  subtitle="Galang dan salurkan dana untuk program dakwah, bantuan kemanusiaan, dan kebutuhan jaringan LDK se-Nusantara &mdash; transparan dari donasi hingga penyaluran."
+  quoteSource="hadith">
+  <!-- Siluet sisi kanan hero: hati berdenyut didekap sepasang tangan sebagai
+       hub, garis jaringan menjalar ke titik-titik simpul — pola sama persis
+       Goods/Kalender/Perpustakaan, motif tengahnya diganti hati+tangan,
+       selaras tema Kantong Amal. -->
+  <div heroVisual class="hero-kam-visual">
+    <svg aria-hidden="true" viewBox="0 0 480 320" class="kam-svg">
+      <defs>
+        <linearGradient id="kamHeartFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--color-gold)" />
+          <stop offset="100%" stop-color="var(--color-gold-dark)" />
+        </linearGradient>
+        <linearGradient id="kamHandFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--color-primary-bright)" />
+          <stop offset="100%" stop-color="var(--color-primary)" />
+        </linearGradient>
+        <filter id="kamSoftBlur" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="4" />
+        </filter>
+      </defs>
+
+      <g class="kam-silhouette">
+        <ellipse cx="240" cy="266" rx="92" ry="10" fill="var(--color-primary-dark)" opacity=".14" filter="url(#kamSoftBlur)" />
+
+        <!-- Sepasang tangan mendekap -->
+        <path d="M150,230 Q150,170 205,160 L205,210 Q205,230 184,236 Z" fill="url(#kamHandFill)" />
+        <path d="M330,230 Q330,170 275,160 L275,210 Q275,230 296,236 Z" fill="url(#kamHandFill)" />
+        <path d="M150,230 Q196,250 240,250 Q284,250 330,230 L330,246 Q284,266 240,266 Q196,266 150,246 Z" fill="var(--color-primary-dark)" />
+
+        <!-- Hati di tengah dekapan, berdenyut pelan -->
+        <path class="kam-heartbeat" d="M240,150 C216,122 176,128 176,162 C176,194 212,214 240,232 C268,214 304,194 304,162 C304,128 264,122 240,150 Z" fill="url(#kamHeartFill)" />
+        <circle class="kam-heartbeat" cx="240" cy="170" r="7" fill="#fff" opacity=".45" />
+      </g>
+
+      <!-- Garis "digambar sendiri" — identik mekanisme Goods/Kalender/Galeri. -->
+      <path class="kam-line thick" d="M240,118 L120,85" />
+      <path class="kam-line thick" d="M240,118 L240,45" />
+      <path class="kam-line thick" d="M240,118 L360,85" />
+      <path class="kam-line" d="M120,85 L55,70" />
+      <path class="kam-line" d="M120,85 L75,150" />
+      <path class="kam-line" d="M360,85 L425,70" />
+      <path class="kam-line" d="M360,85 L405,150" />
+
+      <g class="kam-tier kam-tier-0">
+        <circle class="network-ping" cx="240" cy="118" r="12" />
+        <circle class="network-node" cx="240" cy="118" r="12" />
+      </g>
+      <g class="kam-tier kam-tier-1">
+        <circle class="network-node gold" cx="120" cy="85" r="9" />
+        <circle class="network-node gold" cx="240" cy="45" r="9" />
+        <circle class="network-node gold" cx="360" cy="85" r="9" />
+        <circle class="network-node ember" cx="55" cy="70" r="6" />
+        <circle class="network-node ember" cx="75" cy="150" r="6" />
+        <circle class="network-node ember" cx="425" cy="70" r="6" />
+        <circle class="network-node ember" cx="405" cy="150" r="6" />
+      </g>
+    </svg>
+  </div>
+</app-page-hero>
+
+<section class="section section-transition section-blob-drift">
+  <div class="container pb-xl">
+    <div class="kam-section-head text-center reveal">
+      <h2>Campaign Kebaikan Aktif</h2>
+      <p class="kam-section-subtitle">Pilih campaign yang ingin Anda dukung — setiap donasi tersalurkan transparan untuk dakwah dan kemanusiaan.</p>
     </div>
 
-    <div class="filters">
-      <input class="form-control search" [(ngModel)]="search" (keyup.enter)="applySearch()" placeholder="Cari campaign…">
-      <div class="chips">
-        <span class="chip" [class.active]="activeCategoryID === 0" (click)="filterCategory(0)">Semua</span>
-        @for (c of categories(); track c.campaignCategoryID) {
-          <span class="chip" [class.active]="activeCategoryID === c.campaignCategoryID" (click)="filterCategory(c.campaignCategoryID)">{{ c.categoryName }}</span>
-        }
-      </div>
-    </div>
-
-    <div class="sort-row">
-      <app-select style="width:240px" [options]="sortOptions" [(ngModel)]="sort" (ngModelChange)="applySort()" />
+    <div class="kam-toolbar">
+      <app-search-filter-sort
+        searchPlaceholder="Cari nama campaign..."
+        [searchValue]="searchText()"
+        [filterFields]="filterFields()"
+        [filterValues]="filterValues()"
+        [sortOptions]="sortOptions"
+        [sortValue]="currentSort()"
+        [filterMobileSheet]="true"
+        filterTitle="Filter Campaign"
+        filterSubtitle="Pilih kategori, provinsi, atau tampilkan campaign unggulan saja."
+        (searchChange)="onSearchChange($event)"
+        (filterApply)="onFilterApply($event)"
+        (sortChange)="onSortChange($event)"
+      />
     </div>
 
     @if (loading()) {
-      <div class="grid grid-3 mt-lg">
-        @for (i of [1,2,3,4,5,6]; track i) {
-          <div class="card" style="overflow:hidden">
-            <span class="skel skel-thumb" style="border-radius:0"></span>
-            <div class="card-pad">
-              <span class="skel skel-title"></span>
-              <span class="skel skel-line" style="width:90%"></span>
-              <span class="skel skel-line" style="width:50%"></span>
+      <div class="kam-grid" aria-hidden="true">
+        @for (i of skeletonItems; track i) {
+          <div class="kam-card-skel">
+            <span class="skel skel-thumb" style="aspect-ratio:16/10;border-radius:0"></span>
+            <div style="padding:18px">
+              <span class="skel skel-line" style="width:40%"></span>
+              <span class="skel skel-title" style="margin-top:8px"></span>
+              <span class="skel skel-line" style="width:70%"></span>
             </div>
           </div>
         }
       </div>
     } @else {
-      <div class="grid grid-3 mt-lg">
-        @for (c of campaigns(); track c.campaignID) {
-          <a class="campaign-card" [routerLink]="kantongAmalPath.detail(c.slug)">
-            <div class="campaign-thumb">@if (c.coverImageUrl) { <img [src]="c.coverImageUrl" [alt]="c.title"> } @else { <span>FOTO CAMPAIGN</span> }</div>
-            <div class="campaign-body">
-              <span class="chip chip-green">{{ c.categoryName }}</span>
-              <h3>{{ c.title }}</h3>
-              <div class="progress-track"><div class="progress-fill" [style.width.%]="progressPercent(c)"></div></div>
-              <div class="progress-meta">
-                <span><strong>{{ formatRupiah(c.collectedAmount) }}</strong> terkumpul</span>
-                <span>{{ progressPercent(c) }}%</span>
-              </div>
-            </div>
-          </a>
-        } @empty {
-          <div class="empty-state" style="grid-column:1/-1; min-height:50vh; display:flex; flex-direction:column; align-items:center; justify-content:center">
-            @if (search || activeCategoryID) {
-              <span class="icon-badge lg icon-badge-neutral" style="margin:0 auto 14px"><app-icon name="search" [size]="26" /></span>
-              <h4>Tidak ada campaign ditemukan</h4>
-              <p>Coba ubah kata kunci pencarian atau kategori yang dipilih.</p>
-            } @else {
-              <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="hand-heart" [size]="26" /></span>
-              <h4>Belum ada campaign</h4>
-              <p>Jadi yang pertama menggalang dana kebaikan di sini.</p>
+      @if (campaigns().length === 0 && hasActiveSearchOrFilter()) {
+        <div class="empty-state kam-empty-anim">
+          <span class="kam-empty-icon"><app-icon name="search" [size]="26" /></span>
+          <h4>Campaign Tidak Ditemukan</h4>
+          <p>Coba ubah kata kunci atau hapus filter yang aktif.</p>
+          <div class="kam-empty-suggestions">
+            @if (searchText()) {
+              <button type="button" class="chip" (click)="onSearchChange('')"><app-icon name="search" [size]="12" /> Hapus kata kunci</button>
+            }
+            @if (activeFilterCount() > 0) {
+              <button type="button" class="chip" (click)="onFilterApply({})"><app-icon name="x" [size]="12" /> Hapus filter</button>
+            }
+            @if (searchText() && activeFilterCount() > 0) {
+              <button type="button" class="chip" (click)="resetSearchAndFilter()"><app-icon name="rotate-ccw" [size]="12" /> Reset semua</button>
             }
           </div>
-        }
-      </div>
-
-      @if (count() > limit) {
-        <div class="pager">
-          <button class="btn btn-outline btn-sm" [disabled]="page() <= 1" (click)="go(page() - 1)">Sebelumnya</button>
-          <span>Halaman {{ page() }} dari {{ totalPages() }}</span>
-          <button class="btn btn-outline btn-sm" [disabled]="page() >= totalPages()" (click)="go(page() + 1)">Berikutnya</button>
         </div>
+      } @else if (campaigns().length === 0) {
+        <div class="empty-state kam-empty-anim">
+          <span class="kam-empty-icon"><app-icon name="hand-heart" [size]="26" /></span>
+          <h4>Belum Ada Campaign</h4>
+          <p>Jadi yang pertama menggalang dana kebaikan di sini.</p>
+        </div>
+      } @else {
+        <!-- ---------- Desktop/tablet: grid kartu "progres donasi". ---------- -->
+        <div class="kam-grid">
+          @for (c of campaigns(); track c.campaignID; let i = $index) {
+            <a class="kam-card stagger-in" [style.--stagger-i]="i" [routerLink]="kantongAmalPath.detail(c.slug)">
+              <div class="kam-card-media">
+                @if (c.coverImageUrl) {
+                  <img [src]="c.coverImageUrl" [alt]="c.title" loading="lazy">
+                } @else {
+                  <span class="kam-card-media-fallback"><app-icon name="hand-heart" [size]="30" /></span>
+                }
+                <span class="kam-card-category">{{ c.categoryName }}</span>
+                <span class="kam-card-percent">{{ progressPercent(c) }}<small>%</small></span>
+              </div>
+              <div class="kam-card-body">
+                <span class="kam-card-org"><app-icon name="building" [size]="11" /> {{ organizationLabel(c) }}</span>
+                <h3 class="kam-card-title">{{ c.title }}</h3>
+
+                <div class="kam-progress-track"><div class="kam-progress-fill" [style.width.%]="progressPercent(c)"></div></div>
+                <div class="kam-progress-meta">
+                  <span>Terkumpul<strong>{{ formatRupiah(c.collectedAmount) }}</strong></span>
+                  <span>Target<strong>{{ formatRupiah(c.targetAmount) }}</strong></span>
+                </div>
+
+                <span class="kam-card-cta"><app-icon name="hand-coins" [size]="14" /> Donasi Sekarang</span>
+              </div>
+            </a>
+          }
+        </div>
+
+        <!-- ---------- Mobile: daftar kartu horizontal (thumb kiri + info
+             kanan) ditumpuk vertikal — bentuk PERSIS sama dengan teaser
+             Kantong Amal di Beranda (.campaign-card2 pada breakpoint
+             <=640px, lihat home.index.page.ts), disalin ulang di sini
+             karena view encapsulation Angular tidak membagikan style
+             component-scoped lintas komponen. Tap tetap buka bottom sheet
+             (bukan langsung navigasi) — beda dari Beranda yang punya mode
+             preview khusus teaser, di halaman index penuh ini sheet-nya
+             yang jadi satu-satunya jalur preview mobile. ---------- -->
+        <div class="kam-tile-grid">
+          @for (c of campaigns(); track c.campaignID; let i = $index) {
+            <button type="button" class="kam-tile stagger-in" [style.--stagger-i]="i" (click)="openSheet(c)">
+              <span class="kam-tile-media">
+                @if (c.coverImageUrl) {
+                  <img [src]="c.coverImageUrl" [alt]="c.title" loading="lazy">
+                } @else {
+                  <span class="kam-tile-media-fallback"><app-icon name="hand-heart" [size]="22" /></span>
+                }
+                <span class="kam-tile-category">{{ c.categoryName }}</span>
+                @if (progressPercent(c) >= 90) { <span class="kam-tile-badge">Hampir Tercapai!</span> }
+              </span>
+              <span class="kam-tile-body">
+                <h4>{{ c.title }}</h4>
+                <span class="kam-tile-track"><span class="kam-tile-fill" [style.width.%]="progressPercent(c)"></span></span>
+                <span class="kam-tile-percent-label">{{ progressPercent(c) }}% tercapai</span>
+                <span class="kam-tile-amounts">
+                  <span class="kam-tile-amount"><strong>{{ formatRupiah(c.collectedAmount) }}</strong><small>terkumpul</small></span>
+                </span>
+              </span>
+            </button>
+          }
+        </div>
+
+        @if (count() > limit) {
+          <div class="pagination-wrapper">
+            <app-pagination [page]="page()" [count]="count()" [limit]="limit" itemLabel="campaign" (pageChange)="onPageChange($event)" />
+          </div>
+        }
       }
     }
   </div>
 </section>
+
+<!-- ---------- Bottom sheet mobile: pratinjau campaign ---------- -->
+<app-bottom-sheet
+  [open]="sheetItem() !== null"
+  (closed)="closeSheet()"
+  ctaLabel="Lihat Detail & Donasi"
+  (ctaClick)="goToSheetDetail()"
+>
+  @if (sheetItem(); as c) {
+    <div class="kam-sheet-media">
+      @if (c.coverImageUrl) {
+        <img [src]="c.coverImageUrl" [alt]="c.title">
+      } @else {
+        <div class="kam-sheet-media-fallback"><app-icon name="hand-heart" [size]="34" /></div>
+      }
+    </div>
+    <span class="kam-sheet-org"><app-icon name="building" [size]="12" /> {{ organizationLabel(c) }}</span>
+    <span class="chip chip-green">{{ c.categoryName }}</span>
+    <h3 class="sheet-title">{{ c.title }}</h3>
+    <div class="kam-progress-track"><div class="kam-progress-fill" [style.width.%]="progressPercent(c)"></div></div>
+    <div class="kam-progress-meta" style="margin-bottom:4px">
+      <span>Terkumpul<strong>{{ formatRupiah(c.collectedAmount) }}</strong></span>
+      <span>{{ progressPercent(c) }}% dari {{ formatRupiah(c.targetAmount) }}</span>
+    </div>
+  }
+</app-bottom-sheet>

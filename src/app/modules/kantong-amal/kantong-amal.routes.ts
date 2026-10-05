@@ -1,13 +1,25 @@
 import { Routes } from '@angular/router';
 import { permissionGuard } from '../../core/guards/guards';
 
-/** Rute publik Kantong Amal — dipasang sebagai children dari PublicLayoutComponent. */
+/** Rute publik Kantong Amal (listing + detail campaign) — dipasang sebagai
+ *  children dari PublicLayoutComponent (navbar+footer tetap ada). */
 export const kantongAmalPublicRoutes: () => Routes = () => [
   {
     path: 'kantong-amal',
     title: 'Kantong Amal',
     loadComponent: () => import('./pages/campaign-list/kantong-amal.campaign-list.page').then((m) => m.KantongAmalCampaignListPage),
   },
+  {
+    path: 'kantong-amal/:slug',
+    title: 'Detail Campaign',
+    loadComponent: () => import('./pages/campaign-detail/kantong-amal.campaign-detail.page').then((m) => m.KantongAmalCampaignDetailPage),
+  },
+];
+
+/** Rute alur Donasi (donate -> payment-status -> donation-receipt) — shell
+ *  SENDIRI (KantongAmalDonationFlowLayoutComponent, lihat app.routes.ts),
+ *  TANPA navbar/footer landing page, backdrop ala halaman auth. */
+export const kantongAmalDonationFlowRoutes: () => Routes = () => [
   {
     path: 'kantong-amal/donasi/:publicRef/status',
     title: 'Status Donasi',
@@ -22,11 +34,6 @@ export const kantongAmalPublicRoutes: () => Routes = () => [
     path: 'kantong-amal/:slug/donasi',
     title: 'Donasi',
     loadComponent: () => import('./pages/donate/kantong-amal.donate.page').then((m) => m.KantongAmalDonatePage),
-  },
-  {
-    path: 'kantong-amal/:slug',
-    title: 'Detail Campaign',
-    loadComponent: () => import('./pages/campaign-detail/kantong-amal.campaign-detail.page').then((m) => m.KantongAmalCampaignDetailPage),
   },
 ];
 

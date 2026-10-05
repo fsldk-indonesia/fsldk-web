@@ -1,4 +1,5 @@
-import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
@@ -60,7 +61,7 @@ const emptyFieldForm = (type: DynamicFieldType = 'short_text'): FieldFormValue =
   selector: 'app-dynamicform-builder-page',
   standalone: true,
   templateUrl: './dynamicform.builder.page.html',
-  imports: [FormsModule, RouterLink, IconComponent, ModalBackdropDirective, SelectComponent],
+  imports: [FormsModule, RouterLink, IconComponent, ModalBackdropDirective, SelectComponent, NgStyle],
   providers: [DynamicFormBuilderPresenter],
   styles: [`
     .page-footer { display: flex; justify-content: flex-end; margin-top: 22px; }
@@ -82,8 +83,13 @@ const emptyFieldForm = (type: DynamicFieldType = 'short_text'): FieldFormValue =
     @media (max-width: 1180px) { .builder { grid-template-columns: 240px minmax(0, 1fr); } .builder .sidebar { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } }
     @media (max-width: 760px) { .builder { grid-template-columns: 1fr; } .builder .sidebar { grid-template-columns: 1fr; } }
 
-    /* col 1 — palette */
-    .palette { position: sticky; top: 16px; }
+    /* col 1 — palette. position: sticky silently fails to stay pinned
+       inside this CMS shell (confirmed earlier on .topbar too — no
+       offending overflow/transform ancestor found via static review), so
+       #paletteAnchor/#paletteInner (page.html) reimplement it manually:
+       .palette stays a normal grid item (reserves the column's width via
+       an explicit min-height set from TS), its inner div toggles between
+       static and position:fixed on scroll — see syncSticky() below. */
     .palette .card { padding: 18px; }
     .col-title { display: flex; align-items: center; gap: 8px; font-size: .95rem; font-weight: 800; margin: 0 0 4px; }
     .palette-group { margin-top: 18px; }
@@ -121,8 +127,8 @@ const emptyFieldForm = (type: DynamicFieldType = 'short_text'): FieldFormValue =
     .section-card { border-style: dashed; border-width: 1.5px; border-color: var(--color-primary); background: var(--color-primary-soft); }
     .section-card .field-type-icon { background: #fff; color: var(--color-primary-dark); }
 
-    /* col 3 — sidebar */
-    .sidebar { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 16px; }
+    /* col 3 — sidebar — same manual fixed/static toggle as .palette above. */
+    .sidebar-stack { display: flex; flex-direction: column; gap: 16px; }
     .sidebar-card { padding: 18px; }
     .sidebar-title { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 800; margin: 0 0 14px; }
     .drive-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius-xs); text-decoration: none; color: var(--color-text); transition: background var(--motion-fast) ease, transform var(--motion-fast) ease; }
@@ -189,7 +195,7 @@ const emptyFieldForm = (type: DynamicFieldType = 'short_text'): FieldFormValue =
     .preview-frame .p-opt { display: flex; align-items: center; gap: 8px; font-size: .88rem; margin: 4px 0; }
   `],
 })
-export class DynamicFormBuilderPage implements OnInit, DynamicFormBuilderView {
+export class DynamicFormBuilderPage implements OnInit, AfterViewInit, OnDestroy, DynamicFormBuilderView {
   private presenter = inject(DynamicFormBuilderPresenter);
   private route = inject(ActivatedRoute);
   private alert = inject(AlertService);
@@ -205,6 +211,69 @@ export class DynamicFormBuilderPage implements OnInit, DynamicFormBuilderView {
   popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
   @ViewChild('modalEl') private modalEl?: ElementRef<HTMLElement>;
   private modalAnimation: Animation | null = null;
+
+  // --- manual sticky (position: sticky silently fails in this CMS shell —
+  // see the long comment on .palette above) --------------------------------
+  @ViewChild('paletteAnchor') private paletteAnchorRef?: ElementRef<HTMLElement>;
+  @ViewChild('paletteInner') private paletteInnerRef?: ElementRef<HTMLElement>;
+  @ViewChild('sidebarAnchor') private sidebarAnchorRef?: ElementRef<HTMLElement>;
+  @ViewChild('sidebarInner') private sidebarInnerRef?: ElementRef<HTMLElement>;
+  paletteStyle = signal<Record<string, string>>({});
+  sidebarStyle = signal<Record<string, string>>({});
+  /** px clearance under the CMS topbar (position:fixed, ~76px incl. its own
+   *  top gap — see .cms-main's padding-top comment in cms-layout.component.ts). */
+  private readonly STICKY_TOP = 92;
+  private resizeObserver?: ResizeObserver;
+
+  ngAfterViewInit(): void {
+    this.resizeObserver = new ResizeObserver(() => this.syncSticky());
+    if (this.paletteInnerRef) this.resizeObserver.observe(this.paletteInnerRef.nativeElement);
+    if (this.sidebarInnerRef) this.resizeObserver.observe(this.sidebarInnerRef.nativeElement);
+    this.syncSticky();
+  }
+
+  ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
+  }
+
+  @HostListener('window:scroll')
+  @HostListener('window:resize')
+  onViewportChange(): void { this.syncSticky(); }
+
+  /** CMS sidebar collapse/expand animates .cms-main's margin-left (see
+   *  cms-layout.component.ts), which shifts this grid horizontally without
+   *  firing a window resize or a size change on our own elements — catch it
+   *  via the bubbled transitionend instead. */
+  @HostListener('window:transitionend', ['$event'])
+  onTransitionEnd(ev: TransitionEvent): void {
+    if (ev.propertyName === 'margin-left') this.syncSticky();
+  }
+
+  private syncSticky(): void {
+    this.applySticky(this.paletteAnchorRef, this.paletteInnerRef, this.paletteStyle);
+    this.applySticky(this.sidebarAnchorRef, this.sidebarInnerRef, this.sidebarStyle);
+  }
+
+  private applySticky(
+    anchorRef: ElementRef<HTMLElement> | undefined,
+    innerRef: ElementRef<HTMLElement> | undefined,
+    styleSig: ReturnType<typeof signal<Record<string, string>>>,
+  ): void {
+    const anchor = anchorRef?.nativeElement;
+    const inner = innerRef?.nativeElement;
+    if (!anchor || !inner) return;
+    // Reserve the column's own space at all times — position:fixed below
+    // takes `inner` out of flow, which would otherwise collapse `anchor`
+    // and yank the "Field Aktif" middle column sideways.
+    anchor.style.minHeight = inner.offsetHeight + 'px';
+    const top = anchor.getBoundingClientRect().top;
+    if (top <= this.STICKY_TOP) {
+      const rect = anchor.getBoundingClientRect();
+      styleSig.set({ position: 'fixed', top: this.STICKY_TOP + 'px', left: rect.left + 'px', width: rect.width + 'px' });
+    } else {
+      styleSig.set({});
+    }
+  }
 
   showModal = signal(false);
   editFieldId: number | null = null;

@@ -1,6 +1,10 @@
-import { Component, HostListener, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { GoldPrice } from '../../entities/gold-price';
+import { IconComponent } from '../../../../shared/icon.component';
+import { PopupModalComponent } from '../../../../shared/popup-modal.component';
+import { PageHeroComponent } from '../../../../shared/page-hero.component';
+import { SelectComponent } from '../../../../shared/select.component';
 import {
   CARA_PENGGUNAAN,
   CATATAN_PENTING,
@@ -17,19 +21,58 @@ import { ZakatCalculatorPresenter } from './zakat.calculator.presenter';
 import { FetchStatus, ZakatCalculatorView } from './zakat.calculator.view';
 
 type MoneyField = 'wealth' | 'stok' | 'piutang' | 'kas' | 'utang';
+type TypeAccent = 'primary' | 'gold';
+
+/** Icon per jenis zakat — kartu pemilih jenis (lihat zk-type-tile di template). */
+const TYPE_ICON: Record<ZakatTypeKey, string> = {
+  penghasilan: 'briefcase',
+  maal: 'landmark',
+  emas: 'coins',
+  perdagangan: 'shopping-bag',
+  pertanian: 'seedling',
+  peternakan: 'paw',
+  fitrah: 'moon',
+};
+
+/** Aksen warna badge ikon per jenis — hanya 2 keluarga warna (hijau brand +
+ *  emas aksen), bukan warna acak per kartu, supaya tetap satu bahasa visual. */
+const TYPE_ACCENT: Record<ZakatTypeKey, TypeAccent> = {
+  penghasilan: 'primary',
+  maal: 'gold',
+  emas: 'gold',
+  perdagangan: 'primary',
+  pertanian: 'primary',
+  peternakan: 'gold',
+  fitrah: 'primary',
+};
+
+/** Label tarif ringkas untuk badge pojok kartu. */
+const TYPE_RATE: Record<ZakatTypeKey, string> = {
+  penghasilan: '2,5%',
+  maal: '2,5%',
+  emas: '2,5%',
+  perdagangan: '2,5%',
+  pertanian: '5–10%',
+  peternakan: 'Hewan',
+  fitrah: 'Rp 50rb/jiwa',
+};
 
 /**
  * Public zakat calculator (no login) — mounted under PublicLayoutComponent at
  * `/kalkulator-zakat`, registered before the shortlink redirect catch-all in
  * app.routes.ts. All 7 calculations run in the browser (see zakat.compute.ts);
- * the only network call is the cached gold-price proxy. Styling is ported from
- * ldksyahid-app zakat-calculator/_index-styles.blade.php (class prefix `zk-`).
+ * the only network call is the cached gold-price proxy. Redesigned to match
+ * the hero + section-blob-drift canvas used by Galeri/Struktur Organisasi;
+ * the amil-zakat picker now uses the shared PopupModalComponent (mobile
+ * sheet) instead of a hand-rolled modal, and the jenis-zakat pill row became
+ * a searchable card grid that collapses into the same mobile-sheet pattern
+ * on small screens.
  */
 @Component({
   selector: 'app-zakat-calculator-page',
   standalone: true,
   templateUrl: './zakat.calculator.page.html',
-  imports: [FormsModule],
+  imports: [FormsModule, IconComponent, PopupModalComponent, PageHeroComponent, SelectComponent],
   providers: [ZakatCalculatorPresenter],
   styleUrl: './zakat.calculator.page.scss',
 })
@@ -59,6 +102,15 @@ export class ZakatCalculatorPage implements OnInit, OnDestroy, ZakatCalculatorVi
   openAcc = signal<number | null>(null);
   showOrgModal = signal(false);
 
+  /** Pencarian jenis zakat — dipakai bersama oleh grid desktop & mobile sheet. */
+  typeQuery = signal('');
+  filteredTypes = computed(() => {
+    const q = this.typeQuery().trim().toLowerCase();
+    if (!q) return this.types;
+    return this.types.filter((t) => t.label.toLowerCase().includes(q));
+  });
+  showTypePicker = signal(false);
+
   // --- Form fields ---
   money: Record<MoneyField, string> = { wealth: '', stok: '', piutang: '', kas: '', utang: '' };
   gram = '';
@@ -80,11 +132,28 @@ export class ZakatCalculatorPage implements OnInit, OnDestroy, ZakatCalculatorVi
     document.body.style.overflow = '';
   }
 
+  // --- Jenis zakat helpers (kartu pemilih) ---
+  typeIcon(key: ZakatTypeKey): string { return TYPE_ICON[key]; }
+  typeAccent(key: ZakatTypeKey): TypeAccent { return TYPE_ACCENT[key]; }
+  typeRate(key: ZakatTypeKey): string { return TYPE_RATE[key]; }
+
+  openTypePicker(): void {
+    this.typeQuery.set('');
+    this.showTypePicker.set(true);
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeTypePicker(): void {
+    this.showTypePicker.set(false);
+    document.body.style.overflow = '';
+  }
+
   // --- User actions ---
   onSelectType(key: ZakatTypeKey): void {
     this.selectedType.set(key);
     this.resetForm();
     this.presenter.selectType(key);
+    if (this.showTypePicker()) this.closeTypePicker();
   }
 
   refreshGoldPrice(): void {
@@ -130,17 +199,6 @@ export class ZakatCalculatorPage implements OnInit, OnDestroy, ZakatCalculatorVi
   closeOrgModal(): void {
     this.showOrgModal.set(false);
     document.body.style.overflow = '';
-  }
-
-  /** Close when the click lands on the modal shell (the padding around the
-   *  card), not on the card itself. */
-  onModalShellClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget) this.closeOrgModal();
-  }
-
-  @HostListener('document:keydown.escape')
-  onEsc(): void {
-    if (this.showOrgModal()) this.closeOrgModal();
   }
 
   logoUrl(domain: string): string {
