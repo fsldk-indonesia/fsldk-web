@@ -26,10 +26,7 @@ export const qrcodeRoutes: () => Routes = () => [
 
 /**
  * Rute publik QR Code — dipasang sebagai children dari PublicLayoutComponent:
- * - `qrcode/ajukan` — form pengajuan.
- * - `qr/:id` — halaman detail/unduh gambar QR (tautannya dikirim ke pemohon
- *   lewat WhatsApp/email saat permintaan disetujui). BUKAN redirect —
- *   gambar QR meng-encode URL tujuan LANGSUNG.
+ * - `qrcode/ajukan` — form pengajuan (navbar/footer landing page tetap ada).
  */
 export const qrcodePublicRoutes: () => Routes = () => [
   {
@@ -37,6 +34,21 @@ export const qrcodePublicRoutes: () => Routes = () => [
     title: 'Ajukan QR Code',
     loadComponent: () => import('./pages/public-submit/qrcoderequest.submit.page').then((m) => m.QrcodeRequestSubmitPage),
   },
+];
+
+/**
+ * `qr/:id` — halaman detail/unduh gambar QR (tautannya dikirim ke pemohon
+ * lewat WhatsApp/email saat permintaan disetujui). BUKAN redirect — gambar
+ * QR meng-encode URL tujuan LANGSUNG.
+ *
+ * SENGAJA dipasang sebagai top-level route TERPISAH dari PublicLayoutComponent
+ * (lihat app.routes.ts) — tanpa navbar/footer/WhatsApp FAB landing page, mirip
+ * AuthLayoutComponent (shell sendiri). Halaman ini sendiri yang memikul
+ * backdrop penuh-layar (gradien diagonal hijau tua ala hero gelap Goods/
+ * Berita/Galeri detail), bukan dibungkus layout tambahan, karena cuma satu
+ * halaman yang butuh treatment ini.
+ */
+export const qrcodeDetailRoutes: () => Routes = () => [
   {
     path: 'qr/:id',
     title: 'QR Code',

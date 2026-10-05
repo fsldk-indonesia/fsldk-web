@@ -1,26 +1,41 @@
-<section class="section">
-  <div class="container">
-    <div class="page-head">
-      <h1>Ajukan QR Code</h1>
-      <p class="text-muted">Isi form berikut untuk mengajukan kode QR baru. Tim kami akan meninjau permintaan Anda.</p>
-    </div>
+<app-page-hero
+  badge="Ajukan QR Code &middot; FSLDK Indonesia"
+  title="Satu Kode QR,"
+  titleAccent="Untuk Segala Keperluan Dakwah"
+  subtitle="Buat kode QR custom untuk poster, banner, undangan, atau materi publikasi program dan acara dakwah kampus Anda — tinggal scan, langsung terhubung ke tautan tujuan."
+  quoteSource="hadith"
+  waveColor="var(--color-primary)">
+  <div heroVisual>
+    <app-qrcode-hero-visual />
+  </div>
+</app-page-hero>
 
-    <div class="layout-grid">
-      <aside class="info-col">
-        <div class="card info-card">
-          <h3><app-icon name="list" [size]="16" /> Cara Penggunaan</h3>
-          <ul class="info-list">
+<section class="section">
+  <span class="qr-panel-silhouette" aria-hidden="true"><app-icon name="qr-code" [size]="220" /></span>
+  <span class="qr-panel-silhouette-2" aria-hidden="true"><app-icon name="link" [size]="100" /></span>
+  <div class="container pb-xl">
+    <div class="qr-grid">
+      <aside class="qr-info-col">
+        <div class="card card-hover qr-info-card stagger-in" style="--stagger-i: 0">
+          <div class="qr-info-card-head">
+            <span class="icon-badge sm icon-badge-solid"><app-icon name="list" [size]="16" /></span>
+            <h3>Cara Penggunaan</h3>
+          </div>
+          <ul class="qr-info-list">
             <li>Isi formulir dengan data yang benar dan lengkap — seluruh field wajib diisi.</li>
             <li>Masukkan link asli (URL) yang ingin dijadikan kode QR.</li>
+            <li>Kustomisasi warna &amp; ikon tengah QR sesuai kebutuhan (opsional).</li>
             <li>Klik <strong>Kirim Permintaan</strong>, lalu tunggu peninjauan admin.</li>
-            <li>Setelah disetujui, gambar QR dibuatkan admin — kamu akan menerima tautannya.</li>
-            <li>Anda akan dihubungi lewat WhatsApp &amp; email begitu permintaan diproses.</li>
+            <li>Setelah disetujui, gambar QR dibuatkan admin — kamu akan menerima tautannya lewat WhatsApp &amp; email.</li>
           </ul>
         </div>
 
-        <div class="card info-card">
-          <h3><app-icon name="alert-triangle" [size]="16" /> Ketentuan</h3>
-          <ul class="info-list">
+        <div class="card card-hover qr-info-card stagger-in" style="--stagger-i: 1">
+          <div class="qr-info-card-head">
+            <span class="icon-badge sm icon-badge-gold"><app-icon name="alert-triangle" [size]="16" /></span>
+            <h3>Ketentuan</h3>
+          </div>
+          <ul class="qr-info-list">
             <li>Seluruh field pada formulir <strong>wajib diisi</strong>.</li>
             <li>Nomor WhatsApp harus diawali <code>62</code> atau <code>0</code> dan aktif digunakan.</li>
             <li>Link tujuan harus berupa URL lengkap yang valid (diawali <code>http</code>).</li>
@@ -30,76 +45,166 @@
         </div>
 
         @if (pic()?.picWhatsapp) {
-          <div class="card info-card">
-            <span class="pic-label">Konfirmasi via WhatsApp</span>
-            <div class="pic-row">
-              <span class="icon-badge sm icon-badge-soft"><app-icon name="guest" [size]="15" /></span>
+          <div class="card card-hover qr-info-card stagger-in" style="--stagger-i: 2">
+            <div class="qr-info-card-head">
+              <span class="icon-badge sm icon-badge-ember"><app-icon name="guest" [size]="16" /></span>
+              <h3>Konfirmasi via WhatsApp</h3>
+            </div>
+            <div class="qr-pic-row">
               <div>
-                <div class="pic-name">{{ pic()?.picName || 'Admin FSLDK' }}</div>
-                <div class="pic-phone text-muted">+{{ pic()?.picWhatsapp }}</div>
+                <div class="qr-pic-name">{{ pic()?.picName || 'Admin FSLDK' }}</div>
+                <div class="qr-pic-phone text-muted">+{{ pic()?.picWhatsapp }}</div>
               </div>
             </div>
             <a class="btn btn-whatsapp btn-block" [href]="waLink()" target="_blank" rel="noopener">
               <app-icon name="whatsapp" [size]="16" /> Konfirmasi via WhatsApp
             </a>
-            <p class="pic-hint text-muted">Ingin proses lebih cepat? Konfirmasi permintaan Anda langsung ke PIC lewat WhatsApp.</p>
+            <p class="qr-pic-hint text-muted">Ingin proses lebih cepat? Konfirmasi permintaan Anda langsung ke PIC lewat WhatsApp.</p>
           </div>
         }
+
+        <div class="card card-hover qr-notice-card stagger-in" style="--stagger-i: 3">
+          <span class="icon-badge md icon-badge-soft"><app-icon name="info" [size]="19" /></span>
+          <div class="notice-text">
+            <strong>Ditinjau Admin</strong>
+            <p>Setiap permintaan yang masuk akan ditinjau tim admin FSLDK sebelum gambar QR Code Anda dibuatkan.</p>
+          </div>
+        </div>
       </aside>
 
-      <div class="form-card card">
-        <div class="card-pad">
-          @if (submitted()) {
-            <div class="success">
-              <span class="icon">&#10003;</span>
-              <h2>Permintaan Terkirim</h2>
-              <p class="text-muted">Kami akan mengabari lewat WhatsApp &amp; email begitu permintaan Anda diproses.</p>
-              <a routerLink="/" class="btn btn-primary">Kembali ke Beranda</a>
+      <div class="card card-hover qr-form-card stagger-in" style="--stagger-i: 1">
+        @if (submitted()) {
+          <div class="qr-success-screen">
+            <span class="icon-badge lg icon-badge-solid qr-success-icon"><app-icon name="check-circle" [size]="30" /></span>
+            <h2>Permintaan Terkirim</h2>
+            <p class="qr-success-text">Kami akan mengabari lewat WhatsApp &amp; email begitu permintaan Anda diproses.</p>
+            <a routerLink="/" class="btn btn-primary mt-lg">Kembali ke Beranda</a>
+          </div>
+        } @else {
+          <div class="qr-form-card-header">
+            <span class="icon-badge md icon-badge-solid"><app-icon name="qr-code" [size]="19" /></span>
+            <div>
+              <h2>Ajukan QR Code</h2>
+              <p>Isi form berikut untuk mengajukan kode QR baru. Tim kami akan meninjau permintaan Anda.</p>
             </div>
-          } @else {
-            <form (ngSubmit)="submit()">
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <span class="qr-form-section-label"><app-icon name="user-circle" [size]="12" /> Data Pemohon</span>
+
+            <div class="qr-form-row-2">
               <div class="form-group">
-                <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-                <input class="form-control" name="requesterName" [(ngModel)]="requesterName" placeholder="Masukkan nama lengkapmu" required>
-                <p class="form-hint">Nama lengkap Anda sesuai identitas diri.</p>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Alamat Email <span class="text-danger">*</span></label>
-                <input class="form-control" type="email" name="requesterEmail" [(ngModel)]="requesterEmail" placeholder="contoh@email.com" required>
-                <p class="form-hint">Dipakai mengirim update status permintaan Anda.</p>
-              </div>
-              <div class="form-group">
-                <label class="form-label">WhatsApp Aktif <span class="text-danger">*</span></label>
-                <input class="form-control" name="requesterWhatsapp" [(ngModel)]="requesterWhatsapp" placeholder="+62" required>
-                <p class="form-hint">Awali dengan 62 atau 0 — dipakai mengirim notifikasi status via WhatsApp.</p>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Link Asli (Original URL) <span class="text-danger">*</span></label>
-                <input class="form-control" type="url" name="destinationURL" [(ngModel)]="destinationURL" placeholder="https://contoh.com/halaman-tujuan" required>
-                <p class="form-hint">Tautan tujuan yang akan dibuka saat kode QR dipindai.</p>
+                <label class="form-label" for="requesterName">Nama Lengkap <span class="text-danger">*</span></label>
+                <div class="qr-field-icon-group">
+                  <app-icon name="user-circle" [size]="15" class="qr-field-icon" />
+                  <input id="requesterName" type="text" class="form-control" [class.is-invalid]="hasError('requesterName')" formControlName="requesterName" placeholder="Masukkan nama lengkapmu" maxlength="255">
+                </div>
+                @if (hasError('requesterName')) {
+                  <div class="form-error">Nama wajib diisi (minimal 2 karakter).</div>
+                }
               </div>
 
               <div class="form-group">
-                <label class="form-label">Kustomisasi Tampilan QR (opsional)</label>
+                <label class="form-label" for="requesterEmail">Alamat Email <span class="text-danger">*</span></label>
+                <div class="qr-field-icon-group">
+                  <app-icon name="envelope" [size]="15" class="qr-field-icon" />
+                  <input id="requesterEmail" type="email" class="form-control" [class.is-invalid]="hasError('requesterEmail')" formControlName="requesterEmail" placeholder="contoh@email.com" maxlength="255">
+                </div>
+                @if (hasError('requesterEmail')) {
+                  <div class="form-error">Alamat email tidak valid.</div>
+                }
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="requesterWhatsapp">WhatsApp Aktif <span class="text-danger">*</span></label>
+              <div class="qr-field-icon-group">
+                <app-icon name="whatsapp" [size]="15" class="qr-field-icon" />
+                <input id="requesterWhatsapp" type="text" class="form-control" [class.is-invalid]="hasError('requesterWhatsapp')" formControlName="requesterWhatsapp" placeholder="+62" maxlength="20">
+              </div>
+              @if (hasError('requesterWhatsapp')) {
+                <div class="form-error">Nomor WhatsApp tidak valid (minimal 8 digit).</div>
+              } @else {
+                <p class="form-hint">Awali dengan 62 atau 0 — dipakai mengirim notifikasi status via WhatsApp.</p>
+              }
+            </div>
+
+            <span class="qr-form-section-label qr-form-section-label-spaced"><app-icon name="qr-code" [size]="12" /> Detail QR Code</span>
+
+            <div class="form-group">
+              <label class="form-label" for="destinationURL">Link Asli (Original URL) <span class="text-danger">*</span></label>
+              <div class="qr-field-icon-group">
+                <app-icon name="external-link" [size]="15" class="qr-field-icon" />
+                <input id="destinationURL" type="url" class="form-control" [class.is-invalid]="hasError('destinationURL')" formControlName="destinationURL" placeholder="https://contoh.com/halaman-tujuan" maxlength="1000">
+              </div>
+              @if (hasError('destinationURL')) {
+                <div class="form-error">Masukkan URL yang valid, diawali http:// atau https://.</div>
+              } @else {
+                <p class="form-hint">Tautan tujuan yang akan dibuka saat kode QR dipindai.</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Kustomisasi Tampilan QR (opsional)</label>
+
+              <!-- Desktop: editor lengkap tampil langsung inline. -->
+              <div class="style-inline-block">
                 <app-qrcode-style-editor
-                  [(value)]="style"
+                  [value]="style"
+                  (valueChange)="onStyleChange($event)"
                   [allowCustomUpload]="false"
                   [previewContent]="previewDummyUrl"
                   previewNote="Pratinjau memakai tautan contoh — QR asli akan mengarah ke link tujuanmu setelah disetujui admin." />
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Catatan / Keterangan <span class="text-danger">*</span></label>
-                <textarea class="form-control" name="note" [(ngModel)]="note" rows="3" placeholder="Tuliskan keterangan atau tujuan pembuatan kode QR..." required></textarea>
-                <p class="form-hint">Jelaskan tujuan atau keperluan pembuatan kode QR ini.</p>
-              </div>
-              <button class="btn btn-primary btn-block" type="submit" [disabled]="loading()">
-                @if (loading()) { <span class="spinner"></span> } @else { Kirim Permintaan }
+              <!-- Mobile: kartu ringkasan yang membuka editor sebagai bottom sheet. -->
+              <button type="button" class="style-mobile-trigger" (click)="styleSheetOpen.set(true)">
+                <span class="style-swatch-pair">
+                  <span class="style-swatch-dot" [style.background]="style.foregroundColor"></span>
+                  <span class="style-swatch-dot" [style.background]="style.backgroundColor"></span>
+                </span>
+                <span class="style-icon-chip-wrap">
+                  @if (style.centerIconKey === 'fsldk') { <img src="/assets/logo-fsldk-removebg.png" alt=""> }
+                  @else if (style.centerIconKey) { <app-icon name="qr-code" [size]="14" /> }
+                  @else { <app-icon name="x-circle" [size]="14" /> }
+                </span>
+                <span class="style-mobile-trigger-meta">
+                  <span class="style-mobile-trigger-title">Tampilan QR</span>
+                  <span class="style-mobile-trigger-sub">Ikon: {{ currentIconLabel() }}</span>
+                </span>
+                <app-icon name="chevron-right" [size]="15" class="style-mobile-trigger-chevron" />
               </button>
-            </form>
-          }
-        </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="note">Catatan / Keterangan <span class="text-danger">*</span></label>
+              <textarea id="note" class="form-control qr-textarea" [class.is-invalid]="hasError('note')" formControlName="note" rows="3" placeholder="Tuliskan keterangan atau tujuan pembuatan kode QR..." maxlength="1000"></textarea>
+              @if (hasError('note')) {
+                <div class="form-error">Catatan wajib diisi.</div>
+              } @else {
+                <p class="form-hint">Jelaskan tujuan atau keperluan pembuatan kode QR ini.</p>
+              }
+            </div>
+
+            <div class="qr-submit-wrap">
+              <button class="btn btn-primary qr-submit-btn" type="submit" [disabled]="loading()">
+                @if (loading()) { <span class="spinner spinner-sm mr-xs"></span> Mengirim... } @else { <app-icon name="send" [size]="16" class="mr-xs" /> Kirim Permintaan }
+              </button>
+            </div>
+          </form>
+        }
       </div>
     </div>
   </div>
 </section>
+
+<app-bottom-sheet [open]="styleSheetOpen()" (closed)="styleSheetOpen.set(false)" ctaLabel="Selesai Mengatur" (ctaClick)="styleSheetOpen.set(false)">
+  <h3 class="style-sheet-title">Kustomisasi Tampilan QR</h3>
+  <p class="style-sheet-sub">Atur warna &amp; ikon tengah kode QR kamu. Pratinjau memakai tautan contoh.</p>
+  <app-qrcode-style-editor
+    [value]="style"
+    (valueChange)="onStyleChange($event)"
+    [allowCustomUpload]="false"
+    [previewContent]="previewDummyUrl"
+    previewNote="QR asli akan mengarah ke link tujuanmu setelah disetujui admin." />
+</app-bottom-sheet>

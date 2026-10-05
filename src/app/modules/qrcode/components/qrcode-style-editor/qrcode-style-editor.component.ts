@@ -11,6 +11,8 @@ import {
   QR_ICON_PRESETS, QrIconPreset, composePresetIconDataUrl, renderQrPreview,
 } from '../../qrcode-preview';
 
+type IconFilterCategory = 'semua' | 'umum' | 'sosial';
+
 export interface QrcodeStyleValue {
   foregroundColor: string;
   backgroundColor: string;
@@ -45,48 +47,64 @@ type IconMode = 'none' | 'preset' | 'custom';
     <div class="editor-grid">
       <div class="fields">
         <div class="form-group">
-          <label class="form-label">Warna QR</label>
+          <span class="qse-label"><app-icon name="eye-dropper" [size]="12" /> Warna QR</span>
           <div class="swatches">
             @for (s of fgSwatches; track s.value) {
               <button type="button" class="swatch" [class.active]="eq(value.foregroundColor, s.value)"
-                      [style.background]="s.value" [title]="s.label" (click)="patch({ foregroundColor: s.value })"></button>
+                      [style.background]="s.value" [title]="s.label" (click)="patch({ foregroundColor: s.value })">
+                @if (eq(value.foregroundColor, s.value)) { <app-icon name="check" [size]="13" class="swatch-check" /> }
+              </button>
             }
             <app-color-picker [ngModel]="value.foregroundColor" (ngModelChange)="patch({ foregroundColor: $event })" title="Warna QR lain" />
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Warna Latar</label>
+          <span class="qse-label"><app-icon name="eye-dropper" [size]="12" /> Warna Latar</span>
           <div class="swatches">
             @for (s of bgSwatches; track s.value) {
               <button type="button" class="swatch" [class.active]="eq(value.backgroundColor, s.value)"
-                      [style.background]="s.value" [title]="s.label" (click)="patch({ backgroundColor: s.value })"></button>
+                      [style.background]="s.value" [title]="s.label" (click)="patch({ backgroundColor: s.value })">
+                @if (eq(value.backgroundColor, s.value)) { <app-icon name="check" [size]="13" class="swatch-check dark" /> }
+              </button>
             }
             <app-color-picker [ngModel]="value.backgroundColor" (ngModelChange)="patch({ backgroundColor: $event })" title="Warna latar lain" />
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Ikon Tengah (opsional)</label>
+          <span class="qse-label"><app-icon name="qr-code" [size]="12" /> Ikon Tengah (opsional)</span>
+
+          <div class="icon-filter-row">
+            <button type="button" class="icon-filter-chip" [class.active]="iconCategory === 'semua'" (click)="iconCategory = 'semua'">Semua</button>
+            <button type="button" class="icon-filter-chip" [class.active]="iconCategory === 'umum'" (click)="iconCategory = 'umum'">Umum</button>
+            <button type="button" class="icon-filter-chip" [class.active]="iconCategory === 'sosial'" (click)="iconCategory = 'sosial'">Media Sosial</button>
+          </div>
+
           <div class="icon-picker">
-            <button type="button" class="icon-opt" [class.active]="iconMode === 'none'" (click)="selectNone()">
-              <span class="icon-opt-glyph none">&times;</span>
-              <span class="icon-opt-label">Tanpa</span>
-            </button>
-            @for (p of iconPresets; track p.key) {
+            @if (iconCategory === 'semua') {
+              <button type="button" class="icon-opt" [class.active]="iconMode === 'none'" (click)="selectNone()">
+                <span class="icon-opt-glyph none">&times;</span>
+                <span class="icon-opt-label">Tanpa</span>
+                @if (iconMode === 'none') { <app-icon name="check" [size]="10" class="icon-opt-check" /> }
+              </button>
+            }
+            @for (p of filteredIconPresets(); track p.key) {
               <button type="button" class="icon-opt" [class.active]="iconMode === 'preset' && iconPreset === p.key"
                       [title]="p.label" (click)="selectPreset(p.key)">
                 <span class="icon-opt-glyph">
-                  @if (p.key === 'fsldk') { <img [src]="fsldkLogoUrl" alt="FSLDK" width="18" height="18"> }
-                  @else { <app-icon [name]="p.icon" [size]="16" /> }
+                  @if (p.key === 'fsldk') { <img [src]="fsldkLogoUrl" alt="FSLDK" width="20" height="20"> }
+                  @else { <app-icon [name]="p.icon" [size]="18" /> }
                 </span>
                 <span class="icon-opt-label">{{ p.label }}</span>
+                @if (iconMode === 'preset' && iconPreset === p.key) { <app-icon name="check" [size]="10" class="icon-opt-check" /> }
               </button>
             }
-            @if (allowCustomUpload) {
+            @if (allowCustomUpload && iconCategory === 'semua') {
               <button type="button" class="icon-opt" [class.active]="iconMode === 'custom'" (click)="selectCustom()">
-                <span class="icon-opt-glyph"><app-icon name="download" [size]="15" /></span>
+                <span class="icon-opt-glyph"><app-icon name="download" [size]="17" /></span>
                 <span class="icon-opt-label">Unggah</span>
+                @if (iconMode === 'custom') { <app-icon name="check" [size]="10" class="icon-opt-check" /> }
               </button>
             }
           </div>
@@ -104,36 +122,73 @@ type IconMode = 'none' | 'preset' | 'custom';
         </div>
 
         <div class="form-group">
-          <label class="form-label">Teks di Bawah QR (opsional)</label>
+          <span class="qse-label"><app-icon name="align-left" [size]="12" /> Teks di Bawah QR (opsional)</span>
           <input class="form-control" [ngModel]="value.captionText" (ngModelChange)="patch({ captionText: $event })"
                  maxlength="120" placeholder="mis. Scan untuk info lengkap">
         </div>
       </div>
 
       <div class="preview">
-        <label class="form-label">Pratinjau</label>
-        <canvas #canvas width="240" height="240"></canvas>
-        @if (previewNote) { <p class="form-hint">{{ previewNote }}</p> }
+        <span class="qse-label qse-label-center">Pratinjau Langsung</span>
+        <div class="preview-frame">
+          <canvas #canvas width="240" height="240"></canvas>
+        </div>
+        @if (previewNote) { <p class="form-hint preview-note">{{ previewNote }}</p> }
       </div>
     </div>
   `,
   styles: [`
     :host { display: block; }
-    .editor-grid { display: grid; grid-template-columns: 1fr 240px; gap: 24px; align-items: start; }
+    .editor-grid { display: grid; grid-template-columns: 1fr 240px; gap: 28px; align-items: start; }
     @media (max-width: 620px) { .editor-grid { grid-template-columns: 1fr; } }
-    .swatches { display: flex; flex-wrap: wrap; gap: 8px; }
-    .swatch { width: 30px; height: 30px; border-radius: 8px; border: 2px solid var(--color-border); cursor: pointer; padding: 0; position: relative; overflow: hidden; }
-    .swatch.active { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary-soft); }
-    .icon-picker { display: flex; flex-wrap: wrap; gap: 8px; }
-    .icon-opt { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 60px; padding: 8px 4px; border: 1.5px solid var(--color-border); border-radius: 10px; background: var(--color-bg-warm); cursor: pointer; }
-    .icon-opt:hover { border-color: var(--color-primary); }
-    .icon-opt.active { border-color: var(--color-primary); background: var(--color-primary-soft); }
-    .icon-opt-glyph { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); }
-    .icon-opt-glyph.none { font-size: 18px; line-height: 1; }
-    .icon-opt-label { font-size: .68rem; color: var(--color-text-secondary); }
+
+    .qse-label { display: flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--color-primary-dark); margin-bottom: 10px; }
+    .qse-label app-icon { flex-shrink: 0; opacity: .85; }
+    .qse-label-center { justify-content: center; }
+
+    .swatches { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .swatch {
+      width: 34px; height: 34px; border-radius: 10px; border: 2px solid var(--color-border); cursor: pointer; padding: 0;
+      position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 2px rgba(20,23,26,.06); transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+    }
+    .swatch:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(20,23,26,.12); }
+    .swatch.active { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    .swatch-check { color: #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+    .swatch-check.dark { color: var(--color-primary-dark); filter: none; }
+
+    .icon-filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .icon-filter-chip {
+      padding: 5px 13px; border-radius: var(--radius-full); border: 1.5px solid var(--color-border);
+      background: #fff; font-size: .74rem; font-weight: 700; color: var(--color-text-secondary); cursor: pointer;
+      transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .icon-filter-chip:hover { border-color: var(--color-primary); }
+    .icon-filter-chip.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+    .icon-picker { display: flex; flex-wrap: wrap; gap: 10px; }
+    .icon-opt {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 68px; padding: 12px 4px 10px;
+      border: 1.5px solid var(--color-border); border-radius: 14px; background: var(--color-bg-warm); cursor: pointer;
+      transition: transform var(--motion-fast) ease, border-color var(--motion-fast) ease, background var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+    }
+    .icon-opt:hover { border-color: var(--color-primary); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(20,23,26,.1); }
+    .icon-opt.active { border-color: var(--color-primary); background: var(--color-primary-soft); box-shadow: 0 0 0 3px var(--color-primary-soft); }
+    .icon-opt-glyph { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); }
+    .icon-opt-glyph.none { font-size: 20px; line-height: 1; }
+    .icon-opt.active .icon-opt-glyph { color: var(--color-primary-dark); }
+    .icon-opt-label { font-size: .68rem; font-weight: 600; color: var(--color-text-secondary); }
+    .icon-opt-check {
+      position: absolute; top: -5px; right: -5px; width: 17px; height: 17px; border-radius: 50%;
+      background: var(--color-primary); color: #fff; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 0 2px #fff;
+    }
     .custom-upload { margin-top: 12px; }
-    .preview { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-    .preview canvas { border: 1px solid var(--color-border); border-radius: 8px; max-width: 100%; }
+
+    .preview { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .preview-frame { padding: 10px; border-radius: 16px; background: linear-gradient(145deg, var(--color-primary-soft), #fff); box-shadow: inset 0 0 0 1px var(--color-border); }
+    .preview canvas { display: block; border-radius: 8px; max-width: 100%; box-shadow: 0 6px 18px rgba(20,23,26,.1); }
+    .preview-note { text-align: center; }
   `],
 })
 export class QrcodeStyleEditorComponent implements AfterViewInit, OnChanges {
@@ -152,6 +207,12 @@ export class QrcodeStyleEditorComponent implements AfterViewInit, OnChanges {
 
   iconMode: IconMode = 'none';
   iconPreset: QrIconPreset | '' = '';
+  iconCategory: IconFilterCategory = 'semua';
+
+  filteredIconPresets(): typeof QR_ICON_PRESETS {
+    if (this.iconCategory === 'semua') return this.iconPresets;
+    return this.iconPresets.filter((p) => p.category === this.iconCategory);
+  }
 
   private customImg: HTMLImageElement | null = null;
   private fsldkImg: HTMLImageElement | null = null;
