@@ -88,7 +88,7 @@
                 <input type="number" class="form-control" [(ngModel)]="answers()[field.fieldID].number">
               }
               @case ('DATE') {
-                <input type="date" class="form-control" [(ngModel)]="answers()[field.fieldID].date">
+                <app-datetime-picker [showTime]="false" [(ngModel)]="answers()[field.fieldID].date" />
               }
               @case ('SELECT') {
                 <app-select [options]="optionSelectOptions(field)" [(ngModel)]="answers()[field.fieldID].optionID" placeholder="Pilih…" />

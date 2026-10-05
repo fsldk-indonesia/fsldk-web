@@ -7,6 +7,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { FormField, FormVersionDetail } from '../../../submission-form/entities/submission-form';
 import {
   SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, EDITABLE_STATUSES,
@@ -31,7 +32,7 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
   selector: 'app-submission-pendataan-page',
   standalone: true,
   templateUrl: './submission.pendataan.page.html',
-  imports: [FormsModule, RouterLink, IconComponent, SelectComponent, PdfUploadComponent, ImageUploadComponent],
+  imports: [FormsModule, RouterLink, IconComponent, SelectComponent, PdfUploadComponent, ImageUploadComponent, DateTimePickerComponent],
   providers: [SubmissionPendataanPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
