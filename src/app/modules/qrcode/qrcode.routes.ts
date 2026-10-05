@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /**
  * Rute manajemen QR Code CMS — dipasang sebagai children dari
@@ -10,14 +10,14 @@ import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
 export const qrcodeRoutes: () => Routes = () => [
   {
     path: 'qrcode/list',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'qrcode.view' },
     title: 'Daftar QR Code',
     loadComponent: () => import('./pages/index/qrcode.index.page').then((m) => m.QrcodeIndexPage),
   },
   {
     path: 'qrcode/permintaan',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'qrcode.view' },
     title: 'Permintaan QR Code',
     loadComponent: () => import('./pages/request-index/qrcoderequest.index.page').then((m) => m.QRCodeRequestIndexPage),

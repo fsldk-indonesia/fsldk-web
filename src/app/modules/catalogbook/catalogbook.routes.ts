@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /** Public catalogbook routes — mounted as children of PublicLayoutComponent. */
 export const catalogbookPublicRoutes: () => Routes = () => [
@@ -11,21 +11,21 @@ export const catalogbookPublicRoutes: () => Routes = () => [
 export const catalogbookCmsRoutes: () => Routes = () => [
   {
     path: 'catalog-books',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'catalogbook.view' },
     title: 'Perpustakaan',
     loadComponent: () => import('./pages/index/catalogbook.index.page').then((m) => m.CatalogBookIndexPage),
   },
   {
     path: 'catalog-books/form',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'catalogbook.create' },
     title: 'Tambah Buku',
     loadComponent: () => import('./pages/form/catalogbook.form.page').then((m) => m.CatalogBookFormPage),
   },
   {
     path: 'catalog-books/form/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'catalogbook.update' },
     title: 'Edit Buku',
     loadComponent: () => import('./pages/form/catalogbook.form.page').then((m) => m.CatalogBookFormPage),
@@ -36,7 +36,7 @@ export const catalogbookCmsRoutes: () => Routes = () => [
     // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
     // CatalogBookIndexPage) — pola sama seperti Berita/Event.
     path: 'catalog-books/view/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'catalogbook.view', viewOnly: true },
     title: 'Detail Buku',
     loadComponent: () => import('./pages/form/catalogbook.form.page').then((m) => m.CatalogBookFormPage),

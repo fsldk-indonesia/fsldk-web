@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /** Public route: unsubscribe link opened from the welcome email. */
 export const subscriptionPublicRoutes: () => Routes = () => [
@@ -15,7 +15,7 @@ export const subscriptionPublicRoutes: () => Routes = () => [
 export const subscriptionCmsRoutes: () => Routes = () => [
   {
     path: 'subscribers',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'subscription.view' },
     title: 'Subscription',
     loadComponent: () =>

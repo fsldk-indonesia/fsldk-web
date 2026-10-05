@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 import { FORM_CODE_SENSUS_KADER } from './entities/submission';
 
 /**
@@ -13,20 +13,19 @@ export const kaderRoutes: () => Routes = () => [
   { path: '', pathMatch: 'full', redirectTo: 'ringkasan' },
   {
     path: 'ringkasan',
-    canActivate: [verifiedGuard],
     title: 'Ringkasan',
     loadComponent: () => import('./pages/kader-ringkasan/submission.kader-ringkasan.page').then((m) => m.SubmissionKaderRingkasanPage),
   },
   {
     path: 'pendataan',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'submission.create', formCode: FORM_CODE_SENSUS_KADER },
     title: 'Pendataan',
     loadComponent: () => import('./pages/pendataan/submission.pendataan.page').then((m) => m.SubmissionPendataanPage),
   },
   {
     path: 'status',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'submission.view', formCode: FORM_CODE_SENSUS_KADER },
     title: 'Status Pendataan',
     loadComponent: () => import('./pages/status/submission.status.page').then((m) => m.SubmissionStatusPage),

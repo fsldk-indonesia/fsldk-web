@@ -14,5 +14,7 @@
       @if (resendLoading()) { <span class="spinner"></span> } @else { Kirim Ulang Email Verifikasi }
     </button>
   }
-  <p class="foot"><a routerLink="/login">Kembali ke Login</a></p>
+  @if (!isLoggedIn()) {
+    <p class="foot"><a routerLink="/login">Kembali ke Login</a></p>
+  }
 }

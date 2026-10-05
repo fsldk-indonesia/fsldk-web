@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik artikel — dipasang sebagai children dari PublicLayoutComponent. */
 export const articlePublicRoutes: () => Routes = () => [
@@ -11,21 +11,21 @@ export const articlePublicRoutes: () => Routes = () => [
 export const articleCmsRoutes: () => Routes = () => [
   {
     path: 'articles',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'article.view' },
     title: 'Artikel',
     loadComponent: () => import('./pages/index/article.index.page').then((m) => m.ArticleIndexPage),
   },
   {
     path: 'articles/form',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'article.create' },
     title: 'Tambah Artikel',
     loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
   },
   {
     path: 'articles/form/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'article.update' },
     title: 'Edit Artikel',
     loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),
@@ -36,7 +36,7 @@ export const articleCmsRoutes: () => Routes = () => [
     // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
     // ArticleIndexPage), bukan cuma dari ikon Edit.
     path: 'articles/view/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'article.view', viewOnly: true },
     title: 'Detail Artikel',
     loadComponent: () => import('./pages/form/article.form.page').then((m) => m.ArticleFormPage),

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /**
  * Public routes for the Gallery module.
@@ -53,7 +53,7 @@ export function galleryCmsRoutes(): Routes {
   return [
     {
       path: 'galleries',
-      canActivate: [verifiedGuard, permissionGuard],
+      canActivate: [permissionGuard],
       data: { permission: 'gallery.view' },
       title: 'Galeri',
       loadComponent: () =>
@@ -61,7 +61,7 @@ export function galleryCmsRoutes(): Routes {
     },
     {
       path: 'galleries/form',
-      canActivate: [verifiedGuard, permissionGuard],
+      canActivate: [permissionGuard],
       data: { permission: 'gallery.create' },
       title: 'Tambah Galeri',
       loadComponent: () =>
@@ -69,7 +69,7 @@ export function galleryCmsRoutes(): Routes {
     },
     {
       path: 'galleries/form/:id',
-      canActivate: [verifiedGuard, permissionGuard],
+      canActivate: [permissionGuard],
       data: { permission: 'gallery.update' },
       title: 'Edit Galeri',
       loadComponent: () =>
@@ -81,7 +81,7 @@ export function galleryCmsRoutes(): Routes {
       // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
       // GalleryIndexPage) — pola sama seperti Berita/Event/Perpustakaan.
       path: 'galleries/view/:id',
-      canActivate: [verifiedGuard, permissionGuard],
+      canActivate: [permissionGuard],
       data: { permission: 'gallery.view', viewOnly: true },
       title: 'Detail Galeri',
       loadComponent: () =>

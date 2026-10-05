@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /** Public fill route — mounted as a child of PublicLayoutComponent. The static
  *  `form/` prefix keeps it clear of the shortlink catch-all `:key`. */
@@ -15,21 +15,21 @@ export const dynamicFormPublicRoutes: () => Routes = () => [
 export const dynamicFormCmsRoutes: () => Routes = () => [
   {
     path: 'dynamic-forms',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.view' },
     title: 'Formulir Dinamis',
     loadComponent: () => import('./pages/index/dynamicform.index.page').then((m) => m.DynamicFormIndexPage),
   },
   {
     path: 'dynamic-forms/form',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.create' },
     title: 'Tambah Formulir Dinamis',
     loadComponent: () => import('./pages/form/dynamicform.form.page').then((m) => m.DynamicFormFormPage),
   },
   {
     path: 'dynamic-forms/form/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.update' },
     title: 'Edit Formulir Dinamis',
     loadComponent: () => import('./pages/form/dynamicform.form.page').then((m) => m.DynamicFormFormPage),
@@ -40,35 +40,35 @@ export const dynamicFormCmsRoutes: () => Routes = () => [
     // tombol Simpan disembunyikan. Dipicu dengan klik baris di index (lihat
     // DynamicFormIndexPage) — pola sama seperti Berita/Perpustakaan.
     path: 'dynamic-forms/view/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.view', viewOnly: true },
     title: 'Detail Formulir Dinamis',
     loadComponent: () => import('./pages/form/dynamicform.form.page').then((m) => m.DynamicFormFormPage),
   },
   {
     path: 'dynamic-forms/:id/builder',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.update' },
     title: 'Builder Formulir Dinamis',
     loadComponent: () => import('./pages/builder/dynamicform.builder.page').then((m) => m.DynamicFormBuilderPage),
   },
   {
     path: 'dynamic-forms/:id/responses',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.view' },
     title: 'Respon Formulir Dinamis',
     loadComponent: () => import('./pages/responses/dynamicform.responses.page').then((m) => m.DynamicFormResponsesPage),
   },
   {
     path: 'dynamic-forms/:id/responses/:subId',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.update' },
     title: 'Detail Respon Formulir',
     loadComponent: () => import('./pages/response-edit/dynamicform.response-edit.page').then((m) => m.DynamicFormResponseEditPage),
   },
   {
     path: 'dynamic-forms/:id/analytics',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'dynamicform.view' },
     title: 'Analitik Formulir Dinamis',
     loadComponent: () => import('./pages/analytics/dynamicform.analytics.page').then((m) => m.DynamicFormAnalyticsPage),

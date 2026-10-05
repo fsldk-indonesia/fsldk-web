@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { verifiedGuard, permissionGuard } from '../../core/guards/guards';
+import { permissionGuard } from '../../core/guards/guards';
 
 /** Rute publik Kantong Amal — dipasang sebagai children dari PublicLayoutComponent. */
 export const kantongAmalPublicRoutes: () => Routes = () => [
@@ -41,21 +41,21 @@ export const kantongAmalPublicRoutes: () => Routes = () => [
 export const kantongAmalAdminRoutes: () => Routes = () => [
   {
     path: 'kantong-amal/campaigns',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.campaign.view' },
     title: 'Campaign',
     loadComponent: () => import('./pages/admin-campaign/kantong-amal.admin-campaign.page').then((m) => m.KantongAmalAdminCampaignPage),
   },
   {
     path: 'kantong-amal/campaigns/baru',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.campaign.create' },
     title: 'Tambah Campaign',
     loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
   },
   {
     path: 'kantong-amal/campaigns/:id/edit',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.campaign.update' },
     title: 'Edit Campaign',
     loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
@@ -65,28 +65,28 @@ export const kantongAmalAdminRoutes: () => Routes = () => [
     // lewat route data `viewOnly` yang membuat semua field disabled dan
     // tombol Simpan disembunyikan, sama pola dengan Berita/Formulir Dinamis.
     path: 'kantong-amal/campaigns/:id/view',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.campaign.view', viewOnly: true },
     title: 'Detail Campaign',
     loadComponent: () => import('./pages/campaign-form/kantong-amal.campaign-form.page').then((m) => m.KantongAmalCampaignFormPage),
   },
   {
     path: 'kantong-amal/donasi',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.donation.view' },
     title: 'Donasi',
     loadComponent: () => import('./pages/admin-donation-monitoring/kantong-amal.admin-donation-monitoring.page').then((m) => m.KantongAmalAdminDonationMonitoringPage),
   },
   {
     path: 'kantong-amal/donasi/baru',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.donation.create' },
     title: 'Tambah Donasi',
     loadComponent: () => import('./pages/admin-donation-form/kantong-amal.admin-donation-form.page').then((m) => m.KantongAmalAdminDonationFormPage),
   },
   {
     path: 'kantong-amal/donasi/:id/edit',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.donation.update' },
     title: 'Edit Donasi',
     loadComponent: () => import('./pages/admin-donation-form/kantong-amal.admin-donation-form.page').then((m) => m.KantongAmalAdminDonationFormPage),
@@ -95,42 +95,42 @@ export const kantongAmalAdminRoutes: () => Routes = () => [
     // Donasi dari gateway (bisatopup) tidak bisa diedit — hanya dilihat.
     // Komponen sama dengan form, dibedakan lewat route data `viewOnly`.
     path: 'kantong-amal/donasi/:id/view',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.donation.view', viewOnly: true },
     title: 'Detail Donasi',
     loadComponent: () => import('./pages/admin-donation-form/kantong-amal.admin-donation-form.page').then((m) => m.KantongAmalAdminDonationFormPage),
   },
   {
     path: 'kantong-amal/penarikan',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.withdrawal.approve' },
     title: 'Penarikan',
     loadComponent: () => import('./pages/admin-withdrawal/kantong-amal.admin-withdrawal.page').then((m) => m.KantongAmalAdminWithdrawalPage),
   },
   {
     path: 'kantong-amal/penarikan/baru',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.withdrawal.request' },
     title: 'Tambah Penarikan',
     loadComponent: () => import('./pages/withdrawal-form/kantong-amal.withdrawal-form.page').then((m) => m.KantongAmalWithdrawalFormPage),
   },
   {
     path: 'kantong-amal/penarikan/:id',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.withdrawal.approve' },
     title: 'Detail Penarikan',
     loadComponent: () => import('./pages/withdrawal-detail/kantong-amal.withdrawal-detail.page').then((m) => m.KantongAmalWithdrawalDetailPage),
   },
   {
     path: 'kantong-amal/laporan',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.report.view' },
     title: 'Laporan Kantong Amal',
     loadComponent: () => import('./pages/admin-reports/kantong-amal.admin-reports.page').then((m) => m.KantongAmalAdminReportsPage),
   },
   {
     path: 'kantong-amal/audit-log',
-    canActivate: [verifiedGuard, permissionGuard],
+    canActivate: [permissionGuard],
     data: { permission: 'kantong_amal.audit.view' },
     title: 'Audit Log',
     loadComponent: () => import('./pages/admin-audit-log/kantong-amal.admin-audit-log.page').then((m) => m.KantongAmalAdminAuditLogPage),
