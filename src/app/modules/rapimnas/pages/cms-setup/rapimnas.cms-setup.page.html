@@ -1,0 +1,79 @@
+<div class="page-head">
+  <h1>Rapimnas Setup</h1>
+  <p class="text-muted">Kelola seluruh konten landing page publik /rapimnas — Hero, Beranda, Tentang, Jadwal, Arsip, Pendaftaran Peserta, Pendaftaran Panitia, dan Footer/Kontak. Satu tombol Simpan mengirim semua tab sekaligus.</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-title"></span></div>
+} @else {
+  <div class="tabs">
+    <button type="button" [class.active]="tab() === 'hero'" (click)="tab.set('hero')">Hero</button>
+    <button type="button" [class.active]="tab() === 'beranda'" (click)="tab.set('beranda')">Beranda</button>
+    <button type="button" [class.active]="tab() === 'tentang'" (click)="tab.set('tentang')">Tentang</button>
+    <button type="button" [class.active]="tab() === 'jadwal'" (click)="tab.set('jadwal')">Jadwal</button>
+    <button type="button" [class.active]="tab() === 'arsip'" (click)="tab.set('arsip')">Arsip</button>
+    <button type="button" [class.active]="tab() === 'peserta'" (click)="tab.set('peserta')">Pendaftaran Peserta</button>
+    <button type="button" [class.active]="tab() === 'panitia'" (click)="tab.set('panitia')">Pendaftaran Panitia</button>
+    <button type="button" [class.active]="tab() === 'footer'" (click)="tab.set('footer')">Footer/Kontak</button>
+  </div>
+
+  @if (tab() === 'hero') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Hero</p>
+        <div class="form-group"><label class="form-label">Badge Text</label><input class="form-control" [(ngModel)]="heroBadgeText" name="heroBadgeText"></div>
+        <div class="form-group"><label class="form-label">Judul</label><input class="form-control" [(ngModel)]="heroTitle" name="heroTitle"></div>
+        <div class="form-group"><label class="form-label">Tagline (opsional)</label><input class="form-control" [(ngModel)]="heroTaglineQuote" name="heroTaglineQuote"></div>
+        <div class="form-group"><label class="form-label">Teks Lokasi &amp; Tanggal</label><input class="form-control" [(ngModel)]="heroDateRangeText" name="heroDateRangeText"></div>
+        <div class="form-group"><label class="form-label">Target Hitung Mundur</label><input class="form-control" type="datetime-local" [(ngModel)]="countdownTargetDate" name="countdownTargetDate"></div>
+        <div class="form-group mb-0"><label class="form-label">Gambar Hero</label><app-image-upload [(value)]="heroImageUrl" /></div>
+      </div>
+    </div>
+  }
+
+  @if (tab() === 'panitia') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Pendaftaran Panitia</p>
+        <label class="switch">
+          <input type="checkbox" [(ngModel)]="panitiaIsOpen" name="panitiaIsOpen">
+          <span class="switch-track"></span>
+          <span class="switch-label">Pendaftaran panitia dibuka</span>
+        </label>
+        <div class="form-group mt-md mb-0"><label class="form-label">Pesan saat ditutup</label><textarea class="form-control" rows="3" [(ngModel)]="panitiaClosedMessage" name="panitiaClosedMessage"></textarea></div>
+      </div>
+    </div>
+  }
+
+  @if (tab() === 'footer') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Footer / Kontak</p>
+        <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" [(ngModel)]="footerContactEmail" name="footerContactEmail"></div>
+        <div class="form-group"><label class="form-label">Teks Copyright</label><input class="form-control" [(ngModel)]="footerCopyrightText" name="footerCopyrightText"></div>
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Handle Instagram</label><input class="form-control" [(ngModel)]="footerIgHandle" name="footerIgHandle"></div>
+          <div class="form-group"><label class="form-label">URL Instagram</label><input class="form-control" [(ngModel)]="footerIgUrl" name="footerIgUrl"></div>
+          <div class="form-group"><label class="form-label">Handle TikTok</label><input class="form-control" [(ngModel)]="footerTiktokHandle" name="footerTiktokHandle"></div>
+          <div class="form-group"><label class="form-label">URL TikTok</label><input class="form-control" [(ngModel)]="footerTiktokUrl" name="footerTiktokUrl"></div>
+        </div>
+
+        <p class="form-section-label mt-lg">Kontak WA Footer</p>
+        @for (c of footerWaContacts; track $index) {
+          <div class="repeater-row">
+            <input class="form-control" placeholder="Nama" [(ngModel)]="c.name" [name]="'footerWaName' + $index">
+            <input class="form-control" placeholder="Nomor WA (62...)" [(ngModel)]="c.phoneNumber" [name]="'footerWaPhone' + $index">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeFooterWaContact($index)">Hapus</button>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addFooterWaContact()">+ Tambah Kontak WA</button>
+      </div>
+    </div>
+  }
+
+  <div class="form-actions">
+    <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
+      @if (saving()) { <span class="spinner"></span> } @else { Simpan }
+    </button>
+  </div>
+}
