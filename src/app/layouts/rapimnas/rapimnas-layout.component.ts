@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { RapimnasHeaderComponent } from '../../modules/rapimnas/components/rapimnas-header.component';
 import { RapimnasFooterComponent } from '../../modules/rapimnas/components/rapimnas-footer.component';
@@ -37,7 +38,25 @@ import { RapimnasBackToTopComponent } from '../../modules/rapimnas/components/ra
       min-height: 100dvh; background: var(--rp-bg); color: var(--rp-krem);
       font-family: 'Inter', system-ui, sans-serif; overflow-x: hidden;
     }
-    .rapimnas-main { display: block; }
+    .rapimnas-main { display: block; padding-top: 73px; }
   `],
 })
-export class RapimnasLayoutComponent {}
+export class RapimnasLayoutComponent implements OnInit, OnDestroy {
+  private document = inject(DOCUMENT);
+  private originalFaviconHref: string | null = null;
+
+  ngOnInit(): void {
+    const link = this.document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (link) {
+      this.originalFaviconHref = link.href;
+      link.href = 'assets/rapimnas/logo-rapimnas.png';
+    }
+  }
+
+  ngOnDestroy(): void {
+    const link = this.document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (link && this.originalFaviconHref) {
+      link.href = this.originalFaviconHref;
+    }
+  }
+}

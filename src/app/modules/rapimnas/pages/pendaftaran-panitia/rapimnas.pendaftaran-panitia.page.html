@@ -15,18 +15,20 @@
           <p>Open Recruitment Kepanitiaan RAPIMNAS 2026</p>
         </div>
 
-        <form (ngSubmit)="onSubmit()">
+        <form class="rp-panitia-form" (ngSubmit)="onSubmit()">
           <div class="rp-field">
             <label for="nama">Nama Lengkap</label>
             <input id="nama" type="text" name="nama" required placeholder="Masukkan nama lengkap" [(ngModel)]="nama">
           </div>
-          <div class="rp-field">
-            <label for="email">Email</label>
-            <input id="email" type="email" name="email" required placeholder="nama@students.undip.ac.id" [(ngModel)]="email">
-          </div>
-          <div class="rp-field">
-            <label for="nim">NIM</label>
-            <input id="nim" type="text" name="nim" required placeholder="Nomor Induk Mahasiswa" [(ngModel)]="nim">
+          <div class="rp-field-row">
+            <div class="rp-field">
+              <label for="email">Email</label>
+              <input id="email" type="email" name="email" required placeholder="nama@students.undip.ac.id" [(ngModel)]="email">
+            </div>
+            <div class="rp-field">
+              <label for="nim">NIM</label>
+              <input id="nim" type="text" name="nim" required placeholder="Nomor Induk Mahasiswa" [(ngModel)]="nim">
+            </div>
           </div>
           <div class="rp-field">
             <label for="divisi">Pilihan Divisi</label>

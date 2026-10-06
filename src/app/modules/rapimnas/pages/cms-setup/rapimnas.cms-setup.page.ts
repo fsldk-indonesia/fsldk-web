@@ -263,6 +263,27 @@ export class RapimnasCmsSetupPage implements OnInit, RapimnasCmsSetupView {
     this.resources = next;
   }
 
+  addPickupLocation(): void {
+    this.pickupLocations = [...this.pickupLocations, { name: '', type: '', description: '', mapLink: '', sortOrder: this.pickupLocations.length }];
+  }
+  removePickupLocation(index: number): void {
+    this.pickupLocations = this.pickupLocations.filter((_, i) => i !== index);
+  }
+  movePickupLocation(index: number, dir: -1 | 1): void {
+    const target = index + dir;
+    if (target < 0 || target >= this.pickupLocations.length) return;
+    const next = [...this.pickupLocations];
+    [next[index], next[target]] = [next[target], next[index]];
+    this.pickupLocations = next;
+  }
+
+  addPesertaCpContact(): void {
+    this.pesertaCpContacts = [...this.pesertaCpContacts, { name: '', phoneNumber: '' }];
+  }
+  removePesertaCpContact(index: number): void {
+    this.pesertaCpContacts = this.pesertaCpContacts.filter((_, i) => i !== index);
+  }
+
   private extractContacts(contacts: RapimnasContact[], type: RapimnasContact['contactType']): SimpleContact[] {
     return contacts
       .filter((c) => c.contactType === type)

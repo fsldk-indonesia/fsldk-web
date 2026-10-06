@@ -4,10 +4,13 @@
   @let d = data()!;
   <div class="rp-jadwal">
     <div class="rp-jadwal-head">
+      <div class="rp-jadwal-glow" aria-hidden="true"></div>
       <span class="rp-jadwal-badge">Timeline Kegiatan</span>
-      <h1>Jadwal RAPIMNAS FSLDK</h1>
+      <h1>Jadwal <span class="rp-jadwal-title-accent">RAPIMNAS FSLDK</span></h1>
       <p>{{ d.jadwalHeaderSubtitle }}</p>
     </div>
-    <app-rapimnas-rundown [days]="d.rundownDays" />
+    <div class="rp-jadwal-rundown">
+      <app-rapimnas-rundown [days]="d.rundownDays" />
+    </div>
   </div>
 }

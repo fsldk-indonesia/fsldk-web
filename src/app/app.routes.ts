@@ -203,9 +203,8 @@ export const routes: Routes = [
     children: [...kaderRoutes()],
   },
 
-  // ---------- Rapimnas (shell sendiri — lihat RapimnasLayoutComponent).
-  // SEMENTARA hanya route Beranda; rapimnasPublicRoutes() akan bertambah
-  // seiring halaman lain selesai, lihat rapimnas.routes.ts ----------
+  // ---------- Rapimnas (shell sendiri — lihat RapimnasLayoutComponent,
+  // 6 halaman publik, lihat rapimnas.routes.ts) ----------
   {
     path: 'rapimnas',
     component: RapimnasLayoutComponent,
