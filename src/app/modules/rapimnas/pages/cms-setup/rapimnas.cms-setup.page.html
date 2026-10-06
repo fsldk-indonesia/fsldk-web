@@ -174,6 +174,42 @@
     </div>
   }
 
+  @if (tab() === 'arsip') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Resource / Dokumen Unduhan</p>
+        @for (item of resources; track $index; let i = $index) {
+          <div class="card card-pad" style="margin-bottom: 12px; background: var(--color-bg-warm);">
+            <div class="form-grid-2">
+              <div class="form-group"><label class="form-label">Judul</label><input class="form-control" [(ngModel)]="item.title" [name]="'resTitle' + i"></div>
+              <div class="form-group"><label class="form-label">Ikon</label>
+                <select class="form-control" [(ngModel)]="item.iconKey" [name]="'resIcon' + i">
+                  @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
+                </select>
+              </div>
+            </div>
+            <div class="form-group"><label class="form-label">Deskripsi</label><input class="form-control" [(ngModel)]="item.description" [name]="'resDesc' + i"></div>
+            <div class="form-grid-2">
+              <div class="form-group"><label class="form-label">URL</label><input class="form-control" [(ngModel)]="item.url" [name]="'resUrl' + i"></div>
+              <div class="form-group"><label class="form-label">Label Tombol</label><input class="form-control" [(ngModel)]="item.buttonLabel" [name]="'resBtn' + i"></div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="item.isVisible" [name]="'resVisible' + i">
+              <span class="switch-track"></span>
+              <span class="switch-label">Tampilkan di halaman Arsip</span>
+            </label>
+            <div class="form-actions" style="justify-content: flex-start; border-top: none; padding-top: 10px; margin-top: 10px;">
+              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === 0" (click)="moveResource(i, -1)">&uarr; Naik</button>
+              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === resources.length - 1" (click)="moveResource(i, 1)">&darr; Turun</button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="removeResource(i)">Hapus</button>
+            </div>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addResource()">+ Tambah Resource</button>
+      </div>
+    </div>
+  }
+
   @if (tab() === 'panitia') {
     <div class="tab-panel">
       <div class="card card-pad form-section-card">

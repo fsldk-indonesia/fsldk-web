@@ -247,6 +247,22 @@ export class RapimnasCmsSetupPage implements OnInit, RapimnasCmsSetupView {
     this.rundownDays = next;
   }
 
+  addResource(): void {
+    this.resources = [...this.resources, {
+      title: '', description: '', iconKey: RAPIMNAS_ICON_KEYS[0], url: '', buttonLabel: 'Unduh', isVisible: true, sortOrder: this.resources.length,
+    }];
+  }
+  removeResource(index: number): void {
+    this.resources = this.resources.filter((_, i) => i !== index);
+  }
+  moveResource(index: number, dir: -1 | 1): void {
+    const target = index + dir;
+    if (target < 0 || target >= this.resources.length) return;
+    const next = [...this.resources];
+    [next[index], next[target]] = [next[target], next[index]];
+    this.resources = next;
+  }
+
   private extractContacts(contacts: RapimnasContact[], type: RapimnasContact['contactType']): SimpleContact[] {
     return contacts
       .filter((c) => c.contactType === type)
