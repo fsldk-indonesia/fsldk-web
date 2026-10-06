@@ -1,0 +1,74 @@
+@if (loading()) {
+  <div class="rp-page-loading">Memuat...</div>
+} @else if (data()) {
+  @let d = data()!;
+  <div class="rp-peserta">
+    <div class="rp-peserta-head">
+      <span class="rp-peserta-badge">Pendaftaran Peserta</span>
+      <h1>Delegasi RAPIMNAS FSLDK</h1>
+      <p>Tema: "{{ d.tentangTaglineQuote }}"</p>
+    </div>
+
+    <div class="rp-peserta-card">
+      <div class="rp-peserta-col">
+        <h3>Timeline Pendaftaran</h3>
+        <div class="rp-timeline-row"><strong>Early Bird</strong><span>{{ d.pesertaEarlyBirdDateRange }}</span></div>
+        <div class="rp-timeline-row"><strong>Reguler</strong><span>{{ d.pesertaRegulerDateRange }}</span></div>
+
+        <h3 style="margin-top:24px">HTM Peserta</h3>
+        <div class="rp-harga-box">
+          <div class="rp-harga-group">
+            <span class="rp-harga-group-label">Delegasi Non-Semarang</span>
+            <div class="rp-harga-item"><span>Early Bird</span><span>{{ formatRupiah(d.pesertaHargaNonSemarangEarlyBird) }}</span></div>
+            <div class="rp-harga-item"><span>Reguler</span><span>{{ formatRupiah(d.pesertaHargaNonSemarangReguler) }}</span></div>
+          </div>
+          <div class="rp-harga-group">
+            <span class="rp-harga-group-label">Delegasi Semarang</span>
+            <div class="rp-harga-item"><span>Early Bird</span><span>{{ formatRupiah(d.pesertaHargaSemarangEarlyBird) }}</span></div>
+            <div class="rp-harga-item"><span>Reguler</span><span>{{ formatRupiah(d.pesertaHargaSemarangReguler) }}</span></div>
+          </div>
+          <div class="rp-rekening">
+            <small>Metode Pembayaran:</small>
+            <strong>{{ d.pesertaBankName }} {{ d.pesertaBankAccountNumber }}</strong>
+            <em>a.n. {{ d.pesertaBankAccountHolder }}</em>
+          </div>
+        </div>
+      </div>
+
+      <div class="rp-peserta-col">
+        <div class="rp-aksi-box">
+          <h3>Langkah Pendaftaran:</h3>
+          <p>Pastikan Anda telah membaca dan menyiapkan berkas sesuai panduan pada Guidebook sebelum mendaftar.</p>
+          <div class="rp-aksi-links">
+            <a [href]="d.pesertaGuidebookUrl" target="_blank" rel="noopener noreferrer" class="rp-btn-secondary">Baca Guidebook</a>
+            <a [href]="d.pesertaGoogleFormUrl" target="_blank" rel="noopener noreferrer" class="rp-btn-primary-full">Menuju Form Pendaftaran</a>
+          </div>
+        </div>
+
+        <div class="rp-cp-box">
+          <h4>Narahubung (CP)</h4>
+          @for (cp of pesertaCpContacts(); track $index) {
+            <a [href]="'https://wa.me/' + cp.phoneNumber" target="_blank" rel="noopener noreferrer" class="rp-cp-contact">
+              <span><strong>{{ cp.name }}</strong><span>{{ cp.phoneNumber }}</span></span>
+            </a>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (pickupLocations().length) {
+      <div class="rp-pickup-section">
+        <h2>Titik Lokasi Penjemputan</h2>
+        <p class="rp-pickup-sub">Panitia memfasilitasi penjemputan di {{ pickupLocations().length }} titik utama kedatangan Kota Semarang.</p>
+        <div class="rp-pickup-map">
+          <iframe [src]="safeMapUrl(d.pesertaMapEmbedUrl)" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="rp-pickup-tags">
+          @for (loc of pickupLocations(); track $index) {
+            <a [href]="loc.mapLink" target="_blank" rel="noopener noreferrer" class="rp-pickup-tag">{{ loc.name }}</a>
+          }
+        </div>
+      </div>
+    }
+  </div>
+}
