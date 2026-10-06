@@ -20,19 +20,25 @@ const PICKUP_EMOJI: Record<string, string> = {
   providers: [RapimnasPendaftaranPesertaPresenter],
   styles: [`
     .rp-page-loading { padding: 120px 0; text-align: center; color: var(--rp-krem); }
-    .rp-peserta { max-width: 960px; margin: 0 auto; padding: 40px 16px 80px; }
-    .rp-peserta-head { max-width: 640px; margin: 0 auto 64px; text-align: center; }
-    .rp-peserta-badge { display: inline-block; background: color-mix(in srgb, var(--rp-merah) 40%, transparent); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); color: var(--rp-kuning); font-size: 0.72rem; font-weight: 700; padding: 8px 20px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 24px; }
-    .rp-peserta-head h1 { color: var(--rp-krem); font-size: 2rem; font-weight: 800; margin: 0 0 16px; }
-    .rp-peserta-head p { color: color-mix(in srgb, var(--rp-krem) 80%, transparent); font-style: italic; margin: 0; }
-    .rp-peserta-card { background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); backdrop-filter: blur(6px); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); border-radius: 32px; padding: 32px; display: grid; grid-template-columns: 1fr; gap: 40px; }
-    .rp-peserta-col { display: flex; flex-direction: column; gap: 32px; }
+    .rp-peserta { max-width: 896px; margin: 0 auto; padding: 40px 16px 80px; }
+    .rp-peserta-head { max-width: 896px; margin: 0 auto 64px; padding: 0 16px; text-align: center; position: relative; }
+    .rp-peserta-head-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 256px; height: 256px; background: color-mix(in srgb, var(--rp-oranye) 20%, transparent); border-radius: 999px; filter: blur(80px); pointer-events: none; z-index: 0; }
+    .rp-peserta-badge { position: relative; z-index: 1; display: inline-block; background: color-mix(in srgb, var(--rp-merah) 40%, transparent); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); color: var(--rp-kuning); font-size: 0.75rem; font-weight: 600; padding: 8px 20px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; box-shadow: 0 0 15px rgba(254,112,2,0.3); }
+    .rp-peserta-head h1 { position: relative; z-index: 1; color: var(--rp-krem); font-size: 2.25rem; font-weight: 800; margin: 0 0 16px; }
+    .rp-peserta-title-accent { background: linear-gradient(to right, var(--rp-oranye), var(--rp-kuning)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .rp-peserta-head p { position: relative; z-index: 1; color: color-mix(in srgb, var(--rp-krem) 80%, transparent); font-style: italic; margin: 0; }
+    .rp-peserta-card { position: relative; overflow: hidden; background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); backdrop-filter: blur(24px); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); border-radius: 40px; padding: 32px; display: grid; grid-template-columns: 1fr; gap: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transition: border-color 0.5s; }
+    .rp-peserta-card:hover { border-color: color-mix(in srgb, var(--rp-oranye) 50%, transparent); }
+    .rp-peserta-card-glow { position: absolute; top: -128px; right: -128px; width: 320px; height: 320px; background: color-mix(in srgb, var(--rp-merah) 20%, transparent); border-radius: 999px; filter: blur(64px); pointer-events: none; transition: transform 3s; }
+    .rp-peserta-card:hover .rp-peserta-card-glow { transform: rotate(180deg); }
+    .rp-peserta-col { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 32px; }
     .rp-peserta-col-aksi { justify-content: center; }
-    .rp-peserta-block h3 { color: var(--rp-kuning); font-size: 1.25rem; margin: 0 0 16px; }
+    .rp-peserta-block h3 { color: var(--rp-kuning); font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: 0 0 16px; }
+    .rp-peserta-block h3 svg { width: 24px; height: 24px; color: var(--rp-oranye); flex-shrink: 0; }
     .rp-timeline-row { display: flex; justify-content: space-between; align-items: center; background: color-mix(in srgb, var(--rp-merah) 20%, transparent); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); padding: 16px; border-radius: 12px; margin-bottom: 12px; }
     .rp-timeline-row:last-child { margin-bottom: 0; }
     .rp-timeline-row strong { color: var(--rp-krem); }
-    .rp-timeline-row span { color: color-mix(in srgb, var(--rp-krem) 70%, transparent); font-size: 0.85rem; }
+    .rp-timeline-row span { color: color-mix(in srgb, var(--rp-krem) 70%, transparent); font-size: 0.875rem; font-weight: 500; }
     .rp-harga-box { background: color-mix(in srgb, var(--rp-merah) 20%, transparent); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); padding: 20px; border-radius: 12px; }
     .rp-harga-group { margin-bottom: 20px; }
     .rp-harga-group:last-of-type { margin-bottom: 0; }
@@ -62,16 +68,20 @@ const PICKUP_EMOJI: Record<string, string> = {
     .rp-cp-avatar { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: var(--rp-maroon); display: flex; align-items: center; justify-content: center; color: var(--rp-krem); transition: transform .2s ease; }
     .rp-cp-info strong { display: block; font-size: 0.875rem; font-weight: 600; }
     .rp-cp-info span { font-size: 0.75rem; opacity: 0.7; }
-    .rp-pickup-section { margin-top: 64px; background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); backdrop-filter: blur(6px); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); border-radius: 32px; padding: 32px; }
-    .rp-pickup-section h2 { color: var(--rp-krem); font-size: 1.5rem; font-weight: 700; margin: 0 0 16px; }
+    .rp-pickup-section { margin-top: 64px; background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); backdrop-filter: blur(24px); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); border-radius: 40px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+    .rp-pickup-section-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .rp-pickup-section-head svg { width: 32px; height: 32px; color: var(--rp-oranye); flex-shrink: 0; }
+    .rp-pickup-section h2 { color: var(--rp-krem); font-size: 1.5rem; font-weight: 700; margin: 0; }
     .rp-pickup-section p.rp-pickup-sub { color: color-mix(in srgb, var(--rp-krem) 80%, transparent); font-size: 0.875rem; margin: 0 0 24px; }
-    .rp-pickup-map { width: 100%; height: 288px; border-radius: 16px; overflow: hidden; border: 2px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); }
-    .rp-pickup-map iframe { width: 100%; height: 100%; border: 0; }
+    .rp-pickup-map { width: 100%; height: 288px; border-radius: 16px; overflow: hidden; border: 2px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); position: relative; }
+    .rp-pickup-map iframe { width: 100%; height: 100%; border: 0; filter: grayscale(1) contrast(1.25) opacity(0.9); transition: filter 0.5s ease; }
+    .rp-pickup-map:hover iframe { filter: grayscale(0) contrast(1) opacity(1); }
     .rp-pickup-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
     .rp-pickup-tag { background: color-mix(in srgb, var(--rp-merah) 20%, transparent); color: var(--rp-oranye); font-size: 0.75rem; font-weight: 600; padding: 8px 16px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: all .3s ease; }
     .rp-pickup-tag:hover { background: var(--rp-oranye); color: var(--rp-bg); border-color: var(--rp-oranye); transform: translateY(-4px); }
     @media (min-width: 768px) {
-      .rp-peserta-card { grid-template-columns: 1fr 1fr; }
+      .rp-peserta-head h1 { font-size: 3rem; }
+      .rp-peserta-card { grid-template-columns: 1fr 1fr; padding: 48px; }
       .rp-pickup-map { height: 384px; }
     }
   `],
