@@ -20,16 +20,20 @@ interface TimeLeft { days: number; hours: number; minutes: number; seconds: numb
     </div>
   `,
   styles: [`
-    .rp-countdown { margin-top: 32px; display: inline-flex; flex-direction: column; align-items: center; gap: 12px; background: color-mix(in srgb, var(--rp-merah) 40%, transparent); backdrop-filter: blur(6px); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); padding: 12px 24px; border-radius: 999px; box-shadow: 0 4px 14px rgba(0,0,0,.2); }
-    .rp-countdown-label { color: var(--rp-krem); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .rp-countdown { margin-top: 32px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: color-mix(in srgb, var(--rp-merah) 40%, transparent); backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); padding: 12px 24px; border-radius: 999px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); }
+    .rp-countdown-label { color: var(--rp-krem); font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.025em; }
     .rp-countdown-digits { display: flex; align-items: center; gap: 12px; color: var(--rp-kuning); font-weight: 700; }
     .rp-countdown-unit { display: flex; align-items: baseline; gap: 4px; }
     .rp-countdown-value { font-size: 1.5rem; }
-    .rp-countdown-unit-label { font-size: 0.7rem; font-weight: 500; color: var(--rp-krem); }
-    .rp-countdown-sep { color: var(--rp-oranye); animation: rp-pulse 1.4s ease-in-out infinite; }
-    @keyframes rp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+    .rp-countdown-unit-label { font-size: 0.75rem; font-weight: 500; color: var(--rp-krem); }
+    .rp-countdown-sep { color: var(--rp-oranye); animation: rp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    @keyframes rp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
     @media (min-width: 640px) {
-      .rp-countdown { flex-direction: row; gap: 24px; padding: 14px 32px; }
+      .rp-countdown { flex-direction: row; gap: 24px; }
+    }
+    @media (min-width: 768px) {
+      .rp-countdown { padding: 14px 32px; }
+      .rp-countdown-digits { gap: 16px; }
       .rp-countdown-value { font-size: 1.875rem; }
     }
   `],
