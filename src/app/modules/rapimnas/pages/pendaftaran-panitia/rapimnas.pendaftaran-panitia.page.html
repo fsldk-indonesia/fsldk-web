@@ -1,0 +1,56 @@
+@if (loading()) {
+  <div class="rp-page-loading">Memuat...</div>
+} @else if (data()) {
+  @let d = data()!;
+  <div class="rp-panitia">
+    @if (!d.panitiaIsOpen) {
+      <div class="rp-panitia-closed">
+        <h2>Pendaftaran Panitia Belum Dibuka</h2>
+        <p>{{ d.panitiaClosedMessage }}</p>
+      </div>
+    } @else {
+      <div class="rp-panitia-card">
+        <div class="rp-panitia-head">
+          <h2>Form Pendaftaran Panitia</h2>
+          <p>Open Recruitment Kepanitiaan RAPIMNAS 2026</p>
+        </div>
+
+        <form (ngSubmit)="onSubmit()">
+          <div class="rp-field">
+            <label for="nama">Nama Lengkap</label>
+            <input id="nama" type="text" name="nama" required placeholder="Masukkan nama lengkap" [(ngModel)]="nama">
+          </div>
+          <div class="rp-field">
+            <label for="email">Email</label>
+            <input id="email" type="email" name="email" required placeholder="nama@students.undip.ac.id" [(ngModel)]="email">
+          </div>
+          <div class="rp-field">
+            <label for="nim">NIM</label>
+            <input id="nim" type="text" name="nim" required placeholder="Nomor Induk Mahasiswa" [(ngModel)]="nim">
+          </div>
+          <div class="rp-field">
+            <label for="divisi">Pilihan Divisi</label>
+            <select id="divisi" name="divisi" required [(ngModel)]="divisi">
+              <option value="">-- Pilih Divisi --</option>
+              @for (opt of divisiOptions; track opt) { <option [value]="opt">Divisi {{ opt }}</option> }
+            </select>
+          </div>
+          <div class="rp-field">
+            <label for="linkBerkas">Link CV &amp; Portofolio (Google Drive)</label>
+            <input id="linkBerkas" type="url" name="linkBerkas" required placeholder="Pastikan akses link sudah 'Anyone with the link'" [(ngModel)]="linkBerkas">
+          </div>
+          <div class="rp-field">
+            <label for="alasan">Alasan Mendaftar</label>
+            <textarea id="alasan" name="alasan" required rows="4" placeholder="Ceritakan singkat kenapa kamu ingin bergabung..." [(ngModel)]="alasan"></textarea>
+          </div>
+
+          <button type="submit" class="rp-panitia-submit">Kirim Pendaftaran</button>
+        </form>
+
+        @if (submitted()) {
+          <p class="rp-panitia-notice">Formulir ini belum terhubung ke sistem pendaftaran — info lebih lanjut akan disampaikan melalui kanal resmi RAPIMNAS.</p>
+        }
+      </div>
+    }
+  </div>
+}
