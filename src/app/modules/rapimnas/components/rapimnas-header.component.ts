@@ -56,7 +56,7 @@ import { rapimnasPath } from '../rapimnas.path';
     </header>
   `,
   styles: [`
-    .rp-header { position: sticky; top: 0; z-index: 50; background: color-mix(in srgb, var(--rp-maroon) 95%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rp-merah); }
+    .rp-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: color-mix(in srgb, var(--rp-maroon) 95%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rp-merah); }
     .rp-header-inner { max-width: 1152px; margin: 0 auto; padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
     .rp-brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
     .rp-brand-logos { display: flex; align-items: center; gap: 8px; }
