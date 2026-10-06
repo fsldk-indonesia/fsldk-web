@@ -31,6 +31,64 @@
     </div>
   }
 
+  @if (tab() === 'beranda') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Kartu Fitur (Ukhuwah / Sistem)</p>
+        <div class="form-grid-2">
+          <div>
+            <div class="form-group"><label class="form-label">Ikon 1</label>
+              <select class="form-control" [(ngModel)]="feature1IconKey" name="feature1IconKey">
+                @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Judul 1</label><input class="form-control" [(ngModel)]="feature1Title" name="feature1Title"></div>
+            <div class="form-group mb-0"><label class="form-label">Deskripsi 1</label><input class="form-control" [(ngModel)]="feature1Desc" name="feature1Desc"></div>
+          </div>
+          <div>
+            <div class="form-group"><label class="form-label">Ikon 2</label>
+              <select class="form-control" [(ngModel)]="feature2IconKey" name="feature2IconKey">
+                @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Judul 2</label><input class="form-control" [(ngModel)]="feature2Title" name="feature2Title"></div>
+            <div class="form-group mb-0"><label class="form-label">Deskripsi 2</label><input class="form-control" [(ngModel)]="feature2Desc" name="feature2Desc"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">CTA Penutup</p>
+        <div class="form-group"><label class="form-label">Judul CTA</label><input class="form-control" [(ngModel)]="ctaTitle" name="ctaTitle"></div>
+        <div class="form-group"><label class="form-label">Deskripsi CTA</label><input class="form-control" [(ngModel)]="ctaDescription" name="ctaDescription"></div>
+        <div class="form-group"><label class="form-label">Label Tombol</label><input class="form-control" [(ngModel)]="ctaButtonLabel" name="ctaButtonLabel"></div>
+        <div class="form-group mb-0"><label class="form-label">Gambar Maskot</label><app-image-upload [(value)]="ctaMascotImageUrl" /></div>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Galeri Kilas Balik</p>
+        <app-multi-image-upload [(value)]="galleryImageUrls" [max]="20" />
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Kartu Rangkaian Kegiatan</p>
+        @for (card of homeCards; track $index) {
+          <div class="repeater-row" style="grid-template-columns: 160px 1fr 1fr auto auto auto;">
+            <select class="form-control" [(ngModel)]="card.iconKey" [name]="'homeCardIcon' + $index">
+              @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
+            </select>
+            <input class="form-control" placeholder="Judul" [(ngModel)]="card.title" [name]="'homeCardTitle' + $index">
+            <input class="form-control" placeholder="Deskripsi" [(ngModel)]="card.description" [name]="'homeCardDesc' + $index">
+            <button type="button" class="btn btn-ghost btn-sm" [disabled]="$index === 0" (click)="moveHomeCard($index, -1)">&uarr;</button>
+            <button type="button" class="btn btn-ghost btn-sm" [disabled]="$index === homeCards.length - 1" (click)="moveHomeCard($index, 1)">&darr;</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeHomeCard($index)">Hapus</button>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addHomeCard()">+ Tambah Kartu</button>
+      </div>
+    </div>
+  }
+
   @if (tab() === 'panitia') {
     <div class="tab-panel">
       <div class="card card-pad form-section-card">

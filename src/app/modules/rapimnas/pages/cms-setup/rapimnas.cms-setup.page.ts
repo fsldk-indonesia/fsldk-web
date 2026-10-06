@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
+import { MultiImageUploadComponent } from '../../../../shared/multi-image-upload.component';
+import { RAPIMNAS_ICON_KEYS } from '../../rapimnas.constants';
 import {
   RapimnasCms, RapimnasContact, RapimnasHomeCard, RapimnasPickupLocation,
   RapimnasResource, RapimnasRundownDay, RapimnasUpdatePayload,
@@ -16,7 +18,7 @@ interface SimpleContact { name: string; phoneNumber: string; }
   selector: 'app-rapimnas-cms-setup-page',
   standalone: true,
   templateUrl: './rapimnas.cms-setup.page.html',
-  imports: [FormsModule, ImageUploadComponent],
+  imports: [FormsModule, ImageUploadComponent, MultiImageUploadComponent],
   providers: [RapimnasCmsSetupPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -193,6 +195,22 @@ export class RapimnasCmsSetupPage implements OnInit, RapimnasCmsSetupView {
   }
   removeFooterWaContact(index: number): void {
     this.footerWaContacts = this.footerWaContacts.filter((_, i) => i !== index);
+  }
+
+  readonly iconOptions = RAPIMNAS_ICON_KEYS;
+
+  addHomeCard(): void {
+    this.homeCards = [...this.homeCards, { iconKey: RAPIMNAS_ICON_KEYS[0], title: '', description: '', sortOrder: this.homeCards.length }];
+  }
+  removeHomeCard(index: number): void {
+    this.homeCards = this.homeCards.filter((_, i) => i !== index);
+  }
+  moveHomeCard(index: number, dir: -1 | 1): void {
+    const target = index + dir;
+    if (target < 0 || target >= this.homeCards.length) return;
+    const next = [...this.homeCards];
+    [next[index], next[target]] = [next[target], next[index]];
+    this.homeCards = next;
   }
 
   private extractContacts(contacts: RapimnasContact[], type: RapimnasContact['contactType']): SimpleContact[] {
