@@ -27,7 +27,7 @@
         <div class="rp-about-text">
           <h2>Tentang RAPIMNAS 1</h2>
           <p>Rapimnas × FSLDK 2026 merupakan forum kerja nasional yang secara khusus diarahkan untuk merumuskan fondasi sistem bagi gerak FSLDK ke depan. Forum ini mempertemukan pimpinan Puskomnas, Puskomda, dan perwakilan Lembaga Dakwah Kampus (LDK) dari seluruh Indonesia untuk menyusun arah gerak bersama.</p>
-          <a [routerLink]="path.tentang" class="rp-link-accent">Selengkapnya &rarr;</a>
+          <a [routerLink]="path.tentang" class="rp-link-accent">Selengkapnya <span class="rp-link-arrow">&rarr;</span></a>
         </div>
         <div class="rp-about-features">
           <div class="rp-feature-card">
@@ -46,25 +46,35 @@
 
     <!-- 3. GALERI -->
     @if (d.galleryImages.length) {
-      <section class="rp-section">
-        <h2 class="rp-section-title">Kilas Balik RAPIMNAS</h2>
+      <section class="rp-section rp-gallery-section">
+        <div class="rp-gallery-head">
+          <h2 class="rp-section-title rp-section-title--underline">Kilas Balik RAPIMNAS</h2>
+        </div>
         <div class="rp-gallery">
           <button type="button" class="rp-gallery-arrow rp-gallery-arrow-left" (click)="scrollGallery('left')">&larr;</button>
           <div class="rp-gallery-track" #carousel>
             @for (img of d.galleryImages; track $index) {
               <div class="rp-gallery-item" (click)="openLightbox(img.imageUrl)">
                 <img [src]="img.imageUrl" [alt]="'Dokumentasi ' + ($index + 1)">
+                <div class="rp-gallery-overlay">
+                  <div class="rp-gallery-zoom-icon"><app-icon name="search" [size]="24" /></div>
+                </div>
               </div>
             }
           </div>
           <button type="button" class="rp-gallery-arrow rp-gallery-arrow-right" (click)="scrollGallery('right')">&rarr;</button>
+        </div>
+        <div class="rp-gallery-hint">
+          <app-icon name="arrow-left" [size]="20" />
+          <span>Geser untuk melihat foto lain</span>
+          <app-icon name="arrow-right" [size]="20" />
         </div>
       </section>
     }
 
     <!-- 4. RANGKAIAN KEGIATAN -->
     @if (d.homeCards.length) {
-      <section class="rp-section">
+      <section class="rp-section rp-cards-section">
         <div class="rp-section-head">
           <h2 class="rp-section-title">Rangkaian Kegiatan</h2>
           <p class="rp-section-sub">Agenda utama yang akan memperkuat sinergi LDK se-Indonesia.</p>
@@ -85,12 +95,13 @@
     }
 
     <!-- 5. CTA PENDAFTARAN -->
-    <section class="rp-section">
+    <section class="rp-section rp-cta-section">
       <div class="rp-cta-card">
+        <div class="rp-cta-glow" aria-hidden="true"></div>
         <div class="rp-cta-text">
           <h2>{{ d.ctaTitle }}</h2>
           <p>{{ d.ctaDescription }}</p>
-          <a [routerLink]="path.pendaftaranPeserta" class="rp-btn rp-btn-primary">{{ d.ctaButtonLabel }}</a>
+          <a [routerLink]="path.pendaftaranPeserta" class="rp-btn rp-btn-primary rp-btn-cta">{{ d.ctaButtonLabel }}</a>
         </div>
         @if (d.ctaMascotImageUrl) {
           <div class="rp-cta-mascot"><img [src]="d.ctaMascotImageUrl" alt="Maskot Rapimnas 2026"></div>
@@ -102,7 +113,9 @@
   @if (selectedImage(); as img) {
     <div class="rp-lightbox" (click)="closeLightbox()">
       <button type="button" class="rp-lightbox-close" (click)="closeLightbox()">&times;</button>
-      <img [src]="img" alt="Preview Dokumentasi" class="rp-lightbox-img" (click)="$event.stopPropagation()">
+      <div class="rp-lightbox-box" (click)="$event.stopPropagation()">
+        <img [src]="img" alt="Preview Dokumentasi" class="rp-lightbox-img">
+      </div>
     </div>
   }
 }
