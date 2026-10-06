@@ -89,6 +89,55 @@
     </div>
   }
 
+  @if (tab() === 'tentang') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Tema &amp; Deskripsi</p>
+        <div class="form-group"><label class="form-label">Kutipan Tema</label><input class="form-control" [(ngModel)]="tentangTaglineQuote" name="tentangTaglineQuote"></div>
+        <div class="form-group"><label class="form-label">Paragraf Deskripsi 1</label><textarea class="form-control" rows="4" [(ngModel)]="tentangDescParagraph1" name="tentangDescParagraph1"></textarea></div>
+        <div class="form-group mb-0"><label class="form-label">Paragraf Deskripsi 2</label><textarea class="form-control" rows="4" [(ngModel)]="tentangDescParagraph2" name="tentangDescParagraph2"></textarea></div>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Visi</p>
+        <textarea class="form-control mb-0" rows="3" [(ngModel)]="tentangVisiText" name="tentangVisiText"></textarea>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Misi</p>
+        @for (item of tentangMisi; track $index) {
+          <div class="repeater-row" style="grid-template-columns: 1fr auto;">
+            <input class="form-control" [(ngModel)]="tentangMisi[$index]" [name]="'misi' + $index">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeMisi($index)">Hapus</button>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addMisi()">+ Tambah Misi</button>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Tujuan Pelaksanaan</p>
+        @for (item of tentangTujuan; track $index) {
+          <div class="repeater-row" style="grid-template-columns: 1fr auto;">
+            <input class="form-control" [(ngModel)]="tentangTujuan[$index]" [name]="'tujuan' + $index">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeTujuan($index)">Hapus</button>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addTujuan()">+ Tambah Tujuan</button>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Rangkaian Kegiatan</p>
+        @for (item of tentangKegiatan; track $index) {
+          <div class="repeater-row" style="grid-template-columns: 1fr auto;">
+            <input class="form-control" [(ngModel)]="tentangKegiatan[$index]" [name]="'kegiatan' + $index">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeKegiatan($index)">Hapus</button>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addKegiatan()">+ Tambah Kegiatan</button>
+      </div>
+    </div>
+  }
+
   @if (tab() === 'panitia') {
     <div class="tab-panel">
       <div class="card card-pad form-section-card">

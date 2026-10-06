@@ -213,6 +213,15 @@ export class RapimnasCmsSetupPage implements OnInit, RapimnasCmsSetupView {
     this.homeCards = next;
   }
 
+  addMisi(): void { this.tentangMisi = [...this.tentangMisi, '']; }
+  removeMisi(index: number): void { this.tentangMisi = this.tentangMisi.filter((_, i) => i !== index); }
+
+  addTujuan(): void { this.tentangTujuan = [...this.tentangTujuan, '']; }
+  removeTujuan(index: number): void { this.tentangTujuan = this.tentangTujuan.filter((_, i) => i !== index); }
+
+  addKegiatan(): void { this.tentangKegiatan = [...this.tentangKegiatan, '']; }
+  removeKegiatan(index: number): void { this.tentangKegiatan = this.tentangKegiatan.filter((_, i) => i !== index); }
+
   private extractContacts(contacts: RapimnasContact[], type: RapimnasContact['contactType']): SimpleContact[] {
     return contacts
       .filter((c) => c.contactType === type)
