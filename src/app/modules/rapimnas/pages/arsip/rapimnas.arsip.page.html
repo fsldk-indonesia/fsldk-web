@@ -8,7 +8,7 @@
       <h1>Arsip &amp; <span class="rp-arsip-title-accent">Dokumen</span></h1>
       <p>Kumpulan berkas publik, aset visual, dan dokumen pendukung RAPIMNAS 1 FSLDK Indonesia 2026</p>
     </div>
-    <div class="rp-arsip-list">
+    <div class="rp-arsip-list" rpReveal>
       @for (item of visibleResources(); track $index) {
         <div class="rp-arsip-item">
           <div class="rp-arsip-icon"><app-icon [name]="item.iconKey" [size]="32" /></div>

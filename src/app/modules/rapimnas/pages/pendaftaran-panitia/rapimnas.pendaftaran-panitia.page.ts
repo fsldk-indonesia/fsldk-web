@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RapimnasPublic } from '../../entities/rapimnas';
+import { RapimnasRevealDirective } from '../../rapimnas-reveal.directive';
 import { RapimnasPendaftaranPanitiaPresenter } from './rapimnas.pendaftaran-panitia.presenter';
 import { RapimnasPendaftaranPanitiaView } from './rapimnas.pendaftaran-panitia.view';
 
@@ -10,10 +11,12 @@ const DIVISI_OPTIONS = ['Acara', 'Media & Informasi', 'Humas & Sponsorship', 'Pe
   selector: 'app-rapimnas-pendaftaran-panitia-page',
   standalone: true,
   templateUrl: './rapimnas.pendaftaran-panitia.page.html',
-  imports: [FormsModule],
+  imports: [FormsModule, RapimnasRevealDirective],
   providers: [RapimnasPendaftaranPanitiaPresenter],
   styles: [`
     .rp-page-loading { padding: 120px 0; text-align: center; color: var(--rp-krem); }
+    .rp-reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1); }
+    .rp-reveal.rp-revealed { opacity: 1; transform: none; }
     .rp-panitia { max-width: 768px; margin: 0 auto; padding: 104px 16px 64px; }
     .rp-panitia-card { background: rgba(26, 35, 64, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
     .rp-panitia-head { text-align: center; margin-bottom: 32px; }

@@ -175,6 +175,10 @@ const ICONS: Record<string, string> = {
   // Jenis zakat pertanian & peternakan (zakat.calculator.page — kartu pemilih jenis zakat).
   seedling: 'fas fa-seedling',
   paw: 'fas fa-paw',
+  // Moda transportasi titik penjemputan Rapimnas (rapimnas.pendaftaran-peserta.page).
+  train: 'fas fa-train',
+  plane: 'fas fa-plane',
+  bus: 'fas fa-bus',
 };
 
 /**

@@ -3,29 +3,32 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { formatRupiah } from '../../../../core/utils/format-rupiah';
 import { IconComponent } from '../../../../shared/icon.component';
 import { RapimnasContact, RapimnasPickupLocation, RapimnasPublic } from '../../entities/rapimnas';
+import { RapimnasRevealDirective } from '../../rapimnas-reveal.directive';
 import { RapimnasPendaftaranPesertaPresenter } from './rapimnas.pendaftaran-peserta.presenter';
 import { RapimnasPendaftaranPesertaView } from './rapimnas.pendaftaran-peserta.view';
 
-const PICKUP_EMOJI: Record<string, string> = {
-  'Stasiun Kereta': '🚆',
-  Bandara: '✈️',
-  'Terminal Bus': '🚌',
+const PICKUP_ICON: Record<string, string> = {
+  'Stasiun Kereta': 'train',
+  Bandara: 'plane',
+  'Terminal Bus': 'bus',
 };
 
 @Component({
   selector: 'app-rapimnas-pendaftaran-peserta-page',
   standalone: true,
   templateUrl: './rapimnas.pendaftaran-peserta.page.html',
-  imports: [IconComponent],
+  imports: [IconComponent, RapimnasRevealDirective],
   providers: [RapimnasPendaftaranPesertaPresenter],
   styles: [`
     .rp-page-loading { padding: 120px 0; text-align: center; color: var(--rp-krem); }
+    .rp-reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1); }
+    .rp-reveal.rp-revealed { opacity: 1; transform: none; }
     .rp-peserta { max-width: 896px; margin: 0 auto; padding: 40px 16px 80px; }
     .rp-peserta-head { max-width: 896px; margin: 0 auto 64px; padding: 0 16px; text-align: center; position: relative; }
     .rp-peserta-head-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 256px; height: 256px; background: color-mix(in srgb, var(--rp-oranye) 20%, transparent); border-radius: 999px; filter: blur(80px); pointer-events: none; z-index: 0; }
-    .rp-peserta-badge { position: relative; z-index: 1; display: inline-block; background: color-mix(in srgb, var(--rp-merah) 40%, transparent); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); color: var(--rp-kuning); font-size: 0.75rem; font-weight: 600; padding: 8px 20px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; box-shadow: 0 0 15px rgba(254,112,2,0.3); }
+    .rp-peserta-badge { display: block; position: relative; z-index: 1; color: var(--rp-kuning); font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 20px; text-shadow: 0 0 20px rgba(254,112,2,0.5); }
     .rp-peserta-head h1 { position: relative; z-index: 1; color: var(--rp-krem); font-size: 2.25rem; font-weight: 800; margin: 0 0 16px; }
-    .rp-peserta-title-accent { background: linear-gradient(to right, var(--rp-oranye), var(--rp-kuning)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .rp-peserta-title-accent { color: var(--rp-oranye); }
     .rp-peserta-head p { position: relative; z-index: 1; color: color-mix(in srgb, var(--rp-krem) 80%, transparent); font-style: italic; margin: 0; }
     .rp-peserta-card { position: relative; overflow: hidden; background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); backdrop-filter: blur(24px); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); border-radius: 40px; padding: 32px; display: grid; grid-template-columns: 1fr; gap: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transition: border-color 0.5s; }
     .rp-peserta-card:hover { border-color: color-mix(in srgb, var(--rp-oranye) 50%, transparent); }
@@ -77,7 +80,7 @@ const PICKUP_EMOJI: Record<string, string> = {
     .rp-pickup-map iframe { width: 100%; height: 100%; border: 0; filter: grayscale(1) contrast(1.25) opacity(0.9); transition: filter 0.5s ease; }
     .rp-pickup-map:hover iframe { filter: grayscale(0) contrast(1) opacity(1); }
     .rp-pickup-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
-    .rp-pickup-tag { background: color-mix(in srgb, var(--rp-merah) 20%, transparent); color: var(--rp-oranye); font-size: 0.75rem; font-weight: 600; padding: 8px 16px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: all .3s ease; }
+    .rp-pickup-tag { display: inline-flex; align-items: center; gap: 8px; background: color-mix(in srgb, var(--rp-merah) 20%, transparent); color: var(--rp-oranye); font-size: 0.75rem; font-weight: 600; padding: 8px 16px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: all .3s ease; }
     .rp-pickup-tag:hover { background: var(--rp-oranye); color: var(--rp-bg); border-color: var(--rp-oranye); transform: translateY(-4px); }
     @media (min-width: 768px) {
       .rp-peserta-head h1 { font-size: 3rem; }
@@ -120,7 +123,7 @@ export class RapimnasPendaftaranPesertaPage implements OnInit, RapimnasPendaftar
     return `https://wa.me/${normalized}`;
   }
 
-  pickupEmoji(type: string): string {
-    return PICKUP_EMOJI[type] ?? '📍';
+  pickupIcon(type: string): string {
+    return PICKUP_ICON[type] ?? 'map-pin';
   }
 }

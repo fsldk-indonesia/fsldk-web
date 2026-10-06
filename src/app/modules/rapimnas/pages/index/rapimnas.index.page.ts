@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/icon.component';
 import { RapimnasCountdownComponent } from '../../components/rapimnas-countdown.component';
 import { RapimnasPublic } from '../../entities/rapimnas';
+import { RapimnasRevealDirective } from '../../rapimnas-reveal.directive';
 import { rapimnasPath } from '../../rapimnas.path';
 import { RapimnasIndexPresenter } from './rapimnas.index.presenter';
 import { RapimnasIndexView } from './rapimnas.index.view';
@@ -11,16 +12,18 @@ import { RapimnasIndexView } from './rapimnas.index.view';
   selector: 'app-rapimnas-index-page',
   standalone: true,
   templateUrl: './rapimnas.index.page.html',
-  imports: [RouterLink, IconComponent, RapimnasCountdownComponent],
+  imports: [RouterLink, IconComponent, RapimnasCountdownComponent, RapimnasRevealDirective],
   providers: [RapimnasIndexPresenter],
   styles: [`
     .rp-page-loading { padding: 120px 0; text-align: center; color: var(--rp-krem); }
+    .rp-reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1); }
+    .rp-reveal.rp-revealed { opacity: 1; transform: none; }
     .rp-hero { position: relative; height: calc(100vh - 73px); display: flex; align-items: center; justify-content: center; text-align: center; }
     .rp-hero-bg { position: absolute; inset: 0; z-index: 0; }
     .rp-hero-bg-img { width: 100%; height: 100%; object-fit: cover; }
     .rp-hero-bg-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, color-mix(in srgb, var(--rp-maroon) 70%, transparent) 0%, color-mix(in srgb, var(--rp-maroon) 80%, transparent) 50%, var(--rp-bg) 100%); }
     .rp-hero-content { position: relative; z-index: 1; max-width: 1024px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
-    .rp-hero-badge { background: color-mix(in srgb, var(--rp-merah) 60%, transparent); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); color: var(--rp-kuning); font-size: 0.75rem; font-weight: 600; padding: 6px 16px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 16px; box-shadow: 0 0 15px rgba(254,112,2,0.4); backdrop-filter: blur(4px); }
+    .rp-hero-badge { display: block; color: var(--rp-kuning); font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 20px; text-shadow: 0 0 20px rgba(254,112,2,0.6); }
     .rp-hero-title { font-size: 1.875rem; font-weight: 800; color: #fff; margin: 0 0 16px; line-height: 1.375; filter: drop-shadow(0 10px 8px rgba(0,0,0,0.04)) drop-shadow(0 4px 3px rgba(0,0,0,0.1)); }
     .rp-hero-tagline { font-style: italic; color: var(--rp-krem); opacity: .85; margin: 0 0 8px; }
     .rp-hero-date { color: color-mix(in srgb, var(--rp-krem) 90%, transparent); font-size: 0.875rem; font-weight: 500; margin: 12px 0 0; }
