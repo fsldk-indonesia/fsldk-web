@@ -210,6 +210,72 @@
     </div>
   }
 
+  @if (tab() === 'peserta') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Timeline Pendaftaran</p>
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Rentang Early Bird</label><input class="form-control" [(ngModel)]="pesertaEarlyBirdDateRange" name="pesertaEarlyBirdDateRange"></div>
+          <div class="form-group"><label class="form-label">Rentang Reguler</label><input class="form-control" [(ngModel)]="pesertaRegulerDateRange" name="pesertaRegulerDateRange"></div>
+        </div>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">HTM Peserta</p>
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Non-Semarang — Early Bird</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaNonSemarangEarlyBird" name="pesertaHargaNonSemarangEarlyBird"></div>
+          <div class="form-group"><label class="form-label">Non-Semarang — Reguler</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaNonSemarangReguler" name="pesertaHargaNonSemarangReguler"></div>
+          <div class="form-group"><label class="form-label">Semarang — Early Bird</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaSemarangEarlyBird" name="pesertaHargaSemarangEarlyBird"></div>
+          <div class="form-group"><label class="form-label">Semarang — Reguler</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaSemarangReguler" name="pesertaHargaSemarangReguler"></div>
+        </div>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Bank &amp; Tautan</p>
+        <div class="form-grid-2">
+          <div class="form-group"><label class="form-label">Nama Bank</label><input class="form-control" [(ngModel)]="pesertaBankName" name="pesertaBankName"></div>
+          <div class="form-group"><label class="form-label">No. Rekening</label><input class="form-control" [(ngModel)]="pesertaBankAccountNumber" name="pesertaBankAccountNumber"></div>
+          <div class="form-group"><label class="form-label">Nama Pemilik Rekening</label><input class="form-control" [(ngModel)]="pesertaBankAccountHolder" name="pesertaBankAccountHolder"></div>
+          <div class="form-group"><label class="form-label">URL Guidebook</label><input class="form-control" [(ngModel)]="pesertaGuidebookUrl" name="pesertaGuidebookUrl"></div>
+          <div class="form-group"><label class="form-label">URL Google Form Pendaftaran</label><input class="form-control" [(ngModel)]="pesertaGoogleFormUrl" name="pesertaGoogleFormUrl"></div>
+          <div class="form-group mb-0"><label class="form-label">URL Embed Google Maps</label><input class="form-control" [(ngModel)]="pesertaMapEmbedUrl" name="pesertaMapEmbedUrl"></div>
+        </div>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Narahubung (CP) Peserta</p>
+        @for (c of pesertaCpContacts; track $index; let i = $index) {
+          <div class="repeater-row">
+            <input class="form-control" placeholder="Nama" [(ngModel)]="c.name" [name]="'cpName' + i">
+            <input class="form-control" placeholder="Nomor WA (62...)" [(ngModel)]="c.phoneNumber" [name]="'cpPhone' + i">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removePesertaCpContact(i)">Hapus</button>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addPesertaCpContact()">+ Tambah CP</button>
+      </div>
+
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Titik Penjemputan</p>
+        @for (loc of pickupLocations; track $index; let i = $index) {
+          <div class="card card-pad" style="margin-bottom: 12px; background: var(--color-bg-warm);">
+            <div class="form-grid-2">
+              <div class="form-group"><label class="form-label">Nama Lokasi</label><input class="form-control" [(ngModel)]="loc.name" [name]="'pickupName' + i"></div>
+              <div class="form-group"><label class="form-label">Tipe (mis. Stasiun/Bandara/Terminal)</label><input class="form-control" [(ngModel)]="loc.type" [name]="'pickupType' + i"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Deskripsi (opsional)</label><input class="form-control" [(ngModel)]="loc.description" [name]="'pickupDesc' + i"></div>
+            <div class="form-group mb-0"><label class="form-label">Link Google Maps</label><input class="form-control" [(ngModel)]="loc.mapLink" [name]="'pickupMap' + i"></div>
+            <div class="form-actions" style="justify-content: flex-start; border-top: none; padding-top: 10px; margin-top: 10px;">
+              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === 0" (click)="movePickupLocation(i, -1)">&uarr; Naik</button>
+              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === pickupLocations.length - 1" (click)="movePickupLocation(i, 1)">&darr; Turun</button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="removePickupLocation(i)">Hapus</button>
+            </div>
+          </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addPickupLocation()">+ Tambah Titik Penjemputan</button>
+      </div>
+    </div>
+  }
+
   @if (tab() === 'panitia') {
     <div class="tab-panel">
       <div class="card card-pad form-section-card">
