@@ -1,6 +1,7 @@
 @if (loading()) {
   <div class="rp-page-loading">Memuat...</div>
-} @else if (data(); as d) {
+} @else if (data()) {
+  @let d = data()!;
   <div class="rp-home">
     <!-- 1. HERO -->
     <section class="rp-hero">
