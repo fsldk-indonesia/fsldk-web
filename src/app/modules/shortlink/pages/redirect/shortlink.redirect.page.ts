@@ -44,11 +44,22 @@ import { ShortlinkRedirectView } from './shortlink.redirect.view';
       position: relative; z-index: 1; box-sizing: border-box;
       width: 100%; max-width: 400px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      box-shadow: 0 24px 50px rgba(0,0,0,.35); padding: 32px 28px;
+      box-shadow: 0 24px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6);
+      padding: 40px 32px;
     }
+
+    /* Konten state error — satu momen kemunculan (fade + rise halus) saat
+       resolve shortlink gagal dan kartu beralih dari loader ke pesan ini. */
+    .error-content { animation: redirect-card-in .4s var(--ease-out, ease) both; }
+    @keyframes redirect-card-in { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: none; } }
+    .error-content .icon-badge { margin: 0 auto 18px; }
+    .error-content h4 { font-size: 1.3rem; letter-spacing: -.01em; margin-bottom: 10px; }
+    .error-content p { font-size: .92rem; line-height: 1.6; margin-bottom: 28px; }
+    @media (prefers-reduced-motion: reduce) { .error-content { animation: none; } }
+
     @media (max-width: 480px) {
       .redirect-wash { padding: 20px 16px; }
-      .redirect-card { padding: 26px 22px; }
+      .redirect-card { padding: 30px 24px; }
     }
   `],
 })
