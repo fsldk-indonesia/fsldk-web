@@ -1,0 +1,13 @@
+@if (loading()) {
+  <div class="rp-page-loading">Memuat...</div>
+} @else if (data()) {
+  @let d = data()!;
+  <div class="rp-jadwal">
+    <div class="rp-jadwal-head">
+      <span class="rp-jadwal-badge">Timeline Kegiatan</span>
+      <h1>Jadwal RAPIMNAS FSLDK</h1>
+      <p>{{ d.jadwalHeaderSubtitle }}</p>
+    </div>
+    <app-rapimnas-rundown [days]="d.rundownDays" />
+  </div>
+}
