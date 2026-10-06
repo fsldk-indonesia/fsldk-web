@@ -1,0 +1,107 @@
+@if (loading()) {
+  <div class="rp-page-loading">Memuat...</div>
+} @else if (data(); as d) {
+  <div class="rp-home">
+    <!-- 1. HERO -->
+    <section class="rp-hero">
+      @if (d.heroImageUrl) {
+        <div class="rp-hero-bg"><img [src]="d.heroImageUrl" alt="Dokumentasi Rapimnas Sebelumnya" class="rp-hero-bg-img"><div class="rp-hero-bg-overlay"></div></div>
+      }
+      <div class="rp-hero-content">
+        <span class="rp-hero-badge">{{ d.heroBadgeText }}</span>
+        <h1 class="rp-hero-title">{{ d.heroTitle }}</h1>
+        @if (d.heroTaglineQuote) { <p class="rp-hero-tagline">{{ d.heroTaglineQuote }}</p> }
+        <p class="rp-hero-date">{{ d.heroDateRangeText }}</p>
+        <div class="rp-hero-actions">
+          <a [routerLink]="path.pendaftaranPeserta" class="rp-btn rp-btn-primary">Daftar Delegasi</a>
+          <a href="#jelajahi" class="rp-btn rp-btn-ghost">Jelajahi Acara</a>
+        </div>
+        <app-rapimnas-countdown [targetDate]="d.countdownTargetDate" />
+      </div>
+    </section>
+
+    <!-- 2. TENTANG -->
+    <section id="jelajahi" class="rp-section rp-about">
+      <div class="rp-about-card">
+        <div class="rp-about-text">
+          <h2>Tentang RAPIMNAS 1</h2>
+          <p>Rapimnas × FSLDK 2026 merupakan forum kerja nasional yang secara khusus diarahkan untuk merumuskan fondasi sistem bagi gerak FSLDK ke depan. Forum ini mempertemukan pimpinan Puskomnas, Puskomda, dan perwakilan Lembaga Dakwah Kampus (LDK) dari seluruh Indonesia untuk menyusun arah gerak bersama.</p>
+          <a [routerLink]="path.tentang" class="rp-link-accent">Selengkapnya &rarr;</a>
+        </div>
+        <div class="rp-about-features">
+          <div class="rp-feature-card">
+            <app-icon [name]="d.feature1IconKey" [size]="40" />
+            <div class="rp-feature-title">{{ d.feature1Title }}</div>
+            <p class="rp-feature-desc">{{ d.feature1Desc }}</p>
+          </div>
+          <div class="rp-feature-card rp-feature-card-offset">
+            <app-icon [name]="d.feature2IconKey" [size]="40" />
+            <div class="rp-feature-title">{{ d.feature2Title }}</div>
+            <p class="rp-feature-desc">{{ d.feature2Desc }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. GALERI -->
+    @if (d.galleryImages.length) {
+      <section class="rp-section">
+        <h2 class="rp-section-title">Kilas Balik RAPIMNAS</h2>
+        <div class="rp-gallery">
+          <button type="button" class="rp-gallery-arrow rp-gallery-arrow-left" (click)="scrollGallery('left')">&larr;</button>
+          <div class="rp-gallery-track" #carousel>
+            @for (img of d.galleryImages; track $index) {
+              <div class="rp-gallery-item" (click)="openLightbox(img.imageUrl)">
+                <img [src]="img.imageUrl" [alt]="'Dokumentasi ' + ($index + 1)">
+              </div>
+            }
+          </div>
+          <button type="button" class="rp-gallery-arrow rp-gallery-arrow-right" (click)="scrollGallery('right')">&rarr;</button>
+        </div>
+      </section>
+    }
+
+    <!-- 4. RANGKAIAN KEGIATAN -->
+    @if (d.homeCards.length) {
+      <section class="rp-section">
+        <div class="rp-section-head">
+          <h2 class="rp-section-title">Rangkaian Kegiatan</h2>
+          <p class="rp-section-sub">Agenda utama yang akan memperkuat sinergi LDK se-Indonesia.</p>
+        </div>
+        <div class="rp-home-cards">
+          @for (card of d.homeCards; track $index) {
+            <div class="rp-home-card">
+              <app-icon [name]="card.iconKey" [size]="28" />
+              <h3>{{ card.title }}</h3>
+              <p>{{ card.description }}</p>
+            </div>
+          }
+        </div>
+        <div class="rp-section-cta">
+          <a [routerLink]="path.jadwal" class="rp-link-outline">Lihat Jadwal Keseluruhan</a>
+        </div>
+      </section>
+    }
+
+    <!-- 5. CTA PENDAFTARAN -->
+    <section class="rp-section">
+      <div class="rp-cta-card">
+        <div class="rp-cta-text">
+          <h2>{{ d.ctaTitle }}</h2>
+          <p>{{ d.ctaDescription }}</p>
+          <a [routerLink]="path.pendaftaranPeserta" class="rp-btn rp-btn-primary">{{ d.ctaButtonLabel }}</a>
+        </div>
+        @if (d.ctaMascotImageUrl) {
+          <div class="rp-cta-mascot"><img [src]="d.ctaMascotImageUrl" alt="Maskot Rapimnas 2026"></div>
+        }
+      </div>
+    </section>
+  </div>
+
+  @if (selectedImage(); as img) {
+    <div class="rp-lightbox" (click)="closeLightbox()">
+      <button type="button" class="rp-lightbox-close" (click)="closeLightbox()">&times;</button>
+      <img [src]="img" alt="Preview Dokumentasi" class="rp-lightbox-img" (click)="$event.stopPropagation()">
+    </div>
+  }
+}
