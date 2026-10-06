@@ -35,9 +35,7 @@ export class RapimnasArsipPage implements OnInit, RapimnasArsipView {
 
   data = signal<RapimnasPublic | null>(null);
   loading = signal(true);
-  visibleResources = computed<RapimnasResource[]>(() =>
-    (this.data()?.resources ?? []).filter((r) => r.isVisible).sort((a, b) => a.sortOrder - b.sortOrder),
-  );
+  visibleResources = computed<RapimnasResource[]>(() => this.data()?.resources ?? []);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
