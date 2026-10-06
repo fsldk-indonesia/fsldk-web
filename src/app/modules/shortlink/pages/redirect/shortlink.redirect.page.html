@@ -1,12 +1,15 @@
-@if (notFound()) {
-  <div class="center-screen text-center">
-    <div class="empty-state">
-      <span class="icon-badge lg icon-badge-danger" style="margin:0 auto 14px"><app-icon name="error" [size]="28" /></span>
-      <h4>Tautan Tidak Ditemukan</h4>
-      <p>Shortlink ini tidak valid atau sudah tidak berlaku.</p>
-      <a routerLink="/" class="btn btn-primary btn-sm">Kembali ke Beranda</a>
-    </div>
+<div class="redirect-wash">
+  <div class="redirect-texture" aria-hidden="true"></div>
+  <div class="redirect-card">
+    @if (notFound()) {
+      <div class="empty-state text-center">
+        <span class="icon-badge lg icon-badge-danger" style="margin:0 auto 14px"><app-icon name="error" [size]="28" /></span>
+        <h4>Tautan Tidak Ditemukan</h4>
+        <p>Shortlink ini tidak valid atau sudah tidak berlaku.</p>
+        <a routerLink="/" class="btn btn-primary btn-sm">Kembali ke Beranda</a>
+      </div>
+    } @else {
+      <app-page-loader label="Mengalihkan…" />
+    }
   </div>
-} @else {
-  <app-page-loader label="Mengalihkan…" />
-}
+</div>
