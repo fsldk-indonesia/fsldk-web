@@ -6,6 +6,8 @@ import { KantongAmalDonationFlowLayoutComponent } from './layouts/kantong-amal-d
 import { CmsLayoutComponent } from './layouts/cms-layout.component';
 import { KaderLayoutComponent } from './layouts/kader-layout.component';
 import { authGuard } from './core/guards/guards';
+import { RapimnasLayoutComponent } from './layouts/rapimnas/rapimnas-layout.component';
+import { rapimnasPublicRoutes } from './modules/rapimnas/rapimnas.routes';
 
 import { homeRoutes } from './modules/home/home.routes';
 import { newsPublicRoutes, newsCmsRoutes } from './modules/news/news.routes';
@@ -198,6 +200,15 @@ export const routes: Routes = [
     component: KaderLayoutComponent,
     canActivate: [authGuard],
     children: [...kaderRoutes()],
+  },
+
+  // ---------- Rapimnas (shell sendiri — lihat RapimnasLayoutComponent).
+  // SEMENTARA hanya route Beranda; rapimnasPublicRoutes() akan bertambah
+  // seiring halaman lain selesai, lihat rapimnas.routes.ts ----------
+  {
+    path: 'rapimnas',
+    component: RapimnasLayoutComponent,
+    children: [...rapimnasPublicRoutes()],
   },
 
   ...shortlinkRedirectRoutes(),

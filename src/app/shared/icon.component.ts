@@ -17,6 +17,8 @@ const ICONS: Record<string, string> = {
   'user-group': 'fas fa-users',
   'shield-check': 'fas fa-user-shield',
   link: 'fas fa-link',
+  // Halaman shortlink redirect yang gagal resolve (tautan tidak valid/kedaluwarsa).
+  'link-slash': 'fas fa-link-slash',
   'qr-code': 'fas fa-qrcode',
   'calendar-days': 'fas fa-calendar-alt',
   calendar: 'fas fa-calendar-alt',
