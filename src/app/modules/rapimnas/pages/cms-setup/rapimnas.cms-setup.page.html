@@ -138,6 +138,42 @@
     </div>
   }
 
+  @if (tab() === 'jadwal') {
+    <div class="tab-panel">
+      <div class="card card-pad form-section-card">
+        <p class="form-section-label">Subjudul Header</p>
+        <input class="form-control mb-0" [(ngModel)]="jadwalHeaderSubtitle" name="jadwalHeaderSubtitle">
+      </div>
+
+      @for (day of rundownDays; track $index; let dayIdx = $index) {
+        <div class="card card-pad form-section-card">
+          <div class="form-grid-2">
+            <input class="form-control" placeholder="Label Hari (mis. Hari Pertama)" [(ngModel)]="day.dayLabel" [name]="'dayLabel' + dayIdx">
+            <input class="form-control" placeholder="Tanggal (mis. Kamis, 12 November 2026)" [(ngModel)]="day.dateText" [name]="'dayDate' + dayIdx">
+          </div>
+          <div class="form-actions" style="justify-content: flex-start; border-top: none; padding-top: 10px; margin-top: 0;">
+            <button type="button" class="btn btn-ghost btn-sm" [disabled]="dayIdx === 0" (click)="moveRundownDay(dayIdx, -1)">&uarr; Naik</button>
+            <button type="button" class="btn btn-ghost btn-sm" [disabled]="dayIdx === rundownDays.length - 1" (click)="moveRundownDay(dayIdx, 1)">&darr; Turun</button>
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeRundownDay(dayIdx)">Hapus Hari</button>
+          </div>
+
+          <p class="form-section-label mt-lg">Event Hari Ini</p>
+          @for (event of day.events; track $index; let eventIdx = $index) {
+            <div class="repeater-row" style="grid-template-columns: 1fr 1fr 1fr 1fr auto; margin-bottom: 12px;">
+              <input class="form-control" placeholder="Waktu (opsional)" [(ngModel)]="event.time" [name]="'eventTime' + dayIdx + '_' + eventIdx">
+              <input class="form-control" placeholder="Judul" [(ngModel)]="event.title" [name]="'eventTitle' + dayIdx + '_' + eventIdx">
+              <input class="form-control" placeholder="Deskripsi" [(ngModel)]="event.description" [name]="'eventDesc' + dayIdx + '_' + eventIdx">
+              <input class="form-control" placeholder="Venue (opsional)" [(ngModel)]="event.venue" [name]="'eventVenue' + dayIdx + '_' + eventIdx">
+              <button type="button" class="btn btn-ghost btn-sm" (click)="removeRundownEvent(dayIdx, eventIdx)">Hapus</button>
+            </div>
+          }
+          <button type="button" class="btn btn-outline btn-sm" (click)="addRundownEvent(dayIdx)">+ Tambah Event</button>
+        </div>
+      }
+      <button type="button" class="btn btn-primary btn-sm" (click)="addRundownDay()">+ Tambah Hari</button>
+    </div>
+  }
+
   @if (tab() === 'panitia') {
     <div class="tab-panel">
       <div class="card card-pad form-section-card">

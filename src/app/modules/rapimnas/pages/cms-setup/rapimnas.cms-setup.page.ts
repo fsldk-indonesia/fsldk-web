@@ -222,6 +222,31 @@ export class RapimnasCmsSetupPage implements OnInit, RapimnasCmsSetupView {
   addKegiatan(): void { this.tentangKegiatan = [...this.tentangKegiatan, '']; }
   removeKegiatan(index: number): void { this.tentangKegiatan = this.tentangKegiatan.filter((_, i) => i !== index); }
 
+  addRundownDay(): void {
+    this.rundownDays = [...this.rundownDays, { dayLabel: '', dateText: '', sortOrder: this.rundownDays.length, events: [] }];
+  }
+  removeRundownDay(index: number): void {
+    this.rundownDays = this.rundownDays.filter((_, i) => i !== index);
+  }
+  moveRundownDay(index: number, dir: -1 | 1): void {
+    const target = index + dir;
+    if (target < 0 || target >= this.rundownDays.length) return;
+    const next = [...this.rundownDays];
+    [next[index], next[target]] = [next[target], next[index]];
+    this.rundownDays = next;
+  }
+
+  addRundownEvent(dayIndex: number): void {
+    const next = [...this.rundownDays];
+    next[dayIndex] = { ...next[dayIndex], events: [...next[dayIndex].events, { time: '', title: '', description: '', venue: '', sortOrder: next[dayIndex].events.length }] };
+    this.rundownDays = next;
+  }
+  removeRundownEvent(dayIndex: number, eventIndex: number): void {
+    const next = [...this.rundownDays];
+    next[dayIndex] = { ...next[dayIndex], events: next[dayIndex].events.filter((_, i) => i !== eventIndex) };
+    this.rundownDays = next;
+  }
+
   private extractContacts(contacts: RapimnasContact[], type: RapimnasContact['contactType']): SimpleContact[] {
     return contacts
       .filter((c) => c.contactType === type)
