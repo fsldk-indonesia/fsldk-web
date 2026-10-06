@@ -1,0 +1,23 @@
+@if (loading()) {
+  <div class="rp-page-loading">Memuat...</div>
+} @else {
+  <div class="rp-arsip">
+    <div class="rp-arsip-head">
+      <span class="rp-arsip-badge">Pusat Unduhan</span>
+      <h1>Arsip &amp; Dokumen</h1>
+      <p>Kumpulan berkas publik, aset visual, dan dokumen pendukung RAPIMNAS 1 FSLDK Indonesia 2026</p>
+    </div>
+    <div class="rp-arsip-list">
+      @for (item of visibleResources(); track $index) {
+        <div class="rp-arsip-item">
+          <div class="rp-arsip-icon"><app-icon [name]="item.iconKey" [size]="28" /></div>
+          <div class="rp-arsip-body">
+            <h2>{{ item.title }}</h2>
+            <p>{{ item.description }}</p>
+          </div>
+          <a [href]="item.url" target="_blank" rel="noopener noreferrer" class="rp-arsip-btn">{{ item.buttonLabel }}</a>
+        </div>
+      }
+    </div>
+  </div>
+}

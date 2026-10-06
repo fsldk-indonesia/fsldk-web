@@ -1,0 +1,48 @@
+@if (loading()) {
+  <div class="rp-page-loading">Memuat...</div>
+} @else if (data()) {
+  @let d = data()!;
+  <div class="rp-tentang">
+    <div class="rp-tentang-head">
+      <span class="rp-tentang-badge">Tentang Acara</span>
+      <h1>Rapimnas 1 FSLDK 2026</h1>
+      <div class="rp-tentang-theme-card">
+        <h2>Tema Utama</h2>
+        <p>{{ d.tentangTaglineQuote }}</p>
+      </div>
+    </div>
+
+    <div class="rp-tentang-desc">
+      <p>{{ d.tentangDescParagraph1 }}</p>
+      <p>{{ d.tentangDescParagraph2 }}</p>
+    </div>
+
+    <div class="rp-tentang-vm">
+      <div class="rp-tentang-visi">
+        <h3>Visi</h3>
+        <p>{{ d.tentangVisiText }}</p>
+      </div>
+      <div class="rp-tentang-misi">
+        <h3>MISI</h3>
+        @for (item of d.tentangMisi; track $index) {
+          <div class="rp-misi-item"><span class="rp-misi-num">{{ $index + 1 }}</span><p>{{ item }}</p></div>
+        }
+      </div>
+    </div>
+
+    <div class="rp-tentang-cols">
+      <div>
+        <h2>Tujuan Pelaksanaan</h2>
+        @for (item of d.tentangTujuan; track $index) {
+          <div class="rp-tujuan-item"><span class="rp-tujuan-icon">&check;</span><p>{{ item }}</p></div>
+        }
+      </div>
+      <div>
+        <h2>Rangkaian Kegiatan</h2>
+        @for (item of d.tentangKegiatan; track $index) {
+          <div class="rp-kegiatan-item"><span class="rp-kegiatan-num">{{ $index + 1 }}</span><span>{{ item }}</span></div>
+        }
+      </div>
+    </div>
+  </div>
+}
