@@ -56,23 +56,27 @@ import { rapimnasPath } from '../rapimnas.path';
     </header>
   `,
   styles: [`
-    .rp-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: color-mix(in srgb, var(--rp-maroon) 95%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rp-merah); }
-    .rp-header-inner { max-width: 1152px; margin: 0 auto; padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .rp-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: color-mix(in srgb, var(--rp-maroon) 95%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--rp-merah); }
+    .rp-header-inner { max-width: 1152px; margin: 0 auto; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
     .rp-brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
-    .rp-brand-logos { display: flex; align-items: center; gap: 8px; }
+    .rp-brand-logos { display: flex; align-items: center; gap: 8px; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+    .rp-brand:hover .rp-brand-logos { opacity: 0.8; }
     .rp-brand-logo { width: 32px; height: 32px; object-fit: contain; }
-    .rp-brand-logo-round { border-radius: 4px; }
-    .rp-brand-title { display: none; font-weight: 700; font-size: 1.15rem; color: var(--rp-krem); letter-spacing: -0.01em; }
+    .rp-brand-logo-round { border-radius: 2px; }
+    .rp-brand-title { display: none; font-weight: 700; font-size: 1.25rem; color: var(--rp-krem); letter-spacing: -0.025em; }
     .rp-accent { color: var(--rp-oranye); }
-    .rp-burger { display: flex; color: var(--rp-krem); background: none; border: none; padding: 8px; cursor: pointer; }
+    .rp-burger { display: flex; color: var(--rp-krem); background: none; border: none; padding: 8px; cursor: pointer; transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
     .rp-burger:hover { color: var(--rp-oranye); }
+    .rp-burger:focus { outline: none; }
     .rp-burger-icon { width: 24px; height: 24px; }
-    .rp-nav-desktop { display: none; align-items: center; gap: 32px; font-size: 0.9rem; font-weight: 500; }
-    .rp-nav-desktop a { color: color-mix(in srgb, var(--rp-krem) 90%, transparent); text-decoration: none; transition: color .15s ease; }
-    .rp-nav-desktop a:hover, .rp-nav-desktop a.active { color: var(--rp-oranye); font-weight: 600; }
-    .rp-nav-mobile { display: flex; flex-direction: column; gap: 6px; padding: 16px; background: color-mix(in srgb, var(--rp-maroon) 95%, transparent); border-bottom: 1px solid var(--rp-merah); }
-    .rp-nav-mobile a { padding: 14px 16px; border-radius: 12px; text-decoration: none; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.04em; font-weight: 600; color: color-mix(in srgb, var(--rp-krem) 90%, transparent); }
-    .rp-nav-mobile a.active { background: var(--rp-merah); color: var(--rp-oranye); }
+    .rp-nav-desktop { display: none; align-items: center; gap: 32px; font-size: 0.875rem; font-weight: 500; }
+    .rp-nav-desktop a { color: color-mix(in srgb, var(--rp-krem) 90%, transparent); text-decoration: none; transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+    .rp-nav-desktop a:hover { color: var(--rp-oranye); }
+    .rp-nav-desktop a.active { color: var(--rp-oranye); font-weight: 600; }
+    .rp-nav-mobile { position: absolute; top: 100%; left: 0; width: 100%; z-index: 50; display: flex; flex-direction: column; gap: 6px; padding: 16px; background: color-mix(in srgb, var(--rp-maroon) 95%, transparent); backdrop-filter: blur(24px); border-bottom: 1px solid var(--rp-merah); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+    .rp-nav-mobile a { padding: 14px 16px; border-radius: 12px; text-decoration: none; text-transform: uppercase; font-size: 0.875rem; letter-spacing: 0.025em; font-weight: 600; color: color-mix(in srgb, var(--rp-krem) 90%, transparent); transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+    .rp-nav-mobile a:not(.active):active { background: color-mix(in srgb, var(--rp-merah) 50%, transparent); }
+    .rp-nav-mobile a.active { background: var(--rp-merah); color: var(--rp-oranye); font-weight: 700; }
     @media (min-width: 768px) {
       .rp-brand-title { display: block; }
       .rp-burger { display: none; }
