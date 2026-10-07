@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/icon.component';
 import { RapimnasCountdownComponent } from '../../components/rapimnas-countdown.component';
@@ -91,10 +91,13 @@ import { RapimnasIndexView } from './rapimnas.index.view';
     .rp-cta-mascot { position: relative; z-index: 1; width: 224px; flex-shrink: 0; margin-top: 24px; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5)); transition: transform 500ms; }
     .rp-cta-mascot:hover { transform: scale(1.05) rotate(-2deg); }
     .rp-cta-mascot img { width: 100%; display: block; }
-    .rp-lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.9); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
-    .rp-lightbox-box { position: relative; width: 100%; max-width: 1280px; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); cursor: default; }
+    .rp-lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.9); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; opacity: 0; transition: opacity 320ms cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 320ms cubic-bezier(0.16, 1, 0.3, 1); }
+    .rp-lightbox.open { opacity: 1; }
+    .rp-lightbox-box { position: relative; width: 100%; max-width: 1280px; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); cursor: default; transform: scale(0.82); opacity: 0; transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 320ms cubic-bezier(0.16, 1, 0.3, 1); }
+    .rp-lightbox.open .rp-lightbox-box { transform: scale(1); opacity: 1; }
     .rp-lightbox-img { width: 100%; height: 100%; object-fit: contain; display: block; }
-    .rp-lightbox-close { position: absolute; top: 24px; right: 24px; background: none; border: none; color: #fff; font-size: 2.25rem; line-height: 1; cursor: pointer; z-index: 110; transition: color 300ms; }
+    .rp-lightbox-close { position: absolute; top: 24px; right: 24px; background: none; border: none; color: #fff; font-size: 2.25rem; line-height: 1; cursor: pointer; z-index: 110; transition: color 300ms, transform 300ms cubic-bezier(0.16, 1, 0.3, 1); opacity: 0; transform: translateY(-8px); }
+    .rp-lightbox.open .rp-lightbox-close { opacity: 1; transform: none; transition-delay: 120ms; }
     .rp-lightbox-close:hover { color: var(--rp-oranye); }
     @media (min-width: 640px) {
       .rp-hero-actions { flex-direction: row; }
@@ -124,19 +127,25 @@ import { RapimnasIndexView } from './rapimnas.index.view';
     }
   `],
 })
-export class RapimnasIndexPage implements OnInit, RapimnasIndexView {
+export class RapimnasIndexPage implements OnInit, OnDestroy, RapimnasIndexView {
   private presenter = inject(RapimnasIndexPresenter);
 
   readonly path = rapimnasPath;
   data = signal<RapimnasPublic | null>(null);
   loading = signal(true);
   selectedImage = signal<string | null>(null);
+  lightboxOpen = signal(false);
+  private closeTimeoutId?: ReturnType<typeof setTimeout>;
 
   @ViewChild('carousel') private carouselRef?: ElementRef<HTMLElement>;
 
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.load();
+  }
+
+  ngOnDestroy(): void {
+    if (this.closeTimeoutId) clearTimeout(this.closeTimeoutId);
   }
 
   setData(data: RapimnasPublic): void { this.data.set(data); }
@@ -149,6 +158,15 @@ export class RapimnasIndexPage implements OnInit, RapimnasIndexView {
     el.scrollBy({ left: direction === 'left' ? -amount : amount, behavior: 'smooth' });
   }
 
-  openLightbox(url: string): void { this.selectedImage.set(url); }
-  closeLightbox(): void { this.selectedImage.set(null); }
+  openLightbox(url: string): void {
+    if (this.closeTimeoutId) { clearTimeout(this.closeTimeoutId); this.closeTimeoutId = undefined; }
+    this.selectedImage.set(url);
+    requestAnimationFrame(() => requestAnimationFrame(() => this.lightboxOpen.set(true)));
+  }
+
+  /** Keep the lightbox mounted through its zoom-out transition before clearing the image. */
+  closeLightbox(): void {
+    this.lightboxOpen.set(false);
+    this.closeTimeoutId = setTimeout(() => { this.selectedImage.set(null); this.closeTimeoutId = undefined; }, 320);
+  }
 }

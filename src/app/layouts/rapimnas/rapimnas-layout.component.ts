@@ -44,6 +44,7 @@ import { RapimnasBackToTopComponent } from '../../modules/rapimnas/components/ra
 export class RapimnasLayoutComponent implements OnInit, OnDestroy {
   private document = inject(DOCUMENT);
   private originalFaviconHref: string | null = null;
+  private originalScrollBehavior = '';
 
   ngOnInit(): void {
     const link = this.document.querySelector<HTMLLinkElement>('link[rel="icon"]');
@@ -51,6 +52,10 @@ export class RapimnasLayoutComponent implements OnInit, OnDestroy {
       this.originalFaviconHref = link.href;
       link.href = 'assets/rapimnas/logo-rapimnas.png';
     }
+
+    /** Scoped to this shell's lifetime so fragment scrolls (e.g. "Jelajahi Acara") animate smoothly without affecting scroll behavior on the rest of the site. */
+    this.originalScrollBehavior = this.document.documentElement.style.scrollBehavior;
+    this.document.documentElement.style.scrollBehavior = 'smooth';
   }
 
   ngOnDestroy(): void {
@@ -58,5 +63,7 @@ export class RapimnasLayoutComponent implements OnInit, OnDestroy {
     if (link && this.originalFaviconHref) {
       link.href = this.originalFaviconHref;
     }
+
+    this.document.documentElement.style.scrollBehavior = this.originalScrollBehavior;
   }
 }

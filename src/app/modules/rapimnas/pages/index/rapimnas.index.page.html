@@ -15,7 +15,7 @@
         <p class="rp-hero-date">{{ d.heroDateRangeText }}</p>
         <div class="rp-hero-actions">
           <a [routerLink]="path.pendaftaranPeserta" class="rp-btn rp-btn-primary">Daftar Delegasi</a>
-          <a href="#jelajahi" class="rp-btn rp-btn-ghost">Jelajahi Acara</a>
+          <a [routerLink]="path.index" fragment="jelajahi" class="rp-btn rp-btn-ghost">Jelajahi Acara</a>
         </div>
         <app-rapimnas-countdown [targetDate]="d.countdownTargetDate" />
       </div>
@@ -119,7 +119,7 @@
   </div>
 
   @if (selectedImage(); as img) {
-    <div class="rp-lightbox" (click)="closeLightbox()">
+    <div class="rp-lightbox" [class.open]="lightboxOpen()" (click)="closeLightbox()">
       <button type="button" class="rp-lightbox-close" (click)="closeLightbox()">&times;</button>
       <div class="rp-lightbox-box" (click)="$event.stopPropagation()">
         <img [src]="img" alt="Preview Dokumentasi" class="rp-lightbox-img">
