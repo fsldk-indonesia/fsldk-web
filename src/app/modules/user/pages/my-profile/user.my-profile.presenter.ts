@@ -25,10 +25,14 @@ export class UserMyProfilePresenter extends BasePresenter<UserMyProfileView> {
     });
   }
 
-  /** Hanya relevan untuk akun Kader (findMine mengembalikan null untuk akun
-   *  tanpa pendaftaran Sensus Kader — aman dipanggil dari akun manapun). */
+  /** Hanya relevan untuk akun Kader. Dipanggil dari akun manapun (termasuk
+   *  role CMS tanpa permission 'submission.view', mis. role custom
+   *  non-Super-Admin) — GET /submissions mengembalikan 403 untuk akun
+   *  tanpa permission itu, jadi request ini ditandai silent supaya tidak
+   *  menampilkan toast error untuk pengecekan latar belakang yang opsional
+   *  ini (hasilnya cukup di-null-kan, lihat error handler di bawah). */
   loadKaderInfo(): void {
-    this.submissionRepo.findMine(FORM_CODE_SENSUS_KADER).pipe(
+    this.submissionRepo.findMine(FORM_CODE_SENSUS_KADER, undefined, { silent: true }).pipe(
       switchMap((mine) => (mine ? this.submissionRepo.get(mine.submissionID) : of(null))),
     ).subscribe({
       next: (detail) => this.view.setKader(detail?.kader ?? null),
