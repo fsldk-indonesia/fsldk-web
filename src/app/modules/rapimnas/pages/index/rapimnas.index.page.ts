@@ -35,7 +35,13 @@ import { RapimnasIndexView } from './rapimnas.index.view';
     .rp-btn-ghost:hover { background: color-mix(in srgb, var(--rp-merah) 80%, transparent); border-color: var(--rp-oranye); }
     .rp-btn-cta { padding: 14px 24px; box-shadow: 0 5px 15px rgba(254,112,2,0.3); font-size: 1rem; }
     .rp-section { max-width: 960px; margin: 0 auto; padding: 64px 16px; }
-    .rp-about { max-width: 1152px; scroll-margin-top: 80px; }
+    .rp-about { max-width: 1152px; scroll-margin-top: 80px; position: relative; isolation: isolate; }
+    /* Gold swirl beside the about-card, in the open page margin outside
+       the section's own max-width — hidden below the breakpoint where
+       that margin disappears, same visual language as the sitewide
+       corner swirls in rapimnas-layout.component.ts. */
+    .rp-about-swirl { display: none; position: absolute; top: -40px; left: -150px; width: 320px; height: 420px; z-index: -1; pointer-events: none; transform: scaleX(-1); }
+    @media (min-width: 1280px) { .rp-about-swirl { display: block; } }
     .rp-gallery-section { max-width: 1280px; }
     .rp-cards-section { max-width: 1152px; }
     .rp-cta-section { max-width: 1024px; padding: 80px 16px; margin-bottom: 40px; }
@@ -50,8 +56,8 @@ import { RapimnasIndexView } from './rapimnas.index.view';
     .rp-link-accent:hover { color: var(--rp-kuning); }
     .rp-link-arrow { display: inline-block; transition: transform 300ms; }
     .rp-link-accent:hover .rp-link-arrow { transform: translateX(8px); }
-    .rp-link-outline { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; border: 1px solid color-mix(in srgb, var(--rp-oranye) 50%, transparent); color: var(--rp-oranye); border-radius: 999px; text-decoration: none; transition: background-color 300ms; }
-    .rp-link-outline:hover { background: color-mix(in srgb, var(--rp-oranye) 10%, transparent); }
+    .rp-link-outline { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: color-mix(in srgb, var(--rp-maroon) 55%, transparent); backdrop-filter: blur(8px); border: 1px solid color-mix(in srgb, var(--rp-oranye) 50%, transparent); color: var(--rp-oranye); border-radius: 999px; text-decoration: none; transition: background-color 300ms; }
+    .rp-link-outline:hover { background: color-mix(in srgb, var(--rp-oranye) 15%, transparent); }
     .rp-about-card { background: color-mix(in srgb, var(--rp-merah) 20%, transparent); backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--rp-merah) 30%, transparent); border-radius: 24px; padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 40px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transition: border-color 500ms; }
     .rp-about-card:hover { border-color: color-mix(in srgb, var(--rp-oranye) 40%, transparent); }
     .rp-about-text h2 { color: var(--rp-krem); font-size: 1.875rem; font-weight: 700; margin: 0 0 16px; }
