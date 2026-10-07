@@ -136,7 +136,25 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
       font-family: var(--font-heading); font-weight: 700; font-size: .72rem;
       letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary-dark);
     }
-    .wildcard-tiers { display: flex; gap: 16px; flex-wrap: wrap; }
+    /* Segmented control (bukan 3 kotak centang lepas) — tier bersifat
+       hierarkis-kumulatif (centang Puskomnas ikut mencentang Puskomda & LDK,
+       lihat toggleWildcardTier()), jadi tampilannya SENGAJA dibuat
+       "menyambung" satu baris supaya terlihat sebagai satu skala satu sama
+       lain, bukan 3 pilihan independen. Checkbox asli disembunyikan off-screen
+       (pola sama seperti .switch input di styles.scss) — status terpilih
+       cukup lewat highlight background, highlight BERURUTAN tanpa jeda dari
+       tier terpilih ke bawah juga ikut menegaskan hubungan kumulatifnya. */
+    .wildcard-tiers { display: flex; border: 1px solid var(--color-border); border-radius: var(--radius-xs); overflow: hidden; }
+    .wildcard-tiers .form-check {
+      flex: 1 1 0; justify-content: center; gap: 0; border: none; border-radius: 0;
+      background: #fff; padding: 11px 10px; font-size: .82rem;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .wildcard-tiers .form-check:not(:last-child) { border-right: 1px solid var(--color-border); }
+    .wildcard-tiers .form-check input[type="checkbox"] {
+      position: absolute; width: 1px; height: 1px; opacity: 0; margin: 0; pointer-events: none;
+    }
+    .wildcard-tiers .form-check:has(input:checked) { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 
     /* SATU card putih per section (judul + semua field-nya jadi satu) —
        gaya sama seperti .perm-mod (kartu modul) di popup Role Pengguna,
@@ -216,12 +234,33 @@ export class UserIndexPage implements OnInit, UserIndexView {
     return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName === 'Pengunjung';
   }
 
+  /** Super Admin otomatis dianggap backend punya akses penuh ke seluruh tier
+   *  (lihat effectiveWildcardTierAccess() di auth_service_impl.go) TERLEPAS
+   *  dari isi wildcardTierAccess tersimpan — checkbox "Akses Lintas Tier"
+   *  tetap tampil tapi auto-tercentang semua & dikunci (tidak bisa diuncheck
+   *  manual) begitu role ini dipilih, supaya tampilan form tidak menyesatkan
+   *  (seolah bisa parsial padahal backend selalu full akses untuk role ini). */
+  get isSuperAdminRole(): boolean {
+    return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName === 'Super Admin';
+  }
+
   onRoleChange(v: unknown): void {
+    const wasSuperAdmin = this.isSuperAdminRole;
     this.form.roleID = +(v as number);
     // Ganti ke Pengunjung saat field-nya sedang terisi -> kosongkan supaya
     // tidak diam-diam ikut terkirim saat field-nya sedang disembunyikan.
     if (this.isPengunjungRole) {
       this.form.organizationID = null;
+      this.form.wildcardTierAccess = [];
+    } else if (this.isSuperAdminRole) {
+      // organizationID DIBIARKAN (dipakai keperluan lain, mis. widget waktu
+      // sholat) — wildcardTierAccess auto-dicentang semua (lihat getter di atas).
+      this.form.wildcardTierAccess = [...this.wildcardTiers];
+    } else if (wasSuperAdmin) {
+      // Baru saja PINDAH KELUAR dari Super Admin — lepas lagi centang
+      // otomatisnya, supaya tidak diam-diam ikut terkirim sebagai grant
+      // manual untuk role yang baru dipilih (mis. pindah ke Kader harus
+      // dicentang ulang secara sadar kalau memang mau diberi akses lintas tier).
       this.form.wildcardTierAccess = [];
     }
   }
@@ -236,11 +275,22 @@ export class UserIndexPage implements OnInit, UserIndexView {
     if (this.showOrganizationPicker()) this.presenter.loadOrganizations();
   }
 
+  /** Super Admin selalu direpresentasikan sebagai 3 tier tercentang di form
+   *  (lihat isSuperAdminRole/onRoleChange) terlepas dari apa yang literal
+   *  tersimpan di baris akun (mis. akun lama yang dibuat sebelum perilaku
+   *  auto-centang ini ada) — dipakai openCreate/openEdit/openView supaya
+   *  tampilan form konsisten dengan apa yang sudah di-override backend. */
+  private resolveWildcardTierAccess(roleID: number, stored: string[]): string[] {
+    const roleName = this.roles().find((r) => r.roleID === roleID)?.roleName;
+    return roleName === 'Super Admin' ? [...this.wildcardTiers] : stored;
+  }
+
   openCreate(event?: Event): void {
     this.popupOrigin.set(popupOriginFromEvent(event));
     this.isReadonly = false;
     this.editId = null;
-    this.form = emptyForm(this.roles()[0]?.roleID ?? 0);
+    const roleID = this.roles()[0]?.roleID ?? 0;
+    this.form = { ...emptyForm(roleID), wildcardTierAccess: this.resolveWildcardTierAccess(roleID, []) };
     this.showForm.set(true);
     this.animateModal(true);
   }
@@ -250,7 +300,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.editId = u.userID;
     this.form = {
       fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive,
-      organizationID: u.organizationID ?? null, wildcardTierAccess: [...(u.wildcardTierAccess ?? [])],
+      organizationID: u.organizationID ?? null, wildcardTierAccess: this.resolveWildcardTierAccess(u.roleID, [...(u.wildcardTierAccess ?? [])]),
     };
     this.showForm.set(true);
     this.animateModal(true);
@@ -264,7 +314,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.editId = u.userID;
     this.form = {
       fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive,
-      organizationID: u.organizationID ?? null, wildcardTierAccess: [...(u.wildcardTierAccess ?? [])],
+      organizationID: u.organizationID ?? null, wildcardTierAccess: this.resolveWildcardTierAccess(u.roleID, [...(u.wildcardTierAccess ?? [])]),
     };
     this.showForm.set(true);
     this.animateModal(true);
@@ -311,10 +361,19 @@ export class UserIndexPage implements OnInit, UserIndexView {
     };
   }
 
+  /** Tier bersifat hierarkis-kumulatif (LDK ⊂ Puskomda ⊂ Puskomnas, sama
+   *  seperti TIER_RANK di AuthRepository.tierRank() frontend) — DB
+   *  (wildcardTierAccess) & pengecekan backend (containsTier/IsAccessible)
+   *  TIDAK mencakup otomatis, jadi mencentang Puskomnas saja tanpa ikut
+   *  mencentang LDK/Puskomda akan salah menolak akses ke organisasi LDK/
+   *  Puskomda walau niatnya akses nasional penuh. Representasikan selalu
+   *  sebagai "prefix" hierarki: centang tier X -> ikut centang semua tier DI
+   *  BAWAHNYA; uncentang tier X -> ikut uncentang semua tier DI ATASNYA
+   *  (yang bergantung padanya tetap konsisten sebagai satu rank tertinggi). */
   toggleWildcardTier(tier: string): void {
-    const set = new Set(this.form.wildcardTierAccess);
-    if (set.has(tier)) set.delete(tier); else set.add(tier);
-    this.form.wildcardTierAccess = [...set];
+    const idx = this.wildcardTiers.indexOf(tier as (typeof WILDCARD_TIERS)[number]);
+    const checking = !this.form.wildcardTierAccess.includes(tier);
+    this.form.wildcardTierAccess = this.wildcardTiers.slice(0, checking ? idx + 1 : idx);
   }
 
   isBusy(id: number): boolean { return this.busy().has(id); }

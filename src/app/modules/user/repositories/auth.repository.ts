@@ -106,8 +106,57 @@ export class AuthRepository {
     return rank;
   }
 
-  /** Akses CMS Utama (FSLDK) — ditandai permission admin sistem yang hanya dimiliki Super Admin. */
-  hasUtamaCmsAccess(): boolean { return this.hasPermission('role.view'); }
+  /** Permission self-service yang diberikan ke akun Kader/Pengunjung (lihat
+   *  migrations 0007, 0011, 0018, 0029) — kepemilikan permission ini SAJA
+   *  tidak menghitung sebagai akses CMS Utama, walau beberapa di antaranya
+   *  (mis. 'submission.create'/'submission.view') kebetulan juga tercatat
+   *  sebagai entri menu di lk_permission (dipakai halaman Portal Kader,
+   *  bukan Portal Admin). Kalau Kader/Pengunjung diberi permission baru di
+   *  migration mendatang, tambahkan juga di sini. */
+  private static readonly SELF_SERVICE_PERMISSIONS = new Set([
+    'submission.create', 'submission.update', 'submission.cancel', 'submission.view',
+    'kantong_amal.campaign.create', 'kantong_amal.campaign.view', 'kantong_amal.campaign.update',
+    'kantong_amal.withdrawal.request',
+  ]);
+
+  /** Apakah akun TERKUNCI ke satu tier organisasi saja (mis. staff LDK
+   *  Admin/Puskomda/Puskomnas Verifikator) — beda dari tierRank()>0 yang
+   *  ikut menghitung wildcardTierAccess. Super Admin DI DB juga bisa punya
+   *  organizationTypeCode terisi (mis. akun seed terhubung ke satu
+   *  organisasi untuk keperluan lain, mis. widget waktu sholat), TAPI
+   *  dibedakan dari staff tier biasa lewat wildcardTierAccess yang sengaja
+   *  diberikan (akses cascade ke LDK/Puskomda/Puskomnas SEKALIGUS, lihat
+   *  tierRank()) — jadi "org sendiri" doang (tanpa wildcard) itulah yang
+   *  menandakan akun murni staff satu tier, bukan organizationTypeCode-nya
+   *  isi/kosong semata. */
+  private isSingleOrgTierOnly(): boolean {
+    const u = this.user();
+    if (!u) return false;
+    const ownRank = TIER_RANK[u.organizationTypeCode ?? ''] ?? 0;
+    const hasWildcard = (u.wildcardTierAccess ?? []).length > 0;
+    return ownRank > 0 && !hasWildcard;
+  }
+
+  /** Akses CMS Utama (FSLDK/Portal Admin) — berlaku untuk akun yang BUKAN
+   *  staff terkunci satu tier organisasi (lihat isSingleOrgTierOnly()) dan
+   *  memiliki minimal satu permission DI LUAR daftar self-service Kader di
+   *  atas. Dulu hardcode cek 'role.view' (permission Manajemen Role, hanya
+   *  Super Admin) sebagai proxy akses CMS Utama — bug: role custom
+   *  non-Super-Admin dengan permission FSLDK-tier lain (mis. 'rapimnas.view')
+   *  ikut dianggap TIDAK punya akses CMS sama sekali, padahal rute & guard-nya
+   *  sudah benar. (Catatan: dua percobaan sebelumnya salah juga — (1) cek
+   *  "permission ≠ submission.create" saja: Kader/Pengunjung punya
+   *  submission.update/view/cancel + kantong_amal.* juga, lolos cek itu;
+   *  (2) ganti ke `tierRank() > 0` sebagai gate: Super Admin TERNYATA juga
+   *  punya organizationTypeCode+wildcardTierAccess terisi di DB — tierRank()
+   *  ikut menganggapnya "staff bertier" dan malah menyembunyikan Portal
+   *  Admin dari Super Admin sendiri. isSingleOrgTierOnly() memisahkan org
+   *  asli dari wildcard supaya cuma staff tier MURNI yang ter-exclude.) */
+  hasUtamaCmsAccess(): boolean {
+    if (this.isSingleOrgTierOnly()) return false;
+    const perms = this.user()?.permissions ?? [];
+    return perms.some((p) => !AuthRepository.SELF_SERVICE_PERMISSIONS.has(p));
+  }
   hasPuskomnasCmsAccess(): boolean { return this.tierRank() >= 3; }
   hasPuskomdaCmsAccess(): boolean { return this.tierRank() >= 2; }
   hasLdkCmsAccess(): boolean { return this.tierRank() >= 1; }

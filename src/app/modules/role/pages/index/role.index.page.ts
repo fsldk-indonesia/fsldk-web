@@ -328,9 +328,27 @@ export class RoleIndexPage implements OnInit, RoleIndexView {
     this.showForm.set(true);
     this.animateModal(true);
   }
+  /** Mencentang permission selain `.view` ikut mencentang `.view` modul yang
+   *  sama — tanpa itu permission lain jadi tidak berguna karena rute CMS
+   *  modul tsb digerbangi permission `.view` (lihat bug akses Rapimnas/
+   *  Shortlink yang diperbaiki sesi ini: punya `.create` tanpa `.view` berarti
+   *  tidak ada jalan masuk ke halamannya sama sekali). Hanya diterapkan kalau
+   *  modulnya punya PERSIS SATU permission `.view` — modul gabungan beberapa
+   *  sub-entitas (mis. "Kantong Amal": kantong_amal.campaign.view,
+   *  kantong_amal.donation.view, dst, semuanya di-groupkan ke satu
+   *  moduleName) punya lebih dari satu, jadi sengaja dilewati daripada
+   *  menebak salah yang mana yang relevan. */
   toggle(id: number): void {
     if (this.isReadonly) return;
-    this.selected.has(id) ? this.selected.delete(id) : this.selected.add(id);
+    if (this.selected.has(id)) {
+      this.selected.delete(id);
+      return;
+    }
+    this.selected.add(id);
+    const perm = this.permissions().find((p) => p.permissionID === id);
+    if (!perm || perm.permissionCode.endsWith('.view')) return;
+    const moduleViews = this.permissions().filter((p) => p.moduleName === perm.moduleName && p.permissionCode.endsWith('.view'));
+    if (moduleViews.length === 1) this.selected.add(moduleViews[0].permissionID);
   }
   close(): void {
     this.animateModal(false);

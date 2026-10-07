@@ -69,14 +69,17 @@
             <div class="collapse" [class.open]="!isPengunjungRole">
               <div class="collapse-inner">
                 <div class="form-group">
-                  <label class="form-label">Akses Lintas Tier (opsional)</label>
+                  <label class="form-label">Akses Lintas Tier{{ isSuperAdminRole ? '' : ' (opsional)' }}</label>
                   <div class="wildcard-tiers">
                     @for (tier of wildcardTiers; track tier) {
                       <label class="form-check">
-                        <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" [disabled]="isReadonly" (change)="toggleWildcardTier(tier)"> {{ tier }}
+                        <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" [disabled]="isReadonly || isSuperAdminRole" (change)="toggleWildcardTier(tier)"> {{ tier }}
                       </label>
                     }
                   </div>
+                  @if (isSuperAdminRole) {
+                    <p class="form-hint">Super Admin otomatis punya akses penuh ke seluruh tier.</p>
+                  }
                 </div>
               </div>
             </div>

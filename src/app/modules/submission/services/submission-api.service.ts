@@ -26,8 +26,8 @@ export class SubmissionApiService {
   saveAnswers(id: number, body: unknown): Observable<SubmissionDetail> { return this.api.put(`/submissions/${id}/answers`, body); }
   submit(id: number): Observable<SubmissionResponse> { return this.api.post(`/submissions/${id}/submit`); }
   cancel(id: number): Observable<unknown> { return this.api.post(`/submissions/${id}/cancel`); }
-  list(formCode: string, organizationID?: number): Observable<Pagination<SubmissionResponse>> {
-    return this.api.get('/submissions', { formCode, limit: 1, organizationID });
+  list(formCode: string, organizationID?: number, opts?: { silent?: boolean }): Observable<Pagination<SubmissionResponse>> {
+    return this.api.get('/submissions', { formCode, limit: 1, organizationID }, opts);
   }
   /** Daftar terpaginasi mentah `/submissions`. `status` boleh comma-separated
    *  (backend mem-parsing lewat `dto.ParseCSV` -> IN-list) — dipakai baik
