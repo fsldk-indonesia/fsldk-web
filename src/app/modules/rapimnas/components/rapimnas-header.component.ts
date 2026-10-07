@@ -26,14 +26,18 @@ interface RapimnasNavItem {
   template: `
     <header class="rp-header">
       <div class="rp-header-inner">
-        <a [routerLink]="path.index" class="rp-brand">
-          <div class="rp-brand-logos">
+        <div class="rp-brand">
+          <a routerLink="/" class="rp-brand-fsldk" aria-label="Ke Beranda FSLDK">
             <img src="assets/logo-fsldk-radius.png" alt="Logo FSLDK" class="rp-brand-logo">
-            <img src="assets/rapimnas/logo-insani.png" alt="Logo Insani" class="rp-brand-logo rp-brand-logo-round">
-            <img src="assets/rapimnas/logo-rapimnas.png" alt="Logo RAPIMNAS" class="rp-brand-logo rp-brand-logo-round">
-          </div>
-          <div class="rp-brand-title">RAPIMNAS 1 FSLDK <span class="rp-accent">2026</span></div>
-        </a>
+          </a>
+          <a [routerLink]="path.index" class="rp-brand-rapimnas">
+            <div class="rp-brand-logos">
+              <img src="assets/rapimnas/logo-insani.png" alt="Logo Insani" class="rp-brand-logo rp-brand-logo-round">
+              <img src="assets/rapimnas/logo-rapimnas.png" alt="Logo RAPIMNAS" class="rp-brand-logo rp-brand-logo-round">
+            </div>
+            <div class="rp-brand-title">RAPIMNAS 1 FSLDK <span class="rp-accent">2026</span></div>
+          </a>
+        </div>
 
         <button type="button" class="rp-burger" [class.open]="mobileMenuOpen()" (click)="toggleMobileMenu()" aria-label="Toggle Menu" aria-haspopup="true" [attr.aria-expanded]="mobileMenuOpen()">
           <span class="rp-burger-box">
@@ -94,9 +98,14 @@ interface RapimnasNavItem {
   styles: [`
     .rp-header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; background: color-mix(in srgb, var(--rp-maroon) 95%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--rp-merah); }
     .rp-header-inner { max-width: 1152px; margin: 0 auto; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
-    .rp-brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
+    .rp-brand { display: flex; align-items: center; gap: 16px; }
+    /* FSLDK logo is its own link to the main site root ("/"), separate
+       from the rest of the brand lockup which stays scoped to /rapimnas. */
+    .rp-brand-fsldk { display: flex; text-decoration: none; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
+    .rp-brand-fsldk:hover { opacity: 0.8; }
+    .rp-brand-rapimnas { display: flex; align-items: center; gap: 16px; text-decoration: none; }
     .rp-brand-logos { display: flex; align-items: center; gap: 8px; transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1); }
-    .rp-brand:hover .rp-brand-logos { opacity: 0.8; }
+    .rp-brand-rapimnas:hover .rp-brand-logos { opacity: 0.8; }
     .rp-brand-logo { width: 32px; height: 32px; object-fit: contain; }
     .rp-brand-logo-round { border-radius: 2px; }
     .rp-brand-title { display: none; font-weight: 700; font-size: 1.25rem; color: var(--rp-krem); letter-spacing: -0.025em; }
