@@ -74,6 +74,10 @@ import { RapimnasTentangView } from './rapimnas.tentang.view';
 
     /* Tujuan & Rangkaian Kegiatan */
     .rp-tentang-cols { display: grid; grid-template-columns: 1fr; gap: 48px; }
+    /* Outer card matching .rp-tentang-misi's treatment — the class was
+       added to the markup but its rule was missing, so it rendered with
+       no backing at all. */
+    .rp-tentang-col-card { background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); backdrop-filter: blur(12px); border: 1px solid color-mix(in srgb, var(--rp-merah) 50%, transparent); border-radius: 32px; padding: 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
     .rp-tentang-cols-head { margin-bottom: 32px; }
     .rp-tujuan-list { display: flex; flex-direction: column; gap: 16px; }
     /* Own card backing (previously relied on the page-level .rp-tentang
