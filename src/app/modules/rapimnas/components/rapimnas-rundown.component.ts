@@ -1,4 +1,4 @@
-import { Component, Input, signal } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, Input, OnDestroy, QueryList, ViewChild, ViewChildren, computed, signal } from '@angular/core';
 import { RapimnasRundownDay } from '../entities/rapimnas';
 
 @Component({
@@ -6,14 +6,17 @@ import { RapimnasRundownDay } from '../entities/rapimnas';
   standalone: true,
   template: `
     <div class="rp-rundown">
-      <div class="rp-rundown-tabs">
+      <div class="rp-rundown-tabs" #tabsWrap>
+        <span class="rp-rundown-tab-pill" [class.rp-rundown-tab-pill--animated]="pillAnimated()"
+          [style.width.px]="pillRect().width" [style.height.px]="pillRect().height"
+          [style.transform]="pillTransform()" aria-hidden="true"></span>
         @for (day of days; track $index) {
-          <button type="button" class="rp-rundown-tab" [class.active]="activeTab() === $index" (click)="activeTab.set($index)">{{ day.dayLabel }}</button>
+          <button #tabBtn type="button" class="rp-rundown-tab" [class.active]="activeTab() === $index" (click)="selectTab($index)">{{ day.dayLabel }}</button>
         }
       </div>
 
-      @if (days[activeTab()]; as activeDay) {
-        <div class="rp-rundown-content">
+      @if (days[displayedTab()]; as activeDay) {
+        <div class="rp-rundown-content" [class.rp-rundown-content--visible]="contentVisible()">
           <div class="rp-rundown-line"></div>
           <h3 class="rp-rundown-date">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="rp-rundown-date-icon">
@@ -37,11 +40,14 @@ import { RapimnasRundownDay } from '../entities/rapimnas';
   `,
   styles: [`
     .rp-rundown { max-width: 896px; margin: 0 auto; padding: 0 16px; }
-    .rp-rundown-tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 48px; }
-    .rp-rundown-tab { padding: 12px 24px; border-radius: 999px; font-weight: 600; border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); color: color-mix(in srgb, var(--rp-krem) 70%, transparent); cursor: pointer; transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1); }
+    .rp-rundown-tabs { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 48px; }
+    .rp-rundown-tab-pill { position: absolute; top: 0; left: 0; border-radius: 999px; background: var(--rp-oranye); box-shadow: 0 0 15px rgba(254, 112, 2, 0.5); z-index: 0; pointer-events: none; }
+    .rp-rundown-tab-pill--animated { transition: transform 420ms cubic-bezier(0.65, 0, 0.35, 1), width 420ms cubic-bezier(0.65, 0, 0.35, 1), height 420ms cubic-bezier(0.65, 0, 0.35, 1); }
+    .rp-rundown-tab { position: relative; z-index: 1; padding: 12px 24px; border-radius: 999px; font-weight: 600; border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); background: color-mix(in srgb, var(--rp-maroon) 40%, transparent); color: color-mix(in srgb, var(--rp-krem) 70%, transparent); cursor: pointer; transition: color 250ms ease, border-color 250ms ease, background-color 250ms ease; }
     .rp-rundown-tab:hover { background: color-mix(in srgb, var(--rp-merah) 50%, transparent); color: var(--rp-krem); }
-    .rp-rundown-tab.active { background: var(--rp-oranye); color: var(--rp-maroon); border-color: var(--rp-oranye); box-shadow: 0 0 15px rgba(254, 112, 2, 0.5); transform: scale(1.05); }
-    .rp-rundown-content { position: relative; padding-left: 48px; }
+    .rp-rundown-tab.active { background: transparent; color: var(--rp-maroon); border-color: transparent; font-weight: 700; }
+    .rp-rundown-content { position: relative; padding-left: 48px; opacity: 0; transform: translateY(14px); transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1), transform 260ms cubic-bezier(0.16, 1, 0.3, 1); }
+    .rp-rundown-content--visible { opacity: 1; transform: none; }
     .rp-rundown-line { position: absolute; left: 16px; top: 0; bottom: 0; width: 4px; background: color-mix(in srgb, var(--rp-merah) 30%, transparent); border-radius: 999px; }
     .rp-rundown-date { font-size: 1.5rem; font-weight: 700; line-height: 2rem; color: var(--rp-kuning); margin: 0 0 24px; display: flex; align-items: center; gap: 12px; }
     .rp-rundown-date-icon { width: 24px; height: 24px; flex-shrink: 0; }
@@ -62,8 +68,53 @@ import { RapimnasRundownDay } from '../entities/rapimnas';
     }
   `],
 })
-export class RapimnasRundownComponent {
+export class RapimnasRundownComponent implements AfterViewInit, OnDestroy {
   @Input({ required: true }) days: RapimnasRundownDay[] = [];
 
+  @ViewChild('tabsWrap') private tabsWrapRef?: ElementRef<HTMLDivElement>;
+  @ViewChildren('tabBtn') private tabBtnsQuery?: QueryList<ElementRef<HTMLButtonElement>>;
+
   activeTab = signal(0);
+  displayedTab = signal(0);
+  contentVisible = signal(true);
+  pillAnimated = signal(false);
+  pillRect = signal({ x: 0, y: 0, width: 0, height: 0 });
+  pillTransform = computed(() => `translate(${this.pillRect().x}px, ${this.pillRect().y}px)`);
+
+  private contentTimeoutId?: ReturnType<typeof setTimeout>;
+
+  ngAfterViewInit(): void {
+    this.measurePill(this.activeTab());
+    this.tabBtnsQuery?.changes.subscribe(() => this.measurePill(this.activeTab()));
+    requestAnimationFrame(() => this.pillAnimated.set(true));
+  }
+
+  ngOnDestroy(): void {
+    if (this.contentTimeoutId) clearTimeout(this.contentTimeoutId);
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.measurePill(this.activeTab());
+  }
+
+  selectTab(index: number): void {
+    if (index === this.activeTab()) return;
+    this.activeTab.set(index);
+    this.measurePill(index);
+
+    this.contentVisible.set(false);
+    if (this.contentTimeoutId) clearTimeout(this.contentTimeoutId);
+    this.contentTimeoutId = setTimeout(() => {
+      this.displayedTab.set(index);
+      this.contentVisible.set(true);
+      this.contentTimeoutId = undefined;
+    }, 220);
+  }
+
+  private measurePill(index: number): void {
+    const btn = this.tabBtnsQuery?.get(index)?.nativeElement;
+    if (!btn) return;
+    this.pillRect.set({ x: btn.offsetLeft, y: btn.offsetTop, width: btn.offsetWidth, height: btn.offsetHeight });
+  }
 }

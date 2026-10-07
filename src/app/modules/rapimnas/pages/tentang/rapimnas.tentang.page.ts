@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RapimnasPublic } from '../../entities/rapimnas';
+import { RapimnasRevealDirective } from '../../rapimnas-reveal.directive';
 import { RapimnasTentangPresenter } from './rapimnas.tentang.presenter';
 import { RapimnasTentangView } from './rapimnas.tentang.view';
 
@@ -7,9 +8,12 @@ import { RapimnasTentangView } from './rapimnas.tentang.view';
   selector: 'app-rapimnas-tentang-page',
   standalone: true,
   templateUrl: './rapimnas.tentang.page.html',
+  imports: [RapimnasRevealDirective],
   providers: [RapimnasTentangPresenter],
   styles: [`
     .rp-page-loading { padding: 120px 0; text-align: center; color: var(--rp-krem); }
+    .rp-reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1); }
+    .rp-reveal.rp-revealed { opacity: 1; transform: none; }
 
     /* Outer page wrapper — min-h-screen bg-[#7d0526]/10 + pt-10 pb-20 overflow-hidden */
     .rp-tentang { background: color-mix(in srgb, var(--rp-maroon) 10%, var(--rp-bg)); padding: 40px 0 80px; overflow: hidden; }
@@ -18,9 +22,9 @@ import { RapimnasTentangView } from './rapimnas.tentang.view';
     /* Header — max-w-4xl mx-auto px-4 text-center mb-16 relative */
     .rp-tentang-head { max-width: 896px; margin: 0 auto 64px; padding: 0 16px; text-align: center; position: relative; }
     .rp-tentang-head-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 256px; height: 256px; background: color-mix(in srgb, var(--rp-oranye) 20%, transparent); border-radius: 999px; filter: blur(80px); pointer-events: none; z-index: 0; }
-    .rp-tentang-badge { position: relative; z-index: 1; display: inline-block; background: color-mix(in srgb, var(--rp-merah) 40%, transparent); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); color: var(--rp-kuning); font-size: 0.75rem; font-weight: 600; padding: 8px 20px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; box-shadow: 0 0 15px rgba(254, 112, 2, 0.3); }
-    .rp-tentang-h1 { position: relative; z-index: 1; color: var(--rp-krem); font-size: 2.25rem; font-weight: 800; margin: 0 0 16px; }
-    .rp-tentang-h1-accent { background: linear-gradient(to right, var(--rp-oranye), var(--rp-kuning)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .rp-tentang-badge { display: block; position: relative; z-index: 1; color: var(--rp-kuning); font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 20px; text-shadow: 0 0 20px rgba(254, 112, 2, 0.5); }
+    .rp-tentang-h1 { position: relative; z-index: 1; color: var(--rp-krem); font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 16px; }
+    .rp-tentang-h1-accent { color: var(--rp-oranye); }
     .rp-tentang-theme-card { position: relative; z-index: 1; background: color-mix(in srgb, var(--rp-maroon) 60%, transparent); backdrop-filter: blur(4px); border: 1px solid color-mix(in srgb, var(--rp-merah) 50%, transparent); padding: 24px; border-radius: 16px; max-width: 768px; margin: 0 auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); transition: box-shadow 0.5s; }
     .rp-tentang-theme-card:hover { box-shadow: 0 0 30px rgba(254, 112, 2, 0.15); }
     .rp-tentang-theme-card h2 { color: var(--rp-oranye); font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin: 0 0 8px; }
@@ -34,7 +38,7 @@ import { RapimnasTentangView } from './rapimnas.tentang.view';
     .rp-tentang-desc-glow-2 { bottom: -128px; left: -128px; background: color-mix(in srgb, var(--rp-oranye) 10%, transparent); }
     .rp-tentang-desc:hover .rp-tentang-desc-glow-1 { transform: rotate(180deg); }
     .rp-tentang-desc:hover .rp-tentang-desc-glow-2 { transform: rotate(-180deg); }
-    .rp-tentang-desc p { position: relative; z-index: 1; color: color-mix(in srgb, var(--rp-krem) 90%, transparent); line-height: 1.625; font-size: 1.125rem; font-weight: 500; text-align: justify; margin: 0; }
+    .rp-tentang-desc p { position: relative; z-index: 1; max-width: 68ch; margin: 0 auto; color: color-mix(in srgb, var(--rp-krem) 90%, transparent); line-height: 1.7; font-size: 1.125rem; font-weight: 500; text-align: justify; }
 
     /* Section headings — shared "underline bar" motif */
     .rp-tentang-heading { position: relative; display: inline-block; color: var(--rp-krem); font-size: 1.875rem; font-weight: 700; margin: 0; }

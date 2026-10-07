@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { RapimnasRundownComponent } from '../../components/rapimnas-rundown.component';
 import { RapimnasPublic } from '../../entities/rapimnas';
+import { RapimnasRevealDirective } from '../../rapimnas-reveal.directive';
 import { RapimnasJadwalPresenter } from './rapimnas.jadwal.presenter';
 import { RapimnasJadwalView } from './rapimnas.jadwal.view';
 
@@ -8,16 +9,18 @@ import { RapimnasJadwalView } from './rapimnas.jadwal.view';
   selector: 'app-rapimnas-jadwal-page',
   standalone: true,
   templateUrl: './rapimnas.jadwal.page.html',
-  imports: [RapimnasRundownComponent],
+  imports: [RapimnasRundownComponent, RapimnasRevealDirective],
   providers: [RapimnasJadwalPresenter],
   styles: [`
     .rp-page-loading { padding: 120px 0; text-align: center; color: var(--rp-krem); }
+    .rp-reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1); }
+    .rp-reveal.rp-revealed { opacity: 1; transform: none; }
     .rp-jadwal { padding: 40px 0 80px; }
     .rp-jadwal-head { max-width: 896px; margin: 0 auto 64px; padding: 0 16px; text-align: center; position: relative; }
     .rp-jadwal-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 256px; height: 256px; background: color-mix(in srgb, var(--rp-oranye) 20%, transparent); border-radius: 50%; filter: blur(80px); pointer-events: none; }
-    .rp-jadwal-badge { position: relative; z-index: 10; display: inline-block; background: color-mix(in srgb, var(--rp-merah) 40%, transparent); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); color: var(--rp-kuning); font-size: 0.75rem; font-weight: 600; padding: 8px 20px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; box-shadow: 0 0 15px rgba(254, 112, 2, 0.3); }
+    .rp-jadwal-badge { display: block; position: relative; z-index: 10; color: var(--rp-kuning); font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 20px; text-shadow: 0 0 20px rgba(254, 112, 2, 0.5); }
     .rp-jadwal-head h1 { position: relative; z-index: 10; color: var(--rp-krem); font-size: 2.25rem; line-height: 2.5rem; font-weight: 800; margin: 0 0 16px; }
-    .rp-jadwal-title-accent { background: linear-gradient(to right, var(--rp-oranye), var(--rp-kuning)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .rp-jadwal-title-accent { color: var(--rp-oranye); }
     .rp-jadwal-head p { position: relative; z-index: 10; color: color-mix(in srgb, var(--rp-krem) 80%, transparent); font-style: italic; margin: 0; }
     .rp-jadwal-rundown { position: relative; z-index: 10; padding-bottom: 80px; }
     @media (min-width: 768px) {

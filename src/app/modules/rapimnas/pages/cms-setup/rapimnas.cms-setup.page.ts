@@ -1,7 +1,9 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { MultiImageUploadComponent } from '../../../../shared/multi-image-upload.component';
+import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { RAPIMNAS_ICON_KEYS } from '../../rapimnas.constants';
 import {
   RapimnasCms, RapimnasContact, RapimnasHomeCard, RapimnasPickupLocation,
@@ -18,7 +20,7 @@ interface SimpleContact { name: string; phoneNumber: string; }
   selector: 'app-rapimnas-cms-setup-page',
   standalone: true,
   templateUrl: './rapimnas.cms-setup.page.html',
-  imports: [FormsModule, ImageUploadComponent, MultiImageUploadComponent],
+  imports: [FormsModule, ImageUploadComponent, MultiImageUploadComponent, SelectComponent, DateTimePickerComponent],
   providers: [RapimnasCmsSetupPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -198,6 +200,7 @@ export class RapimnasCmsSetupPage implements OnInit, RapimnasCmsSetupView {
   }
 
   readonly iconOptions = RAPIMNAS_ICON_KEYS;
+  readonly iconSelectOptions: SelectOption[] = RAPIMNAS_ICON_KEYS.map((k) => ({ value: k, label: k }));
 
   addHomeCard(): void {
     this.homeCards = [...this.homeCards, { iconKey: RAPIMNAS_ICON_KEYS[0], title: '', description: '', sortOrder: this.homeCards.length }];

@@ -25,7 +25,7 @@
         <div class="form-group"><label class="form-label">Judul</label><input class="form-control" [(ngModel)]="heroTitle" name="heroTitle"></div>
         <div class="form-group"><label class="form-label">Tagline (opsional)</label><input class="form-control" [(ngModel)]="heroTaglineQuote" name="heroTaglineQuote"></div>
         <div class="form-group"><label class="form-label">Teks Lokasi &amp; Tanggal</label><input class="form-control" [(ngModel)]="heroDateRangeText" name="heroDateRangeText"></div>
-        <div class="form-group"><label class="form-label">Target Hitung Mundur</label><input class="form-control" type="datetime-local" [(ngModel)]="countdownTargetDate" name="countdownTargetDate"></div>
+        <div class="form-group"><label class="form-label">Target Hitung Mundur</label><app-datetime-picker [(ngModel)]="countdownTargetDate" name="countdownTargetDate" placeholder="Pilih tanggal &amp; waktu…" /></div>
         <div class="form-group mb-0"><label class="form-label">Gambar Hero</label><app-image-upload [(value)]="heroImageUrl" /></div>
       </div>
     </div>
@@ -38,18 +38,14 @@
         <div class="form-grid-2">
           <div>
             <div class="form-group"><label class="form-label">Ikon 1</label>
-              <select class="form-control" [(ngModel)]="feature1IconKey" name="feature1IconKey">
-                @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
-              </select>
+              <app-select [(ngModel)]="feature1IconKey" name="feature1IconKey" [options]="iconSelectOptions" />
             </div>
             <div class="form-group"><label class="form-label">Judul 1</label><input class="form-control" [(ngModel)]="feature1Title" name="feature1Title"></div>
             <div class="form-group mb-0"><label class="form-label">Deskripsi 1</label><input class="form-control" [(ngModel)]="feature1Desc" name="feature1Desc"></div>
           </div>
           <div>
             <div class="form-group"><label class="form-label">Ikon 2</label>
-              <select class="form-control" [(ngModel)]="feature2IconKey" name="feature2IconKey">
-                @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
-              </select>
+              <app-select [(ngModel)]="feature2IconKey" name="feature2IconKey" [options]="iconSelectOptions" />
             </div>
             <div class="form-group"><label class="form-label">Judul 2</label><input class="form-control" [(ngModel)]="feature2Title" name="feature2Title"></div>
             <div class="form-group mb-0"><label class="form-label">Deskripsi 2</label><input class="form-control" [(ngModel)]="feature2Desc" name="feature2Desc"></div>
@@ -74,9 +70,7 @@
         <p class="form-section-label">Kartu Rangkaian Kegiatan</p>
         @for (card of homeCards; track $index) {
           <div class="repeater-row" style="grid-template-columns: 160px 1fr 1fr auto auto auto;">
-            <select class="form-control" [(ngModel)]="card.iconKey" [name]="'homeCardIcon' + $index">
-              @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
-            </select>
+            <app-select [(ngModel)]="card.iconKey" [name]="'homeCardIcon' + $index" [options]="iconSelectOptions" />
             <input class="form-control" placeholder="Judul" [(ngModel)]="card.title" [name]="'homeCardTitle' + $index">
             <input class="form-control" placeholder="Deskripsi" [(ngModel)]="card.description" [name]="'homeCardDesc' + $index">
             <button type="button" class="btn btn-ghost btn-sm" [disabled]="$index === 0" (click)="moveHomeCard($index, -1)">&uarr;</button>
@@ -183,9 +177,7 @@
             <div class="form-grid-2">
               <div class="form-group"><label class="form-label">Judul</label><input class="form-control" [(ngModel)]="item.title" [name]="'resTitle' + i"></div>
               <div class="form-group"><label class="form-label">Ikon</label>
-                <select class="form-control" [(ngModel)]="item.iconKey" [name]="'resIcon' + i">
-                  @for (k of iconOptions; track k) { <option [value]="k">{{ k }}</option> }
-                </select>
+                <app-select [(ngModel)]="item.iconKey" [name]="'resIcon' + i" [options]="iconSelectOptions" />
               </div>
             </div>
             <div class="form-group"><label class="form-label">Deskripsi</label><input class="form-control" [(ngModel)]="item.description" [name]="'resDesc' + i"></div>

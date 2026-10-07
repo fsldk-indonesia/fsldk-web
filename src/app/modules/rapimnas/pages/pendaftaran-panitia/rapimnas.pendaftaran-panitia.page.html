@@ -4,12 +4,12 @@
   @let d = data()!;
   <div class="rp-panitia">
     @if (!d.panitiaIsOpen) {
-      <div class="rp-panitia-closed">
+      <div class="rp-panitia-closed" rpReveal>
         <h2>Pendaftaran Panitia Belum Dibuka</h2>
         <p>{{ d.panitiaClosedMessage }}</p>
       </div>
     } @else {
-      <div class="rp-panitia-card">
+      <div class="rp-panitia-card" rpReveal>
         <div class="rp-panitia-head">
           <h2>Form Pendaftaran Panitia</h2>
           <p>Open Recruitment Kepanitiaan RAPIMNAS 2026</p>
