@@ -15,8 +15,11 @@ import { RapimnasTentangView } from './rapimnas.tentang.view';
     .rp-reveal { opacity: 0; transform: translateY(28px); transition: opacity .8s cubic-bezier(0.16,1,0.3,1), transform .8s cubic-bezier(0.16,1,0.3,1); }
     .rp-reveal.rp-revealed { opacity: 1; transform: none; }
 
-    /* Outer page wrapper — min-h-screen bg-[#7d0526]/10 + pt-10 pb-20 overflow-hidden */
-    .rp-tentang { background: color-mix(in srgb, var(--rp-maroon) 10%, var(--rp-bg)); padding: 40px 0 80px; overflow: hidden; }
+    /* Outer page wrapper — bg removed so the sitewide dot/swirl texture
+       (rapimnas-layout.component.ts) shows through directly instead of
+       being tinted/dulled by this page's own flat overlay; inner cards
+       below are untouched. */
+    .rp-tentang { padding: 40px 0 80px; overflow: hidden; }
     .rp-tentang-section { max-width: 1152px; margin: 0 auto; padding: 0 16px; } /* max-w-6xl mx-auto px-4 */
 
     /* Header — max-w-4xl mx-auto px-4 text-center mb-16 relative */
@@ -73,14 +76,22 @@ import { RapimnasTentangView } from './rapimnas.tentang.view';
     .rp-tentang-cols { display: grid; grid-template-columns: 1fr; gap: 48px; }
     .rp-tentang-cols-head { margin-bottom: 32px; }
     .rp-tujuan-list { display: flex; flex-direction: column; gap: 16px; }
-    .rp-tujuan-item { display: flex; align-items: flex-start; gap: 16px; padding: 16px; border-radius: 16px; border: 1px solid transparent; transition: background-color 0.3s, border-color 0.3s; }
-    .rp-tujuan-item:hover { background: linear-gradient(to right, color-mix(in srgb, var(--rp-merah) 20%, transparent), transparent); border-color: color-mix(in srgb, var(--rp-merah) 30%, transparent); }
+    /* Own card backing (previously relied on the page-level .rp-tentang
+       tint, now removed) so list text sits on a calm surface instead of
+       the sitewide dot texture showing straight through — matches
+       .rp-kegiatan-item's baseline/hover treatment in the sibling column. */
+    .rp-tujuan-item { display: flex; align-items: flex-start; gap: 16px; padding: 16px; border-radius: 16px; background: color-mix(in srgb, var(--rp-maroon) 35%, transparent); backdrop-filter: blur(8px); border: 1px solid color-mix(in srgb, var(--rp-merah) 30%, transparent); transition: background-color 0.3s, border-color 0.3s; }
+    .rp-tujuan-item:hover { background: color-mix(in srgb, var(--rp-merah) 30%, transparent); border-color: color-mix(in srgb, var(--rp-oranye) 40%, transparent); }
     .rp-tujuan-icon { color: var(--rp-oranye); flex-shrink: 0; margin-top: 4px; display: inline-flex; transition: transform 0.3s; }
     .rp-tujuan-icon svg { width: 24px; height: 24px; }
     .rp-tujuan-item:hover .rp-tujuan-icon { transform: scale(1.25); }
     .rp-tujuan-item p { color: color-mix(in srgb, var(--rp-krem) 90%, transparent); font-size: 0.875rem; line-height: 1.625; margin: 0; }
     .rp-kegiatan-list { display: flex; flex-direction: column; gap: 12px; }
-    .rp-kegiatan-item { display: flex; align-items: center; gap: 20px; background: linear-gradient(to right, color-mix(in srgb, var(--rp-maroon) 60%, transparent), transparent); padding: 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--rp-merah) 30%, transparent); cursor: default; transition: background-color 0.3s, border-color 0.3s, transform 0.3s; }
+    /* Fades to a dimmer tone, not literal 0% opacity — fading all the way
+       to transparent (as this used to) let the sitewide dot texture show
+       straight through the card's right side once the page-level tint
+       behind it was removed. */
+    .rp-kegiatan-item { display: flex; align-items: center; gap: 20px; background: linear-gradient(to right, color-mix(in srgb, var(--rp-maroon) 55%, transparent), color-mix(in srgb, var(--rp-maroon) 28%, transparent)); padding: 16px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--rp-merah) 30%, transparent); cursor: default; transition: background-color 0.3s, border-color 0.3s, transform 0.3s; }
     .rp-kegiatan-item:hover { background: color-mix(in srgb, var(--rp-merah) 30%, transparent); border-color: color-mix(in srgb, var(--rp-oranye) 50%, transparent); transform: translateX(12px); }
     .rp-kegiatan-num { width: 40px; height: 40px; flex-shrink: 0; border-radius: 12px; background: var(--rp-merah); border: 1px solid color-mix(in srgb, var(--rp-oranye) 40%, transparent); color: var(--rp-kuning); display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); transition: background-color 0.3s, color 0.3s; }
     .rp-kegiatan-item:hover .rp-kegiatan-num { background: var(--rp-oranye); color: var(--rp-maroon); }
