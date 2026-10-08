@@ -18,33 +18,37 @@ import { ShortlinkRedirectView } from './shortlink.redirect.view';
   imports: [RouterLink, IconComponent, PageLoaderComponent],
   providers: [ShortlinkRedirectPresenter],
   styles: [`
-    /* Backdrop — gradien hijau tua diagonal + glow radial emas + tekstur
-       titik, disalin PERSIS dari .auth-wash milik AuthLayoutComponent
-       (halaman ini tidak bersarang di shell manapun — lihat app.routes.ts
-       — jadi backdropnya harus dibawa sendiri). */
+    /* Backdrop — tint hijau lembut + dua blob radial hijau/emas yang
+       drift pelan, pola yang sama dipakai section-blob-drift di halaman
+       publik Struktur Organisasi & Galeri (lihat structure.public-index.page.ts).
+       Halaman ini tidak bersarang di shell manapun — lihat app.routes.ts —
+       jadi backdropnya harus dibawa sendiri. */
     .redirect-wash {
       position: relative; overflow: hidden;
       min-height: 100dvh;
       display: flex; align-items: center; justify-content: center;
       padding: 28px 24px;
-      background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 62%, var(--color-primary-darker) 100%);
+      background: var(--color-primary-tint);
     }
-    .redirect-wash::after {
+    .redirect-wash::before {
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background: radial-gradient(ellipse 55% 65% at 88% 30%, rgba(255,196,0,.18) 0%, transparent 70%);
+      background:
+        radial-gradient(ellipse 55% 55% at 88% 42%, var(--color-gold-soft) 0%, var(--color-primary-soft) 42%, transparent 75%),
+        radial-gradient(ellipse 50% 50% at 10% 62%, var(--color-primary-soft) 0%, var(--color-gold-soft) 45%, transparent 75%);
+      opacity: .8; animation: redirectBlobDrift 12s ease-in-out infinite alternate;
     }
-    .redirect-texture {
-      position: absolute; inset: 0; z-index: 0; opacity: .5; pointer-events: none;
-      background-image: radial-gradient(circle, rgba(255,255,255,.5) 1.5px, transparent 1.6px);
-      background-size: 26px 26px; background-position: 15% -10px;
-      mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
-      -webkit-mask-image: radial-gradient(circle at 12% 15%, black, transparent 60%);
+    @keyframes redirectBlobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to { transform: translate(-4%, 5%) scale(1.15); }
     }
+    @media (prefers-reduced-motion: reduce) { .redirect-wash::before { animation: none; } }
+
+    .redirect-wash > * { position: relative; z-index: 1; }
     .redirect-card {
-      position: relative; z-index: 1; box-sizing: border-box;
+      box-sizing: border-box;
       width: 100%; max-width: 400px;
       background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-      box-shadow: 0 24px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.6);
+      box-shadow: 0 16px 40px rgba(4,100,40,.12), inset 0 1px 0 rgba(255,255,255,.6);
       padding: 40px 32px;
     }
 

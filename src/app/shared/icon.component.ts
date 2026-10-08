@@ -77,6 +77,8 @@ const ICONS: Record<string, string> = {
   'id-card': 'fas fa-id-card',
   phone: 'fas fa-phone',
   'user-circle': 'fas fa-circle-user',
+  // Filter "Penulis" artikel publik (app-search-filter-sort).
+  user: 'fas fa-user',
   // Antrian permintaan shortlink (app-shortlinkrequest-index-page) & App Settings.
   clock: 'fas fa-clock',
   check: 'fas fa-check',

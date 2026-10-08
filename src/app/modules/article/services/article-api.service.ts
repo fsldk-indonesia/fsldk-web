@@ -6,21 +6,27 @@ import { Article } from '../entities/article';
 import { ArticleCategory } from '../entities/article-category';
 
 /** Query params opsional untuk listPublic — search (judul/penulis), category
- *  (slug kategori, multi-select) & year (tahun publikasi, multi-select),
- *  keduanya array — ApiService.toParams() mengirimnya sebagai query key
- *  berulang (?category=a&category=b), diterima backend via Gin QueryArray
- *  (pola sama seperti GalleryPublicListParams). */
+ *  (slug kategori, multi-select), year (tahun publikasi, multi-select),
+ *  writer (penulis, multi-select) & month (bulan publikasi 1-12, multi-select)
+ *  array — ApiService.toParams() mengirimnya sebagai query key berulang
+ *  (?category=a&category=b), diterima backend via Gin QueryArray (pola sama
+ *  seperti GalleryPublicListParams). hasPdf dikirim sebagai string
+ *  "true"/"false" tunggal (bukan array) — tiga state (semua/ya/tidak). */
 export interface ArticlePublicListParams {
   search?: string;
   category?: string[];
   year?: number[];
+  writer?: string[];
+  month?: number[];
+  hasPdf?: boolean;
 }
 
-/** Nilai distinct tahun publikasi yang ada di data — mengisi dropdown filter
- *  publik "Tahun Publikasi" (kategori sudah punya endpoint categories() di
- *  bawah, tidak diulang di sini). */
+/** Nilai distinct tahun publikasi & penulis yang ada di data — mengisi
+ *  dropdown filter publik "Tahun Publikasi" & "Penulis" (kategori sudah
+ *  punya endpoint categories() di bawah, tidak diulang di sini). */
 export interface ArticleFilterOptions {
   years: number[];
+  writers: string[];
 }
 
 /** Panggilan HTTP mentah untuk artikel — publik & CMS. */
@@ -42,6 +48,9 @@ export class ArticleApiService {
     if (params.search) query['search'] = params.search;
     if (params.category?.length) query['category'] = params.category;
     if (params.year?.length) query['year'] = params.year;
+    if (params.writer?.length) query['writer'] = params.writer;
+    if (params.month?.length) query['month'] = params.month;
+    if (params.hasPdf !== undefined) query['hasPdf'] = params.hasPdf;
     return this.api.get('/public/articles', query);
   }
 
