@@ -558,7 +558,8 @@ export class ArticlePublicIndexPage implements OnInit, AfterViewInit {
   currentSort = signal('-publishedDate');
   searchText = signal('');
   /** Nilai filter aktif — key cocok dengan FilterFieldDef.key (lihat
-   *  filterFields()): 'category' (slug[]) & 'year' (number[]). */
+   *  filterFields()): 'category' (slug[]), 'year' (number[]), 'writer'
+   *  (string[]), 'month' (number[]) & 'hasPdf' (boolean, single-select). */
   filterValues = signal<Record<string, unknown>>({});
   categories = signal<ArticleCategory[]>([]);
 
@@ -568,10 +569,19 @@ export class ArticlePublicIndexPage implements OnInit, AfterViewInit {
     { value: 'articleTitle', label: 'Judul A-Z', icon: 'chevrons-up-down' },
   ];
 
-  /** Field filter Artikel — Kategori (dari categories(), sudah dipakai juga
-   *  untuk form CMS) & Tahun Publikasi (dari repo.filterOptions(), distinct
-   *  dari data yang benar-benar ada supaya dropdown tidak pernah menawarkan
-   *  pilihan yang hasilnya kosong). */
+  /** Nama bulan 1-12 untuk field filter "Bulan Publikasi" — daftar tetap
+   *  (bukan dari repo.filterOptions() seperti Tahun/Penulis) karena 12 bulan
+   *  selalu sama, tidak perlu query distinct ke backend. */
+  private readonly monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+  ];
+
+  /** Field filter Artikel — Kategori & Tahun Publikasi (lihat komentar lama),
+   *  ditambah Penulis (distinct dari repo.filterOptions(), sama alasannya
+   *  dengan Tahun), Bulan Publikasi (daftar tetap 1-12) & Punya PDF
+   *  (single-select Ya/Tidak — relevan karena artikel di sini pakai PDF
+   *  sebagai konten penuh, lihat CLAUDE.md). */
   filterFields = computed<FilterFieldDef[]>(() => {
     const fields: FilterFieldDef[] = [];
     const cats = this.categories();
@@ -594,6 +604,32 @@ export class ArticlePublicIndexPage implements OnInit, AfterViewInit {
         options: years.map((y) => ({ value: y, label: String(y) })),
       });
     }
+    const writers = this.repo.filterOptions()?.writers ?? [];
+    if (writers.length) {
+      fields.push({
+        key: 'writer',
+        label: 'Penulis',
+        icon: 'user',
+        multiple: true,
+        options: writers.map((w) => ({ value: w, label: w })),
+      });
+    }
+    fields.push({
+      key: 'month',
+      label: 'Bulan Publikasi',
+      icon: 'calendar',
+      multiple: true,
+      options: this.monthNames.map((label, i) => ({ value: i + 1, label })),
+    });
+    fields.push({
+      key: 'hasPdf',
+      label: 'Punya PDF',
+      icon: 'file-text',
+      options: [
+        { value: true, label: 'Ya' },
+        { value: false, label: 'Tidak' },
+      ],
+    });
     return fields;
   });
 
@@ -632,6 +668,9 @@ export class ArticlePublicIndexPage implements OnInit, AfterViewInit {
       search: this.searchText(),
       category: filter['category'] as string[] | undefined,
       year: filter['year'] as number[] | undefined,
+      writer: filter['writer'] as string[] | undefined,
+      month: filter['month'] as number[] | undefined,
+      hasPdf: filter['hasPdf'] as boolean | undefined,
     });
     this.activeSlide.set(0);
     if (this.mobileTrackRef?.nativeElement) this.mobileTrackRef.nativeElement.scrollLeft = 0;
