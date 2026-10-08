@@ -1,7 +1,6 @@
 <div class="redirect-wash">
-  <div class="redirect-texture" aria-hidden="true"></div>
-  <div class="redirect-card">
-    @if (notFound()) {
+  @if (notFound()) {
+    <div class="redirect-card">
       <div class="empty-state is-error error-content">
         <span class="icon-badge lg icon-badge-danger"><app-icon name="link-slash" [size]="26" /></span>
         <h4>Tautan Tidak Ditemukan</h4>
@@ -10,8 +9,8 @@
           <app-icon name="arrow-left" [size]="13" /> Kembali ke Beranda
         </a>
       </div>
-    } @else {
-      <app-page-loader label="Mengalihkan…" [inline]="true" />
-    }
-  </div>
+    </div>
+  } @else {
+    <app-page-loader label="Mengalihkan…" [inline]="true" />
+  }
 </div>
