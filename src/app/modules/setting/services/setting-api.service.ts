@@ -9,7 +9,9 @@ export class SettingApiService {
   private api = inject(ApiService);
 
   list(): Observable<Setting[]> { return this.api.get('/settings'); }
-  update(id: number, settingValue: string): Observable<Setting> { return this.api.put(`/settings/${id}`, { settingValue }); }
+  update(id: number, settingValue: string, settingValue2 = ''): Observable<Setting> {
+    return this.api.put(`/settings/${id}`, { settingValue, settingValue2 });
+  }
 
   /** Email kontak ditampilkan di beranda ("Hubungi Kami") & /kontak,
    *  lihat setting_model.go (backend) GroupKontak/KeyContactEmail. */

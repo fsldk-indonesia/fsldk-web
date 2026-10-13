@@ -111,6 +111,38 @@ function formatRupiah(value: number): string {
     .greeting-clock .clock-time { font-family: 'Courier New', monospace; font-weight: 700; font-size: 2rem; letter-spacing: .03em; }
     .greeting-clock .clock-date { font-size: .85rem; opacity: .9; }
 
+    /* ---------- Banner peringatan deadline (Utama) ----------
+       Sengaja tanpa gradien/tekstur dekoratif — chrome CMS tetap restrained,
+       cukup border+ikon merah (--color-danger) untuk menandai urgensi. */
+    .deadline-alert-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .deadline-alert {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: #fff; border: 1px solid var(--color-danger-soft); border-radius: var(--radius-lg);
+      padding: 16px 18px; box-shadow: var(--shadow-sm);
+      max-height: 200px; overflow: hidden;
+      animation: deadlineAlertIn .35s var(--ease-out, ease) both;
+      transition: opacity .3s ease, transform .3s ease, max-height .32s ease, padding .3s ease, margin .3s ease, border-width .3s ease;
+    }
+    .deadline-alert.is-overdue { border-color: var(--color-danger); }
+    .deadline-alert.is-dismissing {
+      opacity: 0; transform: translateY(-8px) scale(.98); max-height: 0;
+      padding-top: 0; padding-bottom: 0; margin-bottom: -12px; border-width: 0; box-shadow: none;
+    }
+    @keyframes deadlineAlertIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .deadline-alert { animation: none; transition: none; }
+    }
+    .deadline-alert-body { flex: 1; min-width: 0; }
+    .deadline-alert-title { font-weight: 700; color: var(--color-danger); }
+    .deadline-alert-sub { font-size: .85rem; color: var(--color-text-secondary); margin-top: 2px; }
+    .deadline-alert-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; font-size: .82rem; color: var(--color-text-secondary); }
+    .deadline-alert-close {
+      flex-shrink: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      border: none; background: transparent; border-radius: var(--radius-full); color: var(--color-muted); cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .deadline-alert-close:hover { background: var(--color-danger-soft); color: var(--color-danger); }
+
     /* ---------- Grid statistik (Utama) ---------- */
     .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 
@@ -144,6 +176,29 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
 
   summary = signal<DashboardSummary | null>(null);
   loading = signal(true);
+
+  /** Banner deadline — computed langsung dari summary() (bukan dibaca ulang
+   *  di dalam @if (s.utama; as u)) supaya template bisa menaruhnya di posisi
+   *  manapun di halaman (di atas kartu sapaan), independen dari nesting
+   *  loading()/summary()/s.utama. */
+  deadlineAlerts = computed(() => this.summary()?.utama?.deadlineAlerts ?? []);
+
+  /** Banner deadline yang sudah di-close — per sesi halaman saja (settingKey),
+   *  bukan persisten: refresh akan memunculkannya lagi selama deadline masih
+   *  dalam rentang peringatan (sama seperti dashboard ldksyahid-app). */
+  dismissedAlerts = signal<ReadonlySet<string>>(new Set());
+  /** settingKey yang sedang dalam animasi keluar (lihat .is-dismissing) —
+   *  dipisah dari dismissedAlerts supaya elemen tetap di DOM selama transisi
+   *  collapse berjalan, baru benar-benar dihapus dari render setelahnya. */
+  dismissingAlerts = signal<ReadonlySet<string>>(new Set());
+
+  dismissAlert(settingKey: string): void {
+    this.dismissingAlerts.update((s) => new Set(s).add(settingKey));
+    setTimeout(() => {
+      this.dismissedAlerts.update((s) => new Set(s).add(settingKey));
+      this.dismissingAlerts.update((s) => { const next = new Set(s); next.delete(settingKey); return next; });
+    }, 320);
+  }
 
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
   readonly currentUser = this.auth.user;
@@ -235,6 +290,7 @@ export class DashboardIndexPage implements OnInit, OnDestroy, DashboardIndexView
   }
 
   statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
+  formatCost(value: number): string { return formatRupiah(value); }
 
   setSummary(summary: DashboardSummary): void {
     this.summary.set(summary);

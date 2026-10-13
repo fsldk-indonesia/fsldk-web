@@ -8,5 +8,7 @@ export class SettingRepository {
   private api = inject(SettingApiService);
 
   list(): Observable<Setting[]> { return this.api.list(); }
-  update(id: number, settingValue: string): Observable<Setting> { return this.api.update(id, settingValue); }
+  update(id: number, settingValue: string, settingValue2 = ''): Observable<Setting> {
+    return this.api.update(id, settingValue, settingValue2);
+  }
 }

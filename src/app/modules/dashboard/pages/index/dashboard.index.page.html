@@ -16,6 +16,36 @@
 
   <div class="page-head"><h1>Dashboard</h1><p class="text-muted">Ringkasan pendataan sesuai organisasi Anda.</p></div>
 
+  @if (deadlineAlerts().length) {
+    <div class="deadline-alert-list">
+      @for (alert of deadlineAlerts(); track alert.settingKey) {
+        @if (!dismissedAlerts().has(alert.settingKey)) {
+          <div class="deadline-alert" [class.is-overdue]="alert.isOverdue" [class.is-dismissing]="dismissingAlerts().has(alert.settingKey)">
+            <span class="icon-badge sm icon-badge-danger"><app-icon name="alert-triangle" [size]="15" /></span>
+            <div class="deadline-alert-body">
+              <div class="deadline-alert-title">Deadline {{ alert.label }}</div>
+              <p class="deadline-alert-sub">Segera hubungi tim terkait sebelum tanggal jatuh tempo.</p>
+              <div class="deadline-alert-meta">
+                <span><app-icon name="calendar-days" [size]="12" /> {{ alert.deadline | date:'d MMMM yyyy' }}</span>
+                @if (alert.cost) {
+                  <span><app-icon name="hand-coins" [size]="12" /> {{ formatCost(alert.cost) }}</span>
+                }
+                @if (alert.isOverdue) {
+                  <span class="badge badge-danger">Lewat {{ -alert.daysRemaining }} hari</span>
+                } @else {
+                  <span class="badge badge-draft">{{ alert.daysRemaining }} hari lagi</span>
+                }
+              </div>
+            </div>
+            <button type="button" class="deadline-alert-close" aria-label="Tutup" (click)="dismissAlert(alert.settingKey)">
+              <app-icon name="x" [size]="13" />
+            </button>
+          </div>
+        }
+      }
+    </div>
+  }
+
   <div class="greeting-card pattern-motif pattern-motif-dark">
   <div class="greeting-main">
     <div class="greeting-text"><app-icon name="sparkles" [size]="20" /> {{ greetingLabel() }}</div>
