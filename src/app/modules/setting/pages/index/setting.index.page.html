@@ -21,6 +21,9 @@
                 @if (canUpdate) {
                   @if (isBoolean(s)) {
                     <app-select [options]="yesNoOptions" [(ngModel)]="s.settingValue" />
+                  } @else if (isDate(s)) {
+                    <app-datetime-picker [showTime]="false" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID" />
+                    <app-money-input placeholder="Estimasi biaya (opsional)" [ngModel]="moneyValue(s)" (ngModelChange)="setMoneyValue(s, $event)" [name]="'setting2-' + s.settingID" />
                   } @else {
                     <input class="form-control" [(ngModel)]="s.settingValue" [name]="'setting-' + s.settingID">
                   }

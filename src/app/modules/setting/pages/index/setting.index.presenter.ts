@@ -16,8 +16,8 @@ export class SettingIndexPresenter extends BasePresenter<SettingIndexView> {
     });
   }
 
-  save(id: number, value: string): void {
-    this.settingRepo.update(id, value).subscribe({
+  save(id: number, value: string, value2 = ''): void {
+    this.settingRepo.update(id, value, value2).subscribe({
       next: () => { this.toast.success('Setting disimpan'); this.view.onActionSettled(id); },
       error: () => this.view.onActionSettled(id),
     });

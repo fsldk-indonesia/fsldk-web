@@ -50,6 +50,18 @@ export interface PuskomnasSummary extends StatusCounts {
   perPuskomda: PuskomdaBreakdown[];
 }
 
+/** Satu baris peringatan deadline operasional (lihat setting_dto backend,
+ *  group App Settings "deadline") — hanya dikirim backend bila sisa hari
+ *  <=30 (termasuk yang sudah lewat, daysRemaining negatif). */
+export interface DeadlineAlert {
+  label: string;
+  settingKey: string;
+  deadline: string;
+  daysRemaining: number;
+  isOverdue: boolean;
+  cost?: number;
+}
+
 /** Ringkasan dashboard khusus CMS Utama — metrik administrasi sistem (satu
  *  field per modul sidebar CMS Utama, lihat dashboard_dto.UtamaSummary di
  *  backend — tambah modul baru di kedua sisi sekaligus) PLUS ringkasan
@@ -82,6 +94,7 @@ export interface UtamaSummary extends StatusCounts {
   networkKaderAktif: number;
   networkLevelDistribution: LevelCount[];
   networkPerPuskomda: PuskomdaBreakdown[];
+  deadlineAlerts: DeadlineAlert[];
 }
 
 /** Response GET /dashboard/summary — hanya satu dari utama/ldk/puskomda/puskomnas terisi. */
