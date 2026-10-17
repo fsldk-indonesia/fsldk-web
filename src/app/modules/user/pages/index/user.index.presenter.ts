@@ -19,6 +19,11 @@ export interface UserFormValue {
   isActive: boolean;
   organizationID: number | null;
   wildcardTierAccess: string[];
+  /** Create: true (default) langsung mengaktifkan akun tanpa verifikasi
+   *  email (perilaku lama); false mengirim email verifikasi asli. Update/
+   *  View: mencerminkan & mengubah status verifikasi akun saat ini — lihat
+   *  user_dto.CreateRequest/UpdateRequest.EmailVerified di fsldk-api. */
+  emailVerified: boolean;
 }
 
 @Injectable()
@@ -78,6 +83,7 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
     const body: Record<string, unknown> = {
       fullName: form.fullName, email: form.email, roleID: +form.roleID, isActive: form.isActive,
       organizationID: form.organizationID, wildcardTierAccess: form.wildcardTierAccess,
+      emailVerified: form.emailVerified,
     };
     if (editId) {
       this.userRepo.update(editId, { ...body, password: form.password }).subscribe({

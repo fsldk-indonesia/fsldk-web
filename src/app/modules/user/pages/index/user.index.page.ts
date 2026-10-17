@@ -17,6 +17,7 @@ const WILDCARD_TIERS = ['LDK', 'PUSKOMDA', 'PUSKOMNAS'] as const;
 
 const emptyForm = (roleID = 0): UserFormValue => ({
   fullName: '', email: '', password: '', roleID, isActive: true, organizationID: null, wildcardTierAccess: [],
+  emailVerified: true,
 });
 
 /** Config CmsIndexConfig<UserRow> — pemakaian ketiga CmsIndexComponent
@@ -301,6 +302,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.form = {
       fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive,
       organizationID: u.organizationID ?? null, wildcardTierAccess: this.resolveWildcardTierAccess(u.roleID, [...(u.wildcardTierAccess ?? [])]),
+      emailVerified: u.emailVerified,
     };
     this.showForm.set(true);
     this.animateModal(true);
@@ -315,6 +317,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.form = {
       fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive,
       organizationID: u.organizationID ?? null, wildcardTierAccess: this.resolveWildcardTierAccess(u.roleID, [...(u.wildcardTierAccess ?? [])]),
+      emailVerified: u.emailVerified,
     };
     this.showForm.set(true);
     this.animateModal(true);

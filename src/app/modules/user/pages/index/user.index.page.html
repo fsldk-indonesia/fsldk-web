@@ -91,6 +91,14 @@
         <div class="field-card">
           <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="check-circle" [size]="13" /></span>Status</p>
           <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive" [disabled]="isReadonly"> Aktif</label></div>
+          <div class="form-group">
+            <label class="form-check"><input type="checkbox" [(ngModel)]="form.emailVerified" [disabled]="isReadonly"> Lewati Verifikasi Email</label>
+            @if (!editId) {
+              <p class="form-hint">Dicentang: pengguna baru langsung aktif tanpa verifikasi email. Tidak dicentang: email verifikasi dikirim, pengguna harus memverifikasi dulu.</p>
+            } @else {
+              <p class="form-hint">Dicentang: akun langsung ditandai terverifikasi (tanpa email). Tidak dicentang: status verifikasi dicabut dan email verifikasi dikirim ulang ke pengguna.</p>
+            }
+          </div>
         </div>
       </div>
     </div>
