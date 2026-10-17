@@ -15,6 +15,15 @@ import { UserIndexView } from './user.index.view';
 
 const WILDCARD_TIERS = ['LDK', 'PUSKOMDA', 'PUSKOMNAS'] as const;
 
+/** Rank (index WILDCARD_TIERS) tempat role ini otomatis & terkunci mendapat
+ *  akses lintas-tier kumulatif — lihat getter lockedTierAccess di bawah. */
+const LOCKED_TIER_RANK_BY_ROLE: Readonly<Record<string, number>> = {
+  'LDK Admin': 0,
+  'Puskomda Verifikator': 1,
+  'Puskomnas Verifikator': 2,
+  'Super Admin': 2,
+};
+
 const emptyForm = (roleID = 0): UserFormValue => ({
   fullName: '', email: '', password: '', roleID, isActive: true, organizationID: null, wildcardTierAccess: [],
   emailVerified: true,
@@ -232,33 +241,49 @@ export class UserIndexPage implements OnInit, UserIndexView {
    *  computed()) karena `form.roleID` field polos, bukan signal — computed()
    *  tidak akan pernah re-run kalau bergantung padanya. */
   get isPengunjungRole(): boolean {
-    return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName === 'Pengunjung';
+    return this.currentRoleName === 'Pengunjung';
   }
 
-  /** Super Admin otomatis dianggap backend punya akses penuh ke seluruh tier
-   *  (lihat effectiveWildcardTierAccess() di auth_service_impl.go) TERLEPAS
-   *  dari isi wildcardTierAccess tersimpan — checkbox "Akses Lintas Tier"
-   *  tetap tampil tapi auto-tercentang semua & dikunci (tidak bisa diuncheck
-   *  manual) begitu role ini dipilih, supaya tampilan form tidak menyesatkan
-   *  (seolah bisa parsial padahal backend selalu full akses untuk role ini). */
-  get isSuperAdminRole(): boolean {
-    return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName === 'Super Admin';
+  private get currentRoleName(): string | undefined {
+    return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName;
+  }
+
+  /** Role-role di LOCKED_TIER_RANK_BY_ROLE otomatis dianggap backend punya
+   *  akses lintas-tier kumulatif sampai rank-nya (lihat
+   *  effectiveWildcardTierAccess() di auth_service_impl.go) TERLEPAS dari isi
+   *  wildcardTierAccess tersimpan — checkbox "Akses Lintas Tier" tetap tampil
+   *  tapi auto-tercentang sampai rank itu & dikunci (tidak bisa diuncheck
+   *  manual) begitu salah satu role ini dipilih, supaya tampilan form tidak
+   *  menyesatkan (seolah bisa parsial padahal backend selalu full akses
+   *  sampai rank itu untuk role ini). */
+  get lockedTierAccess(): readonly string[] | null {
+    const rank = LOCKED_TIER_RANK_BY_ROLE[this.currentRoleName ?? ''];
+    return rank === undefined ? null : this.wildcardTiers.slice(0, rank + 1);
+  }
+  get isLockedTierRole(): boolean {
+    return this.lockedTierAccess !== null;
+  }
+  get lockedTierHint(): string | null {
+    const tiers = this.lockedTierAccess;
+    if (!tiers) return null;
+    const scope = tiers.length === this.wildcardTiers.length ? 'penuh ke seluruh tier' : `ke tier ${tiers.join(' & ')}`;
+    return `${this.currentRoleName} otomatis punya akses ${scope}.`;
   }
 
   onRoleChange(v: unknown): void {
-    const wasSuperAdmin = this.isSuperAdminRole;
+    const previousLockedTiers = this.lockedTierAccess;
     this.form.roleID = +(v as number);
     // Ganti ke Pengunjung saat field-nya sedang terisi -> kosongkan supaya
     // tidak diam-diam ikut terkirim saat field-nya sedang disembunyikan.
     if (this.isPengunjungRole) {
       this.form.organizationID = null;
       this.form.wildcardTierAccess = [];
-    } else if (this.isSuperAdminRole) {
+    } else if (this.lockedTierAccess) {
       // organizationID DIBIARKAN (dipakai keperluan lain, mis. widget waktu
-      // sholat) — wildcardTierAccess auto-dicentang semua (lihat getter di atas).
-      this.form.wildcardTierAccess = [...this.wildcardTiers];
-    } else if (wasSuperAdmin) {
-      // Baru saja PINDAH KELUAR dari Super Admin — lepas lagi centang
+      // sholat) — wildcardTierAccess auto-dicentang sampai rank role ini.
+      this.form.wildcardTierAccess = [...this.lockedTierAccess];
+    } else if (previousLockedTiers) {
+      // Baru saja PINDAH KELUAR dari role locked-tier — lepas lagi centang
       // otomatisnya, supaya tidak diam-diam ikut terkirim sebagai grant
       // manual untuk role yang baru dipilih (mis. pindah ke Kader harus
       // dicentang ulang secara sadar kalau memang mau diberi akses lintas tier).
@@ -276,14 +301,16 @@ export class UserIndexPage implements OnInit, UserIndexView {
     if (this.showOrganizationPicker()) this.presenter.loadOrganizations();
   }
 
-  /** Super Admin selalu direpresentasikan sebagai 3 tier tercentang di form
-   *  (lihat isSuperAdminRole/onRoleChange) terlepas dari apa yang literal
-   *  tersimpan di baris akun (mis. akun lama yang dibuat sebelum perilaku
-   *  auto-centang ini ada) — dipakai openCreate/openEdit/openView supaya
-   *  tampilan form konsisten dengan apa yang sudah di-override backend. */
+  /** Role locked-tier (lihat lockedTierAccess/onRoleChange) selalu
+   *  direpresentasikan sebagai tier terkunci itu tercentang di form terlepas
+   *  dari apa yang literal tersimpan di baris akun (mis. akun lama yang
+   *  dibuat sebelum perilaku auto-centang ini ada) — dipakai
+   *  openCreate/openEdit/openView supaya tampilan form konsisten dengan apa
+   *  yang sudah di-override backend. */
   private resolveWildcardTierAccess(roleID: number, stored: string[]): string[] {
     const roleName = this.roles().find((r) => r.roleID === roleID)?.roleName;
-    return roleName === 'Super Admin' ? [...this.wildcardTiers] : stored;
+    const rank = LOCKED_TIER_RANK_BY_ROLE[roleName ?? ''];
+    return rank === undefined ? stored : [...this.wildcardTiers.slice(0, rank + 1)];
   }
 
   openCreate(event?: Event): void {
