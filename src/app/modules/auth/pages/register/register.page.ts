@@ -45,6 +45,9 @@ export class RegisterPage implements OnInit, RegisterView {
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   navigateToVerifyEmail(email: string): void { this.router.navigate(['/verifikasi-email'], { queryParams: { email } }); }
+  // Lihat catatan di LoginPage.navigateAfterLogin (login.page.ts) — logika
+  // identik dipakai di sini untuk jalur Google sign-up/sign-in langsung dari
+  // halaman Daftar.
   navigateAfterLogin(cmsPath: string | null): void {
     if (cmsPath) { this.router.navigateByUrl(cmsPath); return; }
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');

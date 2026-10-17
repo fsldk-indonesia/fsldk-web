@@ -170,7 +170,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
                 <span class="chip-avatar guest"><app-icon name="guest" [size]="15" /></span> Pengunjung
               </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
-                <a routerLink="/login" routerLinkActive="active" class="dropdown-fun-item" (click)="closeUserMenu()">
+                <a routerLink="/login" [queryParams]="{ returnUrl: router.url }" routerLinkActive="active" class="dropdown-fun-item" (click)="closeUserMenu()">
                   <span class="icon-badge sm icon-badge-solid"><app-icon name="log-in" [size]="15" /></span>
                   <span class="nav-dropdown-item-text">
                     <span class="nav-dropdown-item-title">Masuk</span>
@@ -342,7 +342,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
             </span>
           </button>
         } @else {
-          <a routerLink="/login" routerLinkActive="active" class="mobile-action-card" (click)="closeMobile()">
+          <a routerLink="/login" [queryParams]="{ returnUrl: router.url }" routerLinkActive="active" class="mobile-action-card" (click)="closeMobile()">
             <span class="icon-badge sm icon-badge-solid"><app-icon name="log-in" [size]="15" /></span>
             <span class="mobile-action-card-text">
               <span class="mobile-action-card-title">Masuk</span>
@@ -815,7 +815,8 @@ const TIER_CAPTION: Record<CmsTier, string> = {
 export class SiteHeaderComponent implements OnInit, OnDestroy {
   auth = inject(AuthRepository);
   private submissionRepo = inject(SubmissionRepository);
-  private router = inject(Router);
+  // Bukan private — dibaca langsung dari template untuk returnUrl link Masuk.
+  router = inject(Router);
   private ngZone = inject(NgZone);
   private alert = inject(AlertService);
 
