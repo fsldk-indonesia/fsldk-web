@@ -123,14 +123,20 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   /** Tangga 4 level TETAP (Pra Mula→Mula→Madya→Mandiri, lihat LEVEL_OPTIONS)
    *  — tiap step ditandai tanggal PERTAMA KALI dicapai dari levelHistory
    *  (seluruh baris tr_levelisasi_result, bukan cuma yang isCurrent), atau
-   *  "belum dicapai" kalau levelnya tidak pernah muncul di riwayat. Dipakai
-   *  kartu "Record Levelisasi". */
+   *  "belum dicapai" kalau levelnya tidak pernah muncul di riwayat. skipped
+   *  membedakan "belum dicapai karena memang belum sampai situ" dari "tidak
+   *  akan pernah dicapai karena assessment pertama LDK ini langsung di level
+   *  lebih tinggi" — true kalau step ini belum dicapai TAPI ada step lain
+   *  yang urutannya lebih tinggi sudah pernah dicapai. Dipakai kartu "Record
+   *  Levelisasi". */
   levelLadder = computed(() => {
     const history = this.submission()?.levelHistory ?? [];
-    return LEVEL_OPTIONS.map((opt) => ({
+    const achievedDates = LEVEL_OPTIONS.map((opt) => history.find((h) => h.levelCode === opt.value)?.establishedDate ?? null);
+    return LEVEL_OPTIONS.map((opt, i) => ({
       value: opt.value,
       label: opt.label,
-      achievedDate: history.find((h) => h.levelCode === opt.value)?.establishedDate ?? null,
+      achievedDate: achievedDates[i],
+      skipped: !achievedDates[i] && achievedDates.slice(i + 1).some((d) => d !== null),
     }));
   });
 

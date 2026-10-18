@@ -53,6 +53,8 @@
               <strong>{{ step.label }}</strong>
               @if (step.achievedDate) {
                 <span class="text-muted">Dicapai {{ step.achievedDate | date: 'd MMMM y' }}</span>
+              } @else if (step.skipped) {
+                <span class="text-muted">Dilewati — langsung ke level lebih tinggi</span>
               } @else {
                 <span class="text-muted">Belum dicapai</span>
               }
