@@ -152,10 +152,12 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   private provincesLoaded = false;
   /** Nilai id (bukan nama) yang sedang dipilih di dropdown Provinsi/Kota —
    *  murni state UI, TIDAK dipersist — nama yang tersimpan ada di
-   *  form.provinceName/cityName (lihat onProvinceChange/onCityChange).
-   *  Data lama (provinceName/cityName bebas teks, mungkin tidak cocok id
-   *  wilayah.id manapun) sengaja DIBIARKAN tidak terpilih saat edit
-   *  (placeholder), bukan dicocokkan otomatis — lihat openEdit(). */
+   *  form.provinceName/cityName (lihat onProvinceChange/onCityChange). Saat
+   *  edit, dicocokkan ke opsi dropdown via EXACT label match (lihat
+   *  syncLocationSelection()) — data lama yang formatnya tidak cocok persis
+   *  dengan wilayah.id manapun tetap dibiarkan placeholder kosong (tidak ada
+   *  fuzzy-matching; beda dari organization.profile.page.ts/puskomda-list
+   *  yang punya form-hint "Saat ini: ...", di sini belum ada hint serupa). */
   selectedProvinceId: string | null = null;
   selectedCityId: string | null = null;
   form: LdkFormValue = emptyForm();
@@ -240,8 +242,27 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
     };
     this.resetWilayahSelection();
     this.ensureProvincesLoaded();
+    this.syncLocationSelection();
     this.showForm.set(true);
     this.animateModal(true);
+  }
+
+  /** Cocokkan provinceName/cityName yang sudah tersimpan ke opsi dropdown
+   *  via exact label match, supaya "Ubah LDK" tidak selalu membuka dropdown
+   *  kosong walau datanya sudah ada — provinceOptions bisa sudah ter-cache
+   *  dari openCreate/openEdit sebelumnya (ensureProvincesLoaded cuma fetch
+   *  sekali, lihat provincesLoaded), makanya dipanggil langsung di sini,
+   *  BUKAN cuma menunggu setProvinceOptions (yang tidak akan terpanggil
+   *  ulang kalau sudah pernah dimuat). Tetap exact match saja (tidak fuzzy)
+   *  — data lama yang formatnya tidak cocok persis tetap dibiarkan kosong,
+   *  sama seperti organization.profile.page.ts/puskomda-list sebelumnya. */
+  private syncLocationSelection(): void {
+    if (this.selectedProvinceId) return;
+    const match = this.provinceOptions().find((o) => o.label === this.form.provinceName);
+    if (!match) return;
+    const provinceId = match.value as string;
+    this.selectedProvinceId = provinceId;
+    this.presenter.loadRegencies(provinceId);
   }
   // Dipicu klik baris (CmsIndexComponent rowClick emit row, bukan event DOM
   // — makanya popupOrigin tidak dihitung dari titik klik, cukup center sama
@@ -323,8 +344,11 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   }
 
   setPuskomdaOptions(options: SelectOption[]): void { this.puskomdaOptions.set(options); }
-  setProvinceOptions(options: SelectOption[]): void { this.provinceOptions.set(options); }
-  setRegencyOptions(options: SelectOption[]): void { this.regencyOptions.set(options); }
+  setProvinceOptions(options: SelectOption[]): void { this.provinceOptions.set(options); this.syncLocationSelection(); }
+  setRegencyOptions(options: SelectOption[]): void {
+    this.regencyOptions.set(options);
+    if (!this.selectedCityId) this.selectedCityId = (options.find((c) => c.label === this.form.cityName)?.value as string | undefined) ?? null;
+  }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.close(); this.table?.refresh(); }
   onActionSettled(id: number): void { this.clearBusy(id); }
