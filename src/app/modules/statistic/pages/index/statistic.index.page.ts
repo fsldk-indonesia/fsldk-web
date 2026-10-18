@@ -289,8 +289,12 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
     .org-hub-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; pointer-events: none; }
     /* Foto Puskomnas — mengisi lingkaran dalam .network-node (r=28, diameter
        56) bukan seluruh kotak 84px, supaya ring ping/node tetap jadi halo di
-       sekelilingnya (pola sama dipakai org-group-logo untuk Puskomda). */
-    .org-hub-photo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+       sekelilingnya (pola sama dipakai org-group-logo untuk Puskomda).
+       background:#fff WAJIB ada — foto ini duduk di atas .network-node yang
+       fill-nya hijau (var(--color-primary)); tanpa backdrop, bagian
+       transparan logo (mis. padding di sekeliling mark FSLDK) menembuskan
+       hijau itu, kelihatan seperti foto "ketiban" warna hijau. */
+    .org-hub-photo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; background: #fff; }
     /* Hub & group-head sekarang kartu sungguhan (bukan teks mengambang) —
        supaya seluruh data organisasi (kode, lokasi, kontak, jumlah unit)
        kelihatan di satu tempat, bukan cuma nama+kontak seperti sebelumnya. */
