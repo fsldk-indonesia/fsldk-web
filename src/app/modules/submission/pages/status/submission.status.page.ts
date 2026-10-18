@@ -8,7 +8,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import {
   SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS,
-  KADER_STATUS_LABELS, statusTone, kaderStatusTone,
+  KADER_STATUS_LABELS, statusTone, kaderStatusTone, displayStatus,
 } from '../../entities/submission';
 import { SubmissionStatusPresenter } from './submission.status.presenter';
 import { SubmissionStatusView } from './submission.status.view';
@@ -26,6 +26,18 @@ import { SubmissionStatusView } from './submission.status.view';
     .status-card.tone-danger h2 { color: var(--color-danger); }
     .status-card.tone-warning { background: var(--color-ember-soft); }
     .status-card.tone-warning h2 { color: var(--color-ember-dark); }
+    .status-card.tone-neutral { background: var(--color-bg-alt); }
+    .status-card.tone-neutral h2 { color: var(--color-muted); }
+    /* Chip status Kartu Kader SENGAJA bukan .chip (lihat .perm-chip di
+       user.index.page.ts untuk kasus serupa) — .chip global didesain untuk
+       elemen klik (cursor:pointer + :hover ikut berubah warna ke hijau,
+       termasuk saat chip-nya chip-red/netral), padahal badge status di sini
+       tidak bisa diklik. */
+    .status-chip { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: var(--radius-full); font-size: .82rem; font-weight: 600; }
+    .status-chip.success { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    .status-chip.danger { background: var(--color-danger-soft); color: var(--color-danger); }
+    .status-chip.warning { background: var(--color-ember-soft); color: var(--color-ember-dark); }
+    .status-chip.neutral { background: var(--color-bg-alt); color: var(--color-muted); }
     .timeline { display: flex; flex-direction: column; gap: 0; }
     .timeline-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
     .timeline-item:last-child { border-bottom: none; }
@@ -58,6 +70,11 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   loading = signal(true);
   busy = signal(false);
 
+  statusHistoryDesc = computed(() => {
+    const history = this.submission()?.statusHistory ?? [];
+    return [...history].sort((a, b) => Date.parse(b.createdDate) - Date.parse(a.createdDate));
+  });
+
   ngOnInit(): void {
     this.presenter.attachView(this);
     if (this.isKaderSubject()) {
@@ -71,6 +88,22 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   kaderStatusLabel(code: string): string { return this.kaderStatusLabels[code] ?? code; }
   statusTone(code: string): string { return statusTone(code); }
   kaderStatusTone(code: string): string { return kaderStatusTone(code); }
+
+  /** Kartu "Status Saat Ini" di atas HARUS pakai status keanggotaan kader
+   *  (ms_kader.status) untuk subjek Kader — BUKAN status()/tone() dari
+   *  statusLabel/statusTone di atas (tr_submission.status), yang tetap
+   *  'ACTIVE' selamanya begitu pernah disetujui sekali walau kader-nya
+   *  belakangan dinonaktifkan/ditolak lewat Persetujuan Kader (sama seperti
+   *  bug yang diperbaiki di kader-ringkasan.page.ts). Subjek Levelisasi LDK
+   *  tidak punya konsep kader sama sekali, jadi tetap pakai status submission. */
+  topStatusLabel(): string {
+    const s = this.submission();
+    return s ? displayStatus(s, this.isKaderSubject()).label : '';
+  }
+  topStatusTone(): string {
+    const s = this.submission();
+    return s ? displayStatus(s, this.isKaderSubject()).tone : 'neutral';
+  }
 
   async reassess(event?: Event): Promise<void> {
     const s = this.submission();

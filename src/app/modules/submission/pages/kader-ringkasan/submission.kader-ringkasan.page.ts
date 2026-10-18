@@ -26,6 +26,18 @@ import { SubmissionKaderRingkasanView } from './submission.kader-ringkasan.view'
         <p class="text-muted">Isi Formulir Pendataan Sensus Kader untuk mulai bergabung dengan LDK pilihan Anda.</p>
         <a class="btn btn-primary" routerLink="/kader/pendataan">Isi Formulir Pendataan</a>
       </div>
+    } @else if (isInactive()) {
+      <div class="status-card status-tone-neutral">
+        <span class="icon-badge lg icon-badge-soft"><app-icon name="x-circle" [size]="26" /></span>
+        <span class="badge badge-inactive">Kader Nonaktif</span>
+        <h3>Keanggotaan kader Anda telah dinonaktifkan</h3>
+        <p class="text-muted">Hubungi LDK tujuan Anda bila ingin diaktifkan kembali.</p>
+        @if (submission()!.kader?.uniqueCode) {
+          <p class="text-muted" style="margin-bottom:-2px">Kode Kader Anda</p>
+          <span class="kader-code-badge">{{ submission()!.kader!.uniqueCode }}</span>
+        }
+        <a class="btn btn-outline" routerLink="/kader/status">Lihat Detail Status</a>
+      </div>
     } @else if (isActive()) {
       <div class="status-card status-tone-active">
         <span class="icon-badge lg icon-badge-solid"><app-icon name="check-circle" [size]="26" /></span>
@@ -103,8 +115,16 @@ export class SubmissionKaderRingkasanPage implements OnInit, SubmissionKaderRing
   submission = signal<SubmissionDetail | null>(null);
   loading = signal(true);
 
-  isActive = computed(() => this.submission()?.status === 'ACTIVE');
-  isRejected = computed(() => this.submission()?.status === 'REJECTED');
+  /** Status keanggotaan kader (ms_kader.status: PENDING/ACTIVE/INACTIVE/
+   *  REJECTED) — BUKAN submission()?.status (tr_submission.status), yang
+   *  cuma status REVIEW submission Sensus Kader-nya dan TETAP 'ACTIVE'
+   *  selamanya begitu pernah disetujui sekali, tidak pernah berubah lagi
+   *  walau kader-nya belakangan dinonaktifkan/ditolak lewat Persetujuan
+   *  Kader — makanya sebelumnya kader yang sudah dinonaktifkan tetap
+   *  tampil "Aktif" di halaman ini. */
+  isActive = computed(() => this.submission()?.kader?.status === 'ACTIVE');
+  isInactive = computed(() => this.submission()?.kader?.status === 'INACTIVE');
+  isRejected = computed(() => this.submission()?.kader?.status === 'REJECTED');
   isRevision = computed(() => this.submission()?.status === 'REVISION_REQUESTED_LDK');
   statusLabel = computed(() => {
     const s = this.submission();

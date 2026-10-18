@@ -103,7 +103,7 @@
            seperti 1 kartu putih yang diulang-ulang. -->
       <div class="profile-main">
         @if (kader(); as k) {
-          @if (k.status === 'ACTIVE') {
+          @if (k.status === 'ACTIVE' || k.status === 'INACTIVE') {
             <div class="card profile-kader-card">
               <div class="profile-card-head head-gold">
                 <span class="icon-badge md icon-badge-gold"><app-icon name="award" [size]="18" /></span>
@@ -115,6 +115,15 @@
               </div>
               <div class="profile-card-body">
                 <div class="kader-meta-rows">
+                  <div class="kader-meta-row">
+                    <span class="kader-meta-icon"><app-icon name="check-circle" [size]="13" /></span>
+                    <span class="kader-meta-text">
+                      <span class="kader-meta-label">Status</span>
+                      <span class="kader-meta-value">
+                        <span class="badge" [class.badge-active]="k.status === 'ACTIVE'" [class.badge-inactive]="k.status === 'INACTIVE'">{{ k.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif' }}</span>
+                      </span>
+                    </span>
+                  </div>
                   <div class="kader-meta-row">
                     <span class="kader-meta-icon"><app-icon name="sitemap" [size]="13" /></span>
                     <span class="kader-meta-text">

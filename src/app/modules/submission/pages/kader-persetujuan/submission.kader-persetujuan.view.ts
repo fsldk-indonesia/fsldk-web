@@ -4,6 +4,7 @@ import { FormVersionDetail } from '../../../submission-form/entities/submission-
 export interface SubmissionKaderPersetujuanView {
   setPending(items: KaderInfo[]): void;
   setActive(items: KaderInfo[]): void;
+  setInactive(items: KaderInfo[]): void;
   setRejected(items: KaderInfo[]): void;
   setVersion(version: FormVersionDetail): void;
   setDetail(detail: SubmissionDetail): void;
@@ -11,5 +12,6 @@ export interface SubmissionKaderPersetujuanView {
   setBusy(busy: boolean): void;
   onDecisionSuccess(): void;
   onDeactivateSuccess(): void;
+  onReactivateSuccess(): void;
   onReinstateSuccess(): void;
 }

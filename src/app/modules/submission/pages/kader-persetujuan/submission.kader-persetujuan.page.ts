@@ -59,9 +59,10 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
   private presenter = inject(SubmissionKaderPersetujuanPresenter);
   private alert = inject(AlertService);
 
-  tab = signal<'pending' | 'active' | 'rejected'>('pending');
+  tab = signal<'pending' | 'active' | 'inactive' | 'rejected'>('pending');
   pending = signal<KaderInfo[]>([]);
   active = signal<KaderInfo[]>([]);
+  inactive = signal<KaderInfo[]>([]);
   rejected = signal<KaderInfo[]>([]);
   version = signal<FormVersionDetail | null>(null);
   detail = signal<SubmissionDetail | null>(null);
@@ -119,6 +120,14 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
     this.presenter.deactivate(kader.kaderID);
   }
 
+  async reactivate(kader: KaderInfo, event?: Event): Promise<void> {
+    const ok = await this.alert.confirm(`Aktifkan kembali kader "${kader.fullName}"?`, {
+      title: 'Aktifkan Kembali Kader', confirmLabel: 'Ya, Aktifkan',
+    }, event);
+    if (!ok) return;
+    this.presenter.reactivate(kader.kaderID);
+  }
+
   async reinstate(kader: KaderInfo, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(
       `Putihkan kembali "${kader.fullName}"? Data akan direset ke Draf agar bisa mendaftar ulang dari awal.`,
@@ -130,6 +139,7 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
 
   setPending(items: KaderInfo[]): void { this.pending.set(items); }
   setActive(items: KaderInfo[]): void { this.active.set(items); }
+  setInactive(items: KaderInfo[]): void { this.inactive.set(items); }
   setRejected(items: KaderInfo[]): void { this.rejected.set(items); }
   setVersion(version: FormVersionDetail): void { this.version.set(version); }
   setDetail(detail: SubmissionDetail): void {
@@ -140,5 +150,6 @@ export class SubmissionKaderPersetujuanPage implements OnInit, SubmissionKaderPe
   setBusy(busy: boolean): void { this.busy.set(busy); }
   onDecisionSuccess(): void { this.detail.set(null); }
   onDeactivateSuccess(): void {}
+  onReactivateSuccess(): void {}
   onReinstateSuccess(): void {}
 }

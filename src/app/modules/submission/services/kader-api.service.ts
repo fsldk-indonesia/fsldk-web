@@ -14,5 +14,6 @@ export class KaderApiService {
   }
   getCode(id: number): Observable<KaderInfo> { return this.api.get(`/kaders/${id}/code`); }
   deactivate(id: number): Observable<unknown> { return this.api.post(`/kaders/${id}/deactivate`); }
+  reactivate(id: number): Observable<unknown> { return this.api.post(`/kaders/${id}/reactivate`); }
   reinstate(id: number): Observable<unknown> { return this.api.post(`/kaders/${id}/reinstate`); }
 }

@@ -47,6 +47,22 @@ export const KADER_STATUS_TONE: Record<string, StatusTone> = {
 };
 export function kaderStatusTone(status: string): StatusTone { return KADER_STATUS_TONE[status] ?? 'neutral'; }
 
+/** Status GABUNGAN yang pantas ditampilkan untuk satu submission — untuk
+ *  subjek Kader, pakai status KEANGGOTAAN kader (ms_kader.status), BUKAN
+ *  status REVIEW submission-nya (tr_submission.status, yang tetap 'ACTIVE'
+ *  selamanya begitu pernah disetujui sekali, walau kader-nya belakangan
+ *  dinonaktifkan/ditolak lewat Persetujuan Kader). Dipakai di Ringkasan,
+ *  Formulir Pendataan, & Status Pendataan Portal Kader supaya ketiganya
+ *  konsisten — satu sumber kebenaran, bukan dihitung manual lagi per
+ *  komponen (3 tempat sudah kejadian salah baca field ini). Subjek
+ *  Levelisasi LDK tidak punya konsep kader, selalu pakai status submission. */
+export function displayStatus(detail: SubmissionDetail, isKaderSubject: boolean): { label: string; tone: StatusTone } {
+  if (isKaderSubject && detail.kader) {
+    return { label: KADER_STATUS_LABELS[detail.kader.status] ?? detail.kader.status, tone: kaderStatusTone(detail.kader.status) };
+  }
+  return { label: SUBMISSION_STATUS_LABELS[detail.status] ?? detail.status, tone: statusTone(detail.status) };
+}
+
 export interface AnswerInput {
   fieldID: number;
   valueText?: string;
