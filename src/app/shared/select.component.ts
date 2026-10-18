@@ -105,7 +105,10 @@ export interface SelectOption {
       border-radius: 6px; font-size: .85rem; font-family: var(--font-body); color: var(--color-text);
     }
     .app-select-search:focus { outline: none; border-color: var(--color-primary); }
-    .app-select-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; }
+    .app-select-list {
+      list-style: none; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain;
+      display: flex; flex-direction: column; gap: 4px;
+    }
     .app-select-list li { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
     .app-select-list li:hover { background: var(--color-bg-alt); }
     .app-select-list li.active { background: var(--color-bg-alt); }
@@ -344,8 +347,8 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   /** Place the fixed menu below the control, or above it when space is short. */
   private reposition(): void {
     const r = this.el.nativeElement.getBoundingClientRect();
-    const gap = 10;
-    const desired = Math.min((this.options.length || 1) * 42 + 14, 320);
+    const gap = 14;
+    const desired = Math.min((this.options.length || 1) * 46 + 14, 320);
     const below = window.innerHeight - r.bottom - gap;
     const above = r.top - gap;
     const up = below < Math.min(desired, 180) && above > below;
@@ -354,9 +357,12 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
     // (mis. "LDK" di form Ubah Pengguna) tidak seharusnya ikut memotong label
     // opsi yang panjang (nama LDK + Puskomda). Minimal 320px, tidak pernah
     // lebih sempit dari lebar trigger asli, dan left digeser supaya tidak
-    // sampai keluar tepi kanan viewport.
+    // sampai mepet ke tepi kanan viewport — pakai margin tepi sendiri (lebih
+    // lega dari `gap` pemicu-ke-panel) karena di sinilah popup paling sering
+    // kelihatan mepet, mis. kolom Aksi paling kanan di tabel Pengurus.
+    const edgeMargin = 24;
     const width = Math.max(r.width, 320);
-    const left = Math.min(r.left, Math.max(gap, window.innerWidth - width - gap));
+    const left = Math.min(r.left, Math.max(edgeMargin, window.innerWidth - width - edgeMargin));
     this.pos.set({
       top: up ? r.top - gap - maxH : r.bottom + gap,
       left,
