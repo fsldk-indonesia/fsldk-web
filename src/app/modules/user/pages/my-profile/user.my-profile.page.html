@@ -124,6 +124,15 @@
                       </span>
                     </span>
                   </div>
+                  @if (k.status === 'INACTIVE' && k.statusChangedDate) {
+                    <div class="kader-meta-row">
+                      <span class="kader-meta-icon"><app-icon name="calendar-days" [size]="13" /></span>
+                      <span class="kader-meta-text">
+                        <span class="kader-meta-label">Nonaktif Sejak</span>
+                        <span class="kader-meta-value">{{ k.statusChangedDate | date: 'd MMMM y' }}</span>
+                      </span>
+                    </div>
+                  }
                   <div class="kader-meta-row">
                     <span class="kader-meta-icon"><app-icon name="sitemap" [size]="13" /></span>
                     <span class="kader-meta-text">

@@ -115,6 +115,10 @@ export interface KaderInfo {
   fullName: string;
   status: string;
   issuedDate?: string;
+  /** Kapan status SAAT INI mulai berlaku — dipakai "Nonaktif sejak" selama
+   *  status-nya masih INACTIVE (issuedDate tetap tanggal aktivasi awal,
+   *  tidak berubah walau belakangan dinonaktifkan). */
+  statusChangedDate?: string;
 }
 
 export interface SubmissionResponse {
