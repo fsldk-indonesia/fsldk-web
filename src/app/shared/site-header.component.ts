@@ -126,7 +126,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
                 } @else {
                   <span class="chip-avatar">{{ initials() }}</span>
                 }
-                {{ auth.user()?.fullName }}
+                <span class="chip-name">{{ auth.user()?.fullName }}</span>
               </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
                 @for (t of auth.accessibleCmsTiers(); track t) {
@@ -510,6 +510,10 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .account-chip .chip-avatar { background: rgba(255,255,255,.3); color: #fff; }
     .account-chip .chip-avatar.guest { background: rgba(255,255,255,.25); color: #fff; }
     img.chip-avatar { object-fit: cover; }
+    /* Nama/email panjang (mis. hasil Google login) dipotong "…" supaya tidak
+       melebarkan pill ini dan mendorong layout navbar — avatar & chevron
+       tombol parent tetap flex-shrink:0, cuma teks nama yang menyusut. */
+    .chip-name { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     /* Foto profil (kadang PNG transparan, mis. logo FSLDK) butuh cincin putih
        SOLID (border), bukan tint transparan seperti varian teks/inisial di
        atas — kalau tidak, area transparan PNG-nya cuma menembus warna pill
