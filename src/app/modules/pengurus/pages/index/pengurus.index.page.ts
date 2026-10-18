@@ -51,6 +51,7 @@ function buildPengurusIndexConfig(presenter: PengurusIndexPresenter, roleOptions
       { key: 'fullName', label: 'Nama', locked: true },
       { key: 'email', label: 'Email' },
       { key: 'homeOrganizationName', label: 'LDK Asal' },
+      { key: 'puskomdaName', label: 'Puskomda' },
       { key: 'roleName', label: 'Role Saat Ini' },
     ],
     defaultSort: { sortBy: 'fullName', sortDir: 'asc' },

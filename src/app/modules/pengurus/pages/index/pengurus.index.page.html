@@ -8,6 +8,7 @@
     <td><strong>{{ item.fullName }}</strong></td>
     @if (isColumnVisible('email')) { <td class="text-muted">{{ item.email }}</td> }
     @if (isColumnVisible('homeOrganizationName')) { <td>{{ item.homeOrganizationName }}</td> }
+    @if (isColumnVisible('puskomdaName')) { <td>{{ item.puskomdaName }}</td> }
     @if (isColumnVisible('roleName')) { <td>{{ item.roleName }}</td> }
     <td class="role-cell" (click)="$event.stopPropagation()">
       @for (tick of [resyncTick()]; track tick) {

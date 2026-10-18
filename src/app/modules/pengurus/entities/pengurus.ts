@@ -9,4 +9,5 @@ export interface PengurusEntry {
   roleName: string;
   homeOrganizationID: number;
   homeOrganizationName: string;
+  puskomdaName: string;
 }

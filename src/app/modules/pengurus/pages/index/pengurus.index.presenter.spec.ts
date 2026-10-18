@@ -14,7 +14,7 @@ describe('PengurusIndexPresenter', () => {
   let view: jasmine.SpyObj<PengurusIndexView>;
 
   const sample: PengurusEntry[] = [
-    { userID: 1, fullName: 'Budi', email: 'budi@example.com', roleName: 'Kader', homeOrganizationID: 10, homeOrganizationName: 'LDK Syahid' },
+    { userID: 1, fullName: 'Budi', email: 'budi@example.com', roleName: 'Kader', homeOrganizationID: 10, homeOrganizationName: 'LDK Syahid', puskomdaName: 'Puskomda Jabar' },
   ];
 
   beforeEach(() => {
@@ -76,9 +76,9 @@ describe('PengurusIndexPresenter', () => {
 
   describe('list() / paginate() — the <app-cms-index> dataSource adapter', () => {
     const roster: PengurusEntry[] = [
-      { userID: 1, fullName: 'Budi', email: 'budi@example.com', roleName: 'Kader', homeOrganizationID: 10, homeOrganizationName: 'LDK Syahid' },
-      { userID: 2, fullName: 'Citra', email: 'citra@example.com', roleName: 'LDK Admin', homeOrganizationID: 11, homeOrganizationName: 'LDK Binus' },
-      { userID: 3, fullName: 'Andi', email: 'andi@example.com', roleName: 'Puskomda Verifikator', homeOrganizationID: 10, homeOrganizationName: 'LDK Syahid' },
+      { userID: 1, fullName: 'Budi', email: 'budi@example.com', roleName: 'Kader', homeOrganizationID: 10, homeOrganizationName: 'LDK Syahid', puskomdaName: 'Puskomda Jabar' },
+      { userID: 2, fullName: 'Citra', email: 'citra@example.com', roleName: 'LDK Admin', homeOrganizationID: 11, homeOrganizationName: 'LDK Binus', puskomdaName: 'Puskomda Jakarta' },
+      { userID: 3, fullName: 'Andi', email: 'andi@example.com', roleName: 'Puskomda Verifikator', homeOrganizationID: 10, homeOrganizationName: 'LDK Syahid', puskomdaName: 'Puskomda Jabar' },
     ];
 
     const baseParams: CmsListParams = { page: 1, limit: 10, sort: 'fullName', status: [], dateFrom: '', dateTo: '', filters: {} };
