@@ -26,9 +26,11 @@ export interface MultiSelectOption {
   imports: [FormsModule, IconComponent],
   template: `
     <div class="ms-wrap" #wrap>
-      <button type="button" class="ms-trigger" [class.open]="open()" (click)="toggleOpen()">
+      <div class="ms-trigger" role="button" tabindex="0" [class.open]="open()"
+           (click)="toggleOpen()" (keydown)="onTriggerKeydown($event)">
         @if (selected.length === 0) {
           <span class="ms-placeholder">{{ placeholder }}</span>
+          <app-icon class="chevron" name="chevron-down" [size]="10" />
         } @else {
           <span class="ms-pills">
             @for (label of selectedLabels().slice(0, 2); track label) {
@@ -38,9 +40,11 @@ export interface MultiSelectOption {
               <span class="ms-pill ms-pill-more">+{{ selectedLabels().length - 2 }} lainnya</span>
             }
           </span>
+          <button type="button" class="ms-clear" aria-label="Hapus semua pilihan" (click)="clearSelection($event)">
+            <app-icon name="x" [size]="10" />
+          </button>
         }
-        <app-icon class="chevron" name="chevron-down" [size]="10" />
-      </button>
+      </div>
 
       <div class="ms-menu" [class.open]="open()">
         @if (searchable) {
@@ -82,6 +86,16 @@ export interface MultiSelectOption {
     .ms-pill-more { background: var(--color-bg-alt); color: var(--color-text-secondary); }
     .ms-trigger .chevron { flex-shrink: 0; font-size: .65rem; color: var(--color-muted); transition: transform .15s ease; }
     .ms-trigger.open .chevron { transform: rotate(180deg); }
+    /* Tombol hapus semua pilihan — sibling dari trigger (bukan nested di
+       dalamnya), click-nya stopPropagation di clearSelection() supaya tidak
+       ikut men-toggle popup. */
+    .ms-clear {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%;
+      background: transparent; color: var(--color-muted); cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .ms-clear:hover { background: var(--color-bg-alt); color: var(--color-text); }
 
     /* Selalu di-render (bukan @if) supaya transisi tutup juga kelihatan —
        sama seperti .dropdown-menu di CmsIndexComponent. Lebar dibatasi ke
@@ -141,6 +155,31 @@ export class MultiSelectComponent implements OnDestroy {
     if (next) { this.draft = [...this.selected]; this.query = ''; }
     this.open.set(next);
     this.openedChange.emit(next);
+  }
+
+  /** Trigger sekarang <div> (supaya tombol clear bisa jadi sibling, bukan
+   *  nested di dalam <button>), jadi Enter/Space harus ditangani manual —
+   *  tidak lagi gratis dari semantik <button> native. */
+  onTriggerKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.toggleOpen();
+    }
+  }
+
+  /** Tombol "x" di trigger — hapus langsung tanpa lewat alur draft/Terapkan,
+   *  karena menghapus semua pilihan tidak ambigu dan trigger ini mewakili
+   *  `selected` yang sudah ter-apply (bukan draft di dalam popup). */
+  clearSelection(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.selected = [];
+    this.draft = [];
+    this.selectedChange.emit(this.selected);
+    if (this.open()) {
+      this.open.set(false);
+      this.openedChange.emit(false);
+    }
   }
 
   isDraftChecked(value: string | number): boolean { return this.draft.includes(value); }

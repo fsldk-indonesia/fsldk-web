@@ -18,12 +18,18 @@ export interface SelectOption {
   imports: [FormsModule],
   template: `
     <div class="app-select" [class.open]="open()" [class.disabled]="disabled">
-      <button type="button" class="app-select-control" [disabled]="disabled"
-              (click)="toggle()" (keydown)="onKeydown($event)"
-              aria-haspopup="listbox" [attr.aria-expanded]="open()">
+      <div class="app-select-control" role="button" [attr.tabindex]="disabled ? -1 : 0"
+           (click)="toggle()" (keydown)="onKeydown($event)"
+           aria-haspopup="listbox" [attr.aria-expanded]="open()">
         <span [class.placeholder]="!hasSelection()">{{ triggerLabel() }}</span>
-        <i class="fas fa-chevron-down"></i>
-      </button>
+        @if (hasSelection() && !disabled) {
+          <button type="button" class="app-select-clear" aria-label="Hapus pilihan" (click)="clear($event)">
+            <i class="fas fa-xmark"></i>
+          </button>
+        } @else {
+          <i class="fas fa-chevron-down app-select-chevron"></i>
+        }
+      </div>
       <div class="app-select-menu" [class.open]="open()"
            [style.top.px]="pos().top" [style.left.px]="pos().left"
            [style.width.px]="pos().width">
@@ -58,10 +64,21 @@ export interface SelectOption {
     }
     .app-select-control span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .app-select-control span.placeholder { color: var(--color-muted); }
-    .app-select-control i { font-size: .75rem; color: var(--color-muted); flex-shrink: 0; transition: transform var(--motion-fast) ease; }
+    .app-select-chevron { font-size: .75rem; color: var(--color-muted); flex-shrink: 0; transition: transform var(--motion-fast) ease; }
     .app-select.open .app-select-control { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
-    .app-select.open .app-select-control i { transform: rotate(180deg); }
+    .app-select.open .app-select-chevron { transform: rotate(180deg); }
     .app-select.disabled .app-select-control { background: var(--color-bg-alt); color: var(--color-muted); cursor: not-allowed; }
+    /* Tombol hapus pilihan — sibling dari trigger (bukan nested di dalamnya,
+       elemen interaktif seperti button tidak boleh ditumpuk), dirender
+       sebelum chevron lewat urutan DOM. click-nya stopPropagation di clear()
+       supaya tidak ikut men-toggle menu. */
+    .app-select-clear {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%;
+      background: transparent; color: var(--color-muted); font-size: .7rem; cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .app-select-clear:hover { background: var(--color-bg-alt); color: var(--color-text); }
     /* Selalu di-render (bukan @if) supaya transisi TUTUP juga kelihatan —
        @if mencabut elemen dari DOM sesaat menu ditutup, jadi cuma transisi
        buka yang sempat kelihatan. Posisi (top/left/width) tetap dihitung JS
@@ -339,6 +356,19 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
       width: r.width,
       maxH,
     });
+  }
+
+  /** Tombol "x" di trigger — stopPropagation supaya klik tidak ikut men-toggle
+   *  menu (lihat komentar .app-select-clear di styles untuk kenapa ini sibling,
+   *  bukan nested, dari trigger). */
+  clear(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    if (this.disabled) return;
+    this.value = this.multiple ? [] : null;
+    this.onChange(this.value);
+    this.onTouched();
+    if (this.open()) this.close();
   }
 
   choose(opt: SelectOption): void {
