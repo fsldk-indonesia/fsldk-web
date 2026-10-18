@@ -200,6 +200,9 @@
             @for (d of connectorPaths(); track $index) {
               <path class="network-line" [attr.d]="d" />
             }
+            @for (d of ldkConnectorPaths(); track $index) {
+              <path class="network-line ember" [attr.d]="d" />
+            }
           </svg>
 
           @if (rootPuskomnas(); as root) {
@@ -257,7 +260,9 @@
                   @if (g.puskomda?.photoURL) {
                     <img class="org-group-logo" [src]="g.puskomda!.photoURL" [alt]="g.puskomda!.organizationName">
                   } @else {
-                    <span class="org-group-logo-fallback icon-badge icon-badge-gold"><app-icon name="building" [size]="20" /></span>
+                    <span class="org-group-logo-fallback icon-badge icon-badge-gold">
+                      <app-icon [name]="puskomdaIcon" [size]="20" />
+                    </span>
                   }
                   <div class="org-group-title">
                     @if (g.puskomda; as p) {
@@ -295,12 +300,12 @@
                       <span class="org-group-caption org-group-unloaded">Pusat Komunikasi Daerah · di luar hasil filter</span>
                     }
                   </div>
-                  <span class="org-group-count">{{ g.ldks.length }} Unit</span>
+                  <span class="org-group-count">{{ g.ldks.length }} LDK</span>
                 </div>
 
                 <div class="org-group-children">
                   @for (o of g.ldks; track o.organizationID) {
-                    <div class="org-card">
+                    <div class="org-card" #ldkCard>
                       @if (o.photoURL) {
                         <img class="org-logo" [src]="o.photoURL" [alt]="o.organizationName">
                       } @else {

@@ -8,6 +8,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { PageHeroComponent } from '../../../../shared/page-hero.component';
 import { SearchFilterSortComponent, FilterFieldDef } from '../../../../shared/search-filter-sort.component';
 import { NetworkStats, DirectoryEntry, levelBadgeClass } from '../../entities/statistic';
+import { CMS_SHELL_ICON } from '../../../../shared/cms-tier';
 import { StatisticIndexPresenter } from './statistic.index.presenter';
 import { StatisticIndexView } from './statistic.index.view';
 
@@ -51,11 +52,15 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
  * "Direktori LDK" — pakai app-search-filter-sort (komponen global yang sama
  * dipakai halaman Galeri), disusun sebagai PETA jaringan: Puskomnas jadi hub
  * bercahaya di tengah, garis kurva SVG menyambung ke tiap grup Puskomda
- * (jumlahnya terbatas jadi aman dihitung ulang saat resize/filter), unit LDK
- * tetap mengelompok dalam grid di bawah grupnya masing-masing — BUKAN garis
- * bebas yang menyambung ke tiap kartu LDK satu-satu (jumlahnya bisa banyak &
- * reflow grid-nya rapuh terhadap garis presisi, sudah dipertimbangkan &
- * sengaja dihindari, lihat diskusi arah desain sebelumnya).
+ * (hijau), DAN tiap grup Puskomda bercabang lagi ke tiap kartu LDK di
+ * bawahnya (oren/ember — diminta eksplisit 2026-10-19, membalik keputusan
+ * desain sebelumnya yang sengaja menghindari garis per-kartu LDK karena
+ * khawatir rapuh terhadap reflow grid saat jumlah LDK banyak). Garis LDK
+ * TIDAK pakai node/ping bercahaya terpisah per kartu seperti simpul Puskomda
+ * (akan jadi puluhan animasi sekaligus pada DIRECTORY_TREE_LIMIT=100) —
+ * cukup kurva Bezier polos berakhir di tepi atas tiap kartu, sama seperti
+ * garis hub->Puskomda dihitung dari posisi DOM asli (lihat
+ * recomputeConnectors()), bukan dari koordinat statis.
  */
 @Component({
   selector: 'app-statistic-index-page',
@@ -262,9 +267,11 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
        Direktori sebagai PETA — hub Puskomnas bercahaya (reuse .network-node/
        .network-ping) di tengah, garis kurva SVG ke tiap grup Puskomda
        (dihitung dari posisi DOM asli via getBoundingClientRect, lihat
-       recomputeConnectors() di .ts), unit LDK mengelompok dalam grid biasa
-       di bawah grupnya — TIDAK ada garis per-kartu LDK (lihat komentar
-       class komponen). ===================================================================== */
+       recomputeConnectors() di .ts), DAN tiap grup bercabang lagi ke tiap
+       kartu LDK di bawahnya (warna ember/oren, lihat .network-line.ember di
+       styles.scss) — lihat komentar class komponen untuk alasan garis LDK
+       tidak pakai node/ping terpisah seperti simpul Puskomda.
+       ===================================================================== */
     .org-map { position: relative; max-width: 980px; margin: 0 auto; transition: opacity .25s ease; }
     .org-map.is-refetching { opacity: .5; pointer-events: none; }
     .org-map-loading-bar {
@@ -454,12 +461,22 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
    *  selalu cocok dengan layout sesungguhnya (resize, reflow grid, jumlah
    *  grup berubah karena filter). */
   connectorPaths = signal<string[]>([]);
+  /** Garis kurva tiap simpul grup Puskomda -> tiap kartu LDK di bawahnya
+   *  (oren/ember) — dihitung bersamaan di recomputeConnectors(), origin-nya
+   *  posisi simpul grup yang SAMA dipakai garis hub->Puskomda di atas. */
+  ldkConnectorPaths = signal<string[]>([]);
   linesReady = signal(false);
   mapSize = signal({ w: 0, h: 0 });
 
   @ViewChild('mapWrap') private mapWrapRef?: ElementRef<HTMLElement>;
   @ViewChild('hubNode') private hubNodeRef?: ElementRef<HTMLElement>;
   @ViewChildren('groupNode') private groupNodeRefs?: QueryList<ElementRef<HTMLElement>>;
+  /** Flat, DOM-order list kartu LDK lintas SEMUA grup — urutannya otomatis
+   *  sama dengan directoryTree().flatMap(g => g.ldks) karena @for di .html
+   *  merender grup lalu LDK-nya persis seurut itu, jadi recomputeConnectors()
+   *  tinggal mengiris flat list ini per g.ldks.length tanpa butuh ref terpisah
+   *  per grup. */
+  @ViewChildren('ldkCard') private ldkCardRefs?: QueryList<ElementRef<HTMLElement>>;
 
   private resizeObserver?: ResizeObserver;
   private resizeObserverTarget?: HTMLElement;
@@ -484,6 +501,11 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     // pencarian/tab masuk-keluar) — di situlah posisi node-nodenya perlu
     // dihitung ulang.
     this.groupNodeRefs?.changes.subscribe(() => this.scheduleRecomputeConnectors());
+    // Jumlah grup bisa tetap sama sementara jumlah KARTU LDK di dalamnya
+    // berubah (mis. pencarian menyaring sebagian LDK tapi tidak sampai
+    // menghilangkan grup Puskomda-nya) — groupNodeRefs.changes tidak akan
+    // terpicu untuk kasus itu, jadi ldkCardRefs perlu langganan sendiri.
+    this.ldkCardRefs?.changes.subscribe(() => this.scheduleRecomputeConnectors());
   }
 
   ngOnDestroy(): void {
@@ -545,20 +567,34 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
 
   levelBadgeClass = levelBadgeClass;
 
+  /** Ikon fallback kartu grup Puskomda (saat belum ada photoURL) — nama ikon
+   *  disamakan dengan item "Portal Puskomda" di dropdown akun
+   *  (site-header.component.ts, 'building-2'), tapi background tetap
+   *  icon-badge-gold (soft) seperti semula per permintaan eksplisit
+   *  2026-10-19 — hanya ikonnya yang ikut satu sumber kebenaran cms-tier.ts,
+   *  warnanya TIDAK ikut disamakan ke solid tier color milik dropdown. */
+  readonly puskomdaIcon = CMS_SHELL_ICON.PUSKOMDA;
+
   private scheduleRecomputeConnectors(): void {
     requestAnimationFrame(() => this.recomputeConnectors());
   }
 
-  /** Ukur posisi DOM asli hub & tiap simpul grup (getBoundingClientRect),
-   *  lalu bangun kurva Bezier vertikal dari hub ke tiap simpul — data-driven
-   *  dari layout sesungguhnya, bukan dihitung dari koordinat statis, supaya
-   *  selalu cocok berapa pun jumlah grup & lebar layar. */
+  /** Ukur posisi DOM asli hub, tiap simpul grup, DAN tiap kartu LDK
+   *  (getBoundingClientRect), lalu bangun kurva Bezier vertikal hub->grup
+   *  (hijau) dan grup->tiap kartu LDK (oren/ember) — data-driven dari layout
+   *  sesungguhnya, bukan dihitung dari koordinat statis, supaya selalu cocok
+   *  berapa pun jumlah grup/LDK & lebar layar. Kartu LDK diiris dari flat
+   *  ldkCardRefs per g.ldks.length (lihat komentar field-nya) — bukan
+   *  endpoint bercahaya terpisah seperti simpul grup, karena jumlahnya bisa
+   *  sampai DIRECTORY_TREE_LIMIT=100 kartu sekaligus. */
   private recomputeConnectors(): void {
     const wrap = this.mapWrapRef?.nativeElement;
     const hub = this.hubNodeRef?.nativeElement;
-    const nodes = this.groupNodeRefs?.toArray() ?? [];
-    if (!wrap || !hub || nodes.length === 0) {
+    const groupNodes = this.groupNodeRefs?.toArray() ?? [];
+    const ldkCards = this.ldkCardRefs?.toArray() ?? [];
+    if (!wrap || !hub || groupNodes.length === 0) {
       this.connectorPaths.set([]);
+      this.ldkConnectorPaths.set([]);
       return;
     }
 
@@ -576,14 +612,33 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     const hx = hubRect.left + hubRect.width / 2 - wrapRect.left;
     const hy = hubRect.top + hubRect.height / 2 - wrapRect.top;
 
-    const paths = nodes.map((ref) => {
+    const tree = this.directoryTree();
+    const groupPaths: string[] = [];
+    const ldkPaths: string[] = [];
+    let ldkCursor = 0;
+
+    groupNodes.forEach((ref, i) => {
       const r = ref.nativeElement.getBoundingClientRect();
       const nx = r.left + r.width / 2 - wrapRect.left;
       const ny = r.top + r.height / 2 - wrapRect.top;
       const midY = (hy + ny) / 2;
-      return `M${hx},${hy} C${hx},${midY} ${nx},${midY} ${nx},${ny}`;
+      groupPaths.push(`M${hx},${hy} C${hx},${midY} ${nx},${midY} ${nx},${ny}`);
+
+      const ldkCount = tree[i]?.ldks.length ?? 0;
+      for (let j = 0; j < ldkCount; j++) {
+        const cardEl = ldkCards[ldkCursor + j]?.nativeElement;
+        if (!cardEl) continue;
+        const cr = cardEl.getBoundingClientRect();
+        const cx = cr.left + cr.width / 2 - wrapRect.left;
+        const cyTop = cr.top - wrapRect.top;
+        const midY2 = (ny + cyTop) / 2;
+        ldkPaths.push(`M${nx},${ny} C${nx},${midY2} ${cx},${midY2} ${cx},${cyTop}`);
+      }
+      ldkCursor += ldkCount;
     });
-    this.connectorPaths.set(paths);
+
+    this.connectorPaths.set(groupPaths);
+    this.ldkConnectorPaths.set(ldkPaths);
     this.linesReady.set(true);
   }
 
