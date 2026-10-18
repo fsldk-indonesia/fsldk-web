@@ -203,6 +203,14 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
       this.orgContext.organizationID$(this.route).subscribe((id) => {
         this.currentPuskomdaID.set(id);
         this.puskomdaReady.set(true);
+        // Emisi KEDUA dst. (org-switcher dipindah saat halaman ini sudah
+        // ter-mount) — <app-cms-index> tidak otomatis refetch sendiri cuma
+        // karena closure dataSource membaca signal baru; ia cuma re-load saat
+        // disuruh lewat refresh()/applyFilters()/dst (lihat CmsIndexComponent.load()).
+        // Tanpa baris ini, tabel LDK tetap menampilkan data Puskomda yang
+        // aktif saat page pertama kali dimuat walau org-switcher sudah pindah
+        // dan URL/organizationID sudah berubah.
+        this.table?.refresh();
       });
     }
   }
