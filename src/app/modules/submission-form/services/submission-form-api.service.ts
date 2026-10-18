@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
-import { SubmissionForm, SubmissionFormDetail, FormVersionDetail, FormVersionSummary } from '../entities/submission-form';
+import { SubmissionForm, SubmissionFormDetail, FormVersionDetail, FormVersionSummary, PublishImpact } from '../entities/submission-form';
 
 /** Panggilan HTTP mentah untuk form builder (/submission-forms). */
 @Injectable({ providedIn: 'root' })
@@ -15,6 +15,7 @@ export class SubmissionFormApiService {
   createVersion(formID: number, body: unknown): Observable<FormVersionSummary> { return this.api.post(`/submission-forms/${formID}/versions`, body); }
   getVersion(versionID: number): Observable<FormVersionDetail> { return this.api.get(`/submission-forms/versions/${versionID}`); }
   publishVersion(versionID: number): Observable<FormVersionSummary> { return this.api.post(`/submission-forms/versions/${versionID}/publish`); }
+  getPublishImpact(versionID: number): Observable<PublishImpact> { return this.api.get(`/submission-forms/versions/${versionID}/publish-impact`); }
   getPublishedByFormCode(formCode: string): Observable<FormVersionDetail> { return this.api.get(`/submission-forms/by-code/${formCode}/published`); }
 
   createSection(versionID: number, body: unknown): Observable<unknown> { return this.api.post(`/submission-forms/versions/${versionID}/sections`, body); }

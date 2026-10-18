@@ -24,6 +24,12 @@ export const SINGLE_CHOICE_FIELD_TYPES: FieldType[] = ['SELECT', 'RADIO'];
 
 export type ScoringMethod = 'AUTOMATIC' | 'MANUAL';
 
+/** Jumlah submission yang akan terdampak (direassessment) bila sebuah
+ *  version dipublish. */
+export interface PublishImpact {
+  affectedCount: number;
+}
+
 /** Satu baris ms_submission_form. */
 export interface SubmissionForm {
   formID: number;
