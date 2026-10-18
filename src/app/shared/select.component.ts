@@ -345,15 +345,22 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   private reposition(): void {
     const r = this.el.nativeElement.getBoundingClientRect();
     const gap = 10;
-    const desired = Math.min((this.options.length || 1) * 42 + 14, 240);
+    const desired = Math.min((this.options.length || 1) * 42 + 14, 320);
     const below = window.innerHeight - r.bottom - gap;
     const above = r.top - gap;
     const up = below < Math.min(desired, 180) && above > below;
     const maxH = Math.max(120, Math.min(desired, up ? above : below));
+    // Popup boleh lebih lebar dari trigger-nya — field sempit di dalam modal
+    // (mis. "LDK" di form Ubah Pengguna) tidak seharusnya ikut memotong label
+    // opsi yang panjang (nama LDK + Puskomda). Minimal 320px, tidak pernah
+    // lebih sempit dari lebar trigger asli, dan left digeser supaya tidak
+    // sampai keluar tepi kanan viewport.
+    const width = Math.max(r.width, 320);
+    const left = Math.min(r.left, Math.max(gap, window.innerWidth - width - gap));
     this.pos.set({
       top: up ? r.top - gap - maxH : r.bottom + gap,
-      left: r.left,
-      width: r.width,
+      left,
+      width,
       maxH,
     });
   }
