@@ -14,16 +14,30 @@
     <app-select
       [options]="roleFilterOptions"
       [ngModel]="roleFilter()"
-      (ngModelChange)="roleFilter.set($event)"
-      placeholder="Semua Role" />
+      (ngModelChange)="roleFilter.set($event)" />
   </div>
 
   @if (loading()) {
     <div class="table-wrap">
       <table class="table">
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Email</th>
+            <th>LDK Asal</th>
+            <th>Role Saat Ini</th>
+            <th class="role-cell">Aksi</th>
+          </tr>
+        </thead>
         <tbody>
           @for (i of [1,2,3,4,5]; track i) {
-            <tr><td><span class="skel skel-line" style="width:70%"></span></td></tr>
+            <tr>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+              <td><span class="skel skel-line" style="width:70%"></span></td>
+            </tr>
           }
         </tbody>
       </table>

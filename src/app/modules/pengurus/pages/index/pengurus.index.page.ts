@@ -87,8 +87,6 @@ export class PengurusIndexPage implements OnInit, PengurusIndexView {
     });
   });
 
-  hasActiveFilter = computed(() => this.searchQuery().trim() !== '' || this.roleFilter() !== null);
-
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadAll();
