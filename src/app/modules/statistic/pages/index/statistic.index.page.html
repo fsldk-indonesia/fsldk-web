@@ -253,6 +253,9 @@
                         <span class="org-logo-fallback icon-badge-soft"><app-icon name="building" [size]="20" /></span>
                       }
                       <h4>{{ o.organizationName }}</h4>
+                      @if (o.levelLabel) {
+                        <span class="level-badge" [class]="levelBadgeClass(o.levelCode!)">{{ o.levelLabel }}</span>
+                      }
                       @if (o.cityName || o.provinceName) {
                         <p class="org-meta">
                           <app-icon name="map-pin" [size]="11" />

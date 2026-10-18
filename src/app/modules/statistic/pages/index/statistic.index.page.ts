@@ -7,7 +7,7 @@ import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PageHeroComponent } from '../../../../shared/page-hero.component';
 import { SearchFilterSortComponent, FilterFieldDef } from '../../../../shared/search-filter-sort.component';
-import { NetworkStats, DirectoryEntry } from '../../entities/statistic';
+import { NetworkStats, DirectoryEntry, levelBadgeClass } from '../../entities/statistic';
 import { StatisticIndexPresenter } from './statistic.index.presenter';
 import { StatisticIndexView } from './statistic.index.view';
 
@@ -229,6 +229,16 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
     .org-logo { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; object-fit: cover; border: 1px solid var(--color-border); }
     .org-logo-fallback { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
     .org-card h4 { margin: 0 0 6px; font-size: .98rem; font-family: var(--font-heading); }
+    /* Badge level Levelisasi LDK — hanya dirender kalau backend mengirim
+       levelLabel (artinya hasilnya CURRENT + sudah PUBLISH, lihat komentar
+       DirectoryEntry di statistic.ts). 4 varian warna mengikuti tangga
+       capaian level (lk_level: Pra Mula < Mula < Madya < Mandiri), semuanya
+       token warna yang sudah ada di styles.scss — tidak menambah warna baru. */
+    .level-badge { display: inline-flex; align-items: center; padding: 3px 11px; border-radius: var(--radius-full); font-size: .72rem; font-weight: 700; margin: 0 0 8px; }
+    .level-badge-neutral { background: var(--color-bg-alt); color: var(--color-muted); }
+    .level-badge-info { background: var(--color-info-soft); color: var(--color-info); }
+    .level-badge-gold { background: var(--color-gold-soft); color: var(--color-gold-dark); }
+    .level-badge-primary { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     /* align-items:flex-start (bukan center) — teks kota/provinsi yang
        panjang bisa melipat 2-3 baris di kartu sempit; center membuat ikon
        melayang di tengah blok multi-baris (dilaporkan "kurang enak
@@ -504,6 +514,8 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
   waLink(phone: string): string {
     return `https://wa.me/${phone.replace(/\D/g, '')}`;
   }
+
+  levelBadgeClass = levelBadgeClass;
 
   private scheduleRecomputeConnectors(): void {
     requestAnimationFrame(() => this.recomputeConnectors());
