@@ -225,7 +225,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
         <div class="mobile-account">
           <span class="mobile-account-avatar guest"><app-icon name="guest" [size]="18" /></span>
           <div class="mobile-account-text">
-            <span class="mobile-account-greeting">Assalamu'alaikum, Sahabat! <span class="wave-emoji">👋</span></span>
+            <span class="mobile-account-greeting">Assalamu'alaikum, Aktivis Dakwah! <span class="wave-emoji">👋</span></span>
             <span class="mobile-account-email">Masuk untuk akses penuh</span>
           </div>
         </div>
