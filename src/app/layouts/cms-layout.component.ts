@@ -168,7 +168,7 @@ function canvasSilhouetteUrl(hex: string): string {
                   <input class="form-control" [placeholder]="'Cari ' + orgNoun() + '...'" [value]="orgSearch()" (input)="onOrgSearch($event)" (click)="$event.stopPropagation()">
                   @for (o of orgOptions(); track o.organizationID) {
                     <button type="button" [class.active]="o.organizationID === currentOrgID()" (click)="selectOrganization(o.organizationID)">
-                      {{ o.organizationName }}
+                      {{ orgLabel(o) }}
                     </button>
                   } @empty {
                     <p class="text-muted org-empty">Tidak ada {{ orgNoun() }} lain.</p>
@@ -671,7 +671,14 @@ export class CmsLayoutComponent implements OnInit {
   orgDropdownOpen = signal(false);
   year = new Date().getFullYear();
 
-  currentOrgName = computed(() => this.orgOptions().find((o) => o.organizationID === this.currentOrgID())?.organizationName);
+  currentOrgName = computed(() => {
+    const o = this.orgOptions().find((x) => x.organizationID === this.currentOrgID());
+    return o ? this.orgLabel(o) : undefined;
+  });
+
+  orgLabel(o: MeOrganization): string {
+    return o.parentOrganizationName ? `${o.organizationName} - ${o.parentOrganizationName}` : o.organizationName;
+  }
 
   ngOnInit(): void {
     this.tier.set((this.route.snapshot.data['tier'] as Tier) ?? 'FSLDK');
