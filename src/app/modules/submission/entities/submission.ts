@@ -164,6 +164,10 @@ export interface SubmissionDetail extends SubmissionResponse {
   answers: AnswerResponse[];
   statusHistory: StatusHistoryEntry[];
   levelResult?: LevelResult;
+  /** Seluruh baris tr_levelisasi_result organisasi ini (riwayat tidak
+   *  pernah dihapus), terurut dari yang paling awal dicapai — dipakai
+   *  kartu "Record Levelisasi" (tangga 4 level). */
+  levelHistory?: LevelResult[];
   kader?: KaderInfo;
   /** Hanya terisi untuk caller bertier Puskomnas pada submission Levelisasi
    *  — LDK/Puskomda tidak pernah menerima field ini dari backend. */
