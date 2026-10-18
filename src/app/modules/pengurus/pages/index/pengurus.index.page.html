@@ -3,45 +3,73 @@
   <p class="text-muted">Kelola role pengurus (promosi/demosi) untuk kader aktif di organisasi Anda.</p>
 </div>
 
-@if (loading()) {
-  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
-} @else if (items().length === 0) {
-  <div class="card card-pad">
-    <div class="empty-state empty-state-inline">
-      <span class="icon-badge lg icon-badge-soft"><app-icon name="users-round" [size]="26" /></span>
-      <h4>Belum ada kader aktif</h4>
-      <p class="text-muted">Kader aktif di organisasi Anda akan muncul di sini.</p>
+<div class="card">
+  <div class="card-pad filter-row">
+    <input
+      class="form-control"
+      type="text"
+      placeholder="Cari nama, email, atau LDK…"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)">
+    <app-select
+      [options]="roleFilterOptions"
+      [ngModel]="roleFilter()"
+      (ngModelChange)="roleFilter.set($event)"
+      placeholder="Semua Role" />
+  </div>
+
+  @if (loading()) {
+    <div class="table-wrap">
+      <table class="table">
+        <tbody>
+          @for (i of [1,2,3,4,5]; track i) {
+            <tr><td><span class="skel skel-line" style="width:70%"></span></td></tr>
+          }
+        </tbody>
+      </table>
     </div>
-  </div>
-} @else {
-  <div class="card card-pad">
-    <table class="pengurus-table">
-      <thead>
-        <tr>
-          <th>Nama</th>
-          <th>Email</th>
-          <th>LDK Asal</th>
-          <th>Role Saat Ini</th>
-          <th class="role-cell">Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track rowKey(item)) {
+  } @else if (filteredItems().length === 0) {
+    <div class="empty-state">
+      <span class="icon-badge lg icon-badge-soft"><app-icon name="users-round" [size]="26" /></span>
+      @if (items().length === 0) {
+        <h4>Belum ada kader aktif</h4>
+        <p>Kader aktif di organisasi Anda akan muncul di sini.</p>
+      } @else {
+        <h4>Tidak ada hasil</h4>
+        <p>Coba ubah kata kunci pencarian atau filter role.</p>
+        <button type="button" class="btn btn-outline btn-sm" (click)="clearFilters()">Hapus Filter</button>
+      }
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
           <tr>
-            <td>{{ item.fullName }}</td>
-            <td class="text-muted">{{ item.email }}</td>
-            <td>{{ item.homeOrganizationName }}</td>
-            <td>{{ item.roleName }}</td>
-            <td class="role-cell">
-              <app-select
-                [options]="roleOptions"
-                [ngModel]="item.roleName"
-                (ngModelChange)="onRoleChange(item, $event, $event)"
-                [disabled]="busyUserID() === item.userID" />
-            </td>
+            <th>Nama</th>
+            <th>Email</th>
+            <th>LDK Asal</th>
+            <th>Role Saat Ini</th>
+            <th class="role-cell">Aksi</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-}
+        </thead>
+        <tbody>
+          @for (item of filteredItems(); track rowKey(item)) {
+            <tr>
+              <td>{{ item.fullName }}</td>
+              <td class="text-muted">{{ item.email }}</td>
+              <td>{{ item.homeOrganizationName }}</td>
+              <td>{{ item.roleName }}</td>
+              <td class="role-cell">
+                <app-select
+                  [options]="roleOptions"
+                  [ngModel]="item.roleName"
+                  (ngModelChange)="onRoleChange(item, $event, $event)"
+                  [disabled]="busyUserID() === item.userID" />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

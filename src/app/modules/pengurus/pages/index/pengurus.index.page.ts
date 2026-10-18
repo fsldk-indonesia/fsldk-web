@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
@@ -40,11 +40,10 @@ const PENGURUS_ROLES_BY_TIER: Record<string, SelectOption[]> = {
   providers: [PengurusIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 20px; } .page-head h1 { margin-bottom: 2px; }
-    .pengurus-table { width: 100%; border-collapse: collapse; }
-    .pengurus-table th { text-align: left; padding: 10px 12px; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--color-muted); border-bottom: 1px solid var(--color-border); }
-    .pengurus-table td { padding: 10px 12px; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+    .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .filter-row .form-control { max-width: 280px; flex: 1 1 220px; }
+    .filter-row app-select { min-width: 220px; }
     .role-cell { max-width: 220px; }
-    .empty-state-inline { padding: 36px 20px 24px; }
   `],
 })
 export class PengurusIndexPage implements OnInit, PengurusIndexView {
@@ -65,10 +64,39 @@ export class PengurusIndexPage implements OnInit, PengurusIndexView {
   resyncTick = signal(0);
 
   roleOptions: SelectOption[] = PENGURUS_ROLES_BY_TIER[(this.route.snapshot.data['tier'] as string) ?? 'LDK'] ?? [];
+  /** Opsi dropdown filter Role — katalog yang sama dengan roleOptions (aksi
+   *  per baris), ditambah opsi "Semua Role" di depan. */
+  roleFilterOptions: SelectOption[] = [{ value: null, label: 'Semua Role' }, ...this.roleOptions];
+
+  searchQuery = signal('');
+  roleFilter = signal<string | null>(null);
+
+  /** Hasil setelah search+filter role diterapkan ke items() — murni
+   *  client-side (backend GET /pengurus mengembalikan seluruh scope
+   *  caller tanpa paginasi, lihat desain v1 fitur ini). */
+  filteredItems = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const role = this.roleFilter();
+    return this.items().filter((item) => {
+      const matchesSearch = !q
+        || item.fullName.toLowerCase().includes(q)
+        || item.email.toLowerCase().includes(q)
+        || item.homeOrganizationName.toLowerCase().includes(q);
+      const matchesRole = !role || item.roleName === role;
+      return matchesSearch && matchesRole;
+    });
+  });
+
+  hasActiveFilter = computed(() => this.searchQuery().trim() !== '' || this.roleFilter() !== null);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.loadAll();
+  }
+
+  clearFilters(): void {
+    this.searchQuery.set('');
+    this.roleFilter.set(null);
   }
 
   rowKey(item: PengurusEntry): string {
