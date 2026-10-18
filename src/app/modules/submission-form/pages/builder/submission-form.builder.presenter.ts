@@ -25,10 +25,19 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
+  loadPublishImpact(versionID: number): Promise<number> {
+    return new Promise((resolve) => {
+      this.repo.getPublishImpact(versionID).subscribe({
+        next: (r) => resolve(r.affectedCount),
+        error: () => resolve(0),
+      });
+    });
+  }
+
   publishVersion(versionID: number, formID: number): void {
     this.view.setBusy(true);
     this.repo.publishVersion(versionID).subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Versi dipublikasikan'); this.view.reload(); this.loadForm(formID); },
+      next: () => { this.view.setBusy(false); this.toast.success('Versi dipublikasikan — pemrosesan reassessment berjalan di background'); this.view.reload(); this.loadForm(formID); },
       error: () => this.view.setBusy(false),
     });
   }
