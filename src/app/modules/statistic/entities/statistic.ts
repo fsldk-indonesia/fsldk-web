@@ -29,6 +29,7 @@ export interface DirectoryEntry {
   organizationID: number;
   organizationTypeCode: string;
   organizationName: string;
+  organizationCode: string;
   provinceName?: string;
   cityName?: string;
   contactEmail?: string;

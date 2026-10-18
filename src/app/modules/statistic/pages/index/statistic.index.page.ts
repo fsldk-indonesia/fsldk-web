@@ -283,27 +283,51 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
     .org-map-lines { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .45s ease; }
     .org-map-lines.ready { opacity: 1; }
 
-    .org-hub-wrap { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 48px; }
+    .org-hub-wrap { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 48px; }
     .org-hub-node { position: relative; width: 84px; height: 84px; }
     .org-hub-svg { width: 100%; height: 100%; overflow: visible; }
     .org-hub-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; pointer-events: none; }
-    .org-hub-body { text-align: center; }
-    .org-hub-body h4 { margin: 0; font-size: 1.05rem; font-family: var(--font-heading); color: var(--color-text); }
-    .org-hub-caption { display: block; font-size: .76rem; font-weight: 700; letter-spacing: .03em; color: var(--color-primary-dark); margin-top: 3px; }
+    /* Foto Puskomnas — mengisi lingkaran dalam .network-node (r=28, diameter
+       56) bukan seluruh kotak 84px, supaya ring ping/node tetap jadi halo di
+       sekelilingnya (pola sama dipakai org-group-logo untuk Puskomda). */
+    .org-hub-photo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; }
+    /* Hub & group-head sekarang kartu sungguhan (bukan teks mengambang) —
+       supaya seluruh data organisasi (kode, lokasi, kontak, jumlah unit)
+       kelihatan di satu tempat, bukan cuma nama+kontak seperti sebelumnya. */
+    .org-hub-body { text-align: center; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 24px; max-width: 380px; }
+    .org-hub-title-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .org-hub-title-row h4 { margin: 0; font-size: 1.05rem; font-family: var(--font-heading); color: var(--color-text); }
+    .org-hub-caption { display: block; font-size: .76rem; font-weight: 700; letter-spacing: .03em; color: var(--color-primary-dark); margin-top: 4px; }
+    /* Chip kode organisasi (organizationCode) — dipakai hub Puskomnas &
+       kartu Puskomda, sebelumnya tidak pernah ditampilkan sama sekali di
+       halaman publik ini. */
+    .org-code-chip { display: inline-flex; align-items: center; font-size: .68rem; font-weight: 700; letter-spacing: .02em; padding: 2px 9px; border-radius: 999px; background: var(--color-bg-alt); color: var(--color-text-secondary); white-space: nowrap; }
+    /* Kontak Puskomnas/Puskomda dikecilkan jadi ikon saja (bukan ikon+teks
+       penuh seperti .org-card-link) supaya tidak melebarkan kartu header. */
+    .org-hub-links { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .org-hub-links a, .org-group-links a { display: inline-flex; color: var(--color-primary); opacity: .75; transition: opacity var(--motion-fast) ease; }
+    .org-hub-links a:hover, .org-group-links a:hover { opacity: 1; }
 
     .org-map-groups { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 40px; }
     .org-group { position: relative; }
-    .org-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; min-height: 26px; flex-wrap: wrap; }
+    .org-group-head {
+      position: relative; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; min-height: 26px; flex-wrap: wrap;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px 18px 14px 26px;
+      transition: box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+    }
+    .org-group-head:hover { box-shadow: var(--shadow); border-color: var(--color-gold); }
     /* Simpul kecil bercahaya (reuse .network-node/.network-ping gold) —
        inilah titik yang diukur recomputeConnectors() sebagai ujung garis
-       kurva dari hub, BUKAN elemen dekoratif semata. */
-    .org-group-node { position: relative; width: 16px; height: 16px; flex-shrink: 0; }
+       kurva dari hub, BUKAN elemen dekoratif semata. Diposisikan sebagai
+       "pin" mengambang di tepi atas kartu (bukan ikut alur flex) supaya
+       tidak berebut ruang dengan logo/judul Puskomda yang sekarang ada. */
+    .org-group-node { position: absolute; top: -7px; left: 18px; width: 16px; height: 16px; }
     .org-group-node svg { width: 100%; height: 100%; overflow: visible; }
-    /* Nama + kepanjangan "Pusat Komunikasi Daerah" ditumpuk — pola sama
-       persis dengan .org-hub-body (nama Puskomnas + "Pusat Komunikasi
-       Nasional"), supaya tiap Puskomda terasa jadi hub mini yang setara
-       bahasanya dengan hub utama. */
-    .org-group-title { display: flex; flex-direction: column; gap: 1px; }
+    .org-group-logo, .org-group-logo-fallback { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+    .org-group-logo-fallback { display: flex; align-items: center; justify-content: center; }
+    .org-group-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .org-group-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .org-group-links { display: flex; gap: 9px; margin-top: 4px; }
     .org-group-head h4 { margin: 0; font-size: 1rem; font-family: var(--font-heading); color: var(--color-text); }
     .org-group-caption { font-size: .74rem; font-weight: 700; color: var(--color-gold-dark); }
     .org-group-unloaded { color: var(--color-muted); font-weight: 600; font-style: italic; }
