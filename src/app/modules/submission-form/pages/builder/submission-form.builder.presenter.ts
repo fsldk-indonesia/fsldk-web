@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
+import { PublishImpact } from '../../entities/submission-form';
 import { SubmissionFormRepository } from '../../repositories/submission-form.repository';
 import { SubmissionFormBuilderView } from './submission-form.builder.view';
 
@@ -25,11 +26,11 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
-  loadPublishImpact(versionID: number): Promise<number> {
+  loadPublishImpact(versionID: number): Promise<PublishImpact> {
     return new Promise((resolve) => {
       this.repo.getPublishImpact(versionID).subscribe({
-        next: (r) => resolve(r.affectedCount),
-        error: () => resolve(0),
+        next: (r) => resolve(r),
+        error: () => resolve({ affectedCount: 0, subjectLabel: 'LDK/Kader' }),
       });
     });
   }

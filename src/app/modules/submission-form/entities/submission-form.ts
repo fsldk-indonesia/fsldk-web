@@ -25,9 +25,12 @@ export const SINGLE_CHOICE_FIELD_TYPES: FieldType[] = ['SELECT', 'RADIO'];
 export type ScoringMethod = 'AUTOMATIC' | 'MANUAL';
 
 /** Jumlah submission yang akan terdampak (direassessment) bila sebuah
- *  version dipublish. */
+ *  version dipublish. subjectLabel adalah "LDK" (form ber-subjek
+ *  ORGANIZATION, mis. Levelisasi LDK) atau "Kader" (form ber-subjek KADER,
+ *  mis. Sensus Kader) — dipakai menyesuaikan kalimat konfirmasi publish. */
 export interface PublishImpact {
   affectedCount: number;
+  subjectLabel: string;
 }
 
 /** Satu baris ms_submission_form. */

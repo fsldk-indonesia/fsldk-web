@@ -234,8 +234,8 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
     const v = this.version();
     if (!v) return;
     const impact = await this.presenter.loadPublishImpact(v.versionID);
-    const message = impact > 0
-      ? `${impact} pendataan (LDK/Kader) akan diminta mengisi ulang (reassessment) setelah versi ini dipublikasikan. Struktur form tidak dapat diubah lagi setelah dipublikasikan. Lanjutkan?`
+    const message = impact.affectedCount > 0
+      ? `${impact.affectedCount} pendataan ${impact.subjectLabel} akan diminta mengisi ulang (reassessment) setelah versi ini dipublikasikan. Struktur form tidak dapat diubah lagi setelah dipublikasikan. Lanjutkan?`
       : 'Publikasikan versi ini? Struktur form tidak dapat diubah lagi setelah dipublikasikan.';
     const ok = await this.alert.confirm(message, {
       title: 'Publikasikan Versi', confirmLabel: 'Ya, Publikasikan',
