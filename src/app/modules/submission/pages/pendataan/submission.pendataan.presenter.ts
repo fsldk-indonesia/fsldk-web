@@ -1,11 +1,20 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin, of, switchMap, map } from 'rxjs';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
+import { FieldError } from '../../../../core/entities/api-response';
 import { SubmissionFormRepository } from '../../../submission-form/repositories/submission-form.repository';
 import { OrganizationRepository } from '../../../organization/repositories/organization.repository';
 import { SubmissionRepository } from '../../repositories/submission.repository';
 import { SubmissionPendataanView } from './submission.pendataan.view';
+
+/** Ekstrak detail error per field dari response 400/422 — lihat pola yang
+ *  sama di dynamicform.public-fill.presenter.ts. */
+function fieldErrorsOf(err: HttpErrorResponse): FieldError[] {
+  const errors = err.error?.errors;
+  return Array.isArray(errors) ? errors : [];
+}
 
 @Injectable()
 export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendataanView> {
@@ -55,7 +64,7 @@ export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendat
     this.view.setBusy(true);
     this.submissionRepo.saveAnswers(id, { answers }).subscribe({
       next: () => { this.view.setBusy(false); this.toast.success('Draf jawaban tersimpan'); onDone?.(); },
-      error: () => this.view.setBusy(false),
+      error: (err: HttpErrorResponse) => { this.view.setBusy(false); this.view.onValidationErrors(fieldErrorsOf(err)); },
     });
   }
 
@@ -65,10 +74,10 @@ export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendat
       next: () => {
         this.submissionRepo.submit(id).subscribe({
           next: () => { this.view.setBusy(false); this.toast.success('Pendataan berhasil dikirim'); this.view.reload(); },
-          error: () => this.view.setBusy(false),
+          error: (err: HttpErrorResponse) => { this.view.setBusy(false); this.view.onValidationErrors(fieldErrorsOf(err)); },
         });
       },
-      error: () => this.view.setBusy(false),
+      error: (err: HttpErrorResponse) => { this.view.setBusy(false); this.view.onValidationErrors(fieldErrorsOf(err)); },
     });
   }
 

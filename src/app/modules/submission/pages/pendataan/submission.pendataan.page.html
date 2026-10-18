@@ -133,6 +133,7 @@
             }
 
             @if (field.helpText) { <p class="field-help">{{ field.helpText }}</p> }
+            @if (fieldError(field.fieldID)) { <div class="err">{{ fieldError(field.fieldID) }}</div> }
           </div>
         }
       }

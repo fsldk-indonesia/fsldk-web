@@ -10,6 +10,7 @@ import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { FormField, FormVersionDetail } from '../../../submission-form/entities/submission-form';
+import { FieldError } from '../../../../core/entities/api-response';
 import {
   SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, EDITABLE_STATUSES,
   SUBMISSION_STATUS_LABELS, statusTone, displayStatus,
@@ -58,6 +59,7 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .answer-view dt { font-weight: 600; font-size: .88rem; }
     .answer-view dd { color: var(--color-text-secondary); margin: 2px 0 0; overflow-wrap: break-word; word-break: break-word; }
     .empty-state-inline { padding: 36px 20px 24px; }
+    .err { color: var(--color-danger); font-size: .82rem; margin-top: 6px; }
   `],
 })
 export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView {
@@ -98,6 +100,8 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   ldkLocked = computed(() => this.isKaderSubject() && this.auth.user()?.ldkTujuanOrganizationID != null);
 
   answers = signal<Record<number, AnswerDraft>>({});
+  fieldErrors = signal<Record<string, string>>({});
+  fieldError(fieldID: number): string { return this.fieldErrors()[`field_${fieldID}`] ?? ''; }
 
   isEditable = computed(() => {
     const s = this.submission();
@@ -239,12 +243,14 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   saveDraft(): void {
     const s = this.submission();
     if (!s) return;
+    this.fieldErrors.set({});
     this.presenter.saveAnswers(s.submissionID, this.buildAnswerInputs(), () => this.reload());
   }
 
   submitForm(): void {
     const s = this.submission();
     if (!s) return;
+    this.fieldErrors.set({});
     this.presenter.submit(s.submissionID, this.buildAnswerInputs());
   }
 
@@ -289,4 +295,13 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
   reload(): void { this.loading.set(true); this.presenter.loadAll(this.formCode(), this.targetOrganizationID); }
+
+  onValidationErrors(errors: FieldError[]): void {
+    const map: Record<string, string> = {};
+    for (const e of errors) map[e.attribute] = e.message;
+    this.fieldErrors.set(map);
+    queueMicrotask(() => {
+      document.querySelector('.err')?.closest('.field-group')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+  }
 }
