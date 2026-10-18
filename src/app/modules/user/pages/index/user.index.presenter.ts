@@ -72,7 +72,7 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
     this.orgRepo.list({ organizationTypeCode: 'LDK', limit: 200 }).subscribe({
       next: (p) => this.view.setOrganizationOptions(p.data.map((o) => ({
         value: o.organizationID,
-        label: o.provinceName ? `${o.organizationName} — ${o.provinceName}` : o.organizationName,
+        label: o.parentOrganizationName ? `${o.organizationName} — ${o.parentOrganizationName}` : o.organizationName,
       }))),
       error: () => {},
     });

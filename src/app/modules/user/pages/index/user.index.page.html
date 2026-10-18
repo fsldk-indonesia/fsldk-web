@@ -59,7 +59,7 @@
             <div class="collapse" [class.open]="!isPengunjungRole">
               <div class="collapse-inner">
                 <div class="form-group"><label class="form-label">LDK</label>
-                  <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" placeholder="Pilih LDK" />
+                  <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" [searchable]="true" placeholder="Pilih LDK" />
                   <p class="form-hint">{{ ldkFieldHint }}</p>
                 </div>
               </div>

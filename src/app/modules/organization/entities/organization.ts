@@ -29,6 +29,7 @@ export interface MeOrganization {
 export interface OrganizationDirectoryEntry {
   organizationID: number;
   organizationName: string;
+  parentOrganizationName?: string;
   provinceName?: string;
   cityName?: string;
 }

@@ -37,7 +37,7 @@ export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendat
     this.orgRepo.directory('LDK').subscribe({
       next: (list) => this.view.setLdkOptions(list.map((o) => ({
         value: o.organizationID,
-        label: o.provinceName ? `${o.organizationName} — ${o.provinceName}` : o.organizationName,
+        label: o.parentOrganizationName ? `${o.organizationName} — ${o.parentOrganizationName}` : o.organizationName,
       }))),
       error: () => {},
     });
