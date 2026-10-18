@@ -296,8 +296,7 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
       sectionLabel: this.sectionForm.sectionLabel, sortOrder: this.sectionForm.sortOrder, description: this.sectionForm.description,
     };
     if (!this.sectionEditID) body['sectionCode'] = this.sectionForm.sectionCode;
-    this.presenter.saveSection(v.versionID, this.sectionEditID, body);
-    this.closeSectionForm();
+    this.presenter.saveSection(v.versionID, this.sectionEditID, body, () => this.closeSectionForm());
   }
   async removeSection(s: FormSection, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus section "${s.sectionLabel}" beserta seluruh field di dalamnya?`, {
@@ -365,8 +364,7 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
       weight: this.fieldForm.useScoring ? this.fieldForm.weight : null,
     };
     if (!this.fieldEditID) body['fieldCode'] = this.fieldForm.fieldCode;
-    this.presenter.saveField(this.fieldSectionID, this.fieldEditID, body);
-    this.closeFieldForm();
+    this.presenter.saveField(this.fieldSectionID, this.fieldEditID, body, () => this.closeFieldForm());
   }
   async removeField(f: FormField, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus field "${f.fieldLabel}"?`, {
@@ -398,8 +396,7 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
     this.showOptionForm.set(false);
   }
   saveOption(): void {
-    this.presenter.saveOption(this.optionFieldID, this.optionEditID, this.optionForm);
-    this.closeOptionForm();
+    this.presenter.saveOption(this.optionFieldID, this.optionEditID, this.optionForm, () => this.closeOptionForm());
   }
   async removeOption(o: FormOption, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus pilihan "${o.optionLabel}"?`, {

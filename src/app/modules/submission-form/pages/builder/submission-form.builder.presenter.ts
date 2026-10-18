@@ -33,11 +33,11 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
-  saveSection(versionID: number, sectionID: number | null, body: unknown): void {
+  saveSection(versionID: number, sectionID: number | null, body: unknown, onSuccess: () => void): void {
     this.view.setBusy(true);
     const req = sectionID ? this.repo.updateSection(sectionID, body) : this.repo.createSection(versionID, body);
     req.subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Section disimpan'); this.view.reload(); },
+      next: () => { this.view.setBusy(false); this.toast.success('Section disimpan'); this.view.reload(); onSuccess(); },
       error: () => this.view.setBusy(false),
     });
   }
@@ -49,11 +49,11 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
-  saveField(sectionID: number, fieldID: number | null, body: unknown): void {
+  saveField(sectionID: number, fieldID: number | null, body: unknown, onSuccess: () => void): void {
     this.view.setBusy(true);
     const req = fieldID ? this.repo.updateField(fieldID, body) : this.repo.createField(sectionID, body);
     req.subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Field disimpan'); this.view.reload(); },
+      next: () => { this.view.setBusy(false); this.toast.success('Field disimpan'); this.view.reload(); onSuccess(); },
       error: () => this.view.setBusy(false),
     });
   }
@@ -65,11 +65,11 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
-  saveOption(fieldID: number, optionID: number | null, body: unknown): void {
+  saveOption(fieldID: number, optionID: number | null, body: unknown, onSuccess: () => void): void {
     this.view.setBusy(true);
     const req = optionID ? this.repo.updateOption(optionID, body) : this.repo.createOption(fieldID, body);
     req.subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Pilihan disimpan'); this.view.reload(); },
+      next: () => { this.view.setBusy(false); this.toast.success('Pilihan disimpan'); this.view.reload(); onSuccess(); },
       error: () => this.view.setBusy(false),
     });
   }
