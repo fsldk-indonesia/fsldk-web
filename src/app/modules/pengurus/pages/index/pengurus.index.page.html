@@ -1,0 +1,47 @@
+<div class="page-head">
+  <h1>Pengurus</h1>
+  <p class="text-muted">Kelola role pengurus (promosi/demosi) untuk kader aktif di organisasi Anda.</p>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad"><span class="skel skel-line" style="width:60%;height:20px"></span></div>
+} @else if (items().length === 0) {
+  <div class="card card-pad">
+    <div class="empty-state empty-state-inline">
+      <span class="icon-badge lg icon-badge-soft"><app-icon name="users-round" [size]="26" /></span>
+      <h4>Belum ada kader aktif</h4>
+      <p class="text-muted">Kader aktif di organisasi Anda akan muncul di sini.</p>
+    </div>
+  </div>
+} @else {
+  <div class="card card-pad">
+    <table class="pengurus-table">
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Email</th>
+          <th>LDK Asal</th>
+          <th>Role Saat Ini</th>
+          <th class="role-cell">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track rowKey(item)) {
+          <tr>
+            <td>{{ item.fullName }}</td>
+            <td class="text-muted">{{ item.email }}</td>
+            <td>{{ item.homeOrganizationName }}</td>
+            <td>{{ item.roleName }}</td>
+            <td class="role-cell">
+              <app-select
+                [options]="roleOptions"
+                [ngModel]="item.roleName"
+                (ngModelChange)="onRoleChange(item, $event, $event)"
+                [disabled]="busyUserID() === item.userID" />
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
