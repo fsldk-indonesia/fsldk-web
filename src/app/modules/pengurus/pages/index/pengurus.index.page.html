@@ -10,11 +10,13 @@
     @if (isColumnVisible('homeOrganizationName')) { <td>{{ item.homeOrganizationName }}</td> }
     @if (isColumnVisible('roleName')) { <td>{{ item.roleName }}</td> }
     <td class="role-cell" (click)="$event.stopPropagation()">
-      <app-select
-        [options]="roleOptions"
-        [ngModel]="item.roleName"
-        (ngModelChange)="onRoleChange(item, $event, $event)"
-        [disabled]="busyUserID() === item.userID" />
+      @for (tick of [resyncTick()]; track tick) {
+        <app-select
+          [options]="roleOptions"
+          [ngModel]="item.roleName"
+          (ngModelChange)="onRoleChange(item, $event)"
+          [disabled]="busyUserID() === item.userID" />
+      }
     </td>
   </ng-template>
 </app-cms-index>

@@ -9,7 +9,9 @@ import { PengurusEntry } from '../entities/pengurus';
 export class PengurusApiService {
   private api = inject(ApiService);
 
-  list(): Observable<PengurusEntry[]> { return this.api.get('/pengurus'); }
+  list(organizationID?: number): Observable<PengurusEntry[]> {
+    return this.api.get('/pengurus', organizationID ? { organizationID } : undefined);
+  }
   updateRole(userID: number, roleName: string): Observable<PengurusEntry> {
     return this.api.patch(`/pengurus/${userID}/role`, { roleName });
   }

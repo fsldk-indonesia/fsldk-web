@@ -23,16 +23,16 @@ export class PengurusIndexPresenter extends BasePresenter<PengurusIndexView> {
   }
 
   /** dataSource untuk <app-cms-index> — GET /pengurus mengembalikan seluruh
-   *  scope caller sekaligus (tanpa paginasi, lihat desain v1 fitur ini: tidak
-   *  ada org-switcher narrowing, backend sengaja tidak menambah paginasi
-   *  untuk endpoint yang realistis selalu kecil per-organisasi), jadi
-   *  search/filter/sort/limit diterapkan DI SINI secara client-side alih-alih
-   *  diteruskan sebagai query param seperti CmsListParams biasanya dipakai
-   *  (bandingkan user.index.presenter.ts yang meneruskan params.search dst.
-   *  langsung ke backend). */
-  list(params: CmsListParams): Observable<Pagination<PengurusEntry>> {
+   *  scope caller (atau scope yang sudah dipersempit org-switcher lewat
+   *  organizationID, lihat PengurusIndexPage.currentOrganizationID) sekaligus
+   *  tanpa paginasi backend (lists realistis selalu kecil per-organisasi),
+   *  jadi search/filter/sort/limit diterapkan DI SINI secara client-side
+   *  alih-alih diteruskan sebagai query param seperti CmsListParams biasanya
+   *  dipakai (bandingkan user.index.presenter.ts yang meneruskan
+   *  params.search dst. langsung ke backend). */
+  list(params: CmsListParams, organizationID?: number): Observable<Pagination<PengurusEntry>> {
     return new Observable<Pagination<PengurusEntry>>((subscriber) => {
-      this.repo.list().subscribe({
+      this.repo.list(organizationID).subscribe({
         next: (items) => { subscriber.next(this.paginate(items, params)); subscriber.complete(); },
         error: (err) => subscriber.error(err),
       });

@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
+import { OrgContextService } from '../../../../core/services/org-context.service';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
 import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
@@ -75,32 +76,47 @@ export class PengurusIndexPage implements OnInit, PengurusIndexView {
   private presenter = inject(PengurusIndexPresenter);
   private route = inject(ActivatedRoute);
   private alert = inject(AlertService);
+  private orgContext = inject(OrgContextService);
 
   @ViewChild(CmsIndexComponent) private table!: CmsIndexComponent<PengurusEntry>;
 
   busyUserID = signal<number | null>(null);
-  /** Dibump setiap kali onRoleChange() berjalan (confirm ATAU cancel) —
-   *  dipakai sebagai bagian dari @for's track supaya app-select tiap baris
-   *  dipaksa remount dan membaca ulang [ngModel] dari item.roleName.
-   *  Perlu: SelectComponent.choose() langsung menyetel state internalnya
-   *  SEBELUM konfirmasi dialog ditampilkan (lihat select.component.ts),
-   *  jadi kalau pengguna membatalkan konfirmasi, dropdown akan tetap
-   *  menampilkan pilihan yang dibatalkan itu kecuali kita paksa resync. */
+  /** Dibump setiap kali onRoleChange() berjalan (confirm ATAU cancel) — dipakai
+   *  sebagai track key micro-@for yang membungkus <app-select> di template
+   *  (BUKAN @for luar — itu milik CmsIndexComponent sendiri, di-track lewat
+   *  config.rowIdKey/userID, di luar kendali halaman ini sejak rework ke
+   *  app-cms-index). Membungkus ulang dengan @for lokal ber-track resyncTick
+   *  memaksa <app-select> remount tiap kali tick berubah, supaya ia membaca
+   *  ulang [ngModel] dari item.roleName. Perlu: SelectComponent.choose()
+   *  langsung menyetel state internalnya SEBELUM dialog konfirmasi tampil
+   *  (lihat select.component.ts), jadi kalau user membatalkan, dropdown akan
+   *  tetap menampilkan pilihan yang dibatalkan itu kecuali dipaksa resync. */
   resyncTick = signal(0);
+
+  /** organizationID hasil org-switcher (query param ?organizationID=, lihat
+   *  OrgContextService) — diteruskan ke setiap pemanggilan GET /pengurus
+   *  supaya tabel benar-benar berubah saat switcher diganti, bukan selalu
+   *  menampilkan cakupan penuh caller. undefined = pakai cakupan penuh
+   *  caller sendiri (switcher belum/tidak dipakai). */
+  private currentOrganizationID: number | undefined;
 
   roleOptions: SelectOption[] = PENGURUS_ROLES_BY_TIER[(this.route.snapshot.data['tier'] as string) ?? 'LDK'] ?? [];
 
   readonly config = buildPengurusIndexConfig(this.presenter, this.roleOptions);
-  dataSource = (params: CmsListParams) => this.presenter.list(params);
+  dataSource = (params: CmsListParams) => this.presenter.list(params, this.currentOrganizationID);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
     // Tidak memanggil presenter.loadAll() di sini — <app-cms-index> memicu
     // pengambilan data awalnya sendiri lewat dataSource begitu ia init.
-  }
-
-  rowKey(item: PengurusEntry): string {
-    return `${item.userID}_${this.resyncTick()}`;
+    this.orgContext.organizationID$(this.route).subscribe((organizationID) => {
+      const changed = this.currentOrganizationID !== organizationID;
+      this.currentOrganizationID = organizationID;
+      // Lewati refresh pertama (table belum ter-render saat subscribe()
+      // langsung emit synchronous) — dataSource awal <app-cms-index> sendiri
+      // sudah membaca currentOrganizationID yang benar lewat closure di atas.
+      if (changed && this.table) this.table.refresh();
+    });
   }
 
   async onRoleChange(item: PengurusEntry, newRole: unknown, event?: Event): Promise<void> {

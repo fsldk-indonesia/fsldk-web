@@ -7,6 +7,6 @@ import { PengurusEntry } from '../entities/pengurus';
 export class PengurusRepository {
   private api = inject(PengurusApiService);
 
-  list(): Observable<PengurusEntry[]> { return this.api.list(); }
+  list(organizationID?: number): Observable<PengurusEntry[]> { return this.api.list(organizationID); }
   updateRole(userID: number, roleName: string): Observable<PengurusEntry> { return this.api.updateRole(userID, roleName); }
 }
