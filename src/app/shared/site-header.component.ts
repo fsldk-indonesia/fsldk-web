@@ -514,6 +514,25 @@ const TIER_CAPTION: Record<CmsTier, string> = {
        melebarkan pill ini dan mendorong layout navbar — avatar & chevron
        tombol parent tetap flex-shrink:0, cuma teks nama yang menyusut. */
     .chip-name { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Di viewport laptop sempit (>1080px, jadi nav desktop penuh masih
+       tampil — bukan hamburger mobile, lihat @media 1080px di bawah), 8 item
+       .pub-nav-group + prayer-time widget + account-chip SAMA-SAMA
+       flex-shrink:0 — begitu nama akun mendekati batas 180px di atas, totalnya
+       bisa melebihi lebar container dan "ketlewat" (overflow) di luar
+       .pub-header. Perkecil batas chip-name di rentang ini (BUKAN
+       disembunyikan total — tulisan nama harus tetap kelihatan, cuma lebih
+       pendek) supaya membebaskan ruang tanpa menghapus informasinya. */
+    @media (max-width: 1300px) {
+      .chip-name { max-width: 90px; }
+    }
+    /* .pub-header.scrolled MENYEMPITKAN KOTAKNYA SENDIRI ke maks 1300px
+       (lihat width: min(1300px, ...) di atas) TERLEPAS dari lebar viewport —
+       jadi squeeze yang sama di atas tetap kejadian walau layarnya lebar
+       (mis. 1920px) begitu header di-scroll, karena pemicunya state
+       .scrolled itu sendiri, bukan lebar viewport. Aturan berbasis class ini
+       diperlukan TERPISAH dari @media di atas — keduanya saling melengkapi,
+       bukan salah satu pengganti yang lain. */
+    .pub-header.scrolled .chip-name { max-width: 90px; }
     /* Foto profil (kadang PNG transparan, mis. logo FSLDK) butuh cincin putih
        SOLID (border), bukan tint transparan seperti varian teks/inisial di
        atas — kalau tidak, area transparan PNG-nya cuma menembus warna pill
