@@ -27,7 +27,7 @@ export const emptyDynamicFormForm: DynamicFormFormValue = {
   title: '', description: '', headerImageUrl: '', requireLogin: false, isMultipleSubmit: false, maxSubmission: null,
   startDate: '', endDate: '', confirmationMessage: '', redirectUrl: '',
   sendConfirmationEmail: true, notifyEmails: '', rateLimitPerIP: 5, rateLimitWindowMinutes: 10,
-  gsheetEnabled: false,
+  gsheetEnabled: true,
 };
 
 @Injectable()
@@ -79,7 +79,7 @@ export class DynamicFormFormPresenter extends BasePresenter<DynamicFormFormView>
       notifyEmails: form.notifyEmails.split(',').map((s) => s.trim()).filter(Boolean),
       rateLimitPerIP: Number(form.rateLimitPerIP) || 5,
       rateLimitWindowMinutes: Number(form.rateLimitWindowMinutes) || 10,
-      gsheetEnabled: form.gsheetEnabled,
+      gsheetEnabled: true,
     };
   }
 
@@ -112,12 +112,6 @@ export class DynamicFormFormPresenter extends BasePresenter<DynamicFormFormView>
   gsheetResync(id: number): void {
     this.repo.gsheetResync(id).subscribe({
       next: (s) => { this.toast.success('Sinkronisasi ulang dijadwalkan'); this.view.setGsheetStatus(s); },
-      error: () => {},
-    });
-  }
-  gsheetDisconnect(id: number): void {
-    this.repo.gsheetDisconnect(id).subscribe({
-      next: (s) => { this.toast.success('Google Sheet diputuskan (spreadsheet tidak dihapus)'); this.view.setGsheetStatus(s); },
       error: () => {},
     });
   }
