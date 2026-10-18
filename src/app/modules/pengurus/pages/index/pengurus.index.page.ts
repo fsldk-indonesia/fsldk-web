@@ -1,9 +1,10 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
-import { IconComponent } from '../../../../shared/icon.component';
+import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
+import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { PengurusEntry } from '../../entities/pengurus';
 import { PengurusIndexPresenter } from './pengurus.index.presenter';
 import { PengurusIndexView } from './pengurus.index.view';
@@ -32,17 +33,41 @@ const PENGURUS_ROLES_BY_TIER: Record<string, SelectOption[]> = {
   ],
 };
 
+/** Config CmsIndexConfig<PengurusEntry> — pola sama dengan
+ *  buildUserIndexConfig di user.index.page.ts, dibuat lewat factory karena
+ *  target pencarian "Role" butuh loadOptions yang menunjuk ke presenter
+ *  instance (dan katalog role ter-scope tier, lihat roleOptions). */
+function buildPengurusIndexConfig(presenter: PengurusIndexPresenter, roleOptions: SelectOption[]): CmsIndexConfig<PengurusEntry> {
+  return {
+    entityLabel: 'pengurus',
+    searchTargets: [
+      { value: 'name', label: 'Nama' },
+      { value: 'email', label: 'Email' },
+      { value: 'organization', label: 'LDK Asal' },
+      { value: 'role', label: 'Role', mode: 'combobox', loadOptions: () => presenter.roleSearchOptions(roleOptions) },
+    ],
+    columns: [
+      { key: 'fullName', label: 'Nama', locked: true },
+      { key: 'email', label: 'Email' },
+      { key: 'homeOrganizationName', label: 'LDK Asal' },
+      { key: 'roleName', label: 'Role Saat Ini' },
+    ],
+    defaultSort: { sortBy: 'fullName', sortDir: 'asc' },
+    rowIdKey: 'userID',
+    emptyIcon: 'id-card',
+    emptyTitle: 'Belum ada kader aktif',
+    emptyDescription: 'Kader aktif di organisasi Anda akan muncul di sini.',
+  };
+}
+
 @Component({
   selector: 'app-pengurus-index-page',
   standalone: true,
   templateUrl: './pengurus.index.page.html',
-  imports: [FormsModule, SelectComponent, IconComponent],
+  imports: [FormsModule, SelectComponent, CmsIndexComponent],
   providers: [PengurusIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 20px; } .page-head h1 { margin-bottom: 2px; }
-    .filter-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    .filter-row .form-control { max-width: 280px; flex: 1 1 220px; }
-    .filter-row app-select { min-width: 220px; }
     .role-cell { max-width: 220px; }
   `],
 })
@@ -51,8 +76,8 @@ export class PengurusIndexPage implements OnInit, PengurusIndexView {
   private route = inject(ActivatedRoute);
   private alert = inject(AlertService);
 
-  items = signal<PengurusEntry[]>([]);
-  loading = signal(true);
+  @ViewChild(CmsIndexComponent) private table!: CmsIndexComponent<PengurusEntry>;
+
   busyUserID = signal<number | null>(null);
   /** Dibump setiap kali onRoleChange() berjalan (confirm ATAU cancel) —
    *  dipakai sebagai bagian dari @for's track supaya app-select tiap baris
@@ -64,37 +89,14 @@ export class PengurusIndexPage implements OnInit, PengurusIndexView {
   resyncTick = signal(0);
 
   roleOptions: SelectOption[] = PENGURUS_ROLES_BY_TIER[(this.route.snapshot.data['tier'] as string) ?? 'LDK'] ?? [];
-  /** Opsi dropdown filter Role — katalog yang sama dengan roleOptions (aksi
-   *  per baris), ditambah opsi "Semua Role" di depan. */
-  roleFilterOptions: SelectOption[] = [{ value: null, label: 'Semua Role' }, ...this.roleOptions];
 
-  searchQuery = signal('');
-  roleFilter = signal<string | null>(null);
-
-  /** Hasil setelah search+filter role diterapkan ke items() — murni
-   *  client-side (backend GET /pengurus mengembalikan seluruh scope
-   *  caller tanpa paginasi, lihat desain v1 fitur ini). */
-  filteredItems = computed(() => {
-    const q = this.searchQuery().trim().toLowerCase();
-    const role = this.roleFilter();
-    return this.items().filter((item) => {
-      const matchesSearch = !q
-        || item.fullName.toLowerCase().includes(q)
-        || item.email.toLowerCase().includes(q)
-        || item.homeOrganizationName.toLowerCase().includes(q);
-      const matchesRole = !role || item.roleName === role;
-      return matchesSearch && matchesRole;
-    });
-  });
+  readonly config = buildPengurusIndexConfig(this.presenter, this.roleOptions);
+  dataSource = (params: CmsListParams) => this.presenter.list(params);
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.presenter.loadAll();
-  }
-
-  clearFilters(): void {
-    this.searchQuery.set('');
-    this.roleFilter.set(null);
+    // Tidak memanggil presenter.loadAll() di sini — <app-cms-index> memicu
+    // pengambilan data awalnya sendiri lewat dataSource begitu ia init.
   }
 
   rowKey(item: PengurusEntry): string {
@@ -110,10 +112,17 @@ export class PengurusIndexPage implements OnInit, PengurusIndexView {
     );
     this.resyncTick.update((n) => n + 1);
     if (!ok) return;
-    this.presenter.updateRole(item.userID, roleName);
+    this.presenter.updateRole(item.userID, roleName, () => this.table.refresh());
   }
 
-  setItems(items: PengurusEntry[]): void { this.items.set(items); }
-  setLoading(loading: boolean): void { this.loading.set(loading); }
+  /** setItems/setLoading ada di kontrak PengurusIndexView (dipakai
+   *  presenter.loadAll(), masih dipanggil dari dalam updateRole() untuk
+   *  alasan historis) tapi halaman ini tidak lagi merender dari items()/
+   *  loading() — <app-cms-index> yang mengelola data & state loading-nya
+   *  sendiri lewat dataSource. Sengaja no-op, bukan dihapus dari interface,
+   *  supaya presenter (sudah diuji di pengurus.index.presenter.spec.ts)
+   *  tidak perlu diubah. */
+  setItems(): void {}
+  setLoading(): void {}
   setBusy(userID: number | null): void { this.busyUserID.set(userID); }
 }
