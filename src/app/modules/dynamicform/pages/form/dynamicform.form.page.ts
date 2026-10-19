@@ -73,7 +73,6 @@ export class DynamicFormFormPage implements OnInit, DynamicFormFormView {
 
   connect(): void { if (this.editId) this.presenter.gsheetConnect(this.editId); }
   resync(): void { if (this.editId) this.presenter.gsheetResync(this.editId); }
-  disconnect(): void { if (this.editId) this.presenter.gsheetDisconnect(this.editId); }
 
   setForm(form: DynamicFormFormValue): void { this.form = form; }
   setSaving(saving: boolean): void { this.saving.set(saving); }

@@ -190,17 +190,28 @@ export class AuthRepository {
 
   /**
    * Halaman tujuan setelah login — null bila akun tidak punya akses ke
-   * CMS/Portal Kader manapun. Tiap tier organisasi punya shell CMS-nya
-   * sendiri (poin 1-4 miss-development); akun tanpa tier organisasi tapi
-   * berhak isi Sensus Kader diarahkan ke Portal Kader (kader/ringkasan),
-   * bukan Dashboard CMS yang tidak punya widget untuknya.
+   * CMS/Portal Kader manapun (termasuk Pengunjung, lihat di bawah). Tiap
+   * tier organisasi punya shell CMS-nya sendiri (poin 1-4 miss-development);
+   * akun role Kader tanpa tier organisasi tapi berhak isi Sensus Kader
+   * diarahkan ke Portal Kader (kader/ringkasan), bukan Dashboard CMS yang
+   * tidak punya widget untuknya.
+   *
+   * SENGAJA cek `u.role === 'Kader'` di sini, bukan cuma isKaderSelfService()
+   * — Pengunjung diberi permission self-service yang SAMA (termasuk
+   * submission.create, lihat SELF_SERVICE_PERMISSIONS) supaya bisa membuka
+   * Portal Kader untuk mendaftar Sensus Kader, tapi TIDAK boleh otomatis
+   * diarahkan ke sana setelah login — login Pengunjung harus kembali ke
+   * returnUrl/halaman sebelumnya (lihat navigateAfterLogin di login/register
+   * page), null di sini membuat itu terjadi. isKaderSelfService() sendiri
+   * TIDAK diubah — dipakai juga oleh navbar untuk menampilkan link "Daftar
+   * Kader" ke Pengunjung, yang masih harus tetap tampil.
    */
   defaultCmsPath(): string | null {
     const u = this.user();
     if (!u) return null;
     const [tier] = this.accessibleCmsTiers();
     if (tier) return `${CMS_SHELL_BASE[tier]}/dashboard`;
-    if (this.isKaderSelfService()) return '/kader/ringkasan';
+    if (this.isKaderSelfService() && u.role === 'Kader') return '/kader/ringkasan';
     return null;
   }
 

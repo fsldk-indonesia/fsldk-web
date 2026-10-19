@@ -12,21 +12,22 @@
     <a class="btn btn-primary" style="margin-top:10px" [routerLink]="['../pendataan']">Mulai Pendataan</a>
   </div>
 } @else {
-  <div class="status-card" [class.tone-danger]="statusTone(submission()!.status) === 'danger'"
-       [class.tone-warning]="statusTone(submission()!.status) === 'warning'">
+  <div class="status-card" [class.tone-danger]="topStatusTone() === 'danger'"
+       [class.tone-warning]="topStatusTone() === 'warning'" [class.tone-neutral]="topStatusTone() === 'neutral'">
     <div>
       <p class="text-muted" style="margin-bottom:4px">Status Saat Ini</p>
-      <h2>{{ statusLabel(submission()!.status) }}</h2>
+      <h2>{{ topStatusLabel() }}</h2>
     </div>
     <span class="icon-badge lg"
-          [class.icon-badge-danger]="statusTone(submission()!.status) === 'danger'"
-          [class.icon-badge-ember]="statusTone(submission()!.status) === 'warning'"
-          [class.icon-badge-solid]="statusTone(submission()!.status) !== 'danger' && statusTone(submission()!.status) !== 'warning'">
-      <app-icon [name]="statusTone(submission()!.status) === 'danger' ? 'x-circle' : 'clipboard-check'" [size]="26" />
+          [class.icon-badge-danger]="topStatusTone() === 'danger'"
+          [class.icon-badge-ember]="topStatusTone() === 'warning'"
+          [class.icon-badge-soft]="topStatusTone() === 'neutral'"
+          [class.icon-badge-solid]="topStatusTone() === 'success'">
+      <app-icon [name]="topStatusTone() === 'danger' || topStatusTone() === 'neutral' ? 'x-circle' : 'clipboard-check'" [size]="26" />
     </span>
   </div>
 
-  @if (submission()!.levelResult; as level) {
+  @if (latestLevelResult(); as level) {
     <div class="card card-pad" style="margin-top:16px">
       <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="award" [size]="14" /></span>Hasil Levelisasi</p>
       <p class="code-display">{{ level.levelLabel || level.levelCode }}</p>
@@ -38,6 +39,29 @@
           <button class="btn btn-outline btn-sm" (click)="reassess($event)" [disabled]="busy()">Ajukan Reassessment</button>
         </div>
       }
+    </div>
+  }
+
+  @if (!isKaderSubject()) {
+    <div class="card card-pad" style="margin-top:16px">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="award" [size]="14" /></span>Record Levelisasi</p>
+      <ul class="level-ladder">
+        @for (step of levelLadder(); track step.value) {
+          <li class="level-step" [class.achieved]="step.achievedDate" [class.current]="latestLevelResult()?.levelCode === step.value">
+            <span class="level-step-dot"><app-icon [name]="step.achievedDate ? 'check' : 'lock'" [size]="12" /></span>
+            <span class="level-step-text">
+              <strong>{{ step.label }}</strong>
+              @if (step.achievedDate) {
+                <span class="text-muted">Dicapai {{ step.achievedDate | date: 'd MMMM y' }}</span>
+              } @else if (step.skipped) {
+                <span class="text-muted">Dilewati — langsung ke level lebih tinggi</span>
+              } @else {
+                <span class="text-muted">Belum dicapai</span>
+              }
+            </span>
+          </li>
+        }
+      </ul>
     </div>
   }
 
@@ -56,16 +80,17 @@
       } @else {
         <p class="text-muted">Kode kader belum diterbitkan — menunggu persetujuan LDK.</p>
       }
-      <span class="chip" [class.chip-green]="kaderStatusTone(kader.status) === 'success'"
-            [class.chip-red]="kaderStatusTone(kader.status) === 'danger'"
-            [class.chip-ember]="kaderStatusTone(kader.status) === 'warning'">{{ kaderStatusLabel(kader.status) }}</span>
+      <span class="status-chip" [class.success]="kaderStatusTone(kader.status) === 'success'"
+            [class.danger]="kaderStatusTone(kader.status) === 'danger'"
+            [class.warning]="kaderStatusTone(kader.status) === 'warning'"
+            [class.neutral]="kaderStatusTone(kader.status) === 'neutral'">{{ kaderStatusLabel(kader.status) }}</span>
     </div>
   }
 
   <div class="card card-pad" style="margin-top:20px">
     <p class="form-section-label"><span class="icon-badge sm icon-badge-neutral"><app-icon name="history" [size]="14" /></span>Riwayat Status</p>
     <div class="timeline">
-      @for (h of submission()!.statusHistory; track $index) {
+      @for (h of statusHistoryDesc(); track $index) {
         <div class="timeline-item">
           <span class="timeline-dot"></span>
           <div>

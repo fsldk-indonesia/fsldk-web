@@ -1,11 +1,13 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { PhoneInputComponent } from '../../../../shared/phone-input.component';
 import { IconComponent } from '../../../../shared/icon.component';
 import { WilayahService } from '../../../../core/services/wilayah.service';
 import { Organization } from '../../entities/organization';
+import { PROFILE_TITLE_BY_TIER } from '../../organization.routes';
 import { OrganizationProfileFormValue, OrganizationProfilePresenter } from './organization.profile.presenter';
 import { OrganizationProfileView } from './organization.profile.view';
 
@@ -48,6 +50,17 @@ const emptyForm = (): OrganizationProfileFormValue => ({
 export class OrganizationProfilePage implements OnInit, OrganizationProfileView {
   private presenter = inject(OrganizationProfilePresenter);
   private wilayah = inject(WilayahService);
+  private route = inject(ActivatedRoute);
+
+  /** Lihat PROFILE_TITLE_BY_TIER di organization.routes.ts — route ini
+   *  dipasang identik di 3 shell, labelnya mengikuti tier leluhur. */
+  pageTitle = computed(() => PROFILE_TITLE_BY_TIER[this.route.snapshot.data['tier'] as string] ?? 'Profil LDK');
+
+  /** Puskomnas bersifat nasional/tunggal (satu-satunya baris akar, lihat
+   *  OrgContextService) — field Provinsi/Kota tidak relevan untuknya,
+   *  berbeda dari LDK (kota) & Puskomda (provinsi) yang memang terikat
+   *  wilayah. */
+  isPuskomnas = computed(() => this.route.snapshot.data['tier'] === 'PUSKOMNAS');
 
   organization = signal<Organization | null>(null);
   loading = signal(true);
@@ -69,7 +82,33 @@ export class OrganizationProfilePage implements OnInit, OrganizationProfileView 
   ngOnInit(): void {
     this.presenter.attachView(this);
     this.presenter.load();
-    this.wilayah.provinces().subscribe((options) => this.provinceOptions.set(options));
+    if (!this.isPuskomnas()) {
+      this.wilayah.provinces().subscribe((options) => { this.provinceOptions.set(options); this.syncLocationSelection(); });
+    }
+  }
+
+  /** Cocokkan provinceName/cityName tersimpan ke opsi dropdown via exact
+   *  match label — provinceOptions (dari wilayah.provinces(), async) dan
+   *  organization() (dari presenter.load(), async terpisah) bisa selesai di
+   *  urutan mana pun, jadi dipanggil dari KEDUA sisi & idempoten lewat guard
+   *  selectedProvinceID. Sebelum ini dropdown SELALU placeholder kosong
+   *  walau datanya sudah tersimpan benar (cuma lewat hint "Saat ini: ..."),
+   *  karena tidak pernah ada percobaan pencocokan sama sekali — bukan cuma
+   *  "tidak fuzzy-match", tapi tidak match apa pun. Tetap tidak ada
+   *  fuzzy-matching (exact label match saja) — data lama yang formatnya
+   *  tidak persis cocok tetap jatuh ke hint seperti sebelumnya. */
+  private syncLocationSelection(): void {
+    const org = this.organization();
+    const provinces = this.provinceOptions();
+    if (!org || !provinces.length || this.selectedProvinceID) return;
+    const match = provinces.find((o) => o.label === this.form.provinceName);
+    if (!match) return;
+    const provinceId = match.value as string;
+    this.selectedProvinceID = provinceId;
+    this.wilayah.regencies(provinceId).subscribe((cities) => {
+      this.cityOptions.set(cities);
+      this.selectedCityID = (cities.find((c) => c.label === this.form.cityName)?.value as string | undefined) ?? null;
+    });
   }
 
   onProvinceChange(): void {
@@ -109,6 +148,7 @@ export class OrganizationProfilePage implements OnInit, OrganizationProfileView 
       photoURL: org.photoURL ?? '',
     };
     this.loading.set(false);
+    this.syncLocationSelection();
   }
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setSaving(saving: boolean): void { this.saving.set(saving); }

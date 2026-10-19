@@ -23,12 +23,14 @@ export interface MeOrganization {
   organizationTypeCode: 'LDK' | 'PUSKOMDA' | 'PUSKOMNAS';
   organizationName: string;
   parentOrganizationID?: number;
+  parentOrganizationName?: string;
 }
 
 /** Entri direktori organisasi aktif lintas cakupan akses (GET /organizations/directory). */
 export interface OrganizationDirectoryEntry {
   organizationID: number;
   organizationName: string;
+  parentOrganizationName?: string;
   provinceName?: string;
   cityName?: string;
 }

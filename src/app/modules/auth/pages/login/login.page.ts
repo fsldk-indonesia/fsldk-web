@@ -44,6 +44,13 @@ export class LoginPage implements OnInit, LoginView {
 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   navigateToVerifyEmail(): void { this.router.navigate(['/verifikasi-email']); }
+  // cmsPath SELALU menang kalau ada — baik dashboard CMS maupun Portal Kader
+  // (role Kader) adalah "rumah" akun ini, bukan sekadar fallback, jadi tidak
+  // boleh "nyangkut" di halaman publik yang kebetulan dibuka sebelum login.
+  // returnUrl HANYA dikonsultasikan saat cmsPath null (mis. Pengunjung tanpa
+  // akses CMS/Kader apa pun — lihat AuthRepository.defaultCmsPath()) supaya
+  // dia kembali ke halaman sebelumnya (authGuard, atau link "Masuk" navbar
+  // yang membawa returnUrl, lihat site-header.component.ts), bukan ke mana pun.
   navigateAfterLogin(cmsPath: string | null): void {
     if (cmsPath) { this.router.navigateByUrl(cmsPath); return; }
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');

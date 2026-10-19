@@ -86,6 +86,8 @@ modules/news/
 | `submission-form` | Form builder (Super Admin) — form/version/section/field/option pendataan Levelisasi & Sensus Kader. **Beda** dari `dynamicform` (di atas): ini khusus dua form baku (Levelisasi LDK, Sensus Kader), bukan form ad-hoc bebas |
 | `submission` | Pengisian, status, & review pendataan — satu modul dipakai LDK (isi form, lihat status), Puskomda/Puskomnas (verifikasi/persetujuan/penetapan level/publikasi), dan LDK lagi (persetujuan kader) sekaligus, dibedakan lewat permission dari `/me/menus`, bukan role hardcode di komponen |
 | `report` | Laporan Wilayah/Nasional — tabel submission + ekspor Excel/CSV |
+| `welcomepopup` | Welcome Popup Beranda (CMS-only, Super Admin) — form edit HTML/JS/CSS mentah, satu baris singleton, tanpa halaman publik sendiri (dirender langsung oleh `home`) |
+| `rapimnas` | Microsite RAPIMNAS 1 FSLDK Indonesia 2026 — 6 halaman publik (Beranda/Tentang/Jadwal/Arsip/Pendaftaran Panitia/Pendaftaran Peserta) di shell sendiri (`RapimnasLayoutComponent`, §6) + 1 halaman CMS "Rapimnas Setup" (Super Admin only, dipasang hanya di tier FSLDK) |
 | `home` | Beranda — hero, berita terbaru, serta section Tentang & Kontak (teks tetap/hardcoded, bukan dari API) |
 
 > Konten Landing Page (visi/misi/section "Kontak" — alamat/media sosial) sengaja **tidak** dikelola via CMS/database — sesuai keputusan produk, teksnya statis langsung di `modules/home/pages/index/home.index.page.ts`. Tidak ada lagi modul `content`/`about` terpisah untuk INI. Jangan bingung dengan modul `structure` dan `contact` di atas — keduanya adalah fitur CMS asli (arsip kepengurusan & kotak masuk pesan) yang namanya kebetulan mirip, ditambahkan belakangan, bukan reinkarnasi modul `content` yang lama.
@@ -217,19 +219,28 @@ Modul `modules/auth/` sendiri **hanya berisi halaman** (login/register/verify-em
 
 Setiap modul mengekspor factory `() => Routes` di `<modul>.routes.ts`, memakai `loadComponent` (bukan `component` langsung) agar tiap halaman menjadi *lazy chunk* terpisah — diverifikasi lewat `ng build` (lihat daftar "Lazy chunk files" pada output build).
 
-[`app.routes.ts`](../src/app/app.routes.ts) mengagregasi seluruh route modul di bawah **empat** layout shell component: `PublicLayoutComponent` (landing page, dengan `AuthLayoutComponent` bersarang di dalamnya untuk halaman login/daftar/dst.), `CmsLayoutComponent` (dipakai ulang untuk **empat** route tree CMS bertier berbeda — lihat di bawah), dan `KaderLayoutComponent` (portal self-service ringkas untuk role Kader — sidebar minimal Pendataan/Status/Persetujuan Kader/Profil LDK, tanpa dashboard statistik karena Kader tidak bertier organisasi, lihat `modules/dashboard` §2 dan API §14 `fsldk-api`).
+[`app.routes.ts`](../src/app/app.routes.ts) mengagregasi seluruh route modul di bawah **tujuh** layout shell component (bukan empat — lihat catatan di bawah) ditambah satu rute tanpa shell sama sekali:
 
-Halaman autentikasi (login/daftar/lupa-password/dst.) sengaja **bersarang di dalam** `PublicLayoutComponent`, bukan shell terpisah — persis pola ldksyahid-app, karena halaman ini untuk masyarakat umum (bukan hanya pengguna dengan akses CMS) sehingga memakai navbar & footer landing page yang sama. `AuthLayoutComponent` kini hanya membingkai kartu form + panel visual (ayat & poin komunitas), bukan shell penuh:
+- `PublicLayoutComponent` — landing page + hampir semua modul publik (news/article/catalogbook/goods/schedule/financeformat/event/kantong-amal/shortlink/qrcode/zakat/structure/gallery/contact/subscription/statistic), plus `akun/profil`.
+- `AuthLayoutComponent` — login/daftar/lupa-password/verifikasi-email/dst. **Shell top-level terpisah sendiri, BUKAN lagi bersarang di dalam `PublicLayoutComponent`** (lihat catatan koreksi di bawah) — hanya kartu form + panel visual (ayat & poin komunitas), tanpa navbar/footer landing page. Jalan keluar ke Beranda lewat tombol "Kembali ke Beranda" di dalam kartu, bukan navbar.
+- `CmsLayoutComponent` — dipakai ulang untuk **empat** route tree CMS bertier berbeda (`/cms`, `/cms-ldk`, `/cms-puskomda`, `/cms-puskomnas` — lihat §7).
+- `KaderLayoutComponent` — portal self-service ringkas untuk role Kader (sidebar minimal Pendataan/Status/Persetujuan Kader/Profil LDK, tanpa dashboard statistik karena Kader tidak bertier organisasi, lihat `modules/dashboard` §2 dan API §14 `fsldk-api`).
+- `FormLayoutComponent` — halaman publik Formulir Dinamis (`dynamicFormPublicRoutes()`), tanpa navbar/footer.
+- `KantongAmalDonationFlowLayoutComponent` — alur donasi Kantong Amal (`kantongAmalDonationFlowRoutes()`), tanpa navbar/footer.
+- `layouts/rapimnas/RapimnasLayoutComponent` — shell berdiri sendiri untuk 6 halaman publik microsite `rapimnas` (`rapimnasPublicRoutes()`, prefix `/rapimnas`) — di luar pola public/cms/kader manapun, lihat modul `rapimnas` di §2.
+- **Tanpa shell**: `qrcodeDetailRoutes()` (`/qr/:id`) — halaman mandiri yang memikul backdrop penuh-layar sendiri, tanpa navbar/footer apa pun.
+
+> **Koreksi arsitektur:** revisi dokumen sebelumnya di sini menyatakan halaman autentikasi "sengaja bersarang di dalam `PublicLayoutComponent`, bukan shell terpisah". Itu **tidak lagi benar** — `app.routes.ts` memasang `AuthLayoutComponent` sebagai elemen array top-level sendiri (`{ path: '', component: AuthLayoutComponent, children: [...authRoutes()] }`), sejajar dengan blok `PublicLayoutComponent`, bukan salah satu `children`-nya. Komentar di kepala `app.routes.ts` sendiri sudah menyebut ini eksplisit ("BUKAN lagi anak dari PublicLayoutComponent"). Jangan percaya jumlah/susunan shell di dokumen manapun tanpa verifikasi ulang ke `app.routes.ts` — riwayatnya sudah berubah lebih dari sekali (3 → 4 → 7 shell + 1 rute tanpa shell).
+
+Bentuk aktual (ringkas, lihat file untuk daftar `children` lengkap):
 
 ```ts
 export const routes: Routes = [
-  {
-    path: '', component: PublicLayoutComponent,
-    children: [
-      ...homeRoutes(), ...newsPublicRoutes(), ...articlePublicRoutes(),
-      { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
-    ],
-  },
+  { path: '', component: PublicLayoutComponent, children: [...homeRoutes(), ...newsPublicRoutes(), /* ...dst. */] },
+  { path: '', component: AuthLayoutComponent, children: [...authRoutes()] },
+  { path: '', component: FormLayoutComponent, children: [...dynamicFormPublicRoutes()] },
+  { path: '', component: KantongAmalDonationFlowLayoutComponent, children: [...kantongAmalDonationFlowRoutes()] },
+  ...qrcodeDetailRoutes(), // tanpa shell
   // 4 shell CMS TERPISAH memakai component YANG SAMA (CmsLayoutComponent) — tier
   // datang dari route `data`, bukan dari toggle runtime (lihat §7 untuk detail
   // & kenapa ini beda dari "organization switcher").
@@ -238,6 +249,7 @@ export const routes: Routes = [
   { path: 'cms-puskomda', component: CmsLayoutComponent, canActivate: [authGuard], data: { tier: 'PUSKOMDA' }, children: [...] },
   { path: 'cms-puskomnas', component: CmsLayoutComponent, canActivate: [authGuard], data: { tier: 'PUSKOMNAS' }, children: [...] },
   { path: 'kader', component: KaderLayoutComponent, canActivate: [authGuard], children: [...kaderRoutes()] },
+  { path: 'rapimnas', component: RapimnasLayoutComponent, children: [...rapimnasPublicRoutes()] },
 ];
 ```
 

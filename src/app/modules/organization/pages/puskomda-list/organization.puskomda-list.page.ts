@@ -178,8 +178,27 @@ export class OrganizationPuskomdaListPage implements OnInit, OrganizationPuskomd
     };
     this.resetWilayahSelection();
     this.ensureProvincesLoaded();
+    this.syncLocationSelection();
     this.showForm.set(true);
     this.animateModal(true);
+  }
+
+  /** Cocokkan provinceName/cityName yang sudah tersimpan ke opsi dropdown
+   *  via exact label match, supaya "Ubah Puskomda" tidak selalu membuka
+   *  dropdown kosong walau datanya sudah ada — provinceOptions bisa sudah
+   *  ter-cache dari openCreate/openEdit sebelumnya (ensureProvincesLoaded
+   *  cuma fetch sekali, lihat provincesLoaded), makanya dipanggil langsung
+   *  di sini, BUKAN cuma menunggu setProvinceOptions (yang tidak akan
+   *  terpanggil ulang kalau sudah pernah dimuat). Tetap exact match saja
+   *  (tidak fuzzy) — data lama yang formatnya tidak cocok persis tetap
+   *  dibiarkan kosong (sama seperti organization.profile.page.ts). */
+  private syncLocationSelection(): void {
+    if (this.selectedProvinceId) return;
+    const match = this.provinceOptions().find((o) => o.label === this.form.provinceName);
+    if (!match) return;
+    const provinceId = match.value as string;
+    this.selectedProvinceId = provinceId;
+    this.presenter.loadRegencies(provinceId);
   }
   // Dipicu klik baris (CmsIndexComponent rowClick emit row, bukan event DOM
   // — makanya popupOrigin tidak dihitung dari titik klik, cukup center sama
@@ -255,8 +274,11 @@ export class OrganizationPuskomdaListPage implements OnInit, OrganizationPuskomd
     if (o.isActive) this.presenter.deactivate(o.organizationID); else this.presenter.reactivate(o.organizationID);
   }
 
-  setProvinceOptions(options: SelectOption[]): void { this.provinceOptions.set(options); }
-  setRegencyOptions(options: SelectOption[]): void { this.regencyOptions.set(options); }
+  setProvinceOptions(options: SelectOption[]): void { this.provinceOptions.set(options); this.syncLocationSelection(); }
+  setRegencyOptions(options: SelectOption[]): void {
+    this.regencyOptions.set(options);
+    if (!this.selectedCityId) this.selectedCityId = (options.find((c) => c.label === this.form.cityName)?.value as string | undefined) ?? null;
+  }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.close(); this.table?.refresh(); }
   onActionSettled(id: number): void { this.clearBusy(id); }

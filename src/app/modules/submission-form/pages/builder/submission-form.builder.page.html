@@ -12,7 +12,7 @@
     @if (canManage) {
       <button class="btn btn-outline btn-sm" (click)="newVersion()" [disabled]="busy()">+ Versi Baru</button>
       @if (version()?.status === 'DRAFT') {
-        <button class="btn btn-primary btn-sm" (click)="publish()" [disabled]="busy()">Publikasikan</button>
+        <button class="btn btn-primary btn-sm" (click)="publish($event)" [disabled]="busy()">Publikasikan</button>
       }
     }
     @if (version()?.status === 'DRAFT' && totalWeight() > 0) {

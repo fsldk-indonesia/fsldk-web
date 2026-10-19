@@ -3,15 +3,17 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AlertService } from '../../../../core/services/alert.service';
 import { OrgContextService } from '../../../../core/services/org-context.service';
+import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { IconComponent } from '../../../../shared/icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
 import { FormField, FormVersionDetail } from '../../../submission-form/entities/submission-form';
+import { FieldError } from '../../../../core/entities/api-response';
 import {
   SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, EDITABLE_STATUSES,
-  SUBMISSION_STATUS_LABELS, statusTone,
+  SUBMISSION_STATUS_LABELS, statusTone, displayStatus,
 } from '../../entities/submission';
 import { SubmissionPendataanPresenter } from './submission.pendataan.presenter';
 import { SubmissionPendataanView } from './submission.pendataan.view';
@@ -39,6 +41,7 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .status-banner { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: var(--radius-md); background: var(--color-bg-warm); margin-bottom: 20px; }
     .status-banner.tone-danger { background: #fdecec; color: #9a1c1c; }
     .status-banner.tone-warning { background: var(--color-ember-soft); color: var(--color-ember-dark); }
+    .status-banner.tone-neutral { background: var(--color-bg-alt); color: var(--color-muted); }
     .status-banner.tone-success { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .section-card { border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; padding: 18px; margin-bottom: 16px; }
     .form-section-label {
@@ -56,6 +59,7 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .answer-view dt { font-weight: 600; font-size: .88rem; }
     .answer-view dd { color: var(--color-text-secondary); margin: 2px 0 0; overflow-wrap: break-word; word-break: break-word; }
     .empty-state-inline { padding: 36px 20px 24px; }
+    .err { color: var(--color-danger); font-size: .82rem; margin-top: 6px; }
   `],
 })
 export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView {
@@ -63,6 +67,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   private route = inject(ActivatedRoute);
   private orgContext = inject(OrgContextService);
   private alert = inject(AlertService);
+  private auth = inject(AuthRepository);
 
   /** LDK yang sedang dibuka lewat org-switcher (shell cms-ldk) — relevan
    *  hanya untuk subjek Levelisasi (bukan Kader, yang memilih LDK Tujuan
@@ -87,7 +92,16 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   ldkOptions = signal<SelectOption[]>([]);
   selectedOrgID: number | null = null;
 
+  /** LDK Tujuan Kader terkunci seumur hidup begitu submission pertamanya
+   *  dibuat (lihat ms_user.organizationID di submission_service_impl.go) —
+   *  begitu terisi, dropdown "Pilih LDK" tidak relevan lagi ditampilkan
+   *  (termasuk saat retry setelah CANCELLED, lihat ldkLocked di template)
+   *  karena pilihan apa pun di situ akan diabaikan backend. */
+  ldkLocked = computed(() => this.isKaderSubject() && this.auth.user()?.ldkTujuanOrganizationID != null);
+
   answers = signal<Record<number, AnswerDraft>>({});
+  fieldErrors = signal<Record<string, string>>({});
+  fieldError(fieldID: number): string { return this.fieldErrors()[`field_${fieldID}`] ?? ''; }
 
   isEditable = computed(() => {
     const s = this.submission();
@@ -97,6 +111,18 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
   statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
   statusTone(code: string): string { return statusTone(code); }
+
+  /** Banner "Status pendataan Anda saat ini" HARUS pakai status keanggotaan
+   *  kader untuk subjek Kader — lihat displayStatus() di entities/submission.ts
+   *  (bug yang sama sudah ditemukan & diperbaiki di 3 halaman Portal Kader). */
+  topStatusLabel(): string {
+    const s = this.submission();
+    return s ? displayStatus(s, this.isKaderSubject()).label : '';
+  }
+  topStatusTone(): string {
+    const s = this.submission();
+    return s ? displayStatus(s, this.isKaderSubject()).tone : 'neutral';
+  }
 
   /** "Isi Ulang Pendataan" (kader ACTIVE) hanya tampil bila Puskomnas sudah
    *  mempublikasikan version form baru sejak submission ini terakhir diisi —
@@ -118,6 +144,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     if (this.isKaderSubject()) {
       this.presenter.loadAll(this.formCode());
       this.presenter.loadLdkOptions();
+      this.selectedOrgID = this.auth.user()?.ldkTujuanOrganizationID ?? null;
     } else {
       this.orgContext.organizationID$(this.route).subscribe((id) => {
         this.targetOrganizationID = id;
@@ -216,12 +243,14 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   saveDraft(): void {
     const s = this.submission();
     if (!s) return;
+    this.fieldErrors.set({});
     this.presenter.saveAnswers(s.submissionID, this.buildAnswerInputs(), () => this.reload());
   }
 
   submitForm(): void {
     const s = this.submission();
     if (!s) return;
+    this.fieldErrors.set({});
     this.presenter.submit(s.submissionID, this.buildAnswerInputs());
   }
 
@@ -266,4 +295,13 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
   reload(): void { this.loading.set(true); this.presenter.loadAll(this.formCode(), this.targetOrganizationID); }
+
+  onValidationErrors(errors: FieldError[]): void {
+    const map: Record<string, string> = {};
+    for (const e of errors) map[e.attribute] = e.message;
+    this.fieldErrors.set(map);
+    queueMicrotask(() => {
+      document.querySelector('.err')?.closest('.field-group')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+  }
 }

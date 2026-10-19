@@ -47,6 +47,22 @@ export const KADER_STATUS_TONE: Record<string, StatusTone> = {
 };
 export function kaderStatusTone(status: string): StatusTone { return KADER_STATUS_TONE[status] ?? 'neutral'; }
 
+/** Status GABUNGAN yang pantas ditampilkan untuk satu submission — untuk
+ *  subjek Kader, pakai status KEANGGOTAAN kader (ms_kader.status), BUKAN
+ *  status REVIEW submission-nya (tr_submission.status, yang tetap 'ACTIVE'
+ *  selamanya begitu pernah disetujui sekali, walau kader-nya belakangan
+ *  dinonaktifkan/ditolak lewat Persetujuan Kader). Dipakai di Ringkasan,
+ *  Formulir Pendataan, & Status Pendataan Portal Kader supaya ketiganya
+ *  konsisten — satu sumber kebenaran, bukan dihitung manual lagi per
+ *  komponen (3 tempat sudah kejadian salah baca field ini). Subjek
+ *  Levelisasi LDK tidak punya konsep kader, selalu pakai status submission. */
+export function displayStatus(detail: SubmissionDetail, isKaderSubject: boolean): { label: string; tone: StatusTone } {
+  if (isKaderSubject && detail.kader) {
+    return { label: KADER_STATUS_LABELS[detail.kader.status] ?? detail.kader.status, tone: kaderStatusTone(detail.kader.status) };
+  }
+  return { label: SUBMISSION_STATUS_LABELS[detail.status] ?? detail.status, tone: statusTone(detail.status) };
+}
+
 export interface AnswerInput {
   fieldID: number;
   valueText?: string;
@@ -99,6 +115,10 @@ export interface KaderInfo {
   fullName: string;
   status: string;
   issuedDate?: string;
+  /** Kapan status SAAT INI mulai berlaku — dipakai "Nonaktif sejak" selama
+   *  status-nya masih INACTIVE (issuedDate tetap tanggal aktivasi awal,
+   *  tidak berubah walau belakangan dinonaktifkan). */
+  statusChangedDate?: string;
 }
 
 export interface SubmissionResponse {
@@ -144,6 +164,10 @@ export interface SubmissionDetail extends SubmissionResponse {
   answers: AnswerResponse[];
   statusHistory: StatusHistoryEntry[];
   levelResult?: LevelResult;
+  /** Seluruh baris tr_levelisasi_result organisasi ini (riwayat tidak
+   *  pernah dihapus), terurut dari yang paling awal dicapai — dipakai
+   *  kartu "Record Levelisasi" (tangga 4 level). */
+  levelHistory?: LevelResult[];
   kader?: KaderInfo;
   /** Hanya terisi untuk caller bertier Puskomnas pada submission Levelisasi
    *  — LDK/Puskomda tidak pernah menerima field ini dari backend. */

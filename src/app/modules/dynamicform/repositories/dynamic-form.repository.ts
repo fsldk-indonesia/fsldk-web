@@ -36,7 +36,6 @@ export class DynamicFormRepository {
 
   gsheetConnect(id: number): Observable<GSheetStatus> { return this.api.gsheetConnect(id); }
   gsheetResync(id: number): Observable<GSheetStatus> { return this.api.gsheetResync(id); }
-  gsheetDisconnect(id: number): Observable<GSheetStatus> { return this.api.gsheetDisconnect(id); }
 
   publicGet(slug: string): Observable<PublicDynamicForm> { return this.api.publicGet(slug); }
   publicSubmit(slug: string, fd: FormData): Observable<SubmitResult> { return this.api.publicSubmit(slug, fd); }

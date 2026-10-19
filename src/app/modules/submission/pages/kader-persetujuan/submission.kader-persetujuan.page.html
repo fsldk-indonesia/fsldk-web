@@ -6,6 +6,7 @@
 <div class="tabs">
   <button type="button" [class.active]="tab() === 'pending'" (click)="tab.set('pending')">Menunggu Persetujuan</button>
   <button type="button" [class.active]="tab() === 'active'" (click)="tab.set('active')">Kader Aktif</button>
+  <button type="button" [class.active]="tab() === 'inactive'" (click)="tab.set('inactive')">Nonaktif</button>
   <button type="button" [class.active]="tab() === 'rejected'" (click)="tab.set('rejected')">Ditolak</button>
 </div>
 
@@ -88,6 +89,23 @@
     </div>
   } @empty {
     <div class="card card-pad"><p class="text-muted">Belum ada kader aktif dari LDK ini.</p></div>
+  }
+  </div>
+} @else if (tab() === 'inactive') {
+  <div class="tab-panel">
+  @for (k of inactive(); track k.kaderID) {
+    <div class="active-item">
+      <div class="flex items-center gap-sm">
+        <span class="icon-badge sm icon-badge-danger"><app-icon name="x" [size]="14" /></span>
+        <div>
+          <strong>{{ k.fullName }}</strong>
+          <p class="text-muted">{{ k.uniqueCode }}</p>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" (click)="reactivate(k, $event)">Aktifkan Kembali</button>
+    </div>
+  } @empty {
+    <div class="card card-pad"><p class="text-muted">Belum ada kader nonaktif dari LDK ini.</p></div>
   }
   </div>
 } @else {

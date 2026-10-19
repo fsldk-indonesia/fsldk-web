@@ -7,7 +7,8 @@ import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PageHeroComponent } from '../../../../shared/page-hero.component';
 import { SearchFilterSortComponent, FilterFieldDef } from '../../../../shared/search-filter-sort.component';
-import { NetworkStats, DirectoryEntry } from '../../entities/statistic';
+import { NetworkStats, DirectoryEntry, levelBadgeClass } from '../../entities/statistic';
+import { CMS_SHELL_ICON } from '../../../../shared/cms-tier';
 import { StatisticIndexPresenter } from './statistic.index.presenter';
 import { StatisticIndexView } from './statistic.index.view';
 
@@ -51,11 +52,15 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
  * "Direktori LDK" — pakai app-search-filter-sort (komponen global yang sama
  * dipakai halaman Galeri), disusun sebagai PETA jaringan: Puskomnas jadi hub
  * bercahaya di tengah, garis kurva SVG menyambung ke tiap grup Puskomda
- * (jumlahnya terbatas jadi aman dihitung ulang saat resize/filter), unit LDK
- * tetap mengelompok dalam grid di bawah grupnya masing-masing — BUKAN garis
- * bebas yang menyambung ke tiap kartu LDK satu-satu (jumlahnya bisa banyak &
- * reflow grid-nya rapuh terhadap garis presisi, sudah dipertimbangkan &
- * sengaja dihindari, lihat diskusi arah desain sebelumnya).
+ * (hijau), DAN tiap grup Puskomda bercabang lagi ke tiap kartu LDK di
+ * bawahnya (oren/ember — diminta eksplisit 2026-10-19, membalik keputusan
+ * desain sebelumnya yang sengaja menghindari garis per-kartu LDK karena
+ * khawatir rapuh terhadap reflow grid saat jumlah LDK banyak). Garis LDK
+ * TIDAK pakai node/ping bercahaya terpisah per kartu seperti simpul Puskomda
+ * (akan jadi puluhan animasi sekaligus pada DIRECTORY_TREE_LIMIT=100) —
+ * cukup kurva Bezier polos berakhir di tepi atas tiap kartu, sama seperti
+ * garis hub->Puskomda dihitung dari posisi DOM asli (lihat
+ * recomputeConnectors()), bukan dari koordinat statis.
  */
 @Component({
   selector: 'app-statistic-index-page',
@@ -229,6 +234,16 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
     .org-logo { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; object-fit: cover; border: 1px solid var(--color-border); }
     .org-logo-fallback { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
     .org-card h4 { margin: 0 0 6px; font-size: .98rem; font-family: var(--font-heading); }
+    /* Badge level Levelisasi LDK — hanya dirender kalau backend mengirim
+       levelLabel (artinya hasilnya CURRENT + sudah PUBLISH, lihat komentar
+       DirectoryEntry di statistic.ts). 4 varian warna mengikuti tangga
+       capaian level (lk_level: Pra Mula < Mula < Madya < Mandiri), semuanya
+       token warna yang sudah ada di styles.scss — tidak menambah warna baru. */
+    .level-badge { display: inline-flex; align-items: center; padding: 3px 11px; border-radius: var(--radius-full); font-size: .72rem; font-weight: 700; margin: 0 0 8px; }
+    .level-badge-neutral { background: var(--color-bg-alt); color: var(--color-muted); }
+    .level-badge-info { background: var(--color-info-soft); color: var(--color-info); }
+    .level-badge-gold { background: var(--color-gold-soft); color: var(--color-gold-dark); }
+    .level-badge-primary { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     /* align-items:flex-start (bukan center) — teks kota/provinsi yang
        panjang bisa melipat 2-3 baris di kartu sempit; center membuat ikon
        melayang di tengah blok multi-baris (dilaporkan "kurang enak
@@ -252,9 +267,11 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
        Direktori sebagai PETA — hub Puskomnas bercahaya (reuse .network-node/
        .network-ping) di tengah, garis kurva SVG ke tiap grup Puskomda
        (dihitung dari posisi DOM asli via getBoundingClientRect, lihat
-       recomputeConnectors() di .ts), unit LDK mengelompok dalam grid biasa
-       di bawah grupnya — TIDAK ada garis per-kartu LDK (lihat komentar
-       class komponen). ===================================================================== */
+       recomputeConnectors() di .ts), DAN tiap grup bercabang lagi ke tiap
+       kartu LDK di bawahnya (warna ember/oren, lihat .network-line.ember di
+       styles.scss) — lihat komentar class komponen untuk alasan garis LDK
+       tidak pakai node/ping terpisah seperti simpul Puskomda.
+       ===================================================================== */
     .org-map { position: relative; max-width: 980px; margin: 0 auto; transition: opacity .25s ease; }
     .org-map.is-refetching { opacity: .5; pointer-events: none; }
     .org-map-loading-bar {
@@ -273,27 +290,55 @@ const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', 
     .org-map-lines { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .45s ease; }
     .org-map-lines.ready { opacity: 1; }
 
-    .org-hub-wrap { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 48px; }
+    .org-hub-wrap { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: 48px; }
     .org-hub-node { position: relative; width: 84px; height: 84px; }
     .org-hub-svg { width: 100%; height: 100%; overflow: visible; }
     .org-hub-icon { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; pointer-events: none; }
-    .org-hub-body { text-align: center; }
-    .org-hub-body h4 { margin: 0; font-size: 1.05rem; font-family: var(--font-heading); color: var(--color-text); }
-    .org-hub-caption { display: block; font-size: .76rem; font-weight: 700; letter-spacing: .03em; color: var(--color-primary-dark); margin-top: 3px; }
+    /* Foto Puskomnas — mengisi lingkaran dalam .network-node (r=28, diameter
+       56) bukan seluruh kotak 84px, supaya ring ping/node tetap jadi halo di
+       sekelilingnya (pola sama dipakai org-group-logo untuk Puskomda).
+       background:#fff WAJIB ada — foto ini duduk di atas .network-node yang
+       fill-nya hijau (var(--color-primary)); tanpa backdrop, bagian
+       transparan logo (mis. padding di sekeliling mark FSLDK) menembuskan
+       hijau itu, kelihatan seperti foto "ketiban" warna hijau. */
+    .org-hub-photo { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 54px; height: 54px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; background: #fff; }
+    /* Hub & group-head sekarang kartu sungguhan (bukan teks mengambang) —
+       supaya seluruh data organisasi (kode, lokasi, kontak, jumlah unit)
+       kelihatan di satu tempat, bukan cuma nama+kontak seperti sebelumnya. */
+    .org-hub-body { text-align: center; background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 24px; max-width: 380px; }
+    .org-hub-title-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .org-hub-title-row h4 { margin: 0; font-size: 1.05rem; font-family: var(--font-heading); color: var(--color-text); }
+    .org-hub-caption { display: block; font-size: .76rem; font-weight: 700; letter-spacing: .03em; color: var(--color-primary-dark); margin-top: 4px; }
+    /* Chip kode organisasi (organizationCode) — dipakai hub Puskomnas &
+       kartu Puskomda, sebelumnya tidak pernah ditampilkan sama sekali di
+       halaman publik ini. */
+    .org-code-chip { display: inline-flex; align-items: center; font-size: .68rem; font-weight: 700; letter-spacing: .02em; padding: 2px 9px; border-radius: 999px; background: var(--color-bg-alt); color: var(--color-text-secondary); white-space: nowrap; }
+    /* Kontak Puskomnas/Puskomda dikecilkan jadi ikon saja (bukan ikon+teks
+       penuh seperti .org-card-link) supaya tidak melebarkan kartu header. */
+    .org-hub-links { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .org-hub-links a, .org-group-links a { display: inline-flex; color: var(--color-primary); opacity: .75; transition: opacity var(--motion-fast) ease; }
+    .org-hub-links a:hover, .org-group-links a:hover { opacity: 1; }
 
     .org-map-groups { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 40px; }
     .org-group { position: relative; }
-    .org-group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; min-height: 26px; flex-wrap: wrap; }
+    .org-group-head {
+      position: relative; display: flex; align-items: center; gap: 14px; margin-bottom: 16px; min-height: 26px; flex-wrap: wrap;
+      background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 14px 18px 14px 26px;
+      transition: box-shadow var(--motion-fast) ease, border-color var(--motion-fast) ease;
+    }
+    .org-group-head:hover { box-shadow: var(--shadow); border-color: var(--color-gold); }
     /* Simpul kecil bercahaya (reuse .network-node/.network-ping gold) —
        inilah titik yang diukur recomputeConnectors() sebagai ujung garis
-       kurva dari hub, BUKAN elemen dekoratif semata. */
-    .org-group-node { position: relative; width: 16px; height: 16px; flex-shrink: 0; }
+       kurva dari hub, BUKAN elemen dekoratif semata. Diposisikan sebagai
+       "pin" mengambang di tepi atas kartu (bukan ikut alur flex) supaya
+       tidak berebut ruang dengan logo/judul Puskomda yang sekarang ada. */
+    .org-group-node { position: absolute; top: -7px; left: 18px; width: 16px; height: 16px; }
     .org-group-node svg { width: 100%; height: 100%; overflow: visible; }
-    /* Nama + kepanjangan "Pusat Komunikasi Daerah" ditumpuk — pola sama
-       persis dengan .org-hub-body (nama Puskomnas + "Pusat Komunikasi
-       Nasional"), supaya tiap Puskomda terasa jadi hub mini yang setara
-       bahasanya dengan hub utama. */
-    .org-group-title { display: flex; flex-direction: column; gap: 1px; }
+    .org-group-logo, .org-group-logo-fallback { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+    .org-group-logo-fallback { display: flex; align-items: center; justify-content: center; }
+    .org-group-title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .org-group-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .org-group-links { display: flex; gap: 9px; margin-top: 4px; }
     .org-group-head h4 { margin: 0; font-size: 1rem; font-family: var(--font-heading); color: var(--color-text); }
     .org-group-caption { font-size: .74rem; font-weight: 700; color: var(--color-gold-dark); }
     .org-group-unloaded { color: var(--color-muted); font-weight: 600; font-style: italic; }
@@ -416,12 +461,22 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
    *  selalu cocok dengan layout sesungguhnya (resize, reflow grid, jumlah
    *  grup berubah karena filter). */
   connectorPaths = signal<string[]>([]);
+  /** Garis kurva tiap simpul grup Puskomda -> tiap kartu LDK di bawahnya
+   *  (oren/ember) — dihitung bersamaan di recomputeConnectors(), origin-nya
+   *  posisi simpul grup yang SAMA dipakai garis hub->Puskomda di atas. */
+  ldkConnectorPaths = signal<string[]>([]);
   linesReady = signal(false);
   mapSize = signal({ w: 0, h: 0 });
 
   @ViewChild('mapWrap') private mapWrapRef?: ElementRef<HTMLElement>;
   @ViewChild('hubNode') private hubNodeRef?: ElementRef<HTMLElement>;
   @ViewChildren('groupNode') private groupNodeRefs?: QueryList<ElementRef<HTMLElement>>;
+  /** Flat, DOM-order list kartu LDK lintas SEMUA grup — urutannya otomatis
+   *  sama dengan directoryTree().flatMap(g => g.ldks) karena @for di .html
+   *  merender grup lalu LDK-nya persis seurut itu, jadi recomputeConnectors()
+   *  tinggal mengiris flat list ini per g.ldks.length tanpa butuh ref terpisah
+   *  per grup. */
+  @ViewChildren('ldkCard') private ldkCardRefs?: QueryList<ElementRef<HTMLElement>>;
 
   private resizeObserver?: ResizeObserver;
   private resizeObserverTarget?: HTMLElement;
@@ -446,6 +501,11 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     // pencarian/tab masuk-keluar) — di situlah posisi node-nodenya perlu
     // dihitung ulang.
     this.groupNodeRefs?.changes.subscribe(() => this.scheduleRecomputeConnectors());
+    // Jumlah grup bisa tetap sama sementara jumlah KARTU LDK di dalamnya
+    // berubah (mis. pencarian menyaring sebagian LDK tapi tidak sampai
+    // menghilangkan grup Puskomda-nya) — groupNodeRefs.changes tidak akan
+    // terpicu untuk kasus itu, jadi ldkCardRefs perlu langganan sendiri.
+    this.ldkCardRefs?.changes.subscribe(() => this.scheduleRecomputeConnectors());
   }
 
   ngOnDestroy(): void {
@@ -505,20 +565,36 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     return `https://wa.me/${phone.replace(/\D/g, '')}`;
   }
 
+  levelBadgeClass = levelBadgeClass;
+
+  /** Ikon fallback kartu grup Puskomda (saat belum ada photoURL) — nama ikon
+   *  disamakan dengan item "Portal Puskomda" di dropdown akun
+   *  (site-header.component.ts, 'building-2'), tapi background tetap
+   *  icon-badge-gold (soft) seperti semula per permintaan eksplisit
+   *  2026-10-19 — hanya ikonnya yang ikut satu sumber kebenaran cms-tier.ts,
+   *  warnanya TIDAK ikut disamakan ke solid tier color milik dropdown. */
+  readonly puskomdaIcon = CMS_SHELL_ICON.PUSKOMDA;
+
   private scheduleRecomputeConnectors(): void {
     requestAnimationFrame(() => this.recomputeConnectors());
   }
 
-  /** Ukur posisi DOM asli hub & tiap simpul grup (getBoundingClientRect),
-   *  lalu bangun kurva Bezier vertikal dari hub ke tiap simpul — data-driven
-   *  dari layout sesungguhnya, bukan dihitung dari koordinat statis, supaya
-   *  selalu cocok berapa pun jumlah grup & lebar layar. */
+  /** Ukur posisi DOM asli hub, tiap simpul grup, DAN tiap kartu LDK
+   *  (getBoundingClientRect), lalu bangun kurva Bezier vertikal hub->grup
+   *  (hijau) dan grup->tiap kartu LDK (oren/ember) — data-driven dari layout
+   *  sesungguhnya, bukan dihitung dari koordinat statis, supaya selalu cocok
+   *  berapa pun jumlah grup/LDK & lebar layar. Kartu LDK diiris dari flat
+   *  ldkCardRefs per g.ldks.length (lihat komentar field-nya) — bukan
+   *  endpoint bercahaya terpisah seperti simpul grup, karena jumlahnya bisa
+   *  sampai DIRECTORY_TREE_LIMIT=100 kartu sekaligus. */
   private recomputeConnectors(): void {
     const wrap = this.mapWrapRef?.nativeElement;
     const hub = this.hubNodeRef?.nativeElement;
-    const nodes = this.groupNodeRefs?.toArray() ?? [];
-    if (!wrap || !hub || nodes.length === 0) {
+    const groupNodes = this.groupNodeRefs?.toArray() ?? [];
+    const ldkCards = this.ldkCardRefs?.toArray() ?? [];
+    if (!wrap || !hub || groupNodes.length === 0) {
       this.connectorPaths.set([]);
+      this.ldkConnectorPaths.set([]);
       return;
     }
 
@@ -536,14 +612,33 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     const hx = hubRect.left + hubRect.width / 2 - wrapRect.left;
     const hy = hubRect.top + hubRect.height / 2 - wrapRect.top;
 
-    const paths = nodes.map((ref) => {
+    const tree = this.directoryTree();
+    const groupPaths: string[] = [];
+    const ldkPaths: string[] = [];
+    let ldkCursor = 0;
+
+    groupNodes.forEach((ref, i) => {
       const r = ref.nativeElement.getBoundingClientRect();
       const nx = r.left + r.width / 2 - wrapRect.left;
       const ny = r.top + r.height / 2 - wrapRect.top;
       const midY = (hy + ny) / 2;
-      return `M${hx},${hy} C${hx},${midY} ${nx},${midY} ${nx},${ny}`;
+      groupPaths.push(`M${hx},${hy} C${hx},${midY} ${nx},${midY} ${nx},${ny}`);
+
+      const ldkCount = tree[i]?.ldks.length ?? 0;
+      for (let j = 0; j < ldkCount; j++) {
+        const cardEl = ldkCards[ldkCursor + j]?.nativeElement;
+        if (!cardEl) continue;
+        const cr = cardEl.getBoundingClientRect();
+        const cx = cr.left + cr.width / 2 - wrapRect.left;
+        const cyTop = cr.top - wrapRect.top;
+        const midY2 = (ny + cyTop) / 2;
+        ldkPaths.push(`M${nx},${ny} C${nx},${midY2} ${cx},${midY2} ${cx},${cyTop}`);
+      }
+      ldkCursor += ldkCount;
     });
-    this.connectorPaths.set(paths);
+
+    this.connectorPaths.set(groupPaths);
+    this.ldkConnectorPaths.set(ldkPaths);
     this.linesReady.set(true);
   }
 

@@ -168,7 +168,7 @@ function canvasSilhouetteUrl(hex: string): string {
                   <input class="form-control" [placeholder]="'Cari ' + orgNoun() + '...'" [value]="orgSearch()" (input)="onOrgSearch($event)" (click)="$event.stopPropagation()">
                   @for (o of orgOptions(); track o.organizationID) {
                     <button type="button" [class.active]="o.organizationID === currentOrgID()" (click)="selectOrganization(o.organizationID)">
-                      {{ o.organizationName }}
+                      {{ orgLabel(o) }}
                     </button>
                   } @empty {
                     <p class="text-muted org-empty">Tidak ada {{ orgNoun() }} lain.</p>
@@ -368,8 +368,8 @@ function canvasSilhouetteUrl(hex: string): string {
     .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: var(--radius-full); border: 1.5px solid var(--color-primary-soft); background: var(--color-primary-tint); color: var(--color-primary-dark); font-weight: 700; font-size: .88rem; cursor: pointer; transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease, color var(--motion-fast) ease, box-shadow var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); }
     .org-switcher-skel { width: 90px; height: 13px; }
     .org-switcher-btn:hover { background: var(--color-primary); border-color: var(--color-primary); color: #fff; box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 35%, transparent); transform: translateY(-1px); }
-    .org-switcher-btn span { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .org-dropdown-panel { left: 0; right: auto; min-width: 280px; max-height: 360px; overflow-y: auto; gap: 4px; }
+    .org-switcher-btn span { max-width: 480px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .org-dropdown-panel { left: 0; right: auto; min-width: 400px; max-height: 360px; overflow-y: auto; gap: 4px; }
     .org-dropdown-panel input { margin-bottom: 6px; }
     .org-dropdown-panel button.active { background: var(--color-primary-soft); color: var(--color-primary-dark); }
     .org-empty { padding: 8px 12px; font-size: .85rem; }
@@ -671,7 +671,14 @@ export class CmsLayoutComponent implements OnInit {
   orgDropdownOpen = signal(false);
   year = new Date().getFullYear();
 
-  currentOrgName = computed(() => this.orgOptions().find((o) => o.organizationID === this.currentOrgID())?.organizationName);
+  currentOrgName = computed(() => {
+    const o = this.orgOptions().find((x) => x.organizationID === this.currentOrgID());
+    return o ? this.orgLabel(o) : undefined;
+  });
+
+  orgLabel(o: MeOrganization): string {
+    return o.parentOrganizationName ? `${o.organizationName} - ${o.parentOrganizationName}` : o.organizationName;
+  }
 
   ngOnInit(): void {
     this.tier.set((this.route.snapshot.data['tier'] as Tier) ?? 'FSLDK');

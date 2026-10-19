@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { SubmissionFormApiService } from '../services/submission-form-api.service';
-import { SubmissionForm, SubmissionFormDetail, FormVersionDetail, FormVersionSummary } from '../entities/submission-form';
+import { SubmissionForm, SubmissionFormDetail, FormVersionDetail, FormVersionSummary, PublishImpact } from '../entities/submission-form';
 
 @Injectable({ providedIn: 'root' })
 export class SubmissionFormRepository {
@@ -16,6 +16,7 @@ export class SubmissionFormRepository {
   }
   getVersion(versionID: number): Observable<FormVersionDetail> { return this.api.getVersion(versionID); }
   publishVersion(versionID: number): Observable<FormVersionSummary> { return this.api.publishVersion(versionID); }
+  getPublishImpact(versionID: number): Observable<PublishImpact> { return this.api.getPublishImpact(versionID); }
   getPublishedByFormCode(formCode: string): Observable<FormVersionDetail> { return this.api.getPublishedByFormCode(formCode); }
 
   createSection(versionID: number, body: unknown): Observable<unknown> { return this.api.createSection(versionID, body); }

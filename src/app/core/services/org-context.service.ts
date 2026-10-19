@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of, switchMap } from 'rxjs';
 import { AuthRepository } from '../../modules/user/repositories/auth.repository';
+import { OrganizationRepository } from '../../modules/organization/repositories/organization.repository';
 
 /**
  * Resolusi organizationID "sedang dilihat" untuk halaman CMS ber-scope
@@ -23,6 +24,17 @@ import { AuthRepository } from '../../modules/user/repositories/auth.repository'
  * organisasi pertama yang benar-benar bertipe sesuai shell (lihat
  * loadOrgOptions()), lalu menulisnya eksplisit ke query param.
  *
+ * PENGECUALIAN tier PUSKOMNAS: showOrgSwitcher() di cms-layout.component.ts
+ * sengaja TIDAK menyalakan switcher untuk tier ini (Puskomnas bersifat
+ * singular — cuma ada SATU baris akar, lihat rootPuskomnas() di statistik-
+ * jaringan publik & RootPuskomnasID() di backend) — jadi mekanisme auto-pilih
+ * lewat switcher di atas tidak pernah jalan untuk Puskomnas. Tanpa penanganan
+ * di sini, akun yang organizationTypeCode-nya tidak persis 'PUSKOMNAS' (mis.
+ * Super Admin/wildcard, home org null) akan selamanya menerima undefined di
+ * shell cms-puskomnas — ditemukan lewat halaman "Profil Puskomnas" yang
+ * datanya tidak pernah termuat/tersimpan untuk Super Admin. Fallback-nya di
+ * sini: ambil langsung satu-satunya organisasi bertipe PUSKOMNAS yang ada.
+ *
  * Sengaja query param (bukan path param bersarang) — tetap eksplisit &
  * bisa dibookmark/dibagikan sesuai Section 19.6, tapi tidak memaksa setiap
  * *.routes.ts anak dari cms-ldk/cms-puskomda/cms-puskomnas mengetahui soal
@@ -32,19 +44,25 @@ import { AuthRepository } from '../../modules/user/repositories/auth.repository'
 @Injectable({ providedIn: 'root' })
 export class OrgContextService {
   private auth = inject(AuthRepository);
+  private orgRepo = inject(OrganizationRepository);
 
   organizationID$(route: ActivatedRoute): Observable<number | undefined> {
     return route.queryParamMap.pipe(
-      map((params) => {
+      switchMap((params) => {
         const raw = params.get('organizationID');
         if (raw) {
           const id = Number(raw);
-          if (Number.isFinite(id) && id > 0) return id;
+          if (Number.isFinite(id) && id > 0) return of(id);
         }
         const tier = route.snapshot.data['tier'] as string | undefined;
         const u = this.auth.user();
-        if (tier && u?.organizationTypeCode === tier) return u.organizationID;
-        return undefined;
+        if (tier && u?.organizationTypeCode === tier) return of(u.organizationID);
+        if (tier === 'PUSKOMNAS') {
+          return this.orgRepo.list({ organizationTypeCode: 'PUSKOMNAS', limit: 1 }).pipe(
+            map((page) => page.data[0]?.organizationID),
+          );
+        }
+        return of(undefined);
       }),
     );
   }

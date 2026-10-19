@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { BasePresenter } from '../../../../core/mvp/base.presenter';
 import { ToastService } from '../../../../core/services/toast.service';
+import { PublishImpact } from '../../entities/submission-form';
 import { SubmissionFormRepository } from '../../repositories/submission-form.repository';
 import { SubmissionFormBuilderView } from './submission-form.builder.view';
 
@@ -25,19 +26,28 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
+  loadPublishImpact(versionID: number): Promise<PublishImpact> {
+    return new Promise((resolve) => {
+      this.repo.getPublishImpact(versionID).subscribe({
+        next: (r) => resolve(r),
+        error: () => resolve({ affectedCount: 0, subjectLabel: 'LDK/Kader' }),
+      });
+    });
+  }
+
   publishVersion(versionID: number, formID: number): void {
     this.view.setBusy(true);
     this.repo.publishVersion(versionID).subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Versi dipublikasikan'); this.view.reload(); this.loadForm(formID); },
+      next: () => { this.view.setBusy(false); this.toast.success('Versi dipublikasikan — pemrosesan reassessment berjalan di background'); this.view.reload(); this.loadForm(formID); },
       error: () => this.view.setBusy(false),
     });
   }
 
-  saveSection(versionID: number, sectionID: number | null, body: unknown): void {
+  saveSection(versionID: number, sectionID: number | null, body: unknown, onSuccess: () => void): void {
     this.view.setBusy(true);
     const req = sectionID ? this.repo.updateSection(sectionID, body) : this.repo.createSection(versionID, body);
     req.subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Section disimpan'); this.view.reload(); },
+      next: () => { this.view.setBusy(false); this.toast.success('Section disimpan'); this.view.reload(); onSuccess(); },
       error: () => this.view.setBusy(false),
     });
   }
@@ -49,11 +59,11 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
-  saveField(sectionID: number, fieldID: number | null, body: unknown): void {
+  saveField(sectionID: number, fieldID: number | null, body: unknown, onSuccess: () => void): void {
     this.view.setBusy(true);
     const req = fieldID ? this.repo.updateField(fieldID, body) : this.repo.createField(sectionID, body);
     req.subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Field disimpan'); this.view.reload(); },
+      next: () => { this.view.setBusy(false); this.toast.success('Field disimpan'); this.view.reload(); onSuccess(); },
       error: () => this.view.setBusy(false),
     });
   }
@@ -65,11 +75,11 @@ export class SubmissionFormBuilderPresenter extends BasePresenter<SubmissionForm
     });
   }
 
-  saveOption(fieldID: number, optionID: number | null, body: unknown): void {
+  saveOption(fieldID: number, optionID: number | null, body: unknown, onSuccess: () => void): void {
     this.view.setBusy(true);
     const req = optionID ? this.repo.updateOption(optionID, body) : this.repo.createOption(fieldID, body);
     req.subscribe({
-      next: () => { this.view.setBusy(false); this.toast.success('Pilihan disimpan'); this.view.reload(); },
+      next: () => { this.view.setBusy(false); this.toast.success('Pilihan disimpan'); this.view.reload(); onSuccess(); },
       error: () => this.view.setBusy(false),
     });
   }

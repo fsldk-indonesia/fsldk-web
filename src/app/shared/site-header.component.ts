@@ -126,7 +126,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
                 } @else {
                   <span class="chip-avatar">{{ initials() }}</span>
                 }
-                {{ auth.user()?.fullName }}
+                <span class="chip-name">{{ auth.user()?.fullName }}</span>
               </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
                 @for (t of auth.accessibleCmsTiers(); track t) {
@@ -170,7 +170,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
                 <span class="chip-avatar guest"><app-icon name="guest" [size]="15" /></span> Pengunjung
               </button>
               <div class="dropdown-fun" [class.open]="userMenuOpen()">
-                <a routerLink="/login" routerLinkActive="active" class="dropdown-fun-item" (click)="closeUserMenu()">
+                <a routerLink="/login" [queryParams]="{ returnUrl: router.url }" routerLinkActive="active" class="dropdown-fun-item" (click)="closeUserMenu()">
                   <span class="icon-badge sm icon-badge-solid"><app-icon name="log-in" [size]="15" /></span>
                   <span class="nav-dropdown-item-text">
                     <span class="nav-dropdown-item-title">Masuk</span>
@@ -225,7 +225,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
         <div class="mobile-account">
           <span class="mobile-account-avatar guest"><app-icon name="guest" [size]="18" /></span>
           <div class="mobile-account-text">
-            <span class="mobile-account-greeting">Assalamu'alaikum, Sahabat! <span class="wave-emoji">👋</span></span>
+            <span class="mobile-account-greeting">Assalamu'alaikum, Aktivis Dakwah! <span class="wave-emoji">👋</span></span>
             <span class="mobile-account-email">Masuk untuk akses penuh</span>
           </div>
         </div>
@@ -342,7 +342,7 @@ const TIER_CAPTION: Record<CmsTier, string> = {
             </span>
           </button>
         } @else {
-          <a routerLink="/login" routerLinkActive="active" class="mobile-action-card" (click)="closeMobile()">
+          <a routerLink="/login" [queryParams]="{ returnUrl: router.url }" routerLinkActive="active" class="mobile-action-card" (click)="closeMobile()">
             <span class="icon-badge sm icon-badge-solid"><app-icon name="log-in" [size]="15" /></span>
             <span class="mobile-action-card-text">
               <span class="mobile-action-card-title">Masuk</span>
@@ -510,6 +510,29 @@ const TIER_CAPTION: Record<CmsTier, string> = {
     .account-chip .chip-avatar { background: rgba(255,255,255,.3); color: #fff; }
     .account-chip .chip-avatar.guest { background: rgba(255,255,255,.25); color: #fff; }
     img.chip-avatar { object-fit: cover; }
+    /* Nama/email panjang (mis. hasil Google login) dipotong "…" supaya tidak
+       melebarkan pill ini dan mendorong layout navbar — avatar & chevron
+       tombol parent tetap flex-shrink:0, cuma teks nama yang menyusut. */
+    .chip-name { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Di viewport laptop sempit (>1080px, jadi nav desktop penuh masih
+       tampil — bukan hamburger mobile, lihat @media 1080px di bawah), 8 item
+       .pub-nav-group + prayer-time widget + account-chip SAMA-SAMA
+       flex-shrink:0 — begitu nama akun mendekati batas 180px di atas, totalnya
+       bisa melebihi lebar container dan "ketlewat" (overflow) di luar
+       .pub-header. Perkecil batas chip-name di rentang ini (BUKAN
+       disembunyikan total — tulisan nama harus tetap kelihatan, cuma lebih
+       pendek) supaya membebaskan ruang tanpa menghapus informasinya. */
+    @media (max-width: 1300px) {
+      .chip-name { max-width: 90px; }
+    }
+    /* .pub-header.scrolled MENYEMPITKAN KOTAKNYA SENDIRI ke maks 1300px
+       (lihat width: min(1300px, ...) di atas) TERLEPAS dari lebar viewport —
+       jadi squeeze yang sama di atas tetap kejadian walau layarnya lebar
+       (mis. 1920px) begitu header di-scroll, karena pemicunya state
+       .scrolled itu sendiri, bukan lebar viewport. Aturan berbasis class ini
+       diperlukan TERPISAH dari @media di atas — keduanya saling melengkapi,
+       bukan salah satu pengganti yang lain. */
+    .pub-header.scrolled .chip-name { max-width: 90px; }
     /* Foto profil (kadang PNG transparan, mis. logo FSLDK) butuh cincin putih
        SOLID (border), bukan tint transparan seperti varian teks/inisial di
        atas — kalau tidak, area transparan PNG-nya cuma menembus warna pill
@@ -815,7 +838,8 @@ const TIER_CAPTION: Record<CmsTier, string> = {
 export class SiteHeaderComponent implements OnInit, OnDestroy {
   auth = inject(AuthRepository);
   private submissionRepo = inject(SubmissionRepository);
-  private router = inject(Router);
+  // Bukan private — dibaca langsung dari template untuk returnUrl link Masuk.
+  router = inject(Router);
   private ngZone = inject(NgZone);
   private alert = inject(AlertService);
 

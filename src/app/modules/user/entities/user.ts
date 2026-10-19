@@ -12,6 +12,13 @@ export interface UserProfile {
   organizationID?: number;
   organizationTypeCode?: string;
   wildcardTierAccess?: string[];
+  /** Nilai mentah ms_user.organizationID — BUKAN organizationID di atas
+   *  (yang dikosongkan backend untuk Kader/Pengunjung, lihat
+   *  resolveEffectiveOrg di auth_service_impl.go). Murni info "LDK Tujuan
+   *  sudah dipilih atau belum" untuk Kader, tidak pernah berarti cakupan
+   *  akses — dipakai halaman Pendataan supaya tidak minta pilih LDK lagi
+   *  kalau sudah terkunci. */
+  ldkTujuanOrganizationID?: number;
 }
 
 /** Ringkasan pengguna minimal untuk autocomplete @mention pada komentar. */

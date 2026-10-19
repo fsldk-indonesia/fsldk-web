@@ -22,6 +22,7 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { roleRoutes } from './modules/role/role.routes';
 import { organizationRoutes } from './modules/organization/organization.routes';
+import { pengurusRoutes } from './modules/pengurus/pengurus.routes';
 import { submissionFormRoutes } from './modules/submission-form/submission-form.routes';
 import { submissionRoutes } from './modules/submission/submission.routes';
 import { reportRoutes } from './modules/report/report.routes';
@@ -165,6 +166,7 @@ export const routes: Routes = [
       ...dashboardRoutes(),
       ...organizationRoutes(),
       ...submissionRoutes(),
+      ...pengurusRoutes('pengurus.ldk.manage'),
     ],
   },
   {
@@ -178,6 +180,7 @@ export const routes: Routes = [
       ...organizationRoutes(),
       ...submissionRoutes(),
       ...reportRoutes(),
+      ...pengurusRoutes('pengurus.puskomda.manage'),
     ],
   },
   {
@@ -192,6 +195,7 @@ export const routes: Routes = [
       ...submissionRoutes(),
       ...reportRoutes(),
       ...submissionFormRoutes(),
+      ...pengurusRoutes('pengurus.puskomnas.manage'),
     ],
   },
 

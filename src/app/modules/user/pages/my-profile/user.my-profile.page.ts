@@ -111,7 +111,7 @@ import { UserMyProfileView } from './user.my-profile.view';
     }
     .id-card-avatar-edit:hover { transform: scale(1.08); background: var(--color-gold-dark); }
     .id-card-body { padding: 46px 24px 24px; }
-    .id-card-name { margin: 0 0 2px; }
+    .id-card-name { margin: 0 0 2px; overflow-wrap: anywhere; }
     .id-card-email { margin: 0 0 14px; color: var(--color-muted); font-size: .86rem; word-break: break-all; }
     .id-card-chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .id-card-chips .chip { cursor: default; font-size: .76rem; padding: 5px 12px; gap: 6px; }

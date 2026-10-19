@@ -59,26 +59,42 @@
             <div class="collapse" [class.open]="!isPengunjungRole">
               <div class="collapse-inner">
                 <div class="form-group"><label class="form-label">LDK</label>
-                  <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" placeholder="Pilih LDK" />
-                  <p class="form-hint">Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.</p>
+                  <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" [searchable]="true" placeholder="Pilih LDK" />
+                  <p class="form-hint">{{ ldkFieldHint }}</p>
                 </div>
               </div>
             </div>
           }
           @if (isFreeTierCaller()) {
-            <div class="collapse" [class.open]="!isPengunjungRole">
+            <div class="collapse" [class.open]="!isPengunjungRole && !isKaderRole">
               <div class="collapse-inner">
                 <div class="form-group">
                   <label class="form-label">Akses Lintas Tier{{ isSuperAdminRole ? '' : ' (opsional)' }}</label>
                   <div class="wildcard-tiers">
                     @for (tier of wildcardTiers; track tier) {
                       <label class="form-check">
-                        <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" [disabled]="isReadonly || isSuperAdminRole" (change)="toggleWildcardTier(tier)"> {{ tier }}
+                        <input type="checkbox" [checked]="form.wildcardTierAccess.includes(tier)" [disabled]="isTierDisabled(tier)" (change)="toggleWildcardTier(tier)"> {{ tier }}
                       </label>
                     }
                   </div>
                   @if (isSuperAdminRole) {
                     <p class="form-hint">Super Admin otomatis punya akses penuh ke seluruh tier.</p>
+                  } @else {
+                    <ul class="tier-requirements">
+                      @for (tier of wildcardTiers; track tier) {
+                        <li [class.met]="!isTierDisabled(tier)">{{ isTierDisabled(tier) ? '✗' : '✓' }} {{ tier }} — butuh role minimal {{ tierRequiredRole(tier) }}</li>
+                      }
+                    </ul>
+                    @for (group of tierRoleChecklists; track group.tier) {
+                      @if (group.permissions.length) {
+                        <p class="form-hint">Syarat tier {{ group.tier }} ({{ group.roleNames }}):</p>
+                        <div class="perm-chips">
+                          @for (p of group.permissions; track p.label) {
+                            <span class="perm-chip" [class.met]="p.met" [class.unmet]="!p.met">{{ p.met ? '✓' : '✗' }} {{ p.label }}</span>
+                          }
+                        </div>
+                      }
+                    }
                   }
                 </div>
               </div>
@@ -91,6 +107,14 @@
         <div class="field-card">
           <p class="form-section-label"><span class="icon-badge sm icon-badge-gold"><app-icon name="check-circle" [size]="13" /></span>Status</p>
           <div class="form-group"><label class="form-check"><input type="checkbox" [(ngModel)]="form.isActive" [disabled]="isReadonly"> Aktif</label></div>
+          <div class="form-group">
+            <label class="form-check"><input type="checkbox" [(ngModel)]="form.emailVerified" [disabled]="isReadonly"> Lewati Verifikasi Email</label>
+            @if (!editId) {
+              <p class="form-hint">Dicentang: pengguna baru langsung aktif tanpa verifikasi email. Tidak dicentang: email verifikasi dikirim, pengguna harus memverifikasi dulu.</p>
+            } @else {
+              <p class="form-hint">Dicentang: akun langsung ditandai terverifikasi (tanpa email). Tidak dicentang: status verifikasi dicabut dan email verifikasi dikirim ulang ke pengguna.</p>
+            }
+          </div>
         </div>
       </div>
     </div>

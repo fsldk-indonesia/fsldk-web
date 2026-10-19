@@ -230,12 +230,16 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
     this.presenter.createVersion(this.formID, this.selectedVersionID(), (versionID) => this.selectVersion(versionID));
   }
 
-  async publish(): Promise<void> {
+  async publish(event?: Event): Promise<void> {
     const v = this.version();
     if (!v) return;
-    const ok = await this.alert.confirm('Publikasikan versi ini? Struktur form tidak dapat diubah lagi setelah dipublikasikan.', {
+    const impact = await this.presenter.loadPublishImpact(v.versionID);
+    const message = impact.affectedCount > 0
+      ? `${impact.affectedCount} pendataan ${impact.subjectLabel} akan diminta mengisi ulang (reassessment) setelah versi ini dipublikasikan. Struktur form tidak dapat diubah lagi setelah dipublikasikan. Lanjutkan?`
+      : 'Publikasikan versi ini? Struktur form tidak dapat diubah lagi setelah dipublikasikan.';
+    const ok = await this.alert.confirm(message, {
       title: 'Publikasikan Versi', confirmLabel: 'Ya, Publikasikan',
-    });
+    }, event);
     if (!ok) return;
     this.presenter.publishVersion(v.versionID, this.formID);
   }
@@ -296,8 +300,7 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
       sectionLabel: this.sectionForm.sectionLabel, sortOrder: this.sectionForm.sortOrder, description: this.sectionForm.description,
     };
     if (!this.sectionEditID) body['sectionCode'] = this.sectionForm.sectionCode;
-    this.presenter.saveSection(v.versionID, this.sectionEditID, body);
-    this.closeSectionForm();
+    this.presenter.saveSection(v.versionID, this.sectionEditID, body, () => this.closeSectionForm());
   }
   async removeSection(s: FormSection, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus section "${s.sectionLabel}" beserta seluruh field di dalamnya?`, {
@@ -365,8 +368,7 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
       weight: this.fieldForm.useScoring ? this.fieldForm.weight : null,
     };
     if (!this.fieldEditID) body['fieldCode'] = this.fieldForm.fieldCode;
-    this.presenter.saveField(this.fieldSectionID, this.fieldEditID, body);
-    this.closeFieldForm();
+    this.presenter.saveField(this.fieldSectionID, this.fieldEditID, body, () => this.closeFieldForm());
   }
   async removeField(f: FormField, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus field "${f.fieldLabel}"?`, {
@@ -398,8 +400,7 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
     this.showOptionForm.set(false);
   }
   saveOption(): void {
-    this.presenter.saveOption(this.optionFieldID, this.optionEditID, this.optionForm);
-    this.closeOptionForm();
+    this.presenter.saveOption(this.optionFieldID, this.optionEditID, this.optionForm, () => this.closeOptionForm());
   }
   async removeOption(o: FormOption, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus pilihan "${o.optionLabel}"?`, {

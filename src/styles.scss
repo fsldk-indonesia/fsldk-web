@@ -576,6 +576,7 @@ a:hover > .icon-badge, .icon-badge-hover:hover { transform: translateY(-2px) sca
    sekunder antar-daerah, supaya struktur "pusat-ke-jaringan" tetap terbaca
    jelas walau grafiknya sekarang jauh lebih besar & padat. */
 .network-line.thick { stroke-width: 2.6; opacity: .7; stroke: var(--color-primary-bright); }
+.network-line.ember { stroke: var(--color-ember); }
 @keyframes line-flow { to { stroke-dashoffset: -90; } }
 
 /* Cincin radar yang beriak keluar dari tiap simpul — menegaskan kesan

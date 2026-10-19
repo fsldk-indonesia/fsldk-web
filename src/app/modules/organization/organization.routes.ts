@@ -1,13 +1,22 @@
 import { Routes } from '@angular/router';
 import { permissionGuard } from '../../core/guards/guards';
 
+/** Label judul "organization/profile" per tier shell — satu route ini
+ *  dipasang identik di cms-ldk/cms-puskomda/cms-puskomnas (lihat
+ *  OrganizationProfilePage, generic untuk organisasi tipe apa pun), jadi
+ *  labelnya dibaca dari `tier` milik shell leluhur (paramsInheritanceStrategy
+ *  'always' di app.config.ts), bukan string statis "Profil LDK" semata. */
+export const PROFILE_TITLE_BY_TIER: Record<string, string> = {
+  PUSKOMDA: 'Profil Puskomda', PUSKOMNAS: 'Profil Puskomnas',
+};
+
 /** Rute modul organization — dipasang sebagai children dari CmsLayoutComponent. */
 export const organizationRoutes: () => Routes = () => [
   {
     path: 'organization/profile',
     canActivate: [permissionGuard],
     data: { permission: 'organization.profile.manage' },
-    title: 'Profil LDK',
+    title: (route) => PROFILE_TITLE_BY_TIER[route.data['tier'] as string] ?? 'Profil LDK',
     loadComponent: () => import('./pages/profile/organization.profile.page').then((m) => m.OrganizationProfilePage),
   },
   {

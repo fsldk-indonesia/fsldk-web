@@ -15,8 +15,17 @@ import { UserIndexView } from './user.index.view';
 
 const WILDCARD_TIERS = ['LDK', 'PUSKOMDA', 'PUSKOMNAS'] as const;
 
+/** Role kanonik per rank tier (index selaras WILDCARD_TIERS) — role boleh
+ *  mencentang manual tier rank R di "Akses Lintas Tier" HANYA kalau
+ *  permission-nya sudah mencakup SEMUA permission role kanonik rank 0..R
+ *  (kumulatif, lihat maxAllowedTierIndexFor), bukan berdasar identitas/nama
+ *  role. Super Admin tetap jalur locked terpisah (lihat isSuperAdminRole),
+ *  tidak lewat daftar ini. */
+const TIER_REQUIRED_ROLE = ['LDK Admin', 'Puskomda Verifikator', 'Puskomnas Verifikator'] as const;
+
 const emptyForm = (roleID = 0): UserFormValue => ({
   fullName: '', email: '', password: '', roleID, isActive: true, organizationID: null, wildcardTierAccess: [],
+  emailVerified: true,
 });
 
 /** Config CmsIndexConfig<UserRow> — pemakaian ketiga CmsIndexComponent
@@ -156,6 +165,23 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
     }
     .wildcard-tiers .form-check:has(input:checked) { background: var(--color-primary-soft); color: var(--color-primary-dark); }
 
+    /* List syarat ✓/✗ per tier (lihat isTierDisabled/tierRequiredRole) —
+       teks polos tanpa ikon, sejalan dengan gaya minim .form-hint di modal
+       ini, bukan elemen dekoratif baru. */
+    .tier-requirements { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--color-muted); }
+    .tier-requirements li.met { color: var(--color-primary-dark); }
+
+    /* Chip hasil cocokkan permission (lihat tierRoleChecklists) — murni
+       informasi, BUKAN dipakai .chip global (styles.scss) karena .chip
+       didesain utuk elemen klik (cursor:pointer + :hover ikut berubah warna,
+       termasuk ke hijau walau chip-nya chip-red) — elemen di sini tidak bisa
+       diklik, jadi style sendiri tanpa cursor/hover supaya tidak menyesatkan
+       & tidak "balik hijau" saat di-hover. */
+    .perm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+    .perm-chip { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: var(--radius-full); font-size: .82rem; font-weight: 600; border: 1px solid transparent; }
+    .perm-chip.met { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    .perm-chip.unmet { background: #fdecec; color: #9a1c1c; }
+
     /* SATU card putih per section (judul + semua field-nya jadi satu) —
        gaya sama seperti .perm-mod (kartu modul) di popup Role Pengguna,
        kontras di atas .modal-body yang abu-abu. */
@@ -230,8 +256,29 @@ export class UserIndexPage implements OnInit, UserIndexView {
    *  role ini dipilih, ditampilkan lagi untuk role lain. Getter biasa (bukan
    *  computed()) karena `form.roleID` field polos, bukan signal — computed()
    *  tidak akan pernah re-run kalau bergantung padanya. */
+  get currentRole(): Role | undefined {
+    return this.roles().find((r) => r.roleID === +this.form.roleID);
+  }
+
   get isPengunjungRole(): boolean {
-    return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName === 'Pengunjung';
+    return this.currentRole?.roleName === 'Pengunjung';
+  }
+
+  /** Kader TIDAK PERNAH punya cakupan akses organisasi (lihat
+   *  resolveEffectiveOrg di auth_service_impl.go — organizationID Kader
+   *  selalu diabaikan di sana) — field LDK untuk Kader murni "LDK Tujuan"
+   *  (sinkron satu kolom dengan field LDK role lain, supaya nempel otomatis
+   *  kalau Kader dipromosikan jadi LDK Admin), BUKAN scope akses. Makanya
+   *  "Akses Lintas Tier" disembunyikan untuk role ini (sama seperti
+   *  Pengunjung) walau field LDK-nya sendiri tetap tampil. */
+  get isKaderRole(): boolean {
+    return this.currentRole?.roleName === 'Kader';
+  }
+
+  get ldkFieldHint(): string {
+    return this.isKaderRole
+      ? 'LDK tempat kader ini terdaftar (LDK Tujuan) — tidak memengaruhi hak akses CMS, Kader tidak memiliki cakupan organisasi.'
+      : 'Cakupan akses (LDK/Puskomda/Puskomnas) mengikuti Role di atas, dihitung otomatis dari LDK ini.';
   }
 
   /** Super Admin otomatis dianggap backend punya akses penuh ke seluruh tier
@@ -241,7 +288,85 @@ export class UserIndexPage implements OnInit, UserIndexView {
    *  manual) begitu role ini dipilih, supaya tampilan form tidak menyesatkan
    *  (seolah bisa parsial padahal backend selalu full akses untuk role ini). */
   get isSuperAdminRole(): boolean {
-    return this.roles().find((r) => r.roleID === +this.form.roleID)?.roleName === 'Super Admin';
+    return this.currentRole?.roleName === 'Super Admin';
+  }
+
+  /** Dipakai maxAllowedTierIndexFor menguji apakah `have` sudah mencakup
+   *  SEMUA permission role kanonik ini (lihat tierRoleChecklists untuk
+   *  tampilan per-item-nya). */
+  private hasAllPermissionsOf(have: ReadonlySet<string>, requiredRoleName: string): boolean {
+    const required = this.roles().find((r) => r.roleName === requiredRoleName)?.permissions ?? [];
+    return required.every((p) => have.has(p));
+  }
+
+  /** Rank tertinggi (index wildcardTiers) yang boleh dicentang untuk suatu
+   *  daftar permission — KUMULATIF: rank ke-i baru diizinkan kalau
+   *  permission role kanonik rank 0..i SEMUA terpenuhi (bukan cuma rank i
+   *  sendiri). Tanpa ini, role bisa lolos centang tier tinggi (match ke
+   *  dirinya sendiri) padahal belum lolos syarat tier yang lebih rendah —
+   *  inkonsisten dengan toggleWildcardTier() yang mem-force-centang semua
+   *  tier DI BAWAHNYA saat tier lebih tinggi dicentang. */
+  private maxAllowedTierIndexFor(permissions: string[]): number {
+    const have = new Set(permissions);
+    let maxIdx = -1;
+    for (let i = 0; i < TIER_REQUIRED_ROLE.length; i++) {
+      if (!this.hasAllPermissionsOf(have, TIER_REQUIRED_ROLE[i])) break;
+      maxIdx = i;
+    }
+    return maxIdx;
+  }
+
+  get maxAllowedTierRank(): number {
+    return this.maxAllowedTierIndexFor(this.currentRolePermissions);
+  }
+
+  isTierDisabled(tier: string): boolean {
+    return this.isReadonly || this.isSuperAdminRole || this.tierIndex(tier) > this.maxAllowedTierRank;
+  }
+
+  /** Nama role minimal yang dibutuhkan supaya tier ini bisa dicentang —
+   *  dipakai menyusun list syarat ✓/✗ di template. */
+  tierRequiredRole(tier: string): string {
+    return TIER_REQUIRED_ROLE[this.tierIndex(tier)];
+  }
+
+  /** wildcardTiers adalah literal tuple (as const) — indexOf butuh cast ini
+   *  supaya bisa dipanggil dengan string polos (dari input form/template). */
+  private tierIndex(tier: string): number {
+    return this.wildcardTiers.indexOf(tier as (typeof WILDCARD_TIERS)[number]);
+  }
+
+  /** Permission role saat ini — dipakai tierRoleChecklists mencocokkan
+   *  permission role kanonik tiap tier terhadap role yang dipilih di form.
+   *  Dinamis mengikuti data role yang sudah ter-load (lihat Role.permissions,
+   *  ikut berubah kalau role-nya diedit lewat halaman Role Pengguna). */
+  get currentRolePermissions(): string[] {
+    return this.currentRole?.permissions ?? [];
+  }
+
+  /** Untuk tiap tier, cocokkan permission GABUNGAN seluruh role kanonik
+   *  rank 0..tier (sama persis dengan logika kumulatif isTierDisabled/
+   *  maxAllowedTierIndexFor) terhadap permission role yang dipilih di form
+   *  — menjawab "apa yang kurang" saat sebuah tier ✗. Deduplikasi HANYA
+   *  dalam satu grup tier (bukan lintas grup) — permission yang sama
+   *  sengaja tetap muncul lagi di grup tier yang lebih tinggi, supaya kalau
+   *  grup PUSKOMDA ada ✗, grup PUSKOMNAS yang mencakupnya juga ikut
+   *  menunjukkan ✗ yang sama (konsisten, bukan kebetulan hilang). */
+  get tierRoleChecklists(): { tier: string; roleNames: string; permissions: { label: string; met: boolean }[] }[] {
+    const current = new Set(this.currentRolePermissions);
+    return this.wildcardTiers.map((tier, i) => {
+      const roleNames = TIER_REQUIRED_ROLE.slice(0, i + 1);
+      const seenInGroup = new Set<string>();
+      const permissions: { label: string; met: boolean }[] = [];
+      for (const roleName of roleNames) {
+        for (const label of this.roles().find((r) => r.roleName === roleName)?.permissions ?? []) {
+          if (seenInGroup.has(label)) continue;
+          seenInGroup.add(label);
+          permissions.push({ label, met: current.has(label) });
+        }
+      }
+      return { tier, roleNames: roleNames.join(' + '), permissions };
+    });
   }
 
   onRoleChange(v: unknown): void {
@@ -262,6 +387,12 @@ export class UserIndexPage implements OnInit, UserIndexView {
       // manual untuk role yang baru dipilih (mis. pindah ke Kader harus
       // dicentang ulang secara sadar kalau memang mau diberi akses lintas tier).
       this.form.wildcardTierAccess = [];
+    } else {
+      // Role baru bukan Super Admin/Pengunjung — pangkas tier yang sudah
+      // tercentang manual bila melebihi rank role baru (mis. pindah dari
+      // Puskomda Verifikator ke LDK Admin harus melepas centang PUSKOMDA).
+      const maxRank = this.maxAllowedTierRank;
+      this.form.wildcardTierAccess = this.form.wildcardTierAccess.filter((t) => this.tierIndex(t) <= maxRank);
     }
   }
 
@@ -279,10 +410,16 @@ export class UserIndexPage implements OnInit, UserIndexView {
    *  (lihat isSuperAdminRole/onRoleChange) terlepas dari apa yang literal
    *  tersimpan di baris akun (mis. akun lama yang dibuat sebelum perilaku
    *  auto-centang ini ada) — dipakai openCreate/openEdit/openView supaya
-   *  tampilan form konsisten dengan apa yang sudah di-override backend. */
+   *  tampilan form konsisten dengan apa yang sudah di-override backend.
+   *  Role lain dipangkas ke rank maksimum yang diizinkan (lihat
+   *  TIER_ROLE_RANK) — melindungi dari data lama yang melebihi rank role-nya
+   *  (mis. dibuat sebelum rule ini ada), supaya tidak ditolak backend begitu
+   *  disimpan ulang tanpa disentuh. */
   private resolveWildcardTierAccess(roleID: number, stored: string[]): string[] {
-    const roleName = this.roles().find((r) => r.roleID === roleID)?.roleName;
-    return roleName === 'Super Admin' ? [...this.wildcardTiers] : stored;
+    const role = this.roles().find((r) => r.roleID === roleID);
+    if (role?.roleName === 'Super Admin') return [...this.wildcardTiers];
+    const maxRank = this.maxAllowedTierIndexFor(role?.permissions ?? []);
+    return stored.filter((t) => this.tierIndex(t) <= maxRank);
   }
 
   openCreate(event?: Event): void {
@@ -301,6 +438,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.form = {
       fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive,
       organizationID: u.organizationID ?? null, wildcardTierAccess: this.resolveWildcardTierAccess(u.roleID, [...(u.wildcardTierAccess ?? [])]),
+      emailVerified: u.emailVerified,
     };
     this.showForm.set(true);
     this.animateModal(true);
@@ -315,6 +453,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.form = {
       fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive,
       organizationID: u.organizationID ?? null, wildcardTierAccess: this.resolveWildcardTierAccess(u.roleID, [...(u.wildcardTierAccess ?? [])]),
+      emailVerified: u.emailVerified,
     };
     this.showForm.set(true);
     this.animateModal(true);
@@ -371,7 +510,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
    *  BAWAHNYA; uncentang tier X -> ikut uncentang semua tier DI ATASNYA
    *  (yang bergantung padanya tetap konsisten sebagai satu rank tertinggi). */
   toggleWildcardTier(tier: string): void {
-    const idx = this.wildcardTiers.indexOf(tier as (typeof WILDCARD_TIERS)[number]);
+    const idx = this.tierIndex(tier);
     const checking = !this.form.wildcardTierAccess.includes(tier);
     this.form.wildcardTierAccess = this.wildcardTiers.slice(0, checking ? idx + 1 : idx);
   }

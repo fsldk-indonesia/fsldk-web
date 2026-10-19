@@ -18,12 +18,18 @@ export interface SelectOption {
   imports: [FormsModule],
   template: `
     <div class="app-select" [class.open]="open()" [class.disabled]="disabled">
-      <button type="button" class="app-select-control" [disabled]="disabled"
-              (click)="toggle()" (keydown)="onKeydown($event)"
-              aria-haspopup="listbox" [attr.aria-expanded]="open()">
+      <div class="app-select-control" role="button" [attr.tabindex]="disabled ? -1 : 0"
+           (click)="toggle()" (keydown)="onKeydown($event)"
+           aria-haspopup="listbox" [attr.aria-expanded]="open()">
         <span [class.placeholder]="!hasSelection()">{{ triggerLabel() }}</span>
-        <i class="fas fa-chevron-down"></i>
-      </button>
+        @if (hasSelection() && !disabled) {
+          <button type="button" class="app-select-clear" aria-label="Hapus pilihan" (click)="clear($event)">
+            <i class="fas fa-xmark"></i>
+          </button>
+        } @else {
+          <i class="fas fa-chevron-down app-select-chevron"></i>
+        }
+      </div>
       <div class="app-select-menu" [class.open]="open()"
            [style.top.px]="pos().top" [style.left.px]="pos().left"
            [style.width.px]="pos().width">
@@ -58,10 +64,21 @@ export interface SelectOption {
     }
     .app-select-control span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .app-select-control span.placeholder { color: var(--color-muted); }
-    .app-select-control i { font-size: .75rem; color: var(--color-muted); flex-shrink: 0; transition: transform var(--motion-fast) ease; }
+    .app-select-chevron { font-size: .75rem; color: var(--color-muted); flex-shrink: 0; transition: transform var(--motion-fast) ease; }
     .app-select.open .app-select-control { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
-    .app-select.open .app-select-control i { transform: rotate(180deg); }
+    .app-select.open .app-select-chevron { transform: rotate(180deg); }
     .app-select.disabled .app-select-control { background: var(--color-bg-alt); color: var(--color-muted); cursor: not-allowed; }
+    /* Tombol hapus pilihan — sibling dari trigger (bukan nested di dalamnya,
+       elemen interaktif seperti button tidak boleh ditumpuk), dirender
+       sebelum chevron lewat urutan DOM. click-nya stopPropagation di clear()
+       supaya tidak ikut men-toggle menu. */
+    .app-select-clear {
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; padding: 0; border: none; border-radius: 50%;
+      background: transparent; color: var(--color-muted); font-size: .7rem; cursor: pointer;
+      transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+    }
+    .app-select-clear:hover { background: var(--color-bg-alt); color: var(--color-text); }
     /* Selalu di-render (bukan @if) supaya transisi TUTUP juga kelihatan —
        @if mencabut elemen dari DOM sesaat menu ditutup, jadi cuma transisi
        buka yang sempat kelihatan. Posisi (top/left/width) tetap dihitung JS
@@ -88,7 +105,10 @@ export interface SelectOption {
       border-radius: 6px; font-size: .85rem; font-family: var(--font-body); color: var(--color-text);
     }
     .app-select-search:focus { outline: none; border-color: var(--color-primary); }
-    .app-select-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; }
+    .app-select-list {
+      list-style: none; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain;
+      display: flex; flex-direction: column; gap: 4px;
+    }
     .app-select-list li { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; font-size: .95rem; color: var(--color-text); cursor: pointer; }
     .app-select-list li:hover { background: var(--color-bg-alt); }
     .app-select-list li.active { background: var(--color-bg-alt); }
@@ -327,18 +347,41 @@ export class SelectComponent implements ControlValueAccessor, OnDestroy {
   /** Place the fixed menu below the control, or above it when space is short. */
   private reposition(): void {
     const r = this.el.nativeElement.getBoundingClientRect();
-    const gap = 10;
-    const desired = Math.min((this.options.length || 1) * 42 + 14, 240);
+    const gap = 14;
+    const desired = Math.min((this.options.length || 1) * 46 + 14, 320);
     const below = window.innerHeight - r.bottom - gap;
     const above = r.top - gap;
     const up = below < Math.min(desired, 180) && above > below;
     const maxH = Math.max(120, Math.min(desired, up ? above : below));
+    // Popup boleh lebih lebar dari trigger-nya — field sempit di dalam modal
+    // (mis. "LDK" di form Ubah Pengguna) tidak seharusnya ikut memotong label
+    // opsi yang panjang (nama LDK + Puskomda). Minimal 320px, tidak pernah
+    // lebih sempit dari lebar trigger asli, dan left digeser supaya tidak
+    // sampai mepet ke tepi kanan viewport — pakai margin tepi sendiri (lebih
+    // lega dari `gap` pemicu-ke-panel) karena di sinilah popup paling sering
+    // kelihatan mepet, mis. kolom Aksi paling kanan di tabel Pengurus.
+    const edgeMargin = 24;
+    const width = Math.max(r.width, 320);
+    const left = Math.min(r.left, Math.max(edgeMargin, window.innerWidth - width - edgeMargin));
     this.pos.set({
       top: up ? r.top - gap - maxH : r.bottom + gap,
-      left: r.left,
-      width: r.width,
+      left,
+      width,
       maxH,
     });
+  }
+
+  /** Tombol "x" di trigger — stopPropagation supaya klik tidak ikut men-toggle
+   *  menu (lihat komentar .app-select-clear di styles untuk kenapa ini sibling,
+   *  bukan nested, dari trigger). */
+  clear(event: Event): void {
+    event.stopPropagation();
+    event.preventDefault();
+    if (this.disabled) return;
+    this.value = this.multiple ? [] : null;
+    this.onChange(this.value);
+    this.onTouched();
+    if (this.open()) this.close();
   }
 
   choose(opt: SelectOption): void {

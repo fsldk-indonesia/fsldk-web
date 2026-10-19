@@ -8,7 +8,7 @@ import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
 import {
   SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, SUBMISSION_STATUS_LABELS,
-  KADER_STATUS_LABELS, statusTone, kaderStatusTone,
+  KADER_STATUS_LABELS, statusTone, kaderStatusTone, displayStatus, LEVEL_OPTIONS,
 } from '../../entities/submission';
 import { SubmissionStatusPresenter } from './submission.status.presenter';
 import { SubmissionStatusView } from './submission.status.view';
@@ -26,11 +26,54 @@ import { SubmissionStatusView } from './submission.status.view';
     .status-card.tone-danger h2 { color: var(--color-danger); }
     .status-card.tone-warning { background: var(--color-ember-soft); }
     .status-card.tone-warning h2 { color: var(--color-ember-dark); }
+    .status-card.tone-neutral { background: var(--color-bg-alt); }
+    .status-card.tone-neutral h2 { color: var(--color-muted); }
+    /* Chip status Kartu Kader SENGAJA bukan .chip (lihat .perm-chip di
+       user.index.page.ts untuk kasus serupa) — .chip global didesain untuk
+       elemen klik (cursor:pointer + :hover ikut berubah warna ke hijau,
+       termasuk saat chip-nya chip-red/netral), padahal badge status di sini
+       tidak bisa diklik. */
+    .status-chip { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: var(--radius-full); font-size: .82rem; font-weight: 600; }
+    .status-chip.success { background: var(--color-primary-soft); color: var(--color-primary-dark); }
+    .status-chip.danger { background: var(--color-danger-soft); color: var(--color-danger); }
+    .status-chip.warning { background: var(--color-ember-soft); color: var(--color-ember-dark); }
+    .status-chip.neutral { background: var(--color-bg-alt); color: var(--color-muted); }
     .timeline { display: flex; flex-direction: column; gap: 0; }
     .timeline-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--color-border); }
     .timeline-item:last-child { border-bottom: none; }
     .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-primary); margin-top: 6px; flex-shrink: 0; }
     .code-display { font-size: 1.4rem; font-weight: 700; letter-spacing: .5px; }
+    /* Tangga 4 level (lihat levelLadder()) — kiri ke kanan, garis penghubung
+       antar dot jadi hijau begitu step itu SENDIRI sudah dicapai (bukan step
+       berikutnya), supaya gradasi "sejauh mana sudah naik" kebaca jelas.
+       Garis dari tengah dot step ini ke tengah dot step berikutnya cuma akurat
+       kalau SEMUA step sama lebar (flex:1 di bawah) — left:50%+width:100%
+       pada step N pas berhenti di tengah step N+1. */
+    .level-ladder { list-style: none; margin: 0; padding: 0; display: flex; align-items: flex-start; }
+    .level-step { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 0 6px; position: relative; flex: 1; }
+    .level-step:not(:last-child)::before {
+      content: ''; position: absolute; left: 50%; top: 14px; width: 100%; height: 2px; background: var(--color-border);
+    }
+    .level-step.achieved:not(:last-child)::before { background: var(--color-primary); }
+    .level-step-dot {
+      width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; background: var(--color-bg-alt); color: var(--color-muted); position: relative; z-index: 1;
+    }
+    .level-step.achieved .level-step-dot { background: var(--color-primary); color: #fff; }
+    .level-step.current .level-step-dot { background: var(--color-gold); color: #fff; box-shadow: 0 0 0 4px var(--color-gold-soft); }
+    .level-step-text { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .level-step-text strong { font-size: .95rem; }
+    .level-step.achieved .level-step-text strong { color: var(--color-primary-dark); }
+    .level-step.current .level-step-text strong { color: var(--color-gold-dark); }
+    /* Di layar sempit (mobile), 4 kolom berdampingan jadi sesak & teks
+       terpotong — balik ke tangga vertikal (pola sama seperti versi awal). */
+    @media (max-width: 640px) {
+      .level-ladder { flex-direction: column; }
+      .level-step { flex-direction: row; align-items: flex-start; gap: 14px; text-align: left; padding: 0 0 22px; }
+      .level-step:last-child { padding-bottom: 0; }
+      .level-step:not(:last-child)::before { left: 13px; top: 28px; width: 2px; height: auto; bottom: 0; }
+      .level-step-text { align-items: flex-start; padding-top: 3px; }
+    }
     .form-section-label {
       display: flex; align-items: center; gap: 8px; margin: 0 0 16px;
       font-family: var(--font-heading); font-weight: 700; font-size: .78rem;
@@ -58,6 +101,11 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   loading = signal(true);
   busy = signal(false);
 
+  statusHistoryDesc = computed(() => {
+    const history = this.submission()?.statusHistory ?? [];
+    return [...history].sort((a, b) => Date.parse(b.createdDate) - Date.parse(a.createdDate));
+  });
+
   ngOnInit(): void {
     this.presenter.attachView(this);
     if (this.isKaderSubject()) {
@@ -71,6 +119,53 @@ export class SubmissionStatusPage implements OnInit, SubmissionStatusView {
   kaderStatusLabel(code: string): string { return this.kaderStatusLabels[code] ?? code; }
   statusTone(code: string): string { return statusTone(code); }
   kaderStatusTone(code: string): string { return kaderStatusTone(code); }
+
+  /** Tangga 4 level TETAP (Pra Mula→Mula→Madya→Mandiri, lihat LEVEL_OPTIONS)
+   *  — tiap step ditandai tanggal PERTAMA KALI dicapai dari levelHistory
+   *  (seluruh baris tr_levelisasi_result, bukan cuma yang isCurrent), atau
+   *  "belum dicapai" kalau levelnya tidak pernah muncul di riwayat. skipped
+   *  membedakan "belum dicapai karena memang belum sampai situ" dari "tidak
+   *  akan pernah dicapai karena assessment pertama LDK ini langsung di level
+   *  lebih tinggi" — true kalau step ini belum dicapai TAPI ada step lain
+   *  yang urutannya lebih tinggi sudah pernah dicapai. Dipakai kartu "Record
+   *  Levelisasi". */
+  levelLadder = computed(() => {
+    const history = this.submission()?.levelHistory ?? [];
+    const achievedDates = LEVEL_OPTIONS.map((opt) => history.find((h) => h.levelCode === opt.value)?.establishedDate ?? null);
+    return LEVEL_OPTIONS.map((opt, i) => ({
+      value: opt.value,
+      label: opt.label,
+      achievedDate: achievedDates[i],
+      skipped: !achievedDates[i] && achievedDates.slice(i + 1).some((d) => d !== null),
+    }));
+  });
+
+  /** Kartu "Hasil Levelisasi" HARUS tetap tampil walau siklus submission
+   *  yang sedang berjalan belum sampai tahap "Tetapkan Level" (levelResult
+   *  milik submission SAAT INI jadi null di rentang itu) — pakai entri
+   *  PALING BARU dari levelHistory (terurut ASC, lihat levelLadder di atas)
+   *  sebagai fallback, supaya tetap menunjukkan level resmi terakhir yang
+   *  berlaku dari siklus sebelumnya. */
+  latestLevelResult = computed(() => {
+    const history = this.submission()?.levelHistory ?? [];
+    return history.length ? history[history.length - 1] : null;
+  });
+
+  /** Kartu "Status Saat Ini" di atas HARUS pakai status keanggotaan kader
+   *  (ms_kader.status) untuk subjek Kader — BUKAN status()/tone() dari
+   *  statusLabel/statusTone di atas (tr_submission.status), yang tetap
+   *  'ACTIVE' selamanya begitu pernah disetujui sekali walau kader-nya
+   *  belakangan dinonaktifkan/ditolak lewat Persetujuan Kader (sama seperti
+   *  bug yang diperbaiki di kader-ringkasan.page.ts). Subjek Levelisasi LDK
+   *  tidak punya konsep kader sama sekali, jadi tetap pakai status submission. */
+  topStatusLabel(): string {
+    const s = this.submission();
+    return s ? displayStatus(s, this.isKaderSubject()).label : '';
+  }
+  topStatusTone(): string {
+    const s = this.submission();
+    return s ? displayStatus(s, this.isKaderSubject()).tone : 'neutral';
+  }
 
   async reassess(event?: Event): Promise<void> {
     const s = this.submission();

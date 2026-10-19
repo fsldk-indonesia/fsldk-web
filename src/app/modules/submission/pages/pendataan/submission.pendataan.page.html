@@ -12,10 +12,10 @@
       <h4>Belum ada pendataan</h4>
       <p class="text-muted">Mulai isi form untuk {{ isKaderSubject() ? 'mendaftar sebagai kader' : 'levelisasi LDK Anda' }}.</p>
     </div>
-    @if (isKaderSubject()) {
+    @if (isKaderSubject() && !ldkLocked()) {
       <div class="form-group" style="max-width:360px;margin:0 auto 14px">
         <label class="form-label">LDK Tujuan</label>
-        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" placeholder="Pilih LDK" />
+        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" [searchable]="true" placeholder="Pilih LDK" />
       </div>
     }
     <div style="text-align:center">
@@ -29,10 +29,10 @@
       <h4>Pendataan sebelumnya dibatalkan</h4>
       <p class="text-muted">Anda dapat mulai isi lagi kapan saja — jawaban sebelumnya tidak dipakai lagi, form dimulai dari awal.</p>
     </div>
-    @if (isKaderSubject()) {
+    @if (isKaderSubject() && !ldkLocked()) {
       <div class="form-group" style="max-width:360px;margin:0 auto 14px">
         <label class="form-label">LDK Tujuan</label>
-        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" placeholder="Pilih LDK" />
+        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" [searchable]="true" placeholder="Pilih LDK" />
       </div>
     }
     <div style="text-align:center">
@@ -40,11 +40,12 @@
     </div>
   </div>
 } @else if (!isEditable()) {
-  <div class="status-banner" [class.tone-danger]="statusTone(submission()!.status) === 'danger'"
-       [class.tone-warning]="statusTone(submission()!.status) === 'warning'"
-       [class.tone-success]="statusTone(submission()!.status) === 'success'">
-    <app-icon [name]="statusTone(submission()!.status) === 'danger' ? 'x-circle' : 'info'" [size]="18" />
-    <span>Status pendataan Anda saat ini: <strong>{{ statusLabel(submission()!.status) }}</strong>. Tidak dapat diubah pada tahap ini.</span>
+  <div class="status-banner" [class.tone-danger]="topStatusTone() === 'danger'"
+       [class.tone-warning]="topStatusTone() === 'warning'"
+       [class.tone-success]="topStatusTone() === 'success'"
+       [class.tone-neutral]="topStatusTone() === 'neutral'">
+    <app-icon [name]="topStatusTone() === 'danger' ? 'x-circle' : 'info'" [size]="18" />
+    <span>Status pendataan Anda saat ini: <strong>{{ topStatusLabel() }}</strong>. Tidak dapat diubah pada tahap ini.</span>
   </div>
   <div class="flex gap">
     <a class="btn btn-outline" [routerLink]="['../status']">Lihat Status Pendataan</a>
@@ -132,6 +133,7 @@
             }
 
             @if (field.helpText) { <p class="field-help">{{ field.helpText }}</p> }
+            @if (fieldError(field.fieldID)) { <div class="err">{{ fieldError(field.fieldID) }}</div> }
           </div>
         }
       }

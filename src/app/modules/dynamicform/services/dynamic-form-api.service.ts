@@ -42,7 +42,6 @@ export class DynamicFormApiService {
   // --- CMS: Google Sheets ---
   gsheetConnect(id: number): Observable<GSheetStatus> { return this.api.post(`${this.base}/${id}/gsheet/connect`); }
   gsheetResync(id: number): Observable<GSheetStatus> { return this.api.post(`${this.base}/${id}/gsheet/resync`); }
-  gsheetDisconnect(id: number): Observable<GSheetStatus> { return this.api.delete(`${this.base}/${id}/gsheet`); }
 
   // --- public ---
   // silent: the fill page renders its own "closed / login required" cards, so
