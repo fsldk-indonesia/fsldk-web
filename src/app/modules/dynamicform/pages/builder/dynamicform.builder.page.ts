@@ -122,10 +122,17 @@ const emptyFieldForm = (type: DynamicFieldType = 'short_text'): FieldFormValue =
     .sidebar-stack { display: flex; flex-direction: column; gap: 16px; }
     .sidebar-card { padding: 18px; }
     .sidebar-title { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 800; margin: 0 0 14px; }
-    .drive-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: var(--radius-xs); text-decoration: none; color: var(--color-text); transition: background var(--motion-fast) ease, transform var(--motion-fast) ease; }
+    .drive-row { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-xs); text-decoration: none; color: var(--color-text); transition: background var(--motion-fast) ease, transform var(--motion-fast) ease; }
     .drive-row:hover { background: var(--color-bg-alt); transform: translateX(2px); }
+    .drive-row > span:not(.icon-badge) { flex: 1; min-width: 0; }
     .drive-row strong { display: block; font-size: .85rem; }
-    .drive-row span { display: block; font-size: .78rem; color: var(--color-muted); }
+    .drive-row:hover strong { text-decoration: underline; }
+    /* "span span" (not "span") on purpose — scopes the muted color to the subtitle only,
+       so it doesn't cascade onto the wrapper span and get inherited by <strong>, which
+       was making the whole row read as uniformly grey. */
+    .drive-row span span { display: block; font-size: .78rem; color: var(--color-muted); }
+    .drive-row-go { color: var(--color-muted); flex-shrink: 0; transition: color var(--motion-fast) ease, transform var(--motion-fast) ease; }
+    .drive-row:hover .drive-row-go { color: var(--color-primary-dark); transform: translate(2px, -2px); }
     .tips-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
     .tips-list li { display: flex; gap: 10px; font-size: .82rem; color: var(--color-text-secondary); line-height: 1.5; }
     .tips-list li app-icon { color: var(--color-primary); flex-shrink: 0; margin-top: 2px; }
