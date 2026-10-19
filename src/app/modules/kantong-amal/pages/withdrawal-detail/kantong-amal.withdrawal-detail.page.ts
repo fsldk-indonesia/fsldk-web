@@ -63,8 +63,16 @@ const STATUS_LABELS: Record<string, string> = {
     .wd-tl-title { font-weight: 700; font-size: .9rem; color: var(--color-text); }
     .wd-tl-time { font-size: .78rem; color: var(--color-text-secondary); margin-top: 2px; }
 
-    .wd-btn-receipt { display: inline-flex; align-items: center; gap: 8px; background: #059669; color: #fff; border-color: #059669; }
-    .wd-btn-receipt:hover { background: #047857; border-color: #047857; }
+    .wd-tl-message { margin-top: 8px; padding: 8px 12px; border-radius: var(--radius-sm); font-size: .82rem; line-height: 1.45; }
+    .wd-tl-message.success { background: #dcfce7; color: #166534; }
+    .wd-tl-message.fail    { background: #fee2e2; color: #991b1b; }
+
+    .wd-receipt-thumb-link { display: inline-block; margin-top: 10px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--color-border); }
+    .wd-receipt-thumb { display: block; max-width: 220px; max-height: 220px; object-fit: contain; background: #fff; }
+
+    .wd-raw-response { margin-top: 18px; }
+    .wd-raw-response summary { cursor: pointer; font-size: .78rem; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: .06em; }
+    .wd-raw-response pre { margin-top: 10px; padding: 12px; border-radius: var(--radius-md); background: var(--color-bg-alt); font-size: .74rem; line-height: 1.5; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
   `],
 })
 export class KantongAmalWithdrawalDetailPage implements OnInit, OnDestroy, KantongAmalWithdrawalDetailView {
@@ -158,5 +166,34 @@ export class KantongAmalWithdrawalDetailPage implements OnInit, OnDestroy, Kanto
     if (s === 'REVERSED') return 'Dibatalkan Sistem';
     if (s === 'CANCELLED') return 'Dibatalkan';
     return 'Menunggu Konfirmasi Bisabiller';
+  }
+
+  // ── Hasil dari BisaTopup (pesan + receipt + raw response) ──────────
+  private static readonly FAILURE_STATUSES: WithdrawalStatus[] = ['FAILED', 'REJECTED', 'REVERSED'];
+
+  isSuccess(): boolean { return this.withdrawal()?.status === 'SUCCESS'; }
+  isFailure(): boolean {
+    const s = this.withdrawal()?.status;
+    return !!s && KantongAmalWithdrawalDetailPage.FAILURE_STATUSES.includes(s);
+  }
+
+  /** Alasan gagal asli dari BisaTopup bila ada (hanya terisi untuk penolakan
+   * sinkron — callback webhook tidak pernah membawa pesan, lihat
+   * withdrawal_service.extractGatewayRejectionMessage di backend). */
+  failureMessage(): string {
+    return this.withdrawal()?.gatewayMessage || 'Gateway tidak memberikan alasan rinci untuk kegagalan ini.';
+  }
+
+  hasRawResponse(): boolean { return !!this.withdrawal()?.gatewayResponseJSON; }
+
+  /** Raw response gateway, pretty-printed bila berupa JSON valid — jatuh ke
+   * teks mentah bila parse gagal (defensif, tidak seharusnya terjadi). */
+  prettyGatewayResponse(): string {
+    const raw = this.withdrawal()?.gatewayResponseJSON ?? '';
+    try {
+      return JSON.stringify(JSON.parse(raw), null, 2);
+    } catch {
+      return raw;
+    }
   }
 }

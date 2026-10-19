@@ -263,7 +263,7 @@
             } @else {
               <button type="submit" class="btn btn-primary submit-btn" [disabled]="submitting()">
                 @if (submitting()) {
-                  Mengirim…
+                  <span class="spinner"></span> Mengirim…
                 } @else {
                   Kirim <app-icon name="paper-plane" [size]="13" />
                 }

@@ -114,19 +114,15 @@
           <p class="sidebar-title"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-spreadsheet" [size]="14" /></span>Google Drive</p>
           @if (f.gsheetSpreadsheetUrl) {
             <a class="drive-row" [href]="f.gsheetSpreadsheetUrl" target="_blank" rel="noopener">
-              <span class="tool-icon"><app-icon name="file-spreadsheet" [size]="14" /></span>
+              <span class="icon-badge sm icon-badge-soft"><app-icon name="file-spreadsheet" [size]="14" /></span>
               <span><strong>Spreadsheet Tanggapan</strong><span>Semua tanggapan ditulis di sini sebagai baris.</span></span>
+              <app-icon class="drive-row-go" name="external-link" [size]="12" />
             </a>
             @if (f.gdriveAttachmentsUrl) {
               <a class="drive-row" [href]="f.gdriveAttachmentsUrl" target="_blank" rel="noopener">
-                <span class="tool-icon"><app-icon name="download" [size]="14" /></span>
+                <span class="icon-badge sm icon-badge-info"><app-icon name="folder" [size]="14" /></span>
                 <span><strong>Folder Lampiran</strong><span>Berkas yang diunggah responden.</span></span>
-              </a>
-            }
-            @if (f.gdriveAssetsUrl) {
-              <a class="drive-row" [href]="f.gdriveAssetsUrl" target="_blank" rel="noopener">
-                <span class="tool-icon"><app-icon name="book-open" [size]="14" /></span>
-                <span><strong>Folder Aset</strong><span>Gambar yang dipakai di builder.</span></span>
+                <app-icon class="drive-row-go" name="external-link" [size]="12" />
               </a>
             }
           } @else {

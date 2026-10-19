@@ -13,6 +13,7 @@ const ICONS: Record<string, string> = {
   'file-text': 'fas fa-file-alt',
   'file-spreadsheet': 'fas fa-file-excel',
   download: 'fas fa-download',
+  folder: 'fas fa-folder',
   users: 'fas fa-users',
   'user-group': 'fas fa-users',
   'shield-check': 'fas fa-user-shield',

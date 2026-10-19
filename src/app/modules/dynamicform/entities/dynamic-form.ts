@@ -28,7 +28,6 @@ export interface DynamicForm {
   gsheetLastSyncDate?: string;
   gsheetLastSyncError?: string;
   gdriveAttachmentsUrl?: string;
-  gdriveAssetsUrl?: string;
   totalSubmission: number;
   isActive: boolean;
   createdDate: string;
