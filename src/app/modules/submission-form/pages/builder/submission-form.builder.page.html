@@ -7,7 +7,7 @@
   </div>
 
   <div class="version-bar">
-    <app-select [options]="versionOptions()" [ngModel]="selectedVersionID()" (ngModelChange)="onVersionOptionChange($event)" placeholder="Pilih versi" />
+    <app-select [options]="versionOptions()" [ngModel]="selectedVersionID()" (ngModelChange)="onVersionOptionChange($event)" [searchable]="true" placeholder="Pilih versi" />
     @if (version(); as v) { <span class="chip" [class.chip-green]="v.status === 'PUBLISHED'">{{ v.status }}</span> }
     @if (canManage) {
       <button class="btn btn-outline btn-sm" (click)="newVersion()" [disabled]="busy()">+ Versi Baru</button>
