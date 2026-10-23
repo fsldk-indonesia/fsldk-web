@@ -156,8 +156,11 @@
           [filterValues]="directoryFilterValues()"
           filterTitle="Filter Direktori"
           filterSubtitle="Saring unit berdasarkan tipe dan provinsi."
+          [sortOptions]="directorySortOptions"
+          [sortValue]="directorySort()"
           (searchChange)="onDirectorySearch($event)"
           (filterApply)="onDirectoryFilterApply($event)"
+          (sortChange)="onDirectorySortChange($event)"
         />
       </div>
 
