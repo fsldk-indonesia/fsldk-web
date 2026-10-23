@@ -1,14 +1,13 @@
 import { Component, ElementRef, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { PopupOrigin, popupOriginFromEvent } from '../../../../core/utils/popup-origin';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { PaginationComponent } from '../../../../shared/pagination.component';
 import { SubmissionForm } from '../../entities/submission-form';
 import { submissionFormPath } from '../../submission-form.path';
-import { FormFormValue, SubmissionFormIndexPresenter } from './submission-form.index.presenter';
+import { SubmissionFormIndexPresenter } from './submission-form.index.presenter';
 import { SubmissionFormIndexView } from './submission-form.index.view';
 
 @Component({
@@ -90,21 +89,14 @@ import { SubmissionFormIndexView } from './submission-form.index.view';
 })
 export class SubmissionFormIndexPage implements OnInit, SubmissionFormIndexView {
   private presenter = inject(SubmissionFormIndexPresenter);
-  private auth = inject(AuthRepository);
   private router = inject(Router);
 
-  @ViewChild('createModalEl') private createModalEl?: ElementRef<HTMLElement>;
   @ViewChild('viewModalEl') private viewModalEl?: ElementRef<HTMLElement>;
-  private createModalAnimation: Animation | null = null;
   private viewModalAnimation: Animation | null = null;
 
   forms = signal<SubmissionForm[]>([]);
   loading = signal(true);
-  showForm = signal(false);
-  saving = signal(false);
   popupOrigin = signal<PopupOrigin>({ dx: 0, dy: 0 });
-  form: FormFormValue = { formCode: '', formName: '', description: '' };
-  canManage = this.auth.hasPermission('submission_form.manage');
 
   // Pencarian & pagination murni client-side — submissionFormRepo.listForms()
   // selalu mengembalikan SEMUA form sekaligus (datanya kecil, hanya beberapa
@@ -125,23 +117,11 @@ export class SubmissionFormIndexPage implements OnInit, SubmissionFormIndexView 
     this.presenter.loadForms();
   }
 
-  openCreate(event?: Event): void {
-    this.popupOrigin.set(popupOriginFromEvent(event));
-    this.form = { formCode: '', formName: '', description: '' };
-    this.showForm.set(true);
-    this.animateModal(this.createModalEl, this.createModalAnimation, true, (a) => this.createModalAnimation = a);
-  }
-  close(): void {
-    this.animateModal(this.createModalEl, this.createModalAnimation, false, (a) => this.createModalAnimation = a);
-    this.showForm.set(false);
-  }
-  save(): void { this.presenter.save(this.form); }
-
   /** Buka/tutup modal digerakkan lewat Web Animations API — pola & alasan
    *  sama persis seperti popup Pengguna (lihat catatan panjang di sana).
-   *  Dipakai bersama oleh KEDUA modal di halaman ini (Tambah Form & Detail
-   *  Form) — tiap pemanggil mengoper ElementRef/Animation/setter miliknya
-   *  sendiri karena masing-masing modal punya state animasi terpisah. */
+   *  Satu-satunya pemanggil saat ini adalah popup Detail Form (openView/
+   *  closeView) — tetap lewat helper generik ini (bukan inline) supaya
+   *  konsisten kalau modal lain ditambah lagi ke halaman ini nanti. */
   private animateModal(
     elRef: ElementRef<HTMLElement> | undefined,
     current: Animation | null,
@@ -207,6 +187,4 @@ export class SubmissionFormIndexPage implements OnInit, SubmissionFormIndexView 
     const totalPages = Math.max(1, Math.ceil(this.filteredForms().length / this.limit));
     if (this.page() > totalPages) this.page.set(totalPages);
   }
-  setSaving(saving: boolean): void { this.saving.set(saving); }
-  onSaveSuccess(): void { this.close(); this.loading.set(true); this.presenter.loadForms(); }
 }

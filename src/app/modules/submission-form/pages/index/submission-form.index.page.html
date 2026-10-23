@@ -1,6 +1,5 @@
 <div class="flex justify-between items-center page-head">
   <div><h1>Form Pendataan</h1><p class="text-muted">Kelola template form Levelisasi LDK dan Sensus Kader.</p></div>
-  @if (canManage) { <button class="btn btn-primary" (click)="openCreate($event)">+ Tambah Form</button> }
 </div>
 
 <div class="card" style="margin-bottom: 20px;">
@@ -25,8 +24,7 @@
   <div class="card"><div class="empty-state">
     <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="file-sliders" [size]="26" /></span>
     <h4>Belum ada form</h4>
-    <p>Buat form pendataan untuk Levelisasi LDK atau Sensus Kader.</p>
-    @if (canManage) { <button class="btn btn-primary btn-sm" (click)="openCreate()">+ Tambah Form</button> }
+    <p>Form pendataan Levelisasi LDK dan Sensus Kader belum tersedia.</p>
   </div></div>
 } @else if (filteredForms().length === 0) {
   <div class="card"><div class="empty-state">
@@ -52,27 +50,6 @@
   </div>
   <app-pagination variant="bar" [page]="page()" [limit]="limit" [count]="filteredForms().length" (pageChange)="goPage($event)" />
 }
-
-<div class="modal-backdrop" [class.open]="showForm()" appModalBackdrop (backdropClose)="close()">
-  <div #createModalEl class="modal modal-pop" [class.open]="showForm()" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
-    <h3>Tambah Form</h3>
-    <p class="text-muted">Isi kode, nama, dan deskripsi form pendataan baru.</p>
-    <div class="modal-body">
-      <div class="form-section-group">
-        <div class="field-card">
-          <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-sliders" [size]="13" /></span>Informasi Form</p>
-          <div class="form-group"><label class="form-label">Kode Form</label><input class="form-control" [(ngModel)]="form.formCode" placeholder="mis. LEVELISASI_LDK"></div>
-          <div class="form-group"><label class="form-label">Nama Form</label><input class="form-control" [(ngModel)]="form.formName"></div>
-          <div class="form-group"><label class="form-label">Deskripsi</label><textarea class="form-control" rows="3" [(ngModel)]="form.description"></textarea></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" (click)="close()">Batal</button>
-      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">Simpan</button>
-    </div>
-  </div>
-</div>
 
 <div class="modal-backdrop" [class.open]="showView()" appModalBackdrop (backdropClose)="closeView()">
   <div #viewModalEl class="modal modal-pop" [class.open]="showView()" [style.--dx.px]="popupOrigin().dx" [style.--dy.px]="popupOrigin().dy" (click)="$event.stopPropagation()">
