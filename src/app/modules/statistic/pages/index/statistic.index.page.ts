@@ -25,13 +25,16 @@ interface PuskomdaGroup {
   ldks: DirectoryEntry[];
 }
 
-/** Backend membatasi limit list maksimum 100 (base/dto/pagination.go,
- *  dipakai lintas modul — sengaja TIDAK diubah cuma untuk fitur ini).
- *  Tree butuh seluruh hasil filter sekaligus supaya pengelompokan Puskomda
- *  -> unit benar, jadi diminta sekali di batas atas itu alih-alih paginasi
- *  bernomor seperti sebelumnya; kalau hasil > 100, tampilkan catatan jujur
- *  (lihat directoryTruncated()) alih-alih diam-diam memotong. */
-const DIRECTORY_TREE_LIMIT = 100;
+/** Direktori publik butuh SELURUH hasil filter sekaligus supaya pengelompokan
+ *  Puskomda -> unit benar (badge "X LDK" per grup, bukan cuma yang kebagian
+ *  slot) — diminta sekali di batas atas ini alih-alih paginasi bernomor.
+ *  Backend endpoint ini (statistic_handler_impl.go Directory()) override
+ *  limit umum 100 (base/dto/pagination.go, dipakai lintas modul lain, TIDAK
+ *  diubah di sana) jadi langit-langit lebih longgar KHUSUS di sini — nilai di
+ *  bawah harus selaras dengan directoryMaxLimit backend. 1000 jauh di atas
+ *  590 organisasi aktif (2026-10); kalau hasil tetap > ini, tampilkan catatan
+ *  jujur (lihat directoryTruncated()) alih-alih diam-diam memotong. */
+const DIRECTORY_TREE_LIMIT = 1000;
 
 Chart.register(...registerables);
 
