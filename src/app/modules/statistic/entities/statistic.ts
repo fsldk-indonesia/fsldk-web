@@ -9,6 +9,11 @@ export interface LevelCount {
   count: number;
 }
 
+export interface CityCount {
+  cityName: string;
+  count: number;
+}
+
 export interface NetworkStats {
   totalPuskomnas: number;
   totalPuskomda: number;
@@ -16,6 +21,7 @@ export interface NetworkStats {
   totalActiveKader: number;
   byProvince: ProvinceCount[];
   byLevel: LevelCount[];
+  byCity: CityCount[];
 }
 
 /** Satu organisasi dalam direktori jaringan publik — photoURL adalah logo LDK/Puskomda/Puskomnas, bila diisi.

@@ -6,7 +6,8 @@ import { TitleCasePipe } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { IconComponent } from '../../../../shared/icon.component';
 import { PageHeroComponent } from '../../../../shared/page-hero.component';
-import { SearchFilterSortComponent, FilterFieldDef } from '../../../../shared/search-filter-sort.component';
+import { SearchFilterSortComponent, FilterFieldDef, SortOptionDef } from '../../../../shared/search-filter-sort.component';
+import { SelectOption } from '../../../../shared/select.component';
 import { NetworkStats, DirectoryEntry, levelBadgeClass } from '../../entities/statistic';
 import { CMS_SHELL_ICON } from '../../../../shared/cms-tier';
 import { StatisticIndexPresenter } from './statistic.index.presenter';
@@ -43,6 +44,14 @@ const TYPE_OPTIONS = [
 ];
 
 const TYPE_LABELS: Record<string, string> = { LDK: 'LDK', PUSKOMDA: 'Puskomda', PUSKOMNAS: 'Puskomnas' };
+
+/** Statis — 4 baris seed lk_level, lihat juga LEVEL_BADGE_CLASS di entities/statistic.ts. */
+const LEVEL_OPTIONS = [
+  { value: 'PRA_MULA', label: 'Pra Mula' },
+  { value: 'MULA', label: 'Mula' },
+  { value: 'MADYA', label: 'Madya' },
+  { value: 'MANDIRI', label: 'Mandiri' },
+];
 
 /**
  * Public page "Statistik Jaringan" — hero & kanvas latar DISAMAKAN dengan
@@ -393,6 +402,14 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
   /** Nilai filter aktif direktori — key cocok FilterFieldDef.key (lihat
    *  directoryFilterFields()): 'type' & 'province', keduanya single-select. */
   directoryFilterValues = signal<Record<string, unknown>>({});
+  /** Nilai "Urutkan" aktif — 'name' (default, alfabetis per tier) atau
+   *  'level' (Mandiri -> Madya -> Mula -> Pra Mula dulu, baru alfabetis),
+   *  dipetakan backend di statistic_repository_impl.go Directory(). */
+  directorySort = signal('name');
+  readonly directorySortOptions: SortOptionDef[] = [
+    { value: 'name', label: 'Nama (A-Z)', icon: 'chevrons-up-down' },
+    { value: 'level', label: 'Level Tertinggi', icon: 'award' },
+  ];
   private directoryLoadedOnce = false;
 
   /** Skeleton penuh HANYA di muat pertama kali; pencarian/filter berikutnya
@@ -402,17 +419,30 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
   showDirectorySkeleton = computed(() => this.directoryLoading() && this.directory().length === 0 && !this.directoryLoadedOnce);
   directoryRefetching = computed(() => this.directoryLoading() && (this.directory().length > 0 || this.directoryLoadedOnce));
 
-  /** Field filter Direktori — opsi Provinsi data-driven dari stats().byProvince
-   *  (distinct dari data yang benar-benar ada), opsi Tipe tetap (3 tipe
-   *  organisasi baku). Dipakai app-search-filter-sort (komponen global yang
-   *  sama dipakai listing publik Galeri), menggantikan 2 <app-select> +
-   *  input pencarian mentah sebelumnya. */
+  /** Opsi filter "Puskomda Induk" — 38 Puskomda aktif, diambil sekali di
+   *  ngOnInit (lihat presenter.loadPuskomdaOptions()), terpisah dari
+   *  directory() utama supaya tidak ikut ter-replace tiap refetch. */
+  puskomdaOptions = signal<SelectOption[]>([]);
+
+  /** Field filter Direktori — semua multi-select (diminta eksplisit
+   *  2026-10-23). Opsi Provinsi/Kota data-driven dari stats().byProvince/
+   *  byCity (distinct dari data yang benar-benar ada), opsi Tipe & Level
+   *  tetap (3 tipe organisasi baku, 4 level lk_level baku), opsi Puskomda
+   *  Induk dari puskomdaOptions() di atas. Dipakai app-search-filter-sort
+   *  (komponen global yang sama dipakai listing publik Galeri), menggantikan
+   *  2 <app-select> + input pencarian mentah sebelumnya. */
   directoryFilterFields = computed<FilterFieldDef[]>(() => [
-    { key: 'type', label: 'Tipe Unit', icon: 'sitemap', options: TYPE_OPTIONS },
+    { key: 'type', label: 'Tipe Unit', icon: 'sitemap', multiple: true, options: TYPE_OPTIONS },
     {
-      key: 'province', label: 'Provinsi', icon: 'map-pin',
+      key: 'province', label: 'Provinsi', icon: 'map-pin', multiple: true,
       options: (this.stats()?.byProvince ?? []).map((p) => ({ value: p.provinceName, label: p.provinceName })),
     },
+    {
+      key: 'city', label: 'Kota/Kabupaten', icon: 'compass', multiple: true,
+      options: (this.stats()?.byCity ?? []).map((c) => ({ value: c.cityName, label: c.cityName })),
+    },
+    { key: 'puskomda', label: 'Puskomda Induk', icon: 'building-2', multiple: true, options: this.puskomdaOptions() },
+    { key: 'level', label: 'Level Levelisasi', icon: 'award', multiple: true, options: LEVEL_OPTIONS },
   ]);
 
   /** Puskomnas akar — ditampilkan sebagai hub peta, bukan ikut dikelompokkan
@@ -488,6 +518,7 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     this.presenter.attachView(this);
     this.statsLoading.set(true);
     this.presenter.loadStats();
+    this.presenter.loadPuskomdaOptions();
     // "Jaringan" (direktori) sekarang tab default — muat datanya langsung,
     // bukan cuma lewat switchTab() (yang hanya terpicu oleh klik user).
     if (this.activeTab() === 'direktori' && !this.directoryLoadedOnce) {
@@ -536,14 +567,7 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
 
   loadDirectory(): void {
     this.directoryLoading.set(true);
-    const filter = this.directoryFilterValues();
-    this.presenter.loadDirectory(
-      1,
-      DIRECTORY_TREE_LIMIT,
-      this.directorySearch(),
-      (filter['type'] as string) || '',
-      (filter['province'] as string) || '',
-    );
+    this.presenter.loadDirectory(1, DIRECTORY_TREE_LIMIT, this.directorySearch(), this.directoryFilterValues(), this.directorySort());
   }
 
   onDirectorySearch(value: string): void {
@@ -553,6 +577,11 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
 
   onDirectoryFilterApply(values: Record<string, unknown>): void {
     this.directoryFilterValues.set(values);
+    this.loadDirectory();
+  }
+
+  onDirectorySortChange(value: string): void {
+    this.directorySort.set(value);
     this.loadDirectory();
   }
 
@@ -695,4 +724,8 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     this.scheduleRecomputeConnectors();
   }
   setDirectoryError(): void { this.directoryLoading.set(false); }
+
+  setPuskomdaOptions(items: DirectoryEntry[]): void {
+    this.puskomdaOptions.set(items.map((o) => ({ value: o.organizationID, label: o.organizationName })));
+  }
 }
