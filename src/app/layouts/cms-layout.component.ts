@@ -5,6 +5,7 @@ import { PermissionRepository } from '../modules/permission/repositories/permiss
 import { OrganizationRepository } from '../modules/organization/repositories/organization.repository';
 import { OrgContextService } from '../core/services/org-context.service';
 import { AlertService } from '../core/services/alert.service';
+import { ToastService } from '../core/services/toast.service';
 import { MenuItem } from '../modules/permission/entities/menu-item';
 import { MeOrganization } from '../modules/organization/entities/organization';
 import { IconComponent } from '../shared/icon.component';
@@ -596,6 +597,7 @@ export class CmsLayoutComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private alert = inject(AlertService);
+  private toast = inject(ToastService);
 
   tier = signal<Tier>('FSLDK');
   shellBase = computed(() => CMS_SHELL_BASE[this.tier()]);
@@ -710,8 +712,21 @@ export class CmsLayoutComponent implements OnInit {
         // placeholder "Pilih Organisasi" (miss-development-prompt-3.md poin 2),
         // langsung kunci ke organisasi pertama yang tersedia lewat URL supaya
         // seluruh halaman (dashboard, kader, dst.) konsisten ikut ter-scope.
+        //
+        // WAJIB toast — tanpa ini, pengguna tanpa home organization (Super
+        // Admin/wildcard, atau Puskomda/Puskomnas Verifikator yang mengisi
+        // Pendataan "atas nama" LDK lain) bisa tanpa sadar bekerja atas nama
+        // organisasi yang SALAH (ditemukan 2026-10-24: submission Pendataan
+        // nyasar ke LDK lain yang kebetulan urutan pertama di switcher, bukan
+        // LDK yang dimaksud pengguna — dikonfirmasi lewat createdDate
+        // tr_submission, bukan asumsi). Auto-pick ini aman untuk halaman
+        // baca-saja, tapi diam-diam SANGAT berisiko untuk halaman yang
+        // membuat data (Pendataan) — toast adalah pengaman minimal yang tidak
+        // mengganggu pola "tidak pernah placeholder kosong" yang sudah ada.
         if (this.currentOrgID() === undefined && list.length > 0) {
-          this.selectOrganization(list[0].organizationID);
+          const picked = list[0];
+          this.toast.warning(`Organisasi otomatis dipilih: ${this.orgLabel(picked)} — gunakan pemilih organisasi di atas untuk mengganti.`);
+          this.selectOrganization(picked.organizationID);
         }
       },
       error: () => { this.orgOptionsLoading.set(false); },
