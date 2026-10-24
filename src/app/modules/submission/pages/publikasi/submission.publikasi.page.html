@@ -9,14 +9,22 @@
   <div class="layout">
     <div>
       <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="list-checks" [size]="14" /></span>Antrian</p>
+      <div class="queue-search">
+        <app-multi-select [options]="queueSearchOptions()" [searchable]="true" placeholder="Cari LDK / Puskomda…" [(selected)]="queueFilter" />
+      </div>
       <div class="queue-list">
-        @for (item of queue(); track item.submissionID) {
+        @for (item of filteredQueue(); track item.submissionID) {
           <button type="button" class="queue-row" [class.active]="detail()?.submissionID === item.submissionID" (click)="select(item)">
             <span class="flex items-center gap-sm"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span><strong>{{ orgName(item.organizationID) }}</strong></span>
             <span class="chip" [class.chip-green]="statusTone(item.status) === 'success'">{{ statusLabel(item.status) }}</span>
           </button>
         } @empty {
-          <div class="card card-pad"><p class="text-muted">Tidak ada submission yang perlu dipublikasikan.</p></div>
+          <div class="card card-pad">
+            <p class="text-muted">
+              @if (queueFilter.length > 0) { Tidak ada submission yang cocok dengan filter. }
+              @else { Tidak ada submission yang perlu dipublikasikan. }
+            </p>
+          </div>
         }
       </div>
     </div>

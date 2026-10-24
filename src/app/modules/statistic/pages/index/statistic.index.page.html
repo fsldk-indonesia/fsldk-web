@@ -251,8 +251,8 @@
           }
 
           <div class="org-map-groups">
-            @for (g of directoryTree(); track g.puskomdaID ?? g.puskomdaName; let i = $index) {
-              <div class="org-group stagger-in" [style.--stagger-i]="i">
+            @for (g of visibleGroups(); track g.puskomdaID ?? g.puskomdaName; let i = $index) {
+              <div class="org-group stagger-in" [style.--stagger-i]="i % groupPageSize">
                 <div class="org-group-head">
                   <span class="org-group-node" #groupNode>
                     <svg viewBox="0 0 16 16" aria-hidden="true">
@@ -356,6 +356,16 @@
               }
             }
           </div>
+
+          <!-- Sentinel infinite-scroll — hanya ada selama visibleGroups()
+               belum mencakup seluruh directoryTree() (lihat komentar
+               DIRECTORY_GROUP_PAGE_SIZE di .ts). IntersectionObserver di
+               observeSentinel() nambah 10 grup lagi begitu ini masuk viewport. -->
+          @if (visibleGroupCount() < directoryTree().length) {
+            <div class="load-more-sentinel" #loadMoreSentinel>
+              <span class="load-more-hint">Menampilkan {{ visibleGroupCount() }} dari {{ directoryTree().length }} Puskomda — scroll untuk memuat lebih banyak</span>
+            </div>
+          }
         </div>
       }
     }

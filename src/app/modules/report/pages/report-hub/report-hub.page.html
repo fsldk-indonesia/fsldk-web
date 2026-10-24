@@ -1,0 +1,17 @@
+<div class="page-head">
+  <h1>{{ title }}</h1>
+  <p class="text-muted">Pilih jenis laporan yang ingin dilihat.</p>
+</div>
+
+<div class="hub-grid">
+  <a [routerLink]="isNasional ? path.levelisasiNasional : path.levelisasiWilayah" target="_blank" class="hub-card">
+    <span class="icon-badge lg icon-badge-soft"><app-icon name="award" [size]="24" /></span>
+    <h3>Laporan Levelisasi</h3>
+    <p>Ringkasan status dan level setiap LDK dalam cakupan Anda.</p>
+  </a>
+  <a [routerLink]="isNasional ? path.pendataanNasional : path.pendataanWilayah" target="_blank" class="hub-card">
+    <span class="icon-badge lg icon-badge-soft"><app-icon name="clipboard-list" [size]="24" /></span>
+    <h3>Laporan Pendataan</h3>
+    <p>Data jawaban lengkap pendataan Levelisasi LDK, per versi formulir.</p>
+  </a>
+</div>
