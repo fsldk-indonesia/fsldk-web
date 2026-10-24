@@ -59,7 +59,10 @@
             <div class="collapse" [class.open]="!isPengunjungRole">
               <div class="collapse-inner">
                 <div class="form-group"><label class="form-label">LDK</label>
-                  <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" [searchable]="true" placeholder="Pilih LDK" />
+                  <app-org-picker [options]="organizationOptions()" [selectedID]="form.organizationID" (selectedIDChange)="form.organizationID = $event"
+                                   (searchChange)="onOrganizationSearch($event)" [disabled]="isReadonly" [fullWidth]="true" [popup]="true"
+                                   noun="LDK" icon="building" title="Pilih LDK" subtitle="Pilih LDK yang ditautkan ke akun ini"
+                                   confirmLabel="Pilih" searchPlaceholder="Cari LDK..." />
                   <p class="form-hint">{{ ldkFieldHint }}</p>
                 </div>
               </div>

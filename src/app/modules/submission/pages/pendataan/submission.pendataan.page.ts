@@ -6,6 +6,7 @@ import { OrgContextService } from '../../../../core/services/org-context.service
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { IconComponent } from '../../../../shared/icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { OrgPickerComponent, OrgPickerOption } from '../../../../shared/org-picker.component';
 import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
@@ -34,7 +35,7 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
   selector: 'app-submission-pendataan-page',
   standalone: true,
   templateUrl: './submission.pendataan.page.html',
-  imports: [FormsModule, RouterLink, IconComponent, SelectComponent, PdfUploadComponent, ImageUploadComponent, DateTimePickerComponent],
+  imports: [FormsModule, RouterLink, IconComponent, SelectComponent, OrgPickerComponent, PdfUploadComponent, ImageUploadComponent, DateTimePickerComponent],
   providers: [SubmissionPendataanPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -89,7 +90,17 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   submission = signal<SubmissionDetail | null>(null);
   loading = signal(true);
   busy = signal(false);
-  ldkOptions = signal<SelectOption[]>([]);
+  /** Daftar LENGKAP LDK nasional (directory(), lihat presenter) — difilter
+   *  client-side oleh ldkOptions() mengikuti ketikan di app-org-picker
+   *  (searchChange), bukan query server per keystroke. */
+  allLdkOptions = signal<OrgPickerOption[]>([]);
+  ldkSearch = signal('');
+  ldkOptions = computed<OrgPickerOption[]>(() => {
+    const q = this.ldkSearch().trim().toLowerCase();
+    if (!q) return this.allLdkOptions();
+    return this.allLdkOptions().filter((o) =>
+      o.name.toLowerCase().includes(q) || (o.parentName ?? '').toLowerCase().includes(q));
+  });
   selectedOrgID: number | null = null;
 
   /** LDK Tujuan Kader terkunci seumur hidup begitu submission pertamanya
@@ -291,7 +302,8 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     this.submission.set(detail);
     if (this.version()) this.answers.set(this.buildAnswerMap(detail));
   }
-  setLdkOptions(options: SelectOption[]): void { this.ldkOptions.set(options); }
+  setLdkOptions(options: OrgPickerOption[]): void { this.allLdkOptions.set(options); }
+  onLdkSearch(value: string): void { this.ldkSearch.set(value); }
   setLoading(loading: boolean): void { this.loading.set(loading); }
   setBusy(busy: boolean): void { this.busy.set(busy); }
   reload(): void { this.loading.set(true); this.presenter.loadAll(this.formCode(), this.targetOrganizationID); }

@@ -8,6 +8,7 @@ import { Role } from '../../../role/entities/role';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { OrgPickerComponent, OrgPickerOption } from '../../../../shared/org-picker.component';
 import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
 import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { UserFormValue, UserIndexPresenter } from './user.index.presenter';
@@ -76,7 +77,7 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
   selector: 'app-user-index-page',
   standalone: true,
   templateUrl: './user.index.page.html',
-  imports: [FormsModule, IconComponent, ModalBackdropDirective, SelectComponent, CmsIndexComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective, SelectComponent, OrgPickerComponent, CmsIndexComponent],
   providers: [UserIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -212,7 +213,18 @@ export class UserIndexPage implements OnInit, UserIndexView {
   @ViewChild(CmsIndexComponent) private table!: CmsIndexComponent<UserRow>;
 
   roles = signal<Role[]>([]);
-  organizationOptions = signal<SelectOption[]>([]);
+  /** Daftar LENGKAP LDK nasional (directory(), lihat presenter) — difilter
+   *  client-side oleh organizationOptions() di bawah mengikuti ketikan di
+   *  app-org-picker (searchChange), BUKAN query server per keystroke;
+   *  directory() sudah memuat semuanya sekali di awal, tanpa limit. */
+  allOrganizationOptions = signal<OrgPickerOption[]>([]);
+  organizationSearch = signal('');
+  organizationOptions = computed<OrgPickerOption[]>(() => {
+    const q = this.organizationSearch().trim().toLowerCase();
+    if (!q) return this.allOrganizationOptions();
+    return this.allOrganizationOptions().filter((o) =>
+      o.name.toLowerCase().includes(q) || (o.parentName ?? '').toLowerCase().includes(q));
+  });
   showForm = signal(false);
   saving = signal(false);
   busy = signal<ReadonlySet<number>>(new Set());
@@ -532,7 +544,8 @@ export class UserIndexPage implements OnInit, UserIndexView {
   onBulkDelete(ids: (string | number)[]): void { this.presenter.bulkDelete(ids as number[]); }
 
   setRoles(roles: Role[]): void { this.roles.set(roles); }
-  setOrganizationOptions(options: SelectOption[]): void { this.organizationOptions.set(options); }
+  setOrganizationOptions(options: OrgPickerOption[]): void { this.allOrganizationOptions.set(options); }
+  onOrganizationSearch(value: string): void { this.organizationSearch.set(value); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.showForm.set(false); this.table.refresh(); }
   onRemoveSuccess(): void { this.table.refresh(); }

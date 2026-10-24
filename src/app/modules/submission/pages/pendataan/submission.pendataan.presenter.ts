@@ -7,6 +7,7 @@ import { FieldError } from '../../../../core/entities/api-response';
 import { SubmissionFormRepository } from '../../../submission-form/repositories/submission-form.repository';
 import { OrganizationRepository } from '../../../organization/repositories/organization.repository';
 import { SubmissionRepository } from '../../repositories/submission.repository';
+import { OrgPickerOption } from '../../../../shared/org-picker.component';
 import { SubmissionPendataanView } from './submission.pendataan.view';
 
 /** Ekstrak detail error per field dari response 400/422 — lihat pola yang
@@ -44,9 +45,10 @@ export class SubmissionPendataanPresenter extends BasePresenter<SubmissionPendat
 
   loadLdkOptions(): void {
     this.orgRepo.directory('LDK').subscribe({
-      next: (list) => this.view.setLdkOptions(list.map((o) => ({
-        value: o.organizationID,
-        label: o.parentOrganizationName ? `${o.organizationName} — ${o.parentOrganizationName}` : o.organizationName,
+      next: (list) => this.view.setLdkOptions(list.map((o): OrgPickerOption => ({
+        id: o.organizationID,
+        name: o.organizationName,
+        parentName: o.parentOrganizationName,
       }))),
       error: () => {},
     });

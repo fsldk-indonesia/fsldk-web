@@ -15,7 +15,10 @@
     @if (isKaderSubject() && !ldkLocked()) {
       <div class="form-group" style="max-width:360px;margin:0 auto 14px">
         <label class="form-label">LDK Tujuan</label>
-        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" [searchable]="true" placeholder="Pilih LDK" />
+        <app-org-picker [options]="ldkOptions()" [selectedID]="selectedOrgID" (selectedIDChange)="selectedOrgID = $event"
+                         (searchChange)="onLdkSearch($event)" [fullWidth]="true" [popup]="true"
+                         noun="LDK" icon="building" title="Pilih LDK Tujuan" subtitle="LDK tempat Anda akan terdaftar sebagai kader"
+                         confirmLabel="Pilih" searchPlaceholder="Cari LDK..." />
       </div>
     }
     <div style="text-align:center">
@@ -32,7 +35,10 @@
     @if (isKaderSubject() && !ldkLocked()) {
       <div class="form-group" style="max-width:360px;margin:0 auto 14px">
         <label class="form-label">LDK Tujuan</label>
-        <app-select [options]="ldkOptions()" [(ngModel)]="selectedOrgID" [searchable]="true" placeholder="Pilih LDK" />
+        <app-org-picker [options]="ldkOptions()" [selectedID]="selectedOrgID" (selectedIDChange)="selectedOrgID = $event"
+                         (searchChange)="onLdkSearch($event)" [fullWidth]="true" [popup]="true"
+                         noun="LDK" icon="building" title="Pilih LDK Tujuan" subtitle="LDK tempat Anda akan terdaftar sebagai kader"
+                         confirmLabel="Pilih" searchPlaceholder="Cari LDK..." />
       </div>
     }
     <div style="text-align:center">

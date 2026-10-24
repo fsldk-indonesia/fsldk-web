@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthRepository } from '../modules/user/repositories/auth.repository';
 import { PermissionRepository } from '../modules/permission/repositories/permission.repository';
@@ -9,8 +9,8 @@ import { MenuItem } from '../modules/permission/entities/menu-item';
 import { MeOrganization } from '../modules/organization/entities/organization';
 import { IconComponent } from '../shared/icon.component';
 import { PrayerTimeComponent } from '../shared/prayer-time.component';
-import { ModalBackdropDirective } from '../shared/modal-backdrop.directive';
-import { MultiSelectComponent, MultiSelectOption } from '../shared/multi-select.component';
+import { OrgPickerComponent, OrgPickerOption } from '../shared/org-picker.component';
+import { MultiSelectOption } from '../shared/multi-select.component';
 import { CmsTier, CMS_SHELL_BASE, CMS_SHELL_LABEL, CMS_SHELL_ICON, CMS_TIER_ACCENT } from '../shared/cms-tier';
 
 type Tier = CmsTier;
@@ -107,7 +107,7 @@ function canvasSilhouetteUrl(hex: string): string {
 @Component({
   selector: 'app-cms-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent, ModalBackdropDirective, MultiSelectComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, PrayerTimeComponent, OrgPickerComponent],
   template: `
     <div class="cms" [class.tier-ldk]="tier() === 'LDK'" [class.tier-puskomda]="tier() === 'PUSKOMDA'" [class.tier-puskomnas]="tier() === 'PUSKOMNAS'" [class.sidebar-collapsed]="!sidebarOpen()" [style.background-image]="canvasBackgroundImage()">
       <aside class="sidebar" [class.open]="sidebarOpen()">
@@ -155,17 +155,14 @@ function canvasSilhouetteUrl(hex: string): string {
             <span></span><span></span><span></span>
           </button>
           @if (showOrgSwitcher()) {
-            <button class="org-switcher-btn" type="button" (click)="openOrgModal()">
-              <span class="prayer-btn-icon"><app-icon [name]="switcherIcon()" [size]="15" /></span>
-              <span class="prayer-btn-text">
-                <span class="prayer-btn-label">{{ orgNoun() }}</span>
-                @if (orgOptionsLoading() && !currentOrgName()) {
-                  <span class="skel skel-line org-switcher-skel"></span>
-                } @else {
-                  <span class="org-switcher-current">{{ currentOrgName() ?? ('Pilih ' + orgNoun()) }}</span>
-                }
-              </span>
-            </button>
+            <app-org-picker [options]="orgPickerOptions()" [loading]="orgOptionsLoading()" [selectedID]="currentOrgID() ?? null"
+                             [noun]="orgNoun()" [icon]="switcherIcon()" [title]="'Pindah ' + orgNoun()"
+                             [subtitle]="'Pilih ' + orgNoun() + ' yang ingin Anda kelola'" confirmLabel="Pindah"
+                             [searchPlaceholder]="'Cari ' + orgNoun() + '...'"
+                             [filterOptions]="filterOptions()" [filterSelected]="selectedFilterValues()" [filterPlaceholder]="orgFilterPlaceholder()"
+                             [accent]="orgAccent()"
+                             (searchChange)="onOrgSearch($event)" (filterSelectedChange)="selectedFilterValues.set($event)"
+                             (selectedIDChange)="selectOrganization($event)" (panelOpenChange)="onOrgPanelOpenChange($event)" />
           }
           <div class="spacer"></div>
           <app-prayer-time [tier]="tier()" />
@@ -189,7 +186,7 @@ function canvasSilhouetteUrl(hex: string): string {
             @if (dropdownOpen()) {
               <div class="dropdown-panel">
                 @for (t of auth.accessibleCmsTiers(); track t) {
-                  <a [routerLink]="shellBaseOf(t) + '/dashboard'" (click)="closeAllDropdowns()"
+                  <a [routerLink]="shellBaseOf(t) + '/dashboard'" [queryParams]="crossTierQueryParams(t)" (click)="closeAllDropdowns()"
                      class="portal-item" [class.active]="tier() === t"
                      [style.background]="tier() === t ? tierTintOf(t) : null"
                      [style.--tier-color]="tierColorOf(t)" [style.--tier-soft]="tierTintOf(t)">
@@ -220,58 +217,6 @@ function canvasSilhouetteUrl(hex: string): string {
             }
           </div>
         </header>
-
-        <div class="org-modal-overlay" [class.active]="orgModalOpen()" appModalBackdrop #orgOverlayEl
-               [style.--color-primary]="orgAccent()?.primary" [style.--color-primary-bright]="orgAccent()?.bright"
-               [style.--color-primary-dark]="orgAccent()?.dark" [style.--color-primary-soft]="orgAccent()?.soft">
-            <div class="org-modal" (click)="$event.stopPropagation()">
-              <div class="org-modal-hero">
-                <button type="button" class="org-modal-close" (click)="closeOrgModal()" aria-label="Tutup">&times;</button>
-                <div class="org-modal-icon"><app-icon [name]="switcherIcon()" [size]="24" /></div>
-                <h3>Pindah {{ orgNoun() }}</h3>
-                <p class="org-modal-sub">Pilih {{ orgNoun() }} yang ingin Anda kelola</p>
-              </div>
-
-              <div class="org-modal-body">
-                <input class="form-control org-modal-search" type="text" [placeholder]="'Cari ' + orgNoun() + '...'"
-                       [value]="orgSearch()" (input)="onOrgSearch($event)">
-
-                @if (showOrgFilter()) {
-                  <app-multi-select [options]="filterOptions()" [selected]="selectedFilterValues()"
-                                     (selectedChange)="selectedFilterValues.set($event)"
-                                     [searchable]="true" [placeholder]="orgFilterPlaceholder()" />
-                }
-
-                <div class="org-card-list">
-                  @if (orgOptionsLoading()) {
-                    <div class="org-modal-loading"><app-icon name="clock" [size]="18" />Memuat daftar {{ orgNoun() }}…</div>
-                  } @else {
-                    @for (o of filteredOrgOptions(); track o.organizationID) {
-                      <button type="button" class="org-card" [class.selected]="o.organizationID === pendingSelectedOrgID()" [title]="orgLabel(o)" (click)="selectCard(o.organizationID)">
-                        <span class="org-card-icon"><app-icon [name]="switcherIcon()" [size]="16" /></span>
-                        <span class="org-card-text">
-                          <span class="org-card-name">{{ o.organizationName }}</span>
-                          @if (o.parentOrganizationName) { <span class="org-card-parent">{{ o.parentOrganizationName }}</span> }
-                        </span>
-                        @if (o.organizationID === pendingSelectedOrgID()) {
-                          <span class="org-card-check"><app-icon name="check" [size]="13" /></span>
-                        }
-                      </button>
-                    } @empty {
-                      <p class="text-muted org-empty">Tidak ada {{ orgNoun() }} ditemukan.</p>
-                    }
-                  }
-                </div>
-              </div>
-
-              <div class="org-modal-footer">
-                <button type="button" class="btn btn-outline" (click)="closeOrgModal()">Batal</button>
-                <button type="button" class="btn btn-primary" [disabled]="!canConfirmSwitch()" (click)="confirmSwitch()">
-                  Pindah
-                </button>
-              </div>
-            </div>
-          </div>
 
         <main class="cms-content"><div class="page-shell"><router-outlet /></div></main>
         <footer class="cms-footer">
@@ -402,78 +347,6 @@ function canvasSilhouetteUrl(hex: string): string {
        ::ng-deep dipilih karena stylenya ada di komponen anak yang encapsulated
        (pola sama dipakai tema per-tier .cms-content ::ng-deep .card di bawah). */
     .topbar ::ng-deep .prayer-btn { border-radius: var(--radius-xs); }
-    /* Tombol pemicu popup "Pindah LDK/Puskomda" — SENGAJA meniru persis
-       tampilan .prayer-btn (PrayerTimeComponent): ikon + 2 baris teks
-       (label kecil di atas, nilai tebal di bawah). Kelas .prayer-btn-* yang
-       dipakai di template di sini TIDAK mewarisi CSS dari PrayerTimeComponent
-       (view encapsulation per-komponen), jadi aturan visualnya diduplikasi
-       secara lokal di bawah — bukan bug, konsekuensi encapsulation Angular. */
-    .org-switcher-btn { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-primary-soft); color: var(--color-primary-dark); font-family: var(--font-body); font-weight: 700; cursor: pointer; transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-out); white-space: nowrap; }
-    .org-switcher-btn:hover { background: var(--color-primary); color: #fff; transform: translateY(-1px); }
-    .org-switcher-btn .prayer-btn-icon { font-size: 1rem; line-height: 1; flex-shrink: 0; }
-    .org-switcher-btn .prayer-btn-text { display: flex; flex-direction: column; line-height: 1.2; text-align: left; min-width: 0; }
-    .org-switcher-btn .prayer-btn-label { font-size: .62rem; font-weight: 600; opacity: .8; text-transform: uppercase; letter-spacing: .03em; }
-    .org-switcher-btn .org-switcher-current { font-size: .82rem; font-weight: 800; white-space: nowrap; }
-    .org-switcher-skel { width: 90px; height: 13px; }
-
-    /* Popup "Pindah LDK/Puskomda" — dipindah ke document.body (lihat
-       ngAfterViewInit), pola & struktur CSS SAMA PERSIS prayer-modal-overlay
-       di PrayerTimeComponent (overlay blur + modal naik dari bawah), hanya
-       isi body-nya beda (search + filter wilayah + grid card, bukan daftar
-       jam sholat statis). */
-    .org-modal-overlay {
-      position: fixed; inset: 0; background: rgba(15,23,20,.55); backdrop-filter: blur(4px); z-index: 200;
-      display: flex; align-items: center; justify-content: center; padding: 16px;
-      opacity: 0; visibility: hidden; pointer-events: none;
-      transition: opacity var(--motion-base) ease, visibility var(--motion-base);
-    }
-    .org-modal-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
-    /* Hero/search/filter/footer TETAP terlihat — hanya .org-card-list (lihat
-       di bawah: flex:1; min-height:0; overflow-y:auto) yang discroll kalau
-       daftarnya panjang, bukan seluruh modal. .org-modal sendiri cuma
-       membatasi tinggi TOTAL popup (max-height) tanpa overflow-nya sendiri,
-       supaya .org-card-list sebagai satu-satunya flex child yang bisa
-       menciut punya ruang untuk benar-benar menghitung sisa tingginya. */
-    .org-modal {
-      background: #fff; border-radius: var(--radius-lg); width: 100%; max-width: 640px; max-height: 88vh; box-shadow: var(--shadow-lg);
-      display: flex; flex-direction: column; min-height: 0;
-      transform: scale(.9) translateY(12px); transition: transform var(--motion-base) var(--ease-out);
-    }
-    .org-modal-overlay.active .org-modal { transform: scale(1) translateY(0); }
-    @media (prefers-reduced-motion: reduce) { .org-modal-overlay, .org-modal { transition: opacity var(--motion-base) ease, visibility var(--motion-base); transform: none !important; } }
-    .org-modal-hero { position: relative; flex-shrink: 0; background: linear-gradient(145deg, var(--color-primary-bright) 0%, var(--color-primary) 60%, var(--color-primary-dark) 100%); border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 28px 24px 22px; text-align: center; color: #fff; }
-    .org-modal-close { position: absolute; top: 12px; right: 12px; width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.2); color: #fff; font-size: 1.2rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-    .org-modal-close:hover { background: rgba(255,255,255,.35); }
-    .org-modal-icon { width: 54px; height: 54px; margin: 0 auto 10px; border-radius: 50%; background: rgba(255,255,255,.18); border: 2px solid rgba(255,255,255,.3); display: flex; align-items: center; justify-content: center; }
-    .org-modal-hero h3 { color: #fff; font-size: 1.1rem; margin: 0 0 4px; }
-    .org-modal-sub { font-size: .82rem; margin: 0; opacity: .85; }
-    .org-modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
-    .org-modal-body app-multi-select { flex-shrink: 0; }
-    /* 2 kolom (bukan 1 list memanjang ke bawah) supaya daftar LDK/Puskomda
-       yang panjang lebih ringkas discroll — card terakhir ganjil otomatis
-       melebar penuh lewat grid-column: 1/-1 di bawah, bukan dibiarkan
-       menggantung sendirian di kolom kiri. */
-    .org-card-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; overflow-y: auto; min-height: 0; flex: 1; padding-right: 2px; align-content: start; }
-    .org-card-list > .org-modal-loading, .org-card-list > .org-empty { grid-column: 1 / -1; }
-    .org-modal-loading { text-align: center; padding: 24px 0; color: var(--color-muted); display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: .88rem; }
-    .org-empty { padding: 16px 0; text-align: center; font-size: .85rem; }
-    /* min-width:0 WAJIB di sini — tanpa ini grid item (default min-width:auto)
-       dipaksa selebar konten intrinsiknya (nama LDK/Puskomda panjang +
-       white-space:nowrap di .org-card-name/-parent di bawah), bikin track
-       grid "kabur" melebihi kontainer & memunculkan scrollbar horizontal +
-       kolom lain kepencet nyaris 0 (persis bug yang dilaporkan). */
-    .org-card { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: var(--color-bg-warm); border-radius: var(--radius-md); border: 1.5px solid transparent; cursor: pointer; text-align: left; width: 100%; min-width: 0; font-family: var(--font-body); transition: background var(--motion-fast) ease, border-color var(--motion-fast) ease; }
-    .org-card:hover { background: var(--color-primary-soft); }
-    .org-card.selected { background: var(--color-primary-soft); border-color: var(--color-primary); }
-    .org-card-icon { flex-shrink: 0; width: 32px; height: 32px; border-radius: var(--radius-full); background: #fff; color: var(--color-primary); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
-    .org-card.selected .org-card-icon { background: var(--color-primary); color: #fff; box-shadow: none; }
-    .org-card-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-    .org-card-name { font-weight: 700; font-size: .9rem; color: var(--color-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .org-card.selected .org-card-name { color: var(--color-primary-dark); }
-    .org-card-parent { font-size: .76rem; color: var(--color-muted); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .org-card-check { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--color-primary); color: #fff; display: flex; align-items: center; justify-content: center; }
-    .org-modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--color-border); flex-shrink: 0; }
-    .org-modal-footer .btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
     /* Hamburger sekarang selalu tampil di topbar (dulu cuma mobile) — satu
        tombol men-toggle sidebarOpen di semua lebar layar. Ikonnya TETAP 3
        garis apa pun status sidebar-nya (tidak berubah jadi "X"). Diberi
@@ -646,27 +519,17 @@ function canvasSilhouetteUrl(hex: string): string {
       .cms-footer { padding: 0 8px; }
       .user-meta { display: none; }
       .dropdown-panel { min-width: 0; width: min(280px, calc(100vw - 32px)); }
-      .org-modal { max-width: min(420px, calc(100vw - 32px)); }
-      /* Sempit di mobile — 2 kolom jadi kepencet, turun ke 1 kolom. */
-      .org-card-list { grid-template-columns: 1fr; }
     }
     /* Di bawah ini topbar makin sempit (ponsel kecil) — sembunyikan elemen
        sekunder (label "Website", nama/role akun sudah disembunyikan sejak
-       900px) supaya hamburger + prayer-time + avatar tidak berdesakan/
-       terpotong. Ikon tetap tampil, cuma label teksnya yang hilang.
-       org-switcher-current (nama LDK/Puskomda) DIHAPUS TOTAL (bukan cuma
-       dipersempit ke 72px seperti sebelumnya) — di lebar ini kombinasi
-       hamburger+org-switcher+prayer-time+website+avatar tetap lebih lebar
-       dari layar walau teksnya sudah dipotong 72px, jadi avatar (elemen
-       TERAKHIR) kepentok/terpotong keluar dari topbar (dilaporkan
-       "kepotong"). Sisa ikon org-switcher masih cukup untuk buka popup
-       pencarian organisasi. */
+       900px) supaya hamburger + org-picker + prayer-time + avatar tidak
+       berdesakan/terpotong. app-org-picker trigger menyusut sendiri lewat
+       CSS internalnya (lihat org-picker.component.ts) — tidak perlu override
+       di sini lagi. */
     @media (max-width: 560px) {
       .nav-website-text { display: none; }
       .nav-website-link { padding: 8px; }
       .topbar { gap: 4px; padding: 8px; }
-      .org-switcher-btn { padding: 7px 9px; gap: 4px; }
-      .org-switcher-btn .org-switcher-current { display: none; }
     }
 
     /* Tema per tier (revisi — sebelumnya tint warna tier disebar ke SELURUH
@@ -691,7 +554,7 @@ function canvasSilhouetteUrl(hex: string): string {
     }
   `],
 })
-export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CmsLayoutComponent implements OnInit {
   auth = inject(AuthRepository);
   private orgRepo = inject(OrganizationRepository);
   private permissionRepo = inject(PermissionRepository);
@@ -712,6 +575,32 @@ export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   canvasBackgroundImage = computed(() => canvasSilhouetteUrl(TIER_COLOR[this.tier()]));
 
   shellBaseOf(t: CmsTier): string { return CMS_SHELL_BASE[t]; }
+  /** ID Puskomda induk dari LDK MILIK AKUN sendiri (auth.user().organizationID,
+   *  HANYA kalau organizationTypeCode-nya LDK) — diresolusi sekali lewat
+   *  GET /organizations/:id di ngOnInit (lihat bawah), bukan dari
+   *  orgOptions()/currentOrgID() switcher. SENGAJA bukan dari switcher:
+   *  org-switcher di shell LDK bisa sedang menampilkan LDK MANAPUN yang
+   *  "dipinjam" Super Admin/Puskomda Verifikator untuk dilihat — itu bukan
+   *  LDK milik akun ini, jadi Puskomda induknya tidak relevan dijadikan
+   *  default "Portal Puskomda". undefined kalau akun bukan LDK Admin (Super
+   *  Admin/Puskomnas Verifikator tidak punya home LDK) — dropdown jatuh
+   *  balik ke perilaku lama (loadOrgOptions() auto-pilih Puskomda pertama). */
+  private myLdkParentPuskomdaID = signal<number | undefined>(undefined);
+
+  /** Dropdown akun "Portal X" (lihat template) BIASANYA navigasi tanpa
+   *  organizationID eksplisit, membiarkan loadOrgOptions() auto-pilih
+   *  organisasi pertama (alfabetis) — benar untuk kebanyakan kasus, tapi
+   *  salah untuk "Portal Puskomda": harusnya langsung ke Puskomda yang
+   *  menaungi LDK akun ini (dilaporkan: LDK Admin klik "Portal Puskomda"
+   *  seharusnya langsung ke Puskomda wilayahnya sendiri, bukan Puskomda
+   *  pertama alfabetis manapun). */
+  crossTierQueryParams(t: CmsTier): Record<string, number> {
+    if (t === 'PUSKOMDA') {
+      const id = this.myLdkParentPuskomdaID();
+      if (id) return { organizationID: id };
+    }
+    return {};
+  }
   shellLabelOf(t: CmsTier): string { return CMS_SHELL_LABEL[t]; }
   shellIconOf(t: CmsTier): string { return CMS_SHELL_ICON[t]; }
   tierColorOf(t: CmsTier): string { return TIER_COLOR[t]; }
@@ -773,35 +662,25 @@ export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
   dropdownOpen = signal(false);
   year = new Date().getFullYear();
 
-  currentOrgName = computed(() => {
-    const o = this.orgOptions().find((x) => x.organizationID === this.currentOrgID());
-    return o ? this.orgLabel(o) : undefined;
-  });
-
-  orgLabel(o: MeOrganization): string {
-    return o.parentOrganizationName ? `${o.organizationName} - ${o.parentOrganizationName}` : o.organizationName;
-  }
-
-  // --- Popup "Pindah LDK/Puskomda" (lihat org-modal-overlay di template) ---
-  // Dipindah ke document.body lewat ngAfterViewInit (pola sama persis dengan
-  // PrayerTimeComponent — lihat catatan lengkapnya di sana) supaya
-  // `position: fixed`-nya tidak terkurung containing block leluhur manapun
-  // (mis. .sidebar yang punya transform saat animasi buka/tutup). Overlay-nya
-  // SENGAJA tidak digerbang @if untuk alasan yang sama (removeChild gagal
-  // kalau node sudah dipindah ke parent lain) — tier() tidak pernah berubah
-  // lagi setelah ngOnInit (component di-recreate, bukan di-reuse, saat
-  // berpindah shell /cms <-> /cms-ldk dst.), jadi cukup aman statis di sini.
-  @ViewChild('orgOverlayEl', { static: true }) private orgOverlayRef!: ElementRef<HTMLElement>;
+  /** Dioper ke [accent] app-org-picker — komponen itu direparenting ke
+   *  document.body (lihat org-picker.component.ts), jadi di luar scope CSS
+   *  custom property .cms.tier-* dan butuh nilai hex langsung. */
   orgAccent(): { primary: string; bright: string; dark: string; soft: string } | null {
     return CMS_TIER_ACCENT[this.tier()] ?? null;
   }
 
-  orgModalOpen = signal(false);
-  /** Org yang sedang di-klik/disorot di dalam popup, BELUM diterapkan ke URL
-   *  sampai tombol "Pindah" ditekan (lihat confirmSwitch()) — beda dari
-   *  currentOrgID yang mencerminkan organisasi yang SEDANG aktif. */
-  pendingSelectedOrgID = signal<number | undefined>(undefined);
-  canConfirmSwitch = computed(() => this.pendingSelectedOrgID() !== undefined);
+  /** parentName HANYA dikirim untuk tier LDK (nama Puskomda yang menaungi —
+   *  info yang berguna). Tier PUSKOMDA parent-nya SELALU "Puskomnas" (satu
+   *  parent nasional konstan untuk semua Puskomda), jadi sengaja di-omit di
+   *  sini — menampilkannya di trigger ("Cirebon Raya — Puskomnas") maupun
+   *  sublabel card cuma noise berulang, tidak membedakan apa pun. */
+  orgPickerOptions = computed<OrgPickerOption[]>(() =>
+    this.filteredOrgOptions().map((o) => ({
+      id: o.organizationID,
+      name: o.organizationName,
+      parentName: this.tier() === 'LDK' ? o.parentOrganizationName : undefined,
+    })),
+  );
 
   /** Filter multi-select (app-multi-select, komponen sama persis yang dipakai
    *  filter Status/Role di cms/users — draft/Terapkan/clear-X sudah
@@ -817,19 +696,24 @@ export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.tier() === 'LDK' ? (o.parentOrganizationName ?? '') : String(o.organizationID);
   }
 
+  /** Array kosong (bukan cuma disembunyikan lewat flag terpisah) kalau cuma
+   *  ada <=1 opsi berbeda — app-org-picker otomatis menyembunyikan baris
+   *  filter saat filterOptions-nya kosong. */
   filterOptions = computed<MultiSelectOption[]>(() => {
+    let opts: MultiSelectOption[];
     if (this.tier() === 'LDK') {
       const names = new Set<string>();
       for (const o of this.orgOptions()) {
         if (o.parentOrganizationName) names.add(o.parentOrganizationName);
       }
-      return Array.from(names).sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name }));
+      opts = Array.from(names).sort((a, b) => a.localeCompare(b)).map((name) => ({ value: name, label: name }));
+    } else {
+      opts = [...this.orgOptions()]
+        .sort((a, b) => a.organizationName.localeCompare(b.organizationName))
+        .map((o) => ({ value: String(o.organizationID), label: o.organizationName }));
     }
-    return [...this.orgOptions()]
-      .sort((a, b) => a.organizationName.localeCompare(b.organizationName))
-      .map((o) => ({ value: String(o.organizationID), label: o.organizationName }));
+    return opts.length > 1 ? opts : [];
   });
-  showOrgFilter = computed(() => this.filterOptions().length > 1);
   orgFilterPlaceholder = computed(() => (this.tier() === 'LDK' ? 'Filter Wilayah/Puskomda' : `Filter ${this.orgNoun()}`));
   filteredOrgOptions = computed<MeOrganization[]>(() => {
     const applied = this.selectedFilterValues();
@@ -837,34 +721,12 @@ export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.orgOptions().filter((o) => applied.includes(this.filterKeyOf(o)));
   });
 
-  openOrgModal(): void {
-    this.pendingSelectedOrgID.set(this.currentOrgID());
+  /** Dipanggil app-org-picker tiap kali panel sidebar dibuka — reset filter
+   *  (reset search sudah ditangani onOrgSearch(''), app-org-picker SELALU
+   *  emit searchChange('') duluan saat membuka). */
+  onOrgPanelOpenChange(open: boolean): void {
+    if (!open) return;
     this.selectedFilterValues.set([]);
-    if (this.orgSearch() !== '') { this.orgSearch.set(''); this.loadOrgOptions(); }
-    this.orgModalOpen.set(true);
-  }
-
-  closeOrgModal(): void {
-    this.orgModalOpen.set(false);
-  }
-
-  selectCard(id: number): void {
-    this.pendingSelectedOrgID.set(id);
-  }
-
-  confirmSwitch(): void {
-    const id = this.pendingSelectedOrgID();
-    if (id === undefined) return;
-    this.selectOrganization(id);
-    this.closeOrgModal();
-  }
-
-  ngAfterViewInit(): void {
-    document.body.appendChild(this.orgOverlayRef.nativeElement);
-  }
-
-  ngOnDestroy(): void {
-    this.orgOverlayRef?.nativeElement.remove();
   }
 
   ngOnInit(): void {
@@ -882,6 +744,14 @@ export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
       this.orgContext.organizationID$(this.route).subscribe((id) => {
         this.currentOrgID.set(id);
         this.loadOrgOptions();
+      });
+    }
+
+    const u = this.auth.user();
+    if (u?.organizationTypeCode === 'LDK' && u.organizationID) {
+      this.orgRepo.get(u.organizationID).subscribe({
+        next: (org) => this.myLdkParentPuskomdaID.set(org.parentOrganizationID),
+        error: () => {},
       });
     }
   }
@@ -906,8 +776,8 @@ export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  onOrgSearch(event: Event): void {
-    this.orgSearch.set((event.target as HTMLInputElement).value);
+  onOrgSearch(value: string): void {
+    this.orgSearch.set(value);
     this.loadOrgOptions();
   }
 
@@ -940,7 +810,8 @@ export class CmsLayoutComponent implements OnInit, AfterViewInit, OnDestroy {
     this.dropdownOpen.set(false);
   }
 
-  selectOrganization(id: number): void {
+  selectOrganization(id: number | null): void {
+    if (id == null) return;
     this.router.navigate([], { queryParams: { organizationID: id }, queryParamsHandling: 'merge' });
   }
 
