@@ -37,10 +37,10 @@ export interface ReportFilterFieldDef {
     </div>
     <div class="rfb-actions">
       <button type="button" class="btn btn-primary" [disabled]="busy" (click)="showReport.emit(draft)">
-        <app-icon name="file-text" [size]="14" /> Show Report
+        <app-icon name="file-text" [size]="14" /> Tampilkan Laporan
       </button>
       <button type="button" class="btn btn-primary" [disabled]="busy" (click)="downloadReport.emit(draft)">
-        <app-icon name="download" [size]="14" /> Download Report
+        <app-icon name="download" [size]="14" /> Unduh Laporan
       </button>
     </div>
   `,
@@ -48,7 +48,7 @@ export interface ReportFilterFieldDef {
     .rfb-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 16px; }
     .rfb-field { min-width: 200px; flex: 1 1 200px; }
     .rfb-field .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: .85rem; }
-    .rfb-actions { display: flex; gap: 12px; padding-top: 4px; border-top: 1px solid var(--color-border); padding-top: 16px; }
+    .rfb-actions { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--color-border); padding-top: 16px; margin-bottom: 20px; }
   `],
 })
 export class ReportFilterBarComponent {
