@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { OrgContextService } from '../../../../core/services/org-context.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { IconComponent } from '../../../../shared/icon.component';
 import { ReportFilterBarComponent, ReportFilterFieldDef } from '../../../../shared/report-filter-bar.component';
 import { StatisticRepository } from '../../../statistic/repositories/statistic.repository';
 import { SUBMISSION_STATUS_LABELS } from '../../../submission/entities/submission';
@@ -14,7 +15,7 @@ import { ReportPendataanView } from './report.pendataan.view';
   selector: 'app-report-pendataan-page',
   standalone: true,
   templateUrl: './report.pendataan.page.html',
-  imports: [ReportFilterBarComponent],
+  imports: [IconComponent, ReportFilterBarComponent],
   providers: [ReportPendataanPresenter],
   styles: [`
     .page-head { margin-bottom: 28px; } .page-head h1 { margin-bottom: 2px; }
@@ -85,6 +86,12 @@ export class ReportPendataanPage implements OnInit, ReportPendataanView {
   activeTabIndex = signal(0);
   loading = signal(false);
   exporting = signal(false);
+  /** Membedakan "belum pernah cari" dari "sudah cari, hasilnya nihil" —
+   *  tanpa ini keduanya jatuh ke pesan "Atur filter lalu tekan..." yang
+   *  sama, padahal ReportLevelisasiPage (lewat CmsIndexComponent) sudah
+   *  menampilkan "Tidak ada data" + icon untuk kasus kedua. Permintaan user
+   *  saat manual testing: seragamkan. */
+  hasShownReport = signal(false);
 
   private currentOrganizationID: number | undefined;
   private currentFilter: ReportFilterValue = { ...EMPTY_REPORT_FILTER };
@@ -121,6 +128,7 @@ export class ReportPendataanPage implements OnInit, ReportPendataanView {
 
   onShowReport(filter: ReportFilterValue): void {
     this.currentFilter = filter;
+    this.hasShownReport.set(true);
     this.presenter.show(filter, this.currentOrganizationID);
   }
 
