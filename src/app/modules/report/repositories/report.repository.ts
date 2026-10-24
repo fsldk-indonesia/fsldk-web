@@ -1,15 +1,27 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { ReportApiService } from '../services/report-api.service';
-import { ExportFormat } from '../entities/report';
+import { Pagination } from '../../../core/entities/pagination';
+import { ExportFormat, ReportFilterValue, ReportSubmissionRow, PendataanTab } from '../entities/report';
 
 @Injectable({ providedIn: 'root' })
 export class ReportRepository {
   private api = inject(ReportApiService);
 
-  /** Mengunduh & langsung memicu penyimpanan berkas di browser. */
-  export(formCode: string, status: string | undefined, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
-    return this.api.exportSubmissions(formCode, status, format, organizationID).pipe(tap((result) => this.triggerDownload(result)));
+  listLevelisasi(filter: ReportFilterValue, page: number, limit: number, sort: string, organizationID?: number): Observable<Pagination<ReportSubmissionRow>> {
+    return this.api.listLevelisasi(filter, page, limit, sort, organizationID);
+  }
+
+  listPendataan(filter: ReportFilterValue, organizationID?: number): Observable<PendataanTab[]> {
+    return this.api.listPendataan(filter, organizationID);
+  }
+
+  exportLevelisasi(filter: ReportFilterValue, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
+    return this.api.exportLevelisasi(filter, format, organizationID).pipe(tap((r) => this.triggerDownload(r)));
+  }
+
+  exportPendataan(filter: ReportFilterValue, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
+    return this.api.exportPendataan(filter, format, organizationID).pipe(tap((r) => this.triggerDownload(r)));
   }
 
   private triggerDownload(result: { blob: Blob; filename: string }): void {
