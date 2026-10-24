@@ -30,7 +30,7 @@ function buildConfig(): CmsIndexConfig<ReportSubmissionRow> {
       { key: 'submittedDate', label: 'Terkirim' },
     ],
     defaultSort: { sortBy: 'organizationName', sortDir: 'asc' },
-    rowIdKey: 'organizationName', // tidak ada submissionID di ReportSubmissionRow (DL-5 row shape) — nama LDK cukup unik dalam satu cakupan organisasi
+    rowIdKey: 'submissionID', // identitas baris sungguhan — organizationName bisa kolisi (dua LDK beda kota/Puskomda bisa saja sama nama)
     limit: 50,
     emptyIcon: 'clipboard-list',
     emptyTitle: 'Tidak ada data',

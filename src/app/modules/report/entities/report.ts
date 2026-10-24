@@ -2,9 +2,12 @@ export type ExportFormat = 'xlsx' | 'csv';
 
 /** Nilai filter Laporan Levelisasi/Pendataan — mirror report_dto.ReportFilter
  *  backend. Semua array = multi-select (dikirim sebagai repeated query param
- *  lewat ApiService.toParams). levelCodes diabaikan backend untuk Pendataan
- *  (TechSpec-Report-Revamp.md DL-4) — tetap dideklarasikan di sini supaya satu
- *  tipe dipakai kedua halaman, ReportPendataanPage cukup tidak mengisinya. */
+ *  lewat ApiService.toParams). levelCodes TIDAK pernah dikirim oleh
+ *  ReportPendataanPage (Pendataan sengaja tidak punya UI filter Level,
+ *  TechSpec-Report-Revamp.md DL-4) — backend sendiri tetap menerapkan filter
+ *  ini kapan pun field-nya terisi (SubmissionRows tidak membedakan
+ *  Levelisasi/Pendataan). Tetap dideklarasikan di sini supaya satu tipe
+ *  dipakai kedua halaman, ReportPendataanPage cukup tidak mengisinya. */
 export interface ReportFilterValue {
   statuses: string[];
   provinces: string[];
@@ -22,6 +25,7 @@ export const EMPTY_REPORT_FILTER: ReportFilterValue = {
 /** Satu baris Laporan Levelisasi — mirror report_dto.SubmissionRow backend
  *  (BUKAN SubmissionResponse milik modul submission, sumbernya beda query). */
 export interface ReportSubmissionRow {
+  submissionID: number;
   organizationName: string;
   parentOrganizationName?: string;
   provinceName?: string;
