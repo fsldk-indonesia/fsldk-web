@@ -25,7 +25,7 @@ import { organizationRoutes } from './modules/organization/organization.routes';
 import { pengurusRoutes } from './modules/pengurus/pengurus.routes';
 import { submissionFormRoutes } from './modules/submission-form/submission-form.routes';
 import { submissionRoutes } from './modules/submission/submission.routes';
-import { reportRoutes } from './modules/report/report.routes';
+import { reportRoutes, reportNasionalRoutes } from './modules/report/report.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { shortlinkRoutes, shortlinkPublicRoutes, shortlinkRedirectRoutes } from './modules/shortlink/shortlink.routes';
 import { qrcodeRoutes, qrcodePublicRoutes, qrcodeDetailRoutes } from './modules/qrcode/qrcode.routes';
@@ -193,7 +193,7 @@ export const routes: Routes = [
       ...dashboardRoutes(),
       ...organizationRoutes(),
       ...submissionRoutes(),
-      ...reportRoutes(),
+      ...reportNasionalRoutes(),
       ...submissionFormRoutes(),
       ...pengurusRoutes('pengurus.puskomnas.manage'),
     ],
