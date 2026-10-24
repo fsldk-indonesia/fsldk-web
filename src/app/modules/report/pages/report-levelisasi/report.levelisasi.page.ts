@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { OrgContextService } from '../../../../core/services/org-context.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
 import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { ReportFilterBarComponent, ReportFilterFieldDef } from '../../../../shared/report-filter-bar.component';
@@ -47,14 +49,26 @@ function buildConfig(): CmsIndexConfig<ReportSubmissionRow> {
 export class ReportLevelisasiPage implements OnInit, ReportLevelisasiView {
   private presenter = inject(ReportLevelisasiPresenter);
   private route = inject(ActivatedRoute);
+  private auth = inject(AuthRepository);
   private orgContext = inject(OrgContextService);
   private statisticRepo = inject(StatisticRepository);
+  private toast = inject(ToastService);
 
   @ViewChild(CmsIndexComponent) private cmsIndex?: CmsIndexComponent<ReportSubmissionRow>;
 
   title = this.route.snapshot.data['title'] as string;
   readonly config = buildConfig();
+  readonly statusLabels = SUBMISSION_STATUS_LABELS;
   exporting = signal(false);
+
+  /** Sama pola dengan canCreate/canUpdate/dst di modul lain (mis.
+   *  news.index.page.ts) — ReportFilterBarComponent (Task 10, sudah
+   *  direview) selalu merender tombol Download Report tanpa tahu
+   *  permission, jadi gating-nya dilakukan di sini: tombol tetap tampil
+   *  (Show Report harus tetap bisa dipakai pemegang .view saja — sudah
+   *  digerbangi route canActivate: [permissionGuard]) tapi onDownloadReport()
+   *  jadi no-op + toast peringatan bila caller tidak punya exportPermission. */
+  canExport = this.auth.hasPermission(this.route.snapshot.data['exportPermission'] as string);
 
   /** Shell saat ini (sama pendekatan dengan ReportHubPage.isNasional) —
    *  menentukan apakah field filter Puskomda ikut ditampilkan (DL-4: hanya
@@ -109,12 +123,22 @@ export class ReportLevelisasiPage implements OnInit, ReportLevelisasiView {
 
   dataSource = (params: CmsListParams) => this.presenter.list(this.currentFilter, params.page, params.limit, params.sort, this.currentOrganizationID);
 
+  /** Sama pola dengan statusLabel() di ReportListPage yang dihapus — backend
+   *  mengirim kode mentah tr_submission.status (mis. PUSKOMDA_REVIEW) tanpa
+   *  terjemahan, fallback ke kode itu sendiri bila suatu saat ada status yang
+   *  belum masuk peta. Dibungkus method (bukan ekspresi `??` langsung di
+   *  template) supaya tidak kena NG8102 — SUBMISSION_STATUS_LABELS bertipe
+   *  Record<string,string> sehingga TS templat strict menganggap index
+   *  access-nya tidak pernah undefined. */
+  statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
+
   onShowReport(filter: ReportFilterValue): void {
     this.currentFilter = filter;
     this.cmsIndex?.refresh();
   }
 
   onDownloadReport(filter: ReportFilterValue): void {
+    if (!this.canExport) { this.toast.warning('Anda tidak memiliki izin mengunduh laporan ini.'); return; }
     this.currentFilter = filter;
     this.presenter.download(filter, 'xlsx', this.currentOrganizationID);
   }

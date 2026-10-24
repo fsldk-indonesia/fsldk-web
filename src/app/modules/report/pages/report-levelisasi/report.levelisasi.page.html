@@ -11,7 +11,7 @@
     @if (isColumnVisible('parentOrganizationName')) { <td class="text-muted">{{ r.parentOrganizationName || '—' }}</td> }
     @if (isColumnVisible('provinceName')) { <td class="text-muted">{{ r.provinceName || '—' }}</td> }
     @if (isColumnVisible('cityName')) { <td class="text-muted">{{ r.cityName || '—' }}</td> }
-    @if (isColumnVisible('status')) { <td class="text-muted">{{ r.status }}</td> }
+    @if (isColumnVisible('status')) { <td class="text-muted">{{ statusLabel(r.status) }}</td> }
     @if (isColumnVisible('levelLabel')) { <td class="text-muted">{{ r.levelLabel || '—' }}</td> }
     @if (isColumnVisible('submittedDate')) { <td class="text-muted">{{ r.submittedDate || '—' }}</td> }
   </ng-template>
