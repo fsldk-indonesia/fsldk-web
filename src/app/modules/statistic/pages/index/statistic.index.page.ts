@@ -36,6 +36,14 @@ interface PuskomdaGroup {
  *  jujur (lihat directoryTruncated()) alih-alih diam-diam memotong. */
 const DIRECTORY_TREE_LIMIT = 1000;
 
+/** Jumlah grup Puskomda yang dirender sekaligus di peta Direktori — direktori
+ *  tetap di-fetch SELURUHNYA sekaligus (lihat DIRECTORY_TREE_LIMIT di atas,
+ *  grouping & badge "X LDK" butuh dataset penuh), tapi RENDER-nya di-windowing
+ *  di sisi frontend (visibleGroups()) supaya tidak sekaligus menaruh 500+
+ *  kartu + garis SVG ke DOM pada muat pertama — kartu sisanya menyusul 10-10
+ *  saat sentinel di bawah list discroll ke viewport (lihat observeSentinel()). */
+const DIRECTORY_GROUP_PAGE_SIZE = 5;
+
 Chart.register(...registerables);
 
 type TabId = 'statistik' | 'direktori';
@@ -363,6 +371,12 @@ const LEVEL_OPTIONS = [
 
     .empty-note { text-align: center; color: var(--color-muted); padding: 40px 0; }
 
+    /* Sentinel infinite-scroll batch grup Puskomda — tidak ada spinner karena
+       datanya sudah ada di memori (cuma window render yang nambah, bukan
+       fetch baru), jadi batch berikutnya langsung muncul tanpa jeda loading. */
+    .load-more-sentinel { display: flex; justify-content: center; padding: 20px 0 4px; }
+    .load-more-hint { font-size: .78rem; font-weight: 600; color: var(--color-muted); }
+
     @media (max-width: 480px) {
       .tab-bar { padding: 4px; gap: 2px; }
       .tab-btn { padding: 9px 13px; font-size: .8rem; }
@@ -483,6 +497,17 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     return Array.from(groups.values()).sort((a, b) => a.puskomdaName.localeCompare(b.puskomdaName));
   });
 
+  /** Potongan pertama directoryTree() yang benar-benar dirender ke DOM —
+   *  lihat komentar DIRECTORY_GROUP_PAGE_SIZE. Nambah 10 tiap kali sentinel
+   *  di bawah list masuk viewport (observeSentinel()), reset ke 10 lagi tiap
+   *  hasil directory() ganti total (search/filter/sort baru, lihat
+   *  setDirectory()). recomputeConnectors() HARUS pakai ini juga (bukan
+   *  directoryTree() mentah) supaya index grup selalu cocok 1:1 dengan DOM
+   *  yang benar-benar ada. */
+  readonly groupPageSize = DIRECTORY_GROUP_PAGE_SIZE;
+  visibleGroupCount = signal(DIRECTORY_GROUP_PAGE_SIZE);
+  visibleGroups = computed<PuskomdaGroup[]>(() => this.directoryTree().slice(0, this.visibleGroupCount()));
+
   /** Direktori dimuat sekali per filter dalam batas DIRECTORY_TREE_LIMIT
    *  (bukan paginasi bernomor, lihat komentar konstantanya) — kalau hasil
    *  sesungguhnya lebih banyak dari itu, tampilkan catatan jujur alih-alih
@@ -510,9 +535,15 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
    *  tinggal mengiris flat list ini per g.ldks.length tanpa butuh ref terpisah
    *  per grup. */
   @ViewChildren('ldkCard') private ldkCardRefs?: QueryList<ElementRef<HTMLElement>>;
+  /** Sentinel di bawah list grup — @if-gated di template (hanya ada selama
+   *  masih ada grup yang belum dirender), jadi QueryList (bukan ViewChild
+   *  biasa) supaya .changes bisa dipakai mendeteksi kapan elemen ini
+   *  muncul/hilang dari DOM, sama pola dengan groupNodeRefs/ldkCardRefs. */
+  @ViewChildren('loadMoreSentinel') private sentinelRefs?: QueryList<ElementRef<HTMLElement>>;
 
   private resizeObserver?: ResizeObserver;
   private resizeObserverTarget?: HTMLElement;
+  private intersectionObserver?: IntersectionObserver;
 
   private provinceChart: Chart | null = null;
   private levelChart: Chart | null = null;
@@ -540,12 +571,18 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     // menghilangkan grup Puskomda-nya) — groupNodeRefs.changes tidak akan
     // terpicu untuk kasus itu, jadi ldkCardRefs perlu langganan sendiri.
     this.ldkCardRefs?.changes.subscribe(() => this.scheduleRecomputeConnectors());
+    // Sentinel masuk/keluar DOM tiap kali "masih ada sisa grup?" berubah
+    // (muat awal, nambah batch, atau filter baru) — observer-nya perlu
+    // dipasang ulang ke elemen yang baru tiap kali itu terjadi.
+    this.sentinelRefs?.changes.subscribe(() => this.observeSentinel());
+    this.observeSentinel();
   }
 
   ngOnDestroy(): void {
     this.provinceChart?.destroy();
     this.levelChart?.destroy();
     this.resizeObserver?.disconnect();
+    this.intersectionObserver?.disconnect();
   }
 
   @HostListener('window:resize')
@@ -611,6 +648,21 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     requestAnimationFrame(() => this.recomputeConnectors());
   }
 
+  /** rootMargin 400px — batch berikutnya sudah mulai dirender SEBELUM
+   *  sentinel benar-benar masuk viewport (user scroll cepat ke bawah tidak
+   *  sempat lihat jeda kosong), bukan nunggu mentok ke tepi layar persis. */
+  private observeSentinel(): void {
+    this.intersectionObserver?.disconnect();
+    const el = this.sentinelRefs?.first?.nativeElement;
+    if (!el) return;
+    this.intersectionObserver = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        this.visibleGroupCount.update((n) => Math.min(n + this.groupPageSize, this.directoryTree().length));
+      }
+    }, { rootMargin: '400px' });
+    this.intersectionObserver.observe(el);
+  }
+
   /** Ukur posisi DOM asli hub, tiap simpul grup, DAN tiap kartu LDK
    *  (getBoundingClientRect), lalu bangun kurva Bezier vertikal hub->grup
    *  (hijau) dan grup->tiap kartu LDK (oren/ember) — data-driven dari layout
@@ -644,7 +696,7 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     const hx = hubRect.left + hubRect.width / 2 - wrapRect.left;
     const hy = hubRect.top + hubRect.height / 2 - wrapRect.top;
 
-    const tree = this.directoryTree();
+    const tree = this.visibleGroups();
     const groupPaths: string[] = [];
     const ldkPaths: string[] = [];
     let ldkCursor = 0;
@@ -724,6 +776,9 @@ export class StatisticIndexPage implements OnInit, AfterViewInit, OnDestroy, Sta
     this.directory.set(items);
     this.directoryCount.set(count);
     this.directoryLoading.set(false);
+    // Hasil baru (search/filter/sort ganti) -> mulai dari batch pertama lagi,
+    // bukan lanjut dari posisi scroll batch sebelumnya yang sudah tidak relevan.
+    this.visibleGroupCount.set(this.groupPageSize);
     this.scheduleRecomputeConnectors();
   }
   setDirectoryError(): void { this.directoryLoading.set(false); }
