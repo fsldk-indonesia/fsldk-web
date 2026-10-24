@@ -87,28 +87,36 @@ export class OrganizationProfilePage implements OnInit, OrganizationProfileView 
     }
   }
 
-  /** Cocokkan provinceName/cityName tersimpan ke opsi dropdown via exact
-   *  match label — provinceOptions (dari wilayah.provinces(), async) dan
-   *  organization() (dari presenter.load(), async terpisah) bisa selesai di
-   *  urutan mana pun, jadi dipanggil dari KEDUA sisi & idempoten lewat guard
-   *  selectedProvinceID. Sebelum ini dropdown SELALU placeholder kosong
-   *  walau datanya sudah tersimpan benar (cuma lewat hint "Saat ini: ..."),
-   *  karena tidak pernah ada percobaan pencocokan sama sekali — bukan cuma
-   *  "tidak fuzzy-match", tapi tidak match apa pun. Tetap tidak ada
-   *  fuzzy-matching (exact label match saja) — data lama yang formatnya
-   *  tidak persis cocok tetap jatuh ke hint seperti sebelumnya. */
+  /** Cocokkan provinceName/cityName tersimpan ke opsi dropdown via label —
+   *  provinceOptions (dari wilayah.provinces(), async) dan organization()
+   *  (dari presenter.load(), async terpisah) bisa selesai di urutan mana
+   *  pun, jadi dipanggil dari KEDUA sisi & idempoten lewat guard
+   *  selectedProvinceID. Match case-INSENSITIVE (bukan fuzzy) — WilayahService
+   *  (emsifa) selalu mengembalikan nama ALL CAPS ("JAWA TIMUR"), sedangkan
+   *  provinceName/cityName tersimpan di DB pakai Title Case ("Jawa Timur",
+   *  hasil seed design/development/insert-data-ldk) — exact match sebelumnya
+   *  SELALU gagal karena perbedaan casing ini, bukan karena datanya memang
+   *  tidak ada (dropdown jatuh ke hint "Saat ini: ..." terus-terusan, DAN
+   *  dropdown Kota/Kabupaten ikut terkunci [disabled]="!selectedProvinceID"
+   *  karena provinsinya sendiri gagal ke-select). Data lama yang namanya
+   *  benar-benar beda (bukan cuma beda casing) tetap jatuh ke hint seperti
+   *  sebelumnya. */
   private syncLocationSelection(): void {
     const org = this.organization();
     const provinces = this.provinceOptions();
     if (!org || !provinces.length || this.selectedProvinceID) return;
-    const match = provinces.find((o) => o.label === this.form.provinceName);
+    const match = provinces.find((o) => this.sameLabel(o.label, this.form.provinceName));
     if (!match) return;
     const provinceId = match.value as string;
     this.selectedProvinceID = provinceId;
     this.wilayah.regencies(provinceId).subscribe((cities) => {
       this.cityOptions.set(cities);
-      this.selectedCityID = (cities.find((c) => c.label === this.form.cityName)?.value as string | undefined) ?? null;
+      this.selectedCityID = (cities.find((c) => this.sameLabel(c.label, this.form.cityName))?.value as string | undefined) ?? null;
     });
+  }
+
+  private sameLabel(a: string, b: string): boolean {
+    return a.trim().toLowerCase() === b.trim().toLowerCase();
   }
 
   onProvinceChange(): void {
