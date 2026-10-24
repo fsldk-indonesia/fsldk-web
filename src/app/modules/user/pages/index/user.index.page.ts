@@ -7,7 +7,6 @@ import { UserRow } from '../../entities/user';
 import { Role } from '../../../role/entities/role';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
-import { SelectComponent, SelectOption } from '../../../../shared/select.component';
 import { OrgPickerComponent, OrgPickerOption } from '../../../../shared/org-picker.component';
 import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
 import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
@@ -77,7 +76,7 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
   selector: 'app-user-index-page',
   standalone: true,
   templateUrl: './user.index.page.html',
-  imports: [FormsModule, IconComponent, ModalBackdropDirective, SelectComponent, OrgPickerComponent, CmsIndexComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective, OrgPickerComponent, CmsIndexComponent],
   providers: [UserIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -252,7 +251,10 @@ export class UserIndexPage implements OnInit, UserIndexView {
   readonly config = buildUserIndexConfig(this.presenter);
   dataSource = (params: CmsListParams) => this.presenter.list(params);
 
-  roleOptions = computed(() => this.roles().map((r) => ({ value: r.roleID, label: r.roleName })));
+  /** Bentuk OrgPickerOption (id/name) — field Role di form ini SENGAJA pakai
+   *  app-org-picker yang sama persis dengan field LDK (popup+search+card),
+   *  bukan app-select, biar satu konsep di seluruh form ini. */
+  roleOptions = computed<OrgPickerOption[]>(() => this.roles().map((r) => ({ id: r.roleID, name: r.roleName })));
 
   /** Provisioning scope UI mengikuti Section 19.5 TechSpec: LDK Admin
    *  organizationID-nya selalu dikunci server-side ke diri sendiri (field

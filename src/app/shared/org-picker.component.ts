@@ -157,7 +157,7 @@ export interface OrgPickerAccent {
     .op-overlay.popup { align-items: center; justify-content: center; padding: 16px; }
     .op-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; }
     .op-panel {
-      height: 100%; width: min(560px, 100vw);
+      height: 100%; width: min(760px, 100vw);
       background: #fff; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; min-height: 0;
       transform: translateX(100%); transition: transform var(--motion-base) var(--ease-out);
     }
@@ -181,9 +181,11 @@ export interface OrgPickerAccent {
     .op-panel-close:hover { background: rgba(255,255,255,.35); }
     .op-panel-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
     .op-panel-body app-multi-select { flex-shrink: 0; }
-    /* 2 kolom (kanan-kiri) — card terakhir ganjil tidak otomatis melebar
-       (biarkan menggantung di kolom kiri, wajar untuk list pilihan). */
+    /* Sidebar (default, .op-panel LEBIH LEBAR — lihat width di atas) pakai 3
+       kolom; popup (.op-panel.popup, lebih sempit, 560px) tetap 2 kolom —
+       card terakhir ganjil tidak otomatis melebar, biarkan menggantung. */
     .op-card-list { display: grid; grid-template-columns: repeat(2, 1fr); align-content: start; gap: 8px; overflow-y: auto; min-height: 0; flex: 1; padding-right: 2px; }
+    .op-panel:not(.popup) .op-card-list { grid-template-columns: repeat(3, 1fr); }
     .op-card-list > .op-loading, .op-card-list > .op-empty { grid-column: 1 / -1; }
     .op-loading { text-align: center; padding: 24px 0; color: var(--color-muted); display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: .88rem; }
     .op-empty { padding: 16px 0; text-align: center; font-size: .85rem; }
@@ -203,6 +205,9 @@ export interface OrgPickerAccent {
     .op-card-check { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--color-primary); color: #fff; display: flex; align-items: center; justify-content: center; }
     .op-panel-footer { flex-shrink: 0; display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--color-border); }
     .op-panel-footer .btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+    @media (max-width: 680px) {
+      .op-panel:not(.popup) .op-card-list { grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 480px) {
       .op-panel { width: 100%; }
       .op-card-list { grid-template-columns: 1fr; }
