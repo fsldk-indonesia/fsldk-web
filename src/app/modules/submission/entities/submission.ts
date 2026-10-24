@@ -127,9 +127,11 @@ export interface SubmissionResponse {
   formCode: string;
   formVersionID: number;
   organizationID: number;
-  /** Nama LDK — diisi backend lewat LEFT JOIN ms_organization di endpoint
-   *  list (`GET /submissions`), kosong di jalur lain (create/get). */
+  /** Nama LDK & Puskomda induknya — diisi backend lewat LEFT JOIN
+   *  ms_organization dua tingkat di endpoint list (`GET /submissions`),
+   *  kosong di jalur lain (create/get). */
   organizationName?: string;
+  parentOrganizationName?: string;
   subjectType: 'ORGANIZATION' | 'KADER';
   status: string;
   version: number;

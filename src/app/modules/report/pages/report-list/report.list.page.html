@@ -21,6 +21,7 @@
   <app-cms-index [config]="config" [dataSource]="dataSource" [showActionsColumn]="false" (rowClick)="select($event)">
     <ng-template #rowTemplate let-r let-isColumnVisible="isColumnVisible">
       <td><strong>{{ r.organizationName || 'Organisasi #' + r.organizationID }}</strong></td>
+      @if (isColumnVisible('parentOrganizationName')) { <td class="text-muted">{{ r.parentOrganizationName || '—' }}</td> }
       @if (isColumnVisible('status')) { <td class="text-muted">{{ statusLabel(r.status) }}</td> }
       @if (isColumnVisible('submittedDate')) { <td class="text-muted">{{ r.submittedDate || '—' }}</td> }
     </ng-template>

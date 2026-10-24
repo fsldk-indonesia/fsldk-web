@@ -29,6 +29,7 @@ function buildReportIndexConfig(): CmsIndexConfig<SubmissionResponse> {
     searchTargets: [{ value: 'search', label: 'Nama LDK' }],
     columns: [
       { key: 'organizationName', label: 'LDK', locked: true },
+      { key: 'parentOrganizationName', label: 'Puskomda' },
       { key: 'status', label: 'Status' },
       { key: 'submittedDate', label: 'Terkirim' },
     ],
