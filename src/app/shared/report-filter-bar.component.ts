@@ -17,10 +17,7 @@ export interface ReportFilterFieldDef {
  *  Field multi-select mana saja yang tampil ditentukan [fields] (Levelisasi
  *  dapat field Level, Pendataan tidak — DL-4). Tidak auto-apply: perubahan
  *  field hanya mengubah state lokal, baru dikirim ke host saat tombol
- *  Show/Download ditekan (sama pola dengan app-search-filter-sort).
- *  Kedua tombol memakai style solid yang sama (btn-primary), dibedakan
- *  hanya lewat ikon — mengikuti referensi ESBCore "Transaction Log Report"
- *  yang jadi acuan komponen ini (bukan pasangan filled+outline). */
+ *  Show/Download ditekan (sama pola dengan app-search-filter-sort). */
 @Component({
   selector: 'app-report-filter-bar',
   standalone: true,
