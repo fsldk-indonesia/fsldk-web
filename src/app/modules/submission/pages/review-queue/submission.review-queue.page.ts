@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { MultiSelectComponent, MultiSelectOption } from '../../../../shared/multi-select.component';
 import { IconComponent } from '../../../../shared/icon.component';
 import { SubmissionAnswersViewComponent } from '../../components/submission-answers-view.component';
 import { SubmissionScoringPanelComponent } from '../../components/submission-scoring-panel.component';
@@ -14,7 +15,7 @@ import { SubmissionReviewQueueView } from './submission.review-queue.view';
   selector: 'app-submission-review-queue-page',
   standalone: true,
   templateUrl: './submission.review-queue.page.html',
-  imports: [FormsModule, SelectComponent, IconComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
+  imports: [FormsModule, SelectComponent, MultiSelectComponent, IconComponent, SubmissionAnswersViewComponent, SubmissionScoringPanelComponent],
   providers: [SubmissionReviewQueuePresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -23,6 +24,7 @@ import { SubmissionReviewQueueView } from './submission.review-queue.view';
     .layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
     .layout > div { min-width: 0; }
     @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    .queue-search { margin-bottom: 10px; }
     .queue-list { display: flex; flex-direction: column; gap: 8px; }
     .queue-row { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: #fff; cursor: pointer; text-align: left; }
     .queue-row:hover { border-color: var(--color-primary); }
@@ -80,6 +82,26 @@ export class SubmissionReviewQueuePage implements OnInit, SubmissionReviewQueueV
 
   orgName(id: number): string { return this.orgNames()[id] ?? `Organisasi #${id}`; }
   statusLabel(code: string): string { return this.statusLabels[code] ?? code; }
+
+  /** submissionID yang dicentang di dropdown pencarian — kosong berarti
+   *  tidak ada filter aktif (Antrian menampilkan semua). */
+  queueFilter: (string | number)[] = [];
+
+  /** Opsi dropdown pencarian di atas Antrian — label gabungan nama LDK &
+   *  Puskomda induknya supaya bisa dicari lewat keduanya. */
+  queueSearchOptions(): MultiSelectOption[] {
+    return this.queue().map((item) => {
+      const name = this.orgName(item.organizationID);
+      return { value: item.submissionID, label: item.parentOrganizationName ? `${name} — ${item.parentOrganizationName}` : name };
+    });
+  }
+
+  /** Antrian yang ditampilkan — queue() utuh saat tidak ada filter dicentang,
+   *  disempitkan ke submissionID yang dicentang saat ada. */
+  filteredQueue(): SubmissionResponse[] {
+    if (this.queueFilter.length === 0) return this.queue();
+    return this.queue().filter((item) => this.queueFilter.includes(item.submissionID));
+  }
 
   select(item: SubmissionResponse): void {
     this.decision = this.decisionOptions[0].value as ReviewDecision;
