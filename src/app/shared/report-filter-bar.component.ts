@@ -6,7 +6,7 @@ import { DateRangePickerComponent, DateRange } from './date-range-picker.compone
 import { ReportFilterValue, EMPTY_REPORT_FILTER } from '../modules/report/entities/report';
 
 export interface ReportFilterFieldDef {
-  key: 'statuses' | 'provinces' | 'cities' | 'puskomdaIDs' | 'levelCodes';
+  key: 'statuses' | 'provinces' | 'cities' | 'puskomdaIDs' | 'organizationIDs' | 'levelCodes';
   label: string;
   options: MultiSelectOption[];
 }
@@ -36,11 +36,13 @@ export interface ReportFilterFieldDef {
       }
     </div>
     <div class="rfb-actions">
-      <button type="button" class="btn btn-primary" [disabled]="busy" (click)="showReport.emit(draft)">
-        <app-icon name="file-text" [size]="14" /> Tampilkan Laporan
+      <button type="button" class="btn btn-primary" [disabled]="showing || exporting" (click)="showReport.emit(draft)">
+        @if (showing) { <span class="spinner spinner-sm"></span> } @else { <app-icon name="file-text" [size]="14" /> }
+        Tampilkan Laporan
       </button>
-      <button type="button" class="btn btn-primary" [disabled]="busy" (click)="downloadReport.emit(draft)">
-        <app-icon name="download" [size]="14" /> Unduh Laporan
+      <button type="button" class="btn btn-primary" [disabled]="showing || exporting" (click)="downloadReport.emit(draft)">
+        @if (exporting) { <span class="spinner spinner-sm"></span> } @else { <app-icon name="download" [size]="14" /> }
+        Unduh Laporan
       </button>
     </div>
   `,
@@ -53,7 +55,13 @@ export interface ReportFilterFieldDef {
 })
 export class ReportFilterBarComponent {
   @Input() fields: ReportFilterFieldDef[] = [];
-  @Input() busy = false;
+  /** `showing`/`exporting` SENGAJA dipisah (bukan satu `busy` gabungan) —
+   *  tiap tombol menampilkan spinner-nya sendiri sesuai aksi mana yang
+   *  sedang berjalan (permintaan user: loading state per aksi), tapi
+   *  KEDUANYA tetap disabled selama salah satu aksi berjalan supaya tidak
+   *  ada dua request laporan bertabrakan. */
+  @Input() showing = false;
+  @Input() exporting = false;
   @Output() showReport = new EventEmitter<ReportFilterValue>();
   @Output() downloadReport = new EventEmitter<ReportFilterValue>();
 

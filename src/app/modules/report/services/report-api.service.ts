@@ -7,7 +7,7 @@ import { ExportFormat, ReportFilterValue, ReportSubmissionRow, PendataanTab } fr
 function toQuery(filter: ReportFilterValue, organizationID?: number) {
   return {
     status: filter.statuses, province: filter.provinces, city: filter.cities,
-    parentOrganizationID: filter.puskomdaIDs, level: filter.levelCodes,
+    parentOrganizationID: filter.puskomdaIDs, ldkOrganizationID: filter.organizationIDs, level: filter.levelCodes,
     dateFrom: filter.dateFrom || undefined, dateTo: filter.dateTo || undefined,
     organizationID,
   };

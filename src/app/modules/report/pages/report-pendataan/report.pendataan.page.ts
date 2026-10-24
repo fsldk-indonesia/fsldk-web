@@ -53,19 +53,31 @@ export class ReportPendataanPage implements OnInit, ReportPendataanView {
    *  sini (bukan diekstrak jadi satu service bersama) karena cuma 2 pemanggil
    *  dan fieldnya sendiri sedikit beda (Pendataan TIDAK punya field Level,
    *  DL-4) — mengekstrak lebih awal untuk 2 titik pakai adalah abstraksi
-   *  prematur (YAGNI). */
+   *  prematur (YAGNI). Provinsi/Kota/Puskomda HANYA tampil di tier Puskomnas
+   *  (permintaan user saat manual testing, sama alasan dengan
+   *  ReportLevelisasiPage) — tier Puskomda sudah otomatis terbatas ke satu
+   *  wilayah sendiri. */
   private isNasional = this.route.snapshot.pathFromRoot.some((r) => r.url.some((seg) => seg.path === 'cms-puskomnas'));
   private provinceOptions = signal<{ value: string; label: string }[]>([]);
   private cityOptions = signal<{ value: string; label: string }[]>([]);
   private puskomdaOptions = signal<{ value: string; label: string }[]>([]);
+  /** Nama LDK — sama pola dengan ReportLevelisasiPage: SELALU tampil di
+   *  kedua tier, opsinya dibatasi per tier (Puskomda: miliknya sendiri lewat
+   *  directory `puskomda=<currentOrganizationID>`; Puskomnas: seluruh LDK). */
+  private ldkOptions = signal<{ value: string; label: string }[]>([]);
 
   filterFields = computed<ReportFilterFieldDef[]>(() => {
     const fields: ReportFilterFieldDef[] = [
       { key: 'statuses', label: 'Status', options: Object.entries(SUBMISSION_STATUS_LABELS).map(([value, label]) => ({ value, label })) },
-      { key: 'provinces', label: 'Provinsi', options: this.provinceOptions() },
-      { key: 'cities', label: 'Kota/Kabupaten', options: this.cityOptions() },
+      { key: 'organizationIDs', label: 'Nama LDK', options: this.ldkOptions() },
     ];
-    if (this.isNasional) fields.push({ key: 'puskomdaIDs', label: 'Puskomda', options: this.puskomdaOptions() });
+    if (this.isNasional) {
+      fields.push(
+        { key: 'provinces', label: 'Provinsi', options: this.provinceOptions() },
+        { key: 'cities', label: 'Kota/Kabupaten', options: this.cityOptions() },
+        { key: 'puskomdaIDs', label: 'Puskomda', options: this.puskomdaOptions() },
+      );
+    }
     return fields;
   });
 
@@ -79,17 +91,29 @@ export class ReportPendataanPage implements OnInit, ReportPendataanView {
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.orgContext.organizationID$(this.route).subscribe((id) => { this.currentOrganizationID = id; });
-    this.statisticRepo.networkStats().subscribe({
-      next: (stats) => {
-        this.provinceOptions.set(stats.byProvince.map((p) => ({ value: p.provinceName, label: p.provinceName })));
-        this.cityOptions.set(stats.byCity.map((c) => ({ value: c.cityName, label: c.cityName })));
-      },
-      error: () => {},
+    this.orgContext.organizationID$(this.route).subscribe((id) => {
+      this.currentOrganizationID = id;
+      if (!this.isNasional) {
+        this.statisticRepo.directory({ type: 'LDK', puskomda: id, limit: 100 }).subscribe({
+          next: (p) => this.ldkOptions.set(p.data.map((o) => ({ value: String(o.organizationID), label: o.organizationName }))),
+          error: () => {},
+        });
+      }
     });
     if (this.isNasional) {
+      this.statisticRepo.networkStats().subscribe({
+        next: (stats) => {
+          this.provinceOptions.set(stats.byProvince.map((p) => ({ value: p.provinceName, label: p.provinceName })));
+          this.cityOptions.set(stats.byCity.map((c) => ({ value: c.cityName, label: c.cityName })));
+        },
+        error: () => {},
+      });
       this.statisticRepo.directory({ type: 'PUSKOMDA', limit: 100 }).subscribe({
         next: (p) => this.puskomdaOptions.set(p.data.map((o) => ({ value: String(o.organizationID), label: o.organizationName }))),
+        error: () => {},
+      });
+      this.statisticRepo.directory({ type: 'LDK', limit: 100 }).subscribe({
+        next: (p) => this.ldkOptions.set(p.data.map((o) => ({ value: String(o.organizationID), label: o.organizationName }))),
         error: () => {},
       });
     }

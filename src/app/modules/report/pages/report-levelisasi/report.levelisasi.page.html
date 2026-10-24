@@ -3,16 +3,20 @@
   <p class="text-muted">Rekap status dan level Levelisasi LDK dalam cakupan Anda.</p>
 </div>
 
-<app-report-filter-bar [fields]="filterFields()" [busy]="exporting()" (showReport)="onShowReport($event)" (downloadReport)="onDownloadReport($event)" />
+<app-report-filter-bar [fields]="filterFields()" [showing]="showing()" [exporting]="exporting()" (showReport)="onShowReport($event)" (downloadReport)="onDownloadReport($event)" />
 
-<app-cms-index [config]="config" [dataSource]="dataSource" [showActionsColumn]="false">
-  <ng-template #rowTemplate let-r let-isColumnVisible="isColumnVisible">
-    <td><strong>{{ r.organizationName }}</strong></td>
-    @if (isColumnVisible('parentOrganizationName')) { <td class="text-muted">{{ r.parentOrganizationName || '—' }}</td> }
-    @if (isColumnVisible('provinceName')) { <td class="text-muted">{{ r.provinceName || '—' }}</td> }
-    @if (isColumnVisible('cityName')) { <td class="text-muted">{{ r.cityName || '—' }}</td> }
-    @if (isColumnVisible('status')) { <td class="text-muted">{{ statusLabel(r.status) }}</td> }
-    @if (isColumnVisible('levelLabel')) { <td class="text-muted">{{ r.levelLabel || '—' }}</td> }
-    @if (isColumnVisible('submittedDate')) { <td class="text-muted">{{ r.submittedDate || '—' }}</td> }
-  </ng-template>
-</app-cms-index>
+@if (hasShownReport()) {
+  <app-cms-index [config]="config" [dataSource]="dataSource" [showActionsColumn]="false">
+    <ng-template #rowTemplate let-r let-isColumnVisible="isColumnVisible">
+      <td><strong>{{ r.organizationName }}</strong></td>
+      @if (isColumnVisible('parentOrganizationName')) { <td class="text-muted">{{ r.parentOrganizationName || '—' }}</td> }
+      @if (isColumnVisible('provinceName')) { <td class="text-muted">{{ r.provinceName || '—' }}</td> }
+      @if (isColumnVisible('cityName')) { <td class="text-muted">{{ r.cityName || '—' }}</td> }
+      @if (isColumnVisible('status')) { <td class="text-muted">{{ statusLabel(r.status) }}</td> }
+      @if (isColumnVisible('levelLabel')) { <td class="text-muted">{{ r.levelLabel || '—' }}</td> }
+      @if (isColumnVisible('submittedDate')) { <td class="text-muted">{{ r.submittedDate || '—' }}</td> }
+    </ng-template>
+  </app-cms-index>
+} @else {
+  <div class="card card-pad"><p class="text-muted">Atur filter lalu tekan "Tampilkan Laporan" untuk menampilkan data.</p></div>
+}

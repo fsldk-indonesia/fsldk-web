@@ -13,13 +13,19 @@ export interface ReportFilterValue {
   provinces: string[];
   cities: string[];
   puskomdaIDs: string[];
+  /** Filter "Nama LDK" — opsinya sudah dibatasi sesuai scope caller di level
+   *  UI (tier Puskomda cuma menawarkan LDK miliknya sendiri lewat filter
+   *  `puskomda` di directory endpoint, tier Puskomnas menawarkan seluruh
+   *  LDK), dikirim sebagai `ldkOrganizationID` (bukan `organizationID` —
+   *  nama itu sudah dipakai param tunggal org-switcher). */
+  organizationIDs: string[];
   levelCodes: string[];
   dateFrom: string;
   dateTo: string;
 }
 
 export const EMPTY_REPORT_FILTER: ReportFilterValue = {
-  statuses: [], provinces: [], cities: [], puskomdaIDs: [], levelCodes: [], dateFrom: '', dateTo: '',
+  statuses: [], provinces: [], cities: [], puskomdaIDs: [], organizationIDs: [], levelCodes: [], dateFrom: '', dateTo: '',
 };
 
 /** Satu baris Laporan Levelisasi — mirror report_dto.SubmissionRow backend

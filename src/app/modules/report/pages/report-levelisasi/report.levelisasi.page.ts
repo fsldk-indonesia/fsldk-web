@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal, computed, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { tap } from 'rxjs';
 import { AuthRepository } from '../../../user/repositories/auth.repository';
 import { OrgContextService } from '../../../../core/services/org-context.service';
 import { ToastService } from '../../../../core/services/toast.service';
@@ -61,6 +62,15 @@ export class ReportLevelisasiPage implements OnInit, ReportLevelisasiView {
   readonly statusLabels = SUBMISSION_STATUS_LABELS;
   exporting = signal(false);
 
+  /** Tabel BARU muncul setelah "Tampilkan Laporan" ditekan pertama kali —
+   *  <app-cms-index> tidak dirender sampai ini true (template), supaya
+   *  ngOnInit()-nya (yang auto-load lewat dataSource) tidak sempat jalan
+   *  dengan EMPTY_REPORT_FILTER saat halaman baru dibuka. Sama perilaku
+   *  dengan ReportPendataanPage, yang memang tidak pernah auto-load (tidak
+   *  pakai CmsIndexComponent) — permintaan user saat manual testing. */
+  hasShownReport = signal(false);
+  showing = signal(false);
+
   /** Sama pola dengan canCreate/canUpdate/dst di modul lain (mis.
    *  news.index.page.ts) — ReportFilterBarComponent (Task 10, sudah
    *  direview) selalu merender tombol Download Report tanpa tahu
@@ -76,26 +86,41 @@ export class ReportLevelisasiPage implements OnInit, ReportLevelisasiView {
    *  sudah otomatis terbatas ke wilayahnya sendiri). */
   private isNasional = this.route.snapshot.pathFromRoot.some((r) => r.url.some((seg) => seg.path === 'cms-puskomnas'));
 
-  /** Provinsi/Kota: distinct dari data organisasi yang benar-benar ada
+  /** Provinsi/Kota/Puskomda HANYA tampil di tier Puskomnas (permintaan user
+   *  saat manual testing) — tier Puskomda sudah otomatis terbatas ke satu
+   *  wilayah sendiri, jadi filter Provinsi/Kota di portalnya sendiri redundan.
+   *  Provinsi/Kota: distinct dari data organisasi yang benar-benar ada
    *  (GET /public/network-stats, endpoint publik yang sama dipakai Direktori
    *  Jaringan — lihat statistic.index.page.ts:444-446) — bukan daftar wilayah
    *  administratif Indonesia generik, dan bukan endpoint baru. Puskomda:
    *  GET /organizations/directory?organizationTypeCode=PUSKOMDA (idem,
-   *  statistic.index.presenter.ts loadPuskomdaOptions()), hanya diisi saat
-   *  isNasional. Level: LEVEL_OPTIONS (submission/entities/submission.ts),
-   *  dipakai tetap di sini karena Laporan Levelisasi selalu relevan dengan
-   *  level, beda dari Laporan Pendataan (Task 14) yang tidak menyertakannya. */
+   *  statistic.index.presenter.ts loadPuskomdaOptions()). Level: LEVEL_OPTIONS
+   *  (submission/entities/submission.ts), dipakai tetap di sini karena Laporan
+   *  Levelisasi selalu relevan dengan level, beda dari Laporan Pendataan
+   *  (Task 14) yang tidak menyertakannya. */
   private provinceOptions = signal<{ value: string; label: string }[]>([]);
   private cityOptions = signal<{ value: string; label: string }[]>([]);
   private puskomdaOptions = signal<{ value: string; label: string }[]>([]);
+  /** Nama LDK — SELALU tampil di kedua tier (beda dari Provinsi/Kota/Puskomda
+   *  di atas), tapi opsinya dibatasi beda per tier: tier Puskomda cuma
+   *  LDK miliknya sendiri (directory `puskomda=<currentOrganizationID>`,
+   *  "based on Puskomda-nya itu aja" — permintaan user), tier Puskomnas
+   *  seluruh LDK nasional (directory tanpa filter puskomda). Endpoint sama
+   *  dengan directory Puskomda di atas, type='LDK'. */
+  private ldkOptions = signal<{ value: string; label: string }[]>([]);
 
   filterFields = computed<ReportFilterFieldDef[]>(() => {
     const fields: ReportFilterFieldDef[] = [
       { key: 'statuses', label: 'Status', options: Object.entries(SUBMISSION_STATUS_LABELS).map(([value, label]) => ({ value, label })) },
-      { key: 'provinces', label: 'Provinsi', options: this.provinceOptions() },
-      { key: 'cities', label: 'Kota/Kabupaten', options: this.cityOptions() },
-      { key: 'levelCodes', label: 'Level', options: LEVEL_OPTIONS },
+      { key: 'organizationIDs', label: 'Nama LDK', options: this.ldkOptions() },
     ];
+    if (this.isNasional) {
+      fields.push(
+        { key: 'provinces', label: 'Provinsi', options: this.provinceOptions() },
+        { key: 'cities', label: 'Kota/Kabupaten', options: this.cityOptions() },
+      );
+    }
+    fields.push({ key: 'levelCodes', label: 'Level', options: LEVEL_OPTIONS });
     if (this.isNasional) fields.push({ key: 'puskomdaIDs', label: 'Puskomda', options: this.puskomdaOptions() });
     return fields;
   });
@@ -105,23 +130,46 @@ export class ReportLevelisasiPage implements OnInit, ReportLevelisasiView {
 
   ngOnInit(): void {
     this.presenter.attachView(this);
-    this.orgContext.organizationID$(this.route).subscribe((id) => { this.currentOrganizationID = id; });
-    this.statisticRepo.networkStats().subscribe({
-      next: (stats) => {
-        this.provinceOptions.set(stats.byProvince.map((p) => ({ value: p.provinceName, label: p.provinceName })));
-        this.cityOptions.set(stats.byCity.map((c) => ({ value: c.cityName, label: c.cityName })));
-      },
-      error: () => {},
+    this.orgContext.organizationID$(this.route).subscribe((id) => {
+      this.currentOrganizationID = id;
+      if (!this.isNasional) {
+        this.statisticRepo.directory({ type: 'LDK', puskomda: id, limit: 100 }).subscribe({
+          next: (p) => this.ldkOptions.set(p.data.map((o) => ({ value: String(o.organizationID), label: o.organizationName }))),
+          error: () => {},
+        });
+      }
     });
     if (this.isNasional) {
+      this.statisticRepo.networkStats().subscribe({
+        next: (stats) => {
+          this.provinceOptions.set(stats.byProvince.map((p) => ({ value: p.provinceName, label: p.provinceName })));
+          this.cityOptions.set(stats.byCity.map((c) => ({ value: c.cityName, label: c.cityName })));
+        },
+        error: () => {},
+      });
       this.statisticRepo.directory({ type: 'PUSKOMDA', limit: 100 }).subscribe({
         next: (p) => this.puskomdaOptions.set(p.data.map((o) => ({ value: String(o.organizationID), label: o.organizationName }))),
+        error: () => {},
+      });
+      this.statisticRepo.directory({ type: 'LDK', limit: 100 }).subscribe({
+        next: (p) => this.ldkOptions.set(p.data.map((o) => ({ value: String(o.organizationID), label: o.organizationName }))),
         error: () => {},
       });
     }
   }
 
-  dataSource = (params: CmsListParams) => this.presenter.list(this.currentFilter, params.page, params.limit, params.sort, this.currentOrganizationID);
+  /** Dibungkus tap() (bukan baca CmsIndexComponent.loading() lewat
+   *  @ViewChild) supaya busy-state tombol Show Report ikut nyala PERSIS saat
+   *  dataSource dipanggil — baik dari ngOnInit() milik CmsIndexComponent
+   *  (begitu <app-cms-index> pertama kali dirender) maupun dari refresh()
+   *  tiap klik Tampilkan Laporan berikutnya — tanpa bergantung pada timing
+   *  @ViewChild yang baru ter-update satu change-detection cycle setelahnya. */
+  dataSource = (params: CmsListParams) => {
+    this.showing.set(true);
+    return this.presenter.list(this.currentFilter, params.page, params.limit, params.sort, this.currentOrganizationID).pipe(
+      tap({ next: () => this.showing.set(false), error: () => this.showing.set(false) }),
+    );
+  };
 
   /** Sama pola dengan statusLabel() di ReportListPage yang dihapus — backend
    *  mengirim kode mentah tr_submission.status (mis. PUSKOMDA_REVIEW) tanpa
@@ -134,6 +182,7 @@ export class ReportLevelisasiPage implements OnInit, ReportLevelisasiView {
 
   onShowReport(filter: ReportFilterValue): void {
     this.currentFilter = filter;
+    this.hasShownReport.set(true);
     this.cmsIndex?.refresh();
   }
 
