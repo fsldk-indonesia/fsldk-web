@@ -9,6 +9,7 @@ import { OrganizationRepository } from '../../../organization/repositories/organ
 import { UserRow } from '../../entities/user';
 import { Pagination } from '../../../../core/entities/pagination';
 import { CmsComboboxOption, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
+import { OrgPickerOption } from '../../../../shared/org-picker.component';
 import { UserIndexView } from './user.index.view';
 
 export interface UserFormValue {
@@ -67,12 +68,21 @@ export class UserIndexPresenter extends BasePresenter<UserIndexView> {
    * ini (lihat auth_service_impl.go resolveEffectiveOrg) — dikonfirmasi
    * 2026-08-19: akses ditentukan oleh ROLE, bukan tipe organisasi yang dipilih
    * di sini.
+   *
+   * directory() (bukan list({limit:200})) — list() dengan limit tetap pernah
+   * membuat LDK yang urutan alfabetisnya jatuh di luar 200 baris pertama
+   * (mis. "Syahid") TIDAK PERNAH muncul sama sekali di field ini, bahkan
+   * saat dicari lewat kotak pencarian (filternya cuma jalan di atas 200 baris
+   * yang sudah kepalang termuat). directory() SELALU mengembalikan SEMUA LDK
+   * aktif nasional tanpa limit (lihat organization_repository_impl.go
+   * ListActiveByType — tidak ada .Limit()), jadi field ini wajib pakai itu.
    */
   loadOrganizations(): void {
-    this.orgRepo.list({ organizationTypeCode: 'LDK', limit: 200 }).subscribe({
-      next: (p) => this.view.setOrganizationOptions(p.data.map((o) => ({
-        value: o.organizationID,
-        label: o.parentOrganizationName ? `${o.organizationName} — ${o.parentOrganizationName}` : o.organizationName,
+    this.orgRepo.directory('LDK').subscribe({
+      next: (list) => this.view.setOrganizationOptions(list.map((o): OrgPickerOption => ({
+        id: o.organizationID,
+        name: o.organizationName,
+        parentName: o.parentOrganizationName,
       }))),
       error: () => {},
     });

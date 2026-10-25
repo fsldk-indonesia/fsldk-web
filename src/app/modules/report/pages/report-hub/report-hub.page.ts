@@ -1,8 +1,9 @@
 import { Component, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IconComponent } from '../../../../shared/icon.component';
 import { reportPath } from '../../report.path';
+
+type ReportTier = 'LDK' | 'PUSKOMDA' | 'PUSKOMNAS';
 
 @Component({
   selector: 'app-report-hub-page',
@@ -22,8 +23,30 @@ export class ReportHubPage {
   private route = inject(ActivatedRoute);
   title = this.route.snapshot.data['title'] as string;
   readonly path = reportPath;
-  /** Shell saat ini ditentukan prefix URL (cms-puskomda vs cms-puskomnas) —
-   *  dibaca dari absolute URL sendiri (bukan route data `tier`, yang tidak
-   *  diset di report.routes.ts) supaya card mengarah ke tier yang benar. */
-  isNasional = this.route.snapshot.pathFromRoot.some((r) => r.url.some((seg) => seg.path === 'cms-puskomnas'));
+
+  /** Shell saat ini ditentukan prefix URL (cms-ldk vs cms-puskomda vs
+   *  cms-puskomnas) — dibaca dari absolute URL sendiri (bukan route data
+   *  `tier`, yang di-set di parent cms-ldk/cms-puskomda/cms-puskomnas route
+   *  tapi tidak otomatis ter-inherit ke child route's snapshot.data tanpa
+   *  paramsInheritanceStrategy: 'always', yang tidak diaktifkan di app ini —
+   *  sama pendekatan dengan versi 2-tier sebelumnya, diperluas jadi 3 tier). */
+  tier: ReportTier = this.route.snapshot.pathFromRoot.some((r) => r.url.some((seg) => seg.path === 'cms-ldk'))
+    ? 'LDK'
+    : this.route.snapshot.pathFromRoot.some((r) => r.url.some((seg) => seg.path === 'cms-puskomnas'))
+      ? 'PUSKOMNAS'
+      : 'PUSKOMDA';
+
+  get isLdk(): boolean { return this.tier === 'LDK'; }
+  private get isNasional(): boolean { return this.tier === 'PUSKOMNAS'; }
+
+  get levelisasiPath(): string { return this.isNasional ? this.path.levelisasiNasional : this.path.levelisasiWilayah; }
+  get pendataanPath(): string { return this.isNasional ? this.path.pendataanNasional : this.path.pendataanWilayah; }
+  get sensusKaderPath(): string {
+    if (this.isLdk) return this.path.sensusKaderLdk;
+    return this.isNasional ? this.path.sensusKaderNasional : this.path.sensusKaderWilayah;
+  }
+  get pendataanSensusKaderPath(): string {
+    if (this.isLdk) return this.path.pendataanSensusKaderLdk;
+    return this.isNasional ? this.path.pendataanSensusKaderNasional : this.path.pendataanSensusKaderWilayah;
+  }
 }

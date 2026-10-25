@@ -1,0 +1,23 @@
+<div class="page-head">
+  <h1>{{ title }}</h1>
+  <p class="text-muted">Rekap data kader terdaftar dalam cakupan Anda.</p>
+</div>
+
+<app-report-filter-bar [fields]="filterFields()" [showing]="showing()" [exporting]="exporting()" (showReport)="onShowReport($event)" (downloadReport)="onDownloadReport($event)" />
+
+@if (hasShownReport()) {
+  <app-cms-index [config]="config" [dataSource]="dataSource" [showActionsColumn]="false">
+    <ng-template #rowTemplate let-r let-isColumnVisible="isColumnVisible">
+      <td><strong>{{ r.fullName }}</strong></td>
+      @if (isColumnVisible('organizationName')) { <td class="text-muted">{{ r.organizationName }}</td> }
+      @if (isColumnVisible('parentOrganizationName')) { <td class="text-muted">{{ r.parentOrganizationName || '—' }}</td> }
+      @if (isColumnVisible('provinceName')) { <td class="text-muted">{{ r.provinceName || '—' }}</td> }
+      @if (isColumnVisible('cityName')) { <td class="text-muted">{{ r.cityName || '—' }}</td> }
+      @if (isColumnVisible('status')) { <td class="text-muted">{{ statusLabel(r.status) }}</td> }
+      @if (isColumnVisible('uniqueCode')) { <td class="text-muted">{{ r.uniqueCode || '—' }}</td> }
+      @if (isColumnVisible('issuedDate')) { <td class="text-muted">{{ r.issuedDate || '—' }}</td> }
+    </ng-template>
+  </app-cms-index>
+} @else {
+  <div class="card card-pad"><p class="text-muted">Atur filter lalu tekan "Tampilkan Laporan" untuk menampilkan data.</p></div>
+}

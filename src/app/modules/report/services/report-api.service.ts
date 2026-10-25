@@ -2,12 +2,21 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { Pagination } from '../../../core/entities/pagination';
-import { ExportFormat, ReportFilterValue, ReportSubmissionRow, PendataanTab } from '../entities/report';
+import { ExportFormat, ReportFilterValue, ReportSubmissionRow, PendataanTab, KaderFilterValue, KaderReportRow } from '../entities/report';
 
 function toQuery(filter: ReportFilterValue, organizationID?: number) {
   return {
     status: filter.statuses, province: filter.provinces, city: filter.cities,
     parentOrganizationID: filter.puskomdaIDs, ldkOrganizationID: filter.organizationIDs, level: filter.levelCodes,
+    dateFrom: filter.dateFrom || undefined, dateTo: filter.dateTo || undefined,
+    organizationID,
+  };
+}
+
+function toKaderQuery(filter: KaderFilterValue, organizationID?: number) {
+  return {
+    status: filter.statuses, province: filter.provinces, city: filter.cities,
+    parentOrganizationID: filter.puskomdaIDs, ldkOrganizationID: filter.organizationIDs,
     dateFrom: filter.dateFrom || undefined, dateTo: filter.dateTo || undefined,
     organizationID,
   };
@@ -33,5 +42,21 @@ export class ReportApiService {
 
   exportPendataan(filter: ReportFilterValue, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
     return this.api.getBlob('/reports/pendataan/export', { ...toQuery(filter, organizationID), format });
+  }
+
+  listSensusKader(filter: KaderFilterValue, page: number, limit: number, sort: string, organizationID?: number): Observable<Pagination<KaderReportRow>> {
+    return this.api.get('/reports/sensus-kader', { ...toKaderQuery(filter, organizationID), page, limit, sort: sort || undefined });
+  }
+
+  exportSensusKader(filter: KaderFilterValue, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
+    return this.api.getBlob('/reports/sensus-kader/export', { ...toKaderQuery(filter, organizationID), format });
+  }
+
+  listPendataanSensusKader(filter: KaderFilterValue, organizationID?: number): Observable<PendataanTab[]> {
+    return this.api.get('/reports/sensus-kader/pendataan', toKaderQuery(filter, organizationID));
+  }
+
+  exportPendataanSensusKader(filter: KaderFilterValue, format: ExportFormat, organizationID?: number): Observable<{ blob: Blob; filename: string }> {
+    return this.api.getBlob('/reports/sensus-kader/pendataan/export', { ...toKaderQuery(filter, organizationID), format });
   }
 }

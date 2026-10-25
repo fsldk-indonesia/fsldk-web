@@ -86,7 +86,7 @@ function buildLdkIndexConfig(isNational: boolean, presenter: OrganizationLdkList
        animateModal()), bukan CSS transition — pola & alasan sama persis
        seperti popup Pengguna (lihat catatan panjang di sana). */
     .modal.modal-pop {
-      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column;
+      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 820px; max-height: 86vh; display: flex; flex-direction: column;
       animation: none; opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25);
     }
     .modal.modal-pop.open { opacity: 1; transform: none; }
@@ -109,10 +109,19 @@ function buildLdkIndexConfig(isNational: boolean, presenter: OrganizationLdkList
       font-family: var(--font-heading); font-weight: 700; font-size: .72rem;
       letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary-dark);
     }
-    .field-card { display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
-    .field-card .form-group { margin-bottom: 0; }
-    .field-card .form-section-label { margin: 0; }
+    /* 2 kolom (modal dilebarkan jadi 820px di atas supaya tetap lega) —
+       form-section-label & field yang sengaja lebar penuh (website) pakai
+       grid-column:1/-1 eksplisit di template; sisanya auto-flow berpasangan
+       kiri-kanan apa adanya. Turun ke 1 kolom di layar sempit (lihat media
+       query di bawah) supaya tidak kepencet di mobile. */
+    .field-card { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 20px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card .form-section-label { grid-column: 1 / -1; margin: 0; }
+    .field-card .form-group { margin-bottom: 0; min-width: 0; }
     .city-select-wrap .form-hint { margin-top: 6px; }
+    @media (max-width: 640px) {
+      .modal.modal-pop { max-width: 480px; }
+      .field-card { grid-template-columns: 1fr; }
+    }
   `],
 })
 export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView {
@@ -256,21 +265,32 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   }
 
   /** Cocokkan provinceName/cityName yang sudah tersimpan ke opsi dropdown
-   *  via exact label match, supaya "Ubah LDK" tidak selalu membuka dropdown
-   *  kosong walau datanya sudah ada — provinceOptions bisa sudah ter-cache
-   *  dari openCreate/openEdit sebelumnya (ensureProvincesLoaded cuma fetch
+   *  via label, supaya "Ubah LDK" tidak selalu membuka dropdown kosong
+   *  walau datanya sudah ada — provinceOptions bisa sudah ter-cache dari
+   *  openCreate/openEdit sebelumnya (ensureProvincesLoaded cuma fetch
    *  sekali, lihat provincesLoaded), makanya dipanggil langsung di sini,
    *  BUKAN cuma menunggu setProvinceOptions (yang tidak akan terpanggil
-   *  ulang kalau sudah pernah dimuat). Tetap exact match saja (tidak fuzzy)
-   *  — data lama yang formatnya tidak cocok persis tetap dibiarkan kosong,
-   *  sama seperti organization.profile.page.ts/puskomda-list sebelumnya. */
+   *  ulang kalau sudah pernah dimuat). Match case-INSENSITIVE (bukan fuzzy)
+   *  — WilayahService (emsifa) selalu mengembalikan nama ALL CAPS ("JAWA
+   *  TIMUR"), sedangkan provinceName/cityName tersimpan di DB pakai Title
+   *  Case ("Jawa Timur", hasil seed design/development/insert-data-ldk) —
+   *  exact match SELALU gagal karena perbedaan casing ini, bukan karena
+   *  datanya memang tidak ada (bug yang sama sudah ditemukan & diperbaiki
+   *  di organization.profile.page.ts, lihat sameLabel() di sana — baru
+   *  disadari belum ikut diterapkan di sini & puskomda-list). Data lama yang
+   *  namanya benar-benar beda (bukan cuma beda casing) tetap jatuh ke
+   *  placeholder kosong seperti sebelumnya. */
   private syncLocationSelection(): void {
     if (this.selectedProvinceId) return;
-    const match = this.provinceOptions().find((o) => o.label === this.form.provinceName);
+    const match = this.provinceOptions().find((o) => this.sameLabel(o.label, this.form.provinceName));
     if (!match) return;
     const provinceId = match.value as string;
     this.selectedProvinceId = provinceId;
     this.presenter.loadRegencies(provinceId);
+  }
+
+  private sameLabel(a: string, b: string): boolean {
+    return a.trim().toLowerCase() === b.trim().toLowerCase();
   }
   // Dipicu klik baris (CmsIndexComponent rowClick emit row, bukan event DOM
   // — makanya popupOrigin tidak dihitung dari titik klik, cukup center sama
@@ -355,7 +375,7 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   setProvinceOptions(options: SelectOption[]): void { this.provinceOptions.set(options); this.syncLocationSelection(); }
   setRegencyOptions(options: SelectOption[]): void {
     this.regencyOptions.set(options);
-    if (!this.selectedCityId) this.selectedCityId = (options.find((c) => c.label === this.form.cityName)?.value as string | undefined) ?? null;
+    if (!this.selectedCityId) this.selectedCityId = (options.find((c) => this.sameLabel(c.label, this.form.cityName))?.value as string | undefined) ?? null;
   }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.close(); this.table?.refresh(); }

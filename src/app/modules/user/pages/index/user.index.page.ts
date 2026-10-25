@@ -7,7 +7,7 @@ import { UserRow } from '../../entities/user';
 import { Role } from '../../../role/entities/role';
 import { IconComponent } from '../../../../shared/icon.component';
 import { ModalBackdropDirective } from '../../../../shared/modal-backdrop.directive';
-import { SelectComponent, SelectOption } from '../../../../shared/select.component';
+import { OrgPickerComponent, OrgPickerOption } from '../../../../shared/org-picker.component';
 import { CmsIndexComponent } from '../../../../shared/cms-index/cms-index.component';
 import { CmsIndexConfig, CmsListParams } from '../../../../shared/cms-index/cms-index.types';
 import { UserFormValue, UserIndexPresenter } from './user.index.presenter';
@@ -76,7 +76,7 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
   selector: 'app-user-index-page',
   standalone: true,
   templateUrl: './user.index.page.html',
-  imports: [FormsModule, IconComponent, ModalBackdropDirective, SelectComponent, CmsIndexComponent],
+  imports: [FormsModule, IconComponent, ModalBackdropDirective, OrgPickerComponent, CmsIndexComponent],
   providers: [UserIndexPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }
@@ -113,7 +113,7 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
        masalah ini — dx/dy dioper LANGSUNG sebagai nilai JS ke .animate(),
        tidak lewat custom property yang bisa "nyangkut" transisi lain. */
     .modal.modal-pop {
-      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column;
+      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 820px; max-height: 86vh; display: flex; flex-direction: column;
       animation: none; opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25);
     }
     .modal.modal-pop.open { opacity: 1; transform: none; }
@@ -185,9 +185,21 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
     /* SATU card putih per section (judul + semua field-nya jadi satu) —
        gaya sama seperti .perm-mod (kartu modul) di popup Role Pengguna,
        kontras di atas .modal-body yang abu-abu. */
-    .field-card { display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
-    .field-card .form-group { margin-bottom: 0; }
-    .field-card .form-section-label { margin: 0; }
+    /* 2 kolom (modal dilebarkan jadi 820px di atas) — Nama Lengkap/Email,
+       Role/LDK, dan kedua checkbox Status berpasangan kiri-kanan lewat
+       auto-flow grid apa adanya. Akses Lintas Tier SENGAJA grid-column:1/-1
+       (lihat .collapse di bawah) — isinya (segmented tier + daftar syarat +
+       perm-chips) butuh lebar penuh, kepencet kalau cuma setengah kolom.
+       Turun ke 1 kolom di layar sempit (lihat media query di bawah). */
+    .field-card { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 20px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card .form-section-label { grid-column: 1 / -1; margin: 0; }
+    .field-card > .form-group { margin-bottom: 0; min-width: 0; }
+    .field-card > .collapse { min-width: 0; }
+    .field-card > .collapse.wide-collapse { grid-column: 1 / -1; }
+    @media (max-width: 640px) {
+      .modal.modal-pop { max-width: 480px; }
+      .field-card { grid-template-columns: 1fr; }
+    }
 
     /* Field LDK & Akses Lintas Tier disembunyikan dengan transisi saat Role
        yang dipilih "Pengunjung" (tidak butuh cakupan organisasi apa pun) —
@@ -212,7 +224,18 @@ export class UserIndexPage implements OnInit, UserIndexView {
   @ViewChild(CmsIndexComponent) private table!: CmsIndexComponent<UserRow>;
 
   roles = signal<Role[]>([]);
-  organizationOptions = signal<SelectOption[]>([]);
+  /** Daftar LENGKAP LDK nasional (directory(), lihat presenter) — difilter
+   *  client-side oleh organizationOptions() di bawah mengikuti ketikan di
+   *  app-org-picker (searchChange), BUKAN query server per keystroke;
+   *  directory() sudah memuat semuanya sekali di awal, tanpa limit. */
+  allOrganizationOptions = signal<OrgPickerOption[]>([]);
+  organizationSearch = signal('');
+  organizationOptions = computed<OrgPickerOption[]>(() => {
+    const q = this.organizationSearch().trim().toLowerCase();
+    if (!q) return this.allOrganizationOptions();
+    return this.allOrganizationOptions().filter((o) =>
+      o.name.toLowerCase().includes(q) || (o.parentName ?? '').toLowerCase().includes(q));
+  });
   showForm = signal(false);
   saving = signal(false);
   busy = signal<ReadonlySet<number>>(new Set());
@@ -240,7 +263,10 @@ export class UserIndexPage implements OnInit, UserIndexView {
   readonly config = buildUserIndexConfig(this.presenter);
   dataSource = (params: CmsListParams) => this.presenter.list(params);
 
-  roleOptions = computed(() => this.roles().map((r) => ({ value: r.roleID, label: r.roleName })));
+  /** Bentuk OrgPickerOption (id/name) — field Role di form ini SENGAJA pakai
+   *  app-org-picker yang sama persis dengan field LDK (popup+search+card),
+   *  bukan app-select, biar satu konsep di seluruh form ini. */
+  roleOptions = computed<OrgPickerOption[]>(() => this.roles().map((r) => ({ id: r.roleID, name: r.roleName })));
 
   /** Provisioning scope UI mengikuti Section 19.5 TechSpec: LDK Admin
    *  organizationID-nya selalu dikunci server-side ke diri sendiri (field
@@ -532,7 +558,8 @@ export class UserIndexPage implements OnInit, UserIndexView {
   onBulkDelete(ids: (string | number)[]): void { this.presenter.bulkDelete(ids as number[]); }
 
   setRoles(roles: Role[]): void { this.roles.set(roles); }
-  setOrganizationOptions(options: SelectOption[]): void { this.organizationOptions.set(options); }
+  setOrganizationOptions(options: OrgPickerOption[]): void { this.allOrganizationOptions.set(options); }
+  onOrganizationSearch(value: string): void { this.organizationSearch.set(value); }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.showForm.set(false); this.table.refresh(); }
   onRemoveSuccess(): void { this.table.refresh(); }

@@ -53,20 +53,26 @@
         <div class="field-card">
           <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="shield-check" [size]="13" /></span>Peran & Akses</p>
           <div class="form-group"><label class="form-label">Role</label>
-            <app-select [ngModel]="form.roleID" (ngModelChange)="onRoleChange($event)" [options]="roleOptions()" [disabled]="isReadonly" placeholder="Pilih role" />
+            <app-org-picker [options]="roleOptions()" [selectedID]="form.roleID" (selectedIDChange)="onRoleChange($event)"
+                             [disabled]="isReadonly" [fullWidth]="true" [popup]="true"
+                             noun="Role" icon="shield-check" title="Pilih Role" subtitle="Pilih role untuk akun ini"
+                             confirmLabel="Pilih" searchPlaceholder="Cari role..." />
           </div>
           @if (showOrganizationPicker()) {
             <div class="collapse" [class.open]="!isPengunjungRole">
               <div class="collapse-inner">
                 <div class="form-group"><label class="form-label">LDK</label>
-                  <app-select [(ngModel)]="form.organizationID" [options]="organizationOptions()" [disabled]="isReadonly" [searchable]="true" placeholder="Pilih LDK" />
+                  <app-org-picker [options]="organizationOptions()" [selectedID]="form.organizationID" (selectedIDChange)="form.organizationID = $event"
+                                   (searchChange)="onOrganizationSearch($event)" [disabled]="isReadonly" [fullWidth]="true" [popup]="true"
+                                   noun="LDK" icon="building" title="Pilih LDK" subtitle="Pilih LDK yang ditautkan ke akun ini"
+                                   confirmLabel="Pilih" searchPlaceholder="Cari LDK..." />
                   <p class="form-hint">{{ ldkFieldHint }}</p>
                 </div>
               </div>
             </div>
           }
           @if (isFreeTierCaller()) {
-            <div class="collapse" [class.open]="!isPengunjungRole && !isKaderRole">
+            <div class="collapse wide-collapse" [class.open]="!isPengunjungRole && !isKaderRole">
               <div class="collapse-inner">
                 <div class="form-group">
                   <label class="form-label">Akses Lintas Tier{{ isSuperAdminRole ? '' : ' (opsional)' }}</label>

@@ -31,6 +31,14 @@
       </table>
     </div>
   }
+} @else if (hasShownReport()) {
+  <div class="card card-pad">
+    <div class="empty-state">
+      <span class="icon-badge lg icon-badge-soft" style="margin:0 auto 14px"><app-icon name="clipboard-list" [size]="26" /></span>
+      <h4>Tidak ada data</h4>
+      <p>Belum ada submission Pendataan Levelisasi LDK yang cocok dengan filter ini.</p>
+    </div>
+  </div>
 } @else {
   <div class="card card-pad"><p class="text-muted">Atur filter lalu tekan "Tampilkan Laporan" untuk menampilkan data.</p></div>
 }
