@@ -86,7 +86,7 @@ function buildLdkIndexConfig(isNational: boolean, presenter: OrganizationLdkList
        animateModal()), bukan CSS transition — pola & alasan sama persis
        seperti popup Pengguna (lihat catatan panjang di sana). */
     .modal.modal-pop {
-      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column;
+      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 820px; max-height: 86vh; display: flex; flex-direction: column;
       animation: none; opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25);
     }
     .modal.modal-pop.open { opacity: 1; transform: none; }
@@ -109,10 +109,19 @@ function buildLdkIndexConfig(isNational: boolean, presenter: OrganizationLdkList
       font-family: var(--font-heading); font-weight: 700; font-size: .72rem;
       letter-spacing: .07em; text-transform: uppercase; color: var(--color-primary-dark);
     }
-    .field-card { display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
-    .field-card .form-group { margin-bottom: 0; }
-    .field-card .form-section-label { margin: 0; }
+    /* 2 kolom (modal dilebarkan jadi 820px di atas supaya tetap lega) —
+       form-section-label & field yang sengaja lebar penuh (website) pakai
+       grid-column:1/-1 eksplisit di template; sisanya auto-flow berpasangan
+       kiri-kanan apa adanya. Turun ke 1 kolom di layar sempit (lihat media
+       query di bawah) supaya tidak kepencet di mobile. */
+    .field-card { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 20px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card .form-section-label { grid-column: 1 / -1; margin: 0; }
+    .field-card .form-group { margin-bottom: 0; min-width: 0; }
     .city-select-wrap .form-hint { margin-top: 6px; }
+    @media (max-width: 640px) {
+      .modal.modal-pop { max-width: 480px; }
+      .field-card { grid-template-columns: 1fr; }
+    }
   `],
 })
 export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView {

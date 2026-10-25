@@ -72,7 +72,7 @@
             </div>
           }
           @if (isFreeTierCaller()) {
-            <div class="collapse" [class.open]="!isPengunjungRole && !isKaderRole">
+            <div class="collapse wide-collapse" [class.open]="!isPengunjungRole && !isKaderRole">
               <div class="collapse-inner">
                 <div class="form-group">
                   <label class="form-label">Akses Lintas Tier{{ isSuperAdminRole ? '' : ' (opsional)' }}</label>

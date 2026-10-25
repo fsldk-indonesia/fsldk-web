@@ -113,7 +113,7 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
        masalah ini — dx/dy dioper LANGSUNG sebagai nilai JS ke .animate(),
        tidak lewat custom property yang bisa "nyangkut" transisi lain. */
     .modal.modal-pop {
-      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 480px; max-height: 86vh; display: flex; flex-direction: column;
+      background: #fff; border-radius: var(--radius-lg); padding: 28px; width: 100%; max-width: 820px; max-height: 86vh; display: flex; flex-direction: column;
       animation: none; opacity: 0; transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(.25);
     }
     .modal.modal-pop.open { opacity: 1; transform: none; }
@@ -185,9 +185,21 @@ function buildUserIndexConfig(presenter: UserIndexPresenter): CmsIndexConfig<Use
     /* SATU card putih per section (judul + semua field-nya jadi satu) —
        gaya sama seperti .perm-mod (kartu modul) di popup Role Pengguna,
        kontras di atas .modal-body yang abu-abu. */
-    .field-card { display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
-    .field-card .form-group { margin-bottom: 0; }
-    .field-card .form-section-label { margin: 0; }
+    /* 2 kolom (modal dilebarkan jadi 820px di atas) — Nama Lengkap/Email,
+       Role/LDK, dan kedua checkbox Status berpasangan kiri-kanan lewat
+       auto-flow grid apa adanya. Akses Lintas Tier SENGAJA grid-column:1/-1
+       (lihat .collapse di bawah) — isinya (segmented tier + daftar syarat +
+       perm-chips) butuh lebar penuh, kepencet kalau cuma setengah kolom.
+       Turun ke 1 kolom di layar sempit (lihat media query di bawah). */
+    .field-card { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 20px; border: 1px solid var(--color-border); border-radius: var(--radius-xs); background: #fff; padding: 16px; }
+    .field-card .form-section-label { grid-column: 1 / -1; margin: 0; }
+    .field-card > .form-group { margin-bottom: 0; min-width: 0; }
+    .field-card > .collapse { min-width: 0; }
+    .field-card > .collapse.wide-collapse { grid-column: 1 / -1; }
+    @media (max-width: 640px) {
+      .modal.modal-pop { max-width: 480px; }
+      .field-card { grid-template-columns: 1fr; }
+    }
 
     /* Field LDK & Akses Lintas Tier disembunyikan dengan transisi saat Role
        yang dipilih "Pengunjung" (tidak butuh cakupan organisasi apa pun) —
