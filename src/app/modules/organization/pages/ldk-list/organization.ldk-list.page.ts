@@ -256,21 +256,32 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   }
 
   /** Cocokkan provinceName/cityName yang sudah tersimpan ke opsi dropdown
-   *  via exact label match, supaya "Ubah LDK" tidak selalu membuka dropdown
-   *  kosong walau datanya sudah ada — provinceOptions bisa sudah ter-cache
-   *  dari openCreate/openEdit sebelumnya (ensureProvincesLoaded cuma fetch
+   *  via label, supaya "Ubah LDK" tidak selalu membuka dropdown kosong
+   *  walau datanya sudah ada — provinceOptions bisa sudah ter-cache dari
+   *  openCreate/openEdit sebelumnya (ensureProvincesLoaded cuma fetch
    *  sekali, lihat provincesLoaded), makanya dipanggil langsung di sini,
    *  BUKAN cuma menunggu setProvinceOptions (yang tidak akan terpanggil
-   *  ulang kalau sudah pernah dimuat). Tetap exact match saja (tidak fuzzy)
-   *  — data lama yang formatnya tidak cocok persis tetap dibiarkan kosong,
-   *  sama seperti organization.profile.page.ts/puskomda-list sebelumnya. */
+   *  ulang kalau sudah pernah dimuat). Match case-INSENSITIVE (bukan fuzzy)
+   *  — WilayahService (emsifa) selalu mengembalikan nama ALL CAPS ("JAWA
+   *  TIMUR"), sedangkan provinceName/cityName tersimpan di DB pakai Title
+   *  Case ("Jawa Timur", hasil seed design/development/insert-data-ldk) —
+   *  exact match SELALU gagal karena perbedaan casing ini, bukan karena
+   *  datanya memang tidak ada (bug yang sama sudah ditemukan & diperbaiki
+   *  di organization.profile.page.ts, lihat sameLabel() di sana — baru
+   *  disadari belum ikut diterapkan di sini & puskomda-list). Data lama yang
+   *  namanya benar-benar beda (bukan cuma beda casing) tetap jatuh ke
+   *  placeholder kosong seperti sebelumnya. */
   private syncLocationSelection(): void {
     if (this.selectedProvinceId) return;
-    const match = this.provinceOptions().find((o) => o.label === this.form.provinceName);
+    const match = this.provinceOptions().find((o) => this.sameLabel(o.label, this.form.provinceName));
     if (!match) return;
     const provinceId = match.value as string;
     this.selectedProvinceId = provinceId;
     this.presenter.loadRegencies(provinceId);
+  }
+
+  private sameLabel(a: string, b: string): boolean {
+    return a.trim().toLowerCase() === b.trim().toLowerCase();
   }
   // Dipicu klik baris (CmsIndexComponent rowClick emit row, bukan event DOM
   // — makanya popupOrigin tidak dihitung dari titik klik, cukup center sama
@@ -355,7 +366,7 @@ export class OrganizationLdkListPage implements OnInit, OrganizationLdkListView 
   setProvinceOptions(options: SelectOption[]): void { this.provinceOptions.set(options); this.syncLocationSelection(); }
   setRegencyOptions(options: SelectOption[]): void {
     this.regencyOptions.set(options);
-    if (!this.selectedCityId) this.selectedCityId = (options.find((c) => c.label === this.form.cityName)?.value as string | undefined) ?? null;
+    if (!this.selectedCityId) this.selectedCityId = (options.find((c) => this.sameLabel(c.label, this.form.cityName))?.value as string | undefined) ?? null;
   }
   setSaving(saving: boolean): void { this.saving.set(saving); }
   onSaveSuccess(): void { this.close(); this.table?.refresh(); }
