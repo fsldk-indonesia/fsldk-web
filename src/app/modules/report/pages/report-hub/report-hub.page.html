@@ -4,14 +4,26 @@
 </div>
 
 <div class="hub-grid">
-  <a [routerLink]="isNasional ? path.levelisasiNasional : path.levelisasiWilayah" target="_blank" class="hub-card">
-    <span class="icon-badge lg icon-badge-soft"><app-icon name="award" [size]="24" /></span>
-    <h3>Laporan Levelisasi</h3>
-    <p>Ringkasan status dan level setiap LDK dalam cakupan Anda.</p>
+  @if (!isLdk) {
+    <a [routerLink]="levelisasiPath" target="_blank" class="hub-card">
+      <span class="icon-badge lg icon-badge-soft"><app-icon name="award" [size]="24" /></span>
+      <h3>Laporan Levelisasi</h3>
+      <p>Ringkasan status dan level setiap LDK dalam cakupan Anda.</p>
+    </a>
+    <a [routerLink]="pendataanPath" target="_blank" class="hub-card">
+      <span class="icon-badge lg icon-badge-soft"><app-icon name="clipboard-list" [size]="24" /></span>
+      <h3>Laporan Pendataan</h3>
+      <p>Data jawaban lengkap pendataan Levelisasi LDK, per versi formulir.</p>
+    </a>
+  }
+  <a [routerLink]="sensusKaderPath" target="_blank" class="hub-card">
+    <span class="icon-badge lg icon-badge-soft"><app-icon name="user-group" [size]="24" /></span>
+    <h3>Laporan Sensus Kader</h3>
+    <p>Ringkasan data kader terdaftar dalam cakupan Anda.</p>
   </a>
-  <a [routerLink]="isNasional ? path.pendataanNasional : path.pendataanWilayah" target="_blank" class="hub-card">
-    <span class="icon-badge lg icon-badge-soft"><app-icon name="clipboard-list" [size]="24" /></span>
-    <h3>Laporan Pendataan</h3>
-    <p>Data jawaban lengkap pendataan Levelisasi LDK, per versi formulir.</p>
+  <a [routerLink]="pendataanSensusKaderPath" target="_blank" class="hub-card">
+    <span class="icon-badge lg icon-badge-soft"><app-icon name="id-card" [size]="24" /></span>
+    <h3>Laporan Pendataan Sensus Kader</h3>
+    <p>Data jawaban lengkap pendataan Sensus Kader, per versi formulir.</p>
   </a>
 </div>
