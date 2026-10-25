@@ -522,14 +522,23 @@ function canvasSilhouetteUrl(hex: string): string {
     }
     /* Di bawah ini topbar makin sempit (ponsel kecil) — sembunyikan elemen
        sekunder (label "Website", nama/role akun sudah disembunyikan sejak
-       900px) supaya hamburger + org-picker + prayer-time + avatar tidak
-       berdesakan/terpotong. app-org-picker trigger menyusut sendiri lewat
-       CSS internalnya (lihat org-picker.component.ts) — tidak perlu override
-       di sini lagi. */
+       900px) supaya hamburger + prayer-time + avatar tidak berdesakan/
+       terpotong, dan org-picker dipindah ke baris sendiri (lihat rule
+       app-org-picker di bawah) alih-alih ikut menyusut di baris yang sama. */
     @media (max-width: 560px) {
       .nav-website-text { display: none; }
       .nav-website-link { padding: 8px; }
-      .topbar { gap: 4px; padding: 8px; }
+      .topbar { gap: 4px; padding: 8px; flex-wrap: wrap; }
+      /* Org-switcher (LDK/Puskomda) dipindah jadi baris sendiri DI BAWAH baris
+         hamburger+jadwal-sholat+website+avatar (bukan sejajar/berdesakan di
+         satu baris seperti sebelumnya) — order dinaikkan supaya jatuh paling
+         akhir, lalu flex-basis 100% memaksanya wrap ke baris baru & melebar
+         penuh. Trigger pill-nya sendiri (.op-trigger, lihat org-picker.component.ts)
+         default lebar-secukupnya (bukan [fullWidth]) jadi perlu di-stretch
+         manual lewat ::ng-deep (pola sama dengan .topbar ::ng-deep .prayer-btn
+         di atas) supaya benar-benar full area, bukan cuma host block-nya. */
+      app-org-picker { order: 5; flex: 1 1 100%; margin-top: 8px; }
+      .topbar ::ng-deep app-org-picker .op-trigger { width: 100%; }
     }
 
     /* Tema per tier (revisi — sebelumnya tint warna tier disebar ke SELURUH

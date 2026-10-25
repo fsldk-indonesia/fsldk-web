@@ -69,6 +69,12 @@ export interface OrgPickerAccent {
           <div class="op-panel-heading">
             <h3>{{ title() }}</h3>
             @if (subtitle()) { <p>{{ subtitle() }}</p> }
+            @if (triggerLabel()) {
+              <span class="op-panel-current">
+                <span class="op-panel-current-label">{{ noun() }}</span>
+                <span class="op-panel-current-value">{{ triggerLabel() }}</span>
+              </span>
+            }
           </div>
           <button type="button" class="op-panel-close" (click)="closePanel()" aria-label="Tutup">
             <app-icon name="x" [size]="16" />
@@ -177,6 +183,19 @@ export interface OrgPickerAccent {
     .op-panel-heading { flex: 1; min-width: 0; }
     .op-panel-heading h3 { color: #fff; font-size: 1.05rem; margin: 2px 0 2px; }
     .op-panel-heading p { font-size: .8rem; margin: 0; opacity: .85; }
+    /* Chip "organisasi saat ini" — nilai yang sama dipakai op-trigger navbar
+       (triggerLabel()), ditaruh di bawah judul+subjudul (bukan di samping
+       tombol close — dicoba lebih dulu, dipindah ke sini) supaya tetap
+       kelihatan selagi panel ini terbuka (navbar di baliknya tertutup
+       overlay gelap). Rata kiri & teks penuh (tanpa ellipsis) mengikuti
+       heading di atasnya, bukan dipotong seperti op-trigger navbar. */
+    .op-panel-current {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 8px;
+      padding: 5px 10px; border-radius: 8px;
+      background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3);
+    }
+    .op-panel-current-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; opacity: .8; flex-shrink: 0; }
+    .op-panel-current-value { font-size: .8rem; font-weight: 800; }
     .op-panel-close { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; border: none; background: rgba(255,255,255,.2); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .op-panel-close:hover { background: rgba(255,255,255,.35); }
     .op-panel-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
