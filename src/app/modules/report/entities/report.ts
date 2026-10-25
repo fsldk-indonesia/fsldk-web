@@ -49,3 +49,39 @@ export interface PendataanTab {
   columns: string[];
   rows: string[][];
 }
+
+/** Nilai filter Laporan Sensus Kader (Ringkasan & Pendataan) — mirror
+ *  report_dto.KaderFilter backend. TIDAK reuse ReportFilterValue — Sensus
+ *  Kader tidak punya konsep Level, menjaga field yang selalu kosong tidak
+ *  diam-diam ada di satu tipe gabungan. */
+export interface KaderFilterValue {
+  statuses: string[];
+  provinces: string[];
+  cities: string[];
+  puskomdaIDs: string[];
+  organizationIDs: string[];
+  dateFrom: string;
+  dateTo: string;
+}
+
+export const EMPTY_KADER_FILTER: KaderFilterValue = {
+  statuses: [], provinces: [], cities: [], puskomdaIDs: [], organizationIDs: [], dateFrom: '', dateTo: '',
+};
+
+/** Satu baris Laporan Sensus Kader — mirror report_dto.KaderReportRow
+ *  backend. status adalah ms_kader.status ("Status Keanggotaan":
+ *  PENDING/ACTIVE/REJECTED/INACTIVE) — terjemahkan lewat KADER_STATUS_LABELS
+ *  (modules/submission/entities/submission.ts), BUKAN SUBMISSION_STATUS_LABELS. */
+export interface KaderReportRow {
+  kaderID: number;
+  submissionID: number;
+  uniqueCode?: string;
+  fullName: string;
+  organizationName: string;
+  parentOrganizationName?: string;
+  provinceName?: string;
+  cityName?: string;
+  status: string;
+  issuedDate?: string;
+  submittedDate?: string;
+}
