@@ -1,0 +1,188 @@
+<div class="rp-competition-page">
+
+    <header class="rp-competition-hero">
+
+        <div class="rp-competition-hero-glow" aria-hidden="true">
+        </div>
+
+        <span class="rp-eyebrow">
+          <app-icon name="trophy" [size]="16" />
+          Rangkaian Kompetisi RAPIMNAS I 2026
+        </span>
+
+        <h1>
+            Pendaftaran
+            <span>Lomba</span>
+        </h1>
+
+        <p>
+            Asah gagasan, hadirkan karya, dan ambil peran dalam rangkaian RAPIMNAS I FSLDK Indonesia 2026.
+        </p>
+
+    </header>
+
+    @if (loading()) {
+    <div class="rp-message" role="status">
+        Memuat informasi lomba...
+    </div>
+    } @else if (error()) {
+    <div class="rp-message" role="alert">
+        {{ error() }}
+    </div>
+    } @else { @if (lomba(); as data) {
+
+    <section aria-labelledby="kategori-title">
+        <h2 id="kategori-title" class="rp-section-title">
+            Kategori Perlombaan
+        </h2>
+
+        <div class="rp-competition-grid">
+
+            @for (kategori of data.daftarKategori; track $index) {
+            <article class="rp-competition-card">
+
+                <span class="rp-card-category">
+              Kompetisi Nasional
+            </span>
+
+                <h2>{{ kategori.namaKategori }}</h2>
+
+                <p class="rp-card-theme">
+                    {{ kategori.temaKategori }}
+                </p>
+
+                <div class="rp-card-info">
+                    <p>
+                        <strong>Jenis Peserta</strong>
+                        <span>{{ kategori.tipePeserta }}</span>
+                    </p>
+                    <p>
+                        <strong>Biaya Pendaftaran</strong>
+                        <span>{{ kategori.biayaPendaftaran }}</span>
+                    </p>
+                </div>
+
+                <div class="rp-card-section">
+                    <h3>Alur Pendaftaran</h3>
+                    <ol>
+                        @for (step of kategori.alurPendaftaran; track $index) {
+                        <li>{{ step }}</li>
+                        }
+                    </ol>
+                </div>
+
+                <div class="rp-card-section">
+                    <h3>
+                        <app-icon name="calendar-days" [size]="17" /> Timeline
+                    </h3>
+
+                    <div class="rp-timeline">
+                        @for (item of kategori.timeline; track $index) {
+                        <div class="rp-timeline-item">
+                            <strong>{{ item.title }}</strong>
+                            <span>{{ item.date }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+
+                <div class="rp-card-actions">
+
+                    <!-- Daftar: sama untuk Poster dan BCC -->
+                    @if (data.linkPendaftaran) {
+                    <a class="rp-fill-btn" [href]="data.linkPendaftaran" target="_blank" rel="noopener noreferrer">
+      Daftar Sekarang
+      <app-icon name="external-link" [size]="16" />
+    </a> }
+
+                    <!-- Guidebook: sama untuk Poster dan BCC -->
+                    @if (data.linkGuidebook) {
+                    <a class="rp-outline-btn" [href]="data.linkGuidebook" target="_blank" rel="noopener noreferrer">
+      Guidebook
+      <app-icon name="external-link" [size]="16" />
+    </a> }
+
+                    <!-- Satu link pengumpulan untuk kedua kategori -->
+                    @if (data.linkPengumpulanKarya) {
+                    <a class="rp-outline-btn" [href]="data.linkPengumpulanKarya" target="_blank" rel="noopener noreferrer">
+      {{ kategori.namaKategori.toUpperCase() === 'BCC'
+        ? 'Kumpulkan Proposal'
+        : 'Kumpulkan Karya' }}
+      <app-icon name="upload" [size]="16" />
+    </a> }
+
+                    <!-- Hanya untuk Business Case Competition -->
+                    @if (kategori.namaKategori.toUpperCase() === 'BCC' && data.linkTemplateBCC) {
+                    <a class="rp-outline-btn" [href]="data.linkTemplateBCC" target="_blank" rel="noopener noreferrer">
+      Template BCC
+      <app-icon name="download" [size]="16" />
+    </a> }
+
+                </div>
+            </article>
+            }
+
+        </div>
+    </section>
+
+    <section class="rp-info-section">
+        <h2 class="rp-section-title">Persyaratan Umum</h2>
+
+        <div class="rp-info-card">
+            <ul>
+                @for (syarat of data.persyaratanUmum; track $index) {
+                <li>{{ syarat }}</li>
+                }
+            </ul>
+        </div>
+    </section>
+
+    <section class="rp-info-section">
+        <h2 class="rp-section-title">Benefit & Penghargaan</h2>
+
+        <div class="rp-info-card">
+            <ul>
+                @for (item of data.benefit; track $index) {
+                <li>{{ item }}</li>
+                }
+            </ul>
+        </div>
+    </section>
+
+    <section class="rp-info-section">
+        <h2 class="rp-section-title">Narahubung</h2>
+
+        <div class="rp-info-card">
+            <div class="rp-contact-grid">
+                @for (cp of data.contactPersons; track $index) {
+                <div class="rp-contact-item">
+                    <strong>{{ cp.name }}</strong>
+                    <span>{{ cp.type }}</span>
+                    <a [href]="whatsappUrl(cp.phone)" target="_blank" rel="noopener noreferrer">
+                      {{ cp.phone }}
+                    </a>
+                </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    @if (data.linkPendaftaran) {
+    <section class="rp-competition-cta">
+        <h2>Siap Menjadi Bagian dari Kompetisi?</h2>
+        <p>
+            Daftarkan dirimu atau timmu melalui formulir resmi Pendaftaran Lomba RAPIMNAS I FSLDK Indonesia 2026.
+        </p>
+
+        <a class="rp-fill-btn" [href]="data.linkPendaftaran" target="_blank" rel="noopener noreferrer">
+          Daftar Sekarang
+          <app-icon name="arrow-right" [size]="16" />
+        </a>
+    </section>
+    } } @else {
+    <div class="rp-message">
+        Informasi lomba belum tersedia.
+    </div>
+    } }
+</div>

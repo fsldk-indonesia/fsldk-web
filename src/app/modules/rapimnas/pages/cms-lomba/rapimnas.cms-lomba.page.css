@@ -1,0 +1,31 @@
+:host { display: block; }
+.cms-lomba-section { margin-bottom: 20px; }
+.cms-lomba-section h2 { margin: 0 0 16px; font-size: 1.15rem; }
+.cms-lomba-section h3 { margin: 0; font-size: 1rem; }
+.cms-lomba-section h4 { margin: 0; font-size: .94rem; }
+.cms-lomba-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.cms-lomba-fieldset:disabled { opacity: .75; }
+.cms-lomba-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+.cms-lomba-span-2 { grid-column: 1 / -1; }
+.cms-lomba-grid .form-group { margin-bottom: 0; min-width: 0; }
+.cms-lomba-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.cms-lomba-heading h2 { margin: 0; }
+.cms-lomba-space { margin-top: 24px; }
+.cms-lomba-subcard { padding: 22px; margin: 18px 0; border: 1px solid var(--color-border); border-radius: 14px; background: var(--color-bg-warm, transparent); }
+.cms-lomba-repeater { display: grid; grid-template-columns: 24px minmax(0,1fr) auto; gap: 10px; align-items: start; margin-bottom: 10px; }
+.cms-lomba-index { padding-top: 11px; color: var(--color-text-secondary); }
+.cms-lomba-timeline { grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; }
+.cms-lomba-contacts { grid-template-columns: repeat(3, minmax(0,1fr)) auto; }
+.cms-lomba-actions { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 20px 0 32px; }
+.cms-lomba-action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+.cms-lomba-error, .cms-lomba-warning { padding: 12px 16px; border-radius: 10px; margin: 12px 0; }
+.cms-lomba-error { color: #941b2b; border: 1px solid #e9b0b9; background: #fff0f1; }
+.cms-lomba-warning { color: #805900; border: 1px solid #ecd090; background: #fff8de; }
+@media (max-width: 700px) {
+  .cms-lomba-grid { grid-template-columns: 1fr; }
+  .cms-lomba-span-2 { grid-column: auto; }
+  .cms-lomba-subcard { padding: 14px; }
+  .cms-lomba-timeline, .cms-lomba-contacts { grid-template-columns: minmax(0, 1fr); }
+  .cms-lomba-repeater { gap: 8px; }
+  .cms-lomba-actions { align-items: stretch; }
+}

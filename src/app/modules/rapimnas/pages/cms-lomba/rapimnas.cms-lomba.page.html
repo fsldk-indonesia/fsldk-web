@@ -1,0 +1,117 @@
+<div class="page-head">
+  <h1>CMS Pendaftaran Lomba</h1>
+  <p class="text-muted">Kelola informasi lomba Poster dan BCC. Perubahan akan muncul pada halaman publik setelah disimpan.</p>
+  <a routerLink="/rapimnas/pendaftaran/lomba" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Lihat Halaman Publik ↗</a>
+</div>
+
+@if (loading()) {
+  <div class="card card-pad" role="status">Memuat informasi lomba...</div>
+} @else if (!data) {
+  <div class="card card-pad" role="alert">{{ error() || 'Konfigurasi tidak tersedia.' }}
+    <button type="button" class="btn btn-outline" (click)="load()">Coba Lagi</button>
+  </div>
+} @else {
+  @if (data; as form) {
+  @if (!canManage) {
+    <p class="cms-lomba-warning" role="status">Akun ini hanya memiliki akses lihat. Untuk menyimpan diperlukan permission <code>rapimnas.lomba.manage</code>.</p>
+  }
+  @if (error()) { <p class="cms-lomba-error" role="alert">{{ error() }}</p> }
+
+  <fieldset class="cms-lomba-fieldset" [disabled]="saving() || !canManage">
+    <section class="card card-pad cms-lomba-section">
+      <h2>Informasi Utama</h2>
+      <div class="form-group">
+        <label class="form-label" for="namaKegiatan">Nama Kegiatan *</label>
+        <input id="namaKegiatan" class="form-control" [(ngModel)]="form.namaKegiatan" maxlength="255" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="deskripsi">Deskripsi *</label>
+        <textarea id="deskripsi" class="form-control" [(ngModel)]="form.deskripsi" rows="5" maxlength="20000"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="akunSosmed">Akun Instagram</label>
+        <input id="akunSosmed" class="form-control" [(ngModel)]="form.akunSosmed" maxlength="100" />
+      </div>
+    </section>
+
+    <section class="card card-pad cms-lomba-section">
+      <h2>Tautan Resmi</h2>
+      <p class="text-muted">Satu link pendaftaran dan satu link pengumpulan berlaku untuk Poster dan BCC. Link template hanya ditampilkan di kategori BCC.</p>
+      <div class="cms-lomba-grid">
+        <div class="form-group"><label class="form-label" for="linkPendaftaran">Link Pendaftaran (wajib) *</label><input id="linkPendaftaran" type="url" class="form-control" [(ngModel)]="form.linkPendaftaran" placeholder="https://..." /></div>
+        <div class="form-group"><label class="form-label" for="linkPengumpulanKarya">Link Pengumpulan Karya/Proposal</label><input id="linkPengumpulanKarya" type="url" class="form-control" [(ngModel)]="form.linkPengumpulanKarya" placeholder="https://..." /></div>
+        <div class="form-group"><label class="form-label" for="linkTemplateBCC">Link Template BCC</label><input id="linkTemplateBCC" type="url" class="form-control" [(ngModel)]="form.linkTemplateBCC" placeholder="https://..." /></div>
+        <div class="form-group"><label class="form-label" for="linkGuidebook">Link Guidebook</label><input id="linkGuidebook" type="url" class="form-control" [(ngModel)]="form.linkGuidebook" placeholder="https://..." /></div>
+        <div class="form-group"><label class="form-label" for="linkTwibbon">Link Twibbon</label><input id="linkTwibbon" type="url" class="form-control" [(ngModel)]="form.linkTwibbon" placeholder="https://..." /></div>
+      </div>
+    </section>
+
+    <section class="card card-pad cms-lomba-section">
+      <div class="cms-lomba-heading"><h2>Kategori Lomba</h2><button type="button" class="btn btn-outline btn-sm" (click)="addCategory()">+ Tambah Kategori</button></div>
+      @for (category of form.daftarKategori; track category; let ci = $index) {
+        <div class="cms-lomba-subcard">
+          <div class="cms-lomba-heading"><h3>Kategori {{ ci + 1 }} · {{ category.namaKategori || 'Baru' }}</h3><button type="button" class="btn btn-ghost btn-sm" [disabled]="form.daftarKategori.length <= 1" (click)="removeCategory(ci)">Hapus Kategori</button></div>
+          <div class="cms-lomba-grid">
+            <div class="form-group"><label class="form-label">Nama Kategori *</label><input class="form-control" [(ngModel)]="category.namaKategori" /></div>
+            <div class="form-group"><label class="form-label">Jenis Peserta *</label><input class="form-control" [(ngModel)]="category.tipePeserta" placeholder="Individu / Kelompok 3-4 orang" /></div>
+            <div class="form-group"><label class="form-label">Biaya Pendaftaran *</label><input class="form-control" [(ngModel)]="category.biayaPendaftaran" /></div>
+            <div class="form-group cms-lomba-span-2"><label class="form-label">Tema Kategori *</label><textarea rows="3" class="form-control" [(ngModel)]="category.temaKategori"></textarea></div>
+          </div>
+
+          <div class="cms-lomba-heading cms-lomba-space"><h4>Alur Pendaftaran</h4><button type="button" class="btn btn-outline btn-sm" (click)="addStep(category)">+ Tambah Langkah</button></div>
+          @for (step of category.alurPendaftaran; track $index; let si = $index) {
+            <div class="cms-lomba-repeater">
+              <span class="cms-lomba-index">{{ si + 1 }}.</span>
+              <input class="form-control" [(ngModel)]="category.alurPendaftaran[si]" [attr.aria-label]="'Langkah ' + (si + 1)" />
+              <button type="button" class="btn btn-ghost btn-sm" (click)="removeStep(category, si)">Hapus</button>
+            </div>
+          }
+
+          <div class="cms-lomba-heading cms-lomba-space"><h4>Timeline</h4><button type="button" class="btn btn-outline btn-sm" (click)="addTimeline(category)">+ Tambah Jadwal</button></div>
+          @for (entry of category.timeline; track entry; let ti = $index) {
+            <div class="cms-lomba-repeater cms-lomba-timeline">
+              <input class="form-control" [(ngModel)]="entry.title" placeholder="Nama tahapan" [attr.aria-label]="'Tahapan ' + (ti + 1)" />
+              <input class="form-control" [(ngModel)]="entry.date" placeholder="10 - 24 Okt 2026" [attr.aria-label]="'Tanggal tahapan ' + (ti + 1)" />
+              <button type="button" class="btn btn-ghost btn-sm" (click)="removeTimeline(category, ti)">Hapus</button>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="card card-pad cms-lomba-section">
+      <div class="cms-lomba-heading"><h2>Persyaratan Umum</h2><button type="button" class="btn btn-outline btn-sm" (click)="addRequirement()">+ Tambah</button></div>
+      @for (requirement of form.persyaratanUmum; track $index; let i = $index) {
+        <div class="cms-lomba-repeater"><span class="cms-lomba-index">{{ i + 1 }}.</span><textarea rows="2" class="form-control" [(ngModel)]="form.persyaratanUmum[i]" [attr.aria-label]="'Persyaratan ' + (i + 1)"></textarea><button type="button" class="btn btn-ghost btn-sm" (click)="removeRequirement(i)">Hapus</button></div>
+      }
+    </section>
+
+    <section class="card card-pad cms-lomba-section">
+      <div class="cms-lomba-heading"><h2>Benefit & Penghargaan</h2><button type="button" class="btn btn-outline btn-sm" (click)="addBenefit()">+ Tambah</button></div>
+      @for (benefit of form.benefit; track $index; let i = $index) {
+        <div class="cms-lomba-repeater"><span class="cms-lomba-index">{{ i + 1 }}.</span><textarea rows="2" class="form-control" [(ngModel)]="form.benefit[i]" [attr.aria-label]="'Benefit ' + (i + 1)"></textarea><button type="button" class="btn btn-ghost btn-sm" (click)="removeBenefit(i)">Hapus</button></div>
+      }
+    </section>
+
+    <section class="card card-pad cms-lomba-section">
+      <div class="cms-lomba-heading"><h2>Narahubung</h2><button type="button" class="btn btn-outline btn-sm" (click)="addContact()">+ Tambah Kontak</button></div>
+      @for (person of form.contactPersons; track person; let i = $index) {
+        <div class="cms-lomba-repeater cms-lomba-contacts">
+          <input class="form-control" [(ngModel)]="person.name" placeholder="Nama" [attr.aria-label]="'Nama kontak ' + (i + 1)" />
+          <input class="form-control" [(ngModel)]="person.phone" placeholder="Nomor WhatsApp" [attr.aria-label]="'Telepon kontak ' + (i + 1)" />
+          <input class="form-control" [(ngModel)]="person.type" placeholder="Ikhwan/Akhwat" [attr.aria-label]="'Jenis kontak ' + (i + 1)" />
+          <button type="button" class="btn btn-ghost btn-sm" (click)="removeContact(i)">Hapus</button>
+        </div>
+      }
+    </section>
+  </fieldset>
+
+  <div class="cms-lomba-actions">
+    <small class="text-muted">@if (updatedDate()) { Terakhir disimpan: {{ updatedDate() }} } @else { Belum tercatat waktu pembaruan }</small>
+    <div class="cms-lomba-action-buttons">
+      <button type="button" class="btn btn-outline" (click)="load()" [disabled]="saving()">Muat Ulang</button>
+      @if (canManage) { <button type="button" class="btn btn-primary" (click)="save()" [disabled]="saving()">{{ saving() ? 'Menyimpan...' : 'Simpan Semua Perubahan' }}</button> }
+    </div>
+  </div>
+  }
+}

@@ -12,6 +12,7 @@ export function rapimnasPublicRoutes(): Routes {
     { path: 'jadwal', title: 'Jadwal — RAPIMNAS 1 FSLDK Indonesia 2026', loadComponent: () => import('./pages/jadwal/rapimnas.jadwal.page').then((m) => m.RapimnasJadwalPage) },
     { path: 'arsip', title: 'Arsip — RAPIMNAS 1 FSLDK Indonesia 2026', loadComponent: () => import('./pages/arsip/rapimnas.arsip.page').then((m) => m.RapimnasArsipPage) },
     { path: 'pendaftaran/panitia', title: 'Pendaftaran Panitia — RAPIMNAS 1 FSLDK Indonesia 2026', loadComponent: () => import('./pages/pendaftaran-panitia/rapimnas.pendaftaran-panitia.page').then((m) => m.RapimnasPendaftaranPanitiaPage) },
+    { path: 'pendaftaran/lomba', title: 'Pendaftaran Lomba — RAPIMNAS 1 FSLDK Indonesia 2026', loadComponent: () => import('./pages/pendaftaran-lomba/rapimnas.pendaftaran-lomba.page').then((m) => m.RapimnasPendaftaranLombaPage) },
     { path: 'pendaftaran/peserta', title: 'Pendaftaran Peserta — RAPIMNAS 1 FSLDK Indonesia 2026', loadComponent: () => import('./pages/pendaftaran-peserta/rapimnas.pendaftaran-peserta.page').then((m) => m.RapimnasPendaftaranPesertaPage) },
   ];
 }

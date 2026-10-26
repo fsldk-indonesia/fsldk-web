@@ -11,8 +11,9 @@ import {
 } from '../../entities/rapimnas';
 import { RapimnasCmsSetupPresenter } from './rapimnas.cms-setup.presenter';
 import { RapimnasCmsSetupView } from './rapimnas.cms-setup.view';
+import { RapimnasCmsLombaPage } from '../cms-lomba/rapimnas.cms-lomba.page';
 
-type RapimnasSetupTab = 'hero' | 'beranda' | 'tentang' | 'jadwal' | 'arsip' | 'peserta' | 'panitia' | 'footer';
+type RapimnasSetupTab = 'hero' | 'beranda' | 'tentang' | 'jadwal' | 'arsip' | 'peserta' | 'lomba' | 'footer';
 
 interface SimpleContact { name: string; phoneNumber: string; }
 
@@ -20,7 +21,7 @@ interface SimpleContact { name: string; phoneNumber: string; }
   selector: 'app-rapimnas-cms-setup-page',
   standalone: true,
   templateUrl: './rapimnas.cms-setup.page.html',
-  imports: [FormsModule, ImageUploadComponent, MultiImageUploadComponent, SelectComponent, DateTimePickerComponent],
+  imports: [FormsModule, ImageUploadComponent, MultiImageUploadComponent, SelectComponent, DateTimePickerComponent, RapimnasCmsLombaPage],
   providers: [RapimnasCmsSetupPresenter],
   styles: [`
     .page-head { margin-bottom: 24px; } .page-head h1 { margin-bottom: 2px; }

@@ -1,0 +1,569 @@
+:host {
+    display: block
+}
+
+.rp-competition-page {
+    max-width: 1152px;
+    margin: 0 auto;
+    padding: 112px 20px 84px;
+    color: var(--rp-krem)
+}
+
+.rp-competition-hero {
+    text-align: center;
+    max-width: 740px;
+    margin: 0 auto 52px
+}
+
+.rp-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--rp-kuning);
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase
+}
+
+.rp-competition-hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    line-height: 1.1;
+    margin: 22px 0 16px;
+    font-weight: 800
+}
+
+.rp-competition-hero h1 span {
+    color: var(--rp-oranye)
+}
+
+.rp-competition-hero p,
+.rp-form-top p {
+    opacity: .82;
+    line-height: 1.75
+}
+
+.rp-competition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+    gap: 24px
+}
+
+.rp-competition-card,
+.rp-form-card {
+    background: color-mix(in srgb, var(--rp-maroon) 45%, transparent);
+    border: 1px solid color-mix(in srgb, var(--rp-merah) 55%, transparent);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .18);
+    border-radius: 28px;
+    backdrop-filter: blur(16px)
+}
+
+.rp-competition-card {
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: border-color .2s, transform .2s
+}
+
+.rp-competition-card:hover {
+    border-color: var(--rp-oranye);
+    transform: translateY(-3px)
+}
+
+.rp-card-category {
+    color: var(--rp-kuning);
+    font-size: .74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em
+}
+
+.rp-competition-card h2 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    margin: 0
+}
+
+.rp-desc,
+.rp-requirements {
+    white-space: pre-line;
+    line-height: 1.65;
+    opacity: .88;
+    margin: 0
+}
+
+.rp-requirements {
+    font-size: .87rem
+}
+
+.rp-requirements strong {
+    color: var(--rp-kuning)
+}
+
+.rp-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: .88rem;
+    color: var(--rp-oranye)
+}
+
+.rp-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 12px
+}
+
+.rp-fill-btn,
+.rp-outline-btn,
+.rp-disabled-btn {
+    border: 1px solid var(--rp-oranye);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font: inherit;
+    font-size: .88rem;
+    font-weight: 700;
+    cursor: pointer
+}
+
+.rp-fill-btn {
+    background: var(--rp-oranye);
+    color: var(--rp-bg)
+}
+
+.rp-fill-btn:hover {
+    background: var(--rp-kuning);
+    border-color: var(--rp-kuning)
+}
+
+.rp-outline-btn {
+    background: transparent;
+    color: var(--rp-krem)
+}
+
+.rp-outline-btn:hover {
+    background: color-mix(in srgb, var(--rp-oranye) 20%, transparent)
+}
+
+.rp-disabled-btn {
+    border-color: var(--rp-merah);
+    color: var(--rp-krem);
+    opacity: .75;
+    cursor: default
+}
+
+.rp-fill-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed
+}
+
+.rp-message {
+    padding: 30px;
+    border: 1px solid var(--rp-merah);
+    border-radius: 20px;
+    text-align: center;
+    margin: 24px 0;
+    background: color-mix(in srgb, var(--rp-maroon) 50%, transparent)
+}
+
+.rp-message-success {
+    border-color: var(--rp-kuning);
+    color: var(--rp-kuning)
+}
+
+.rp-form-card {
+    padding: clamp(22px, 4vw, 44px);
+    max-width: 820px;
+    margin: 55px auto 0;
+    scroll-margin-top: 110px
+}
+
+.rp-form-top {
+    margin-bottom: 30px
+}
+
+.rp-form-top h2 {
+    font-size: 1.9rem;
+    margin: 10px 0
+}
+
+.rp-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px
+}
+
+.rp-span-2 {
+    grid-column: 1/-1
+}
+
+.rp-field {
+    min-width: 0
+}
+
+.rp-field label {
+    display: block;
+    font-weight: 600;
+    font-size: .87rem;
+    margin-bottom: 8px
+}
+
+.rp-field input,
+.rp-field textarea {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(237, 229, 191, .25);
+    border-radius: 12px;
+    padding: 13px 15px;
+    color: var(--rp-krem);
+    font: inherit
+}
+
+.rp-field input:focus,
+.rp-field textarea:focus {
+    outline: 2px solid var(--rp-oranye);
+    outline-offset: 1px
+}
+
+.rp-field small {
+    display: block;
+    margin-top: 6px;
+    opacity: .7
+}
+
+.rp-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 30px
+}
+
+.rp-form-error {
+    background: rgba(183, 15, 60, .25);
+    padding: 14px;
+    border-radius: 10px;
+    color: var(--rp-krem)
+}
+
+@media(max-width:650px) {
+    .rp-form-grid {
+        grid-template-columns: 1fr
+    }
+    .rp-span-2 {
+        grid-column: auto
+    }
+    .rp-card-actions>* {
+        flex: 1
+    }
+    .rp-form-actions {
+        flex-direction: column-reverse
+    }
+}
+
+
+/* Informasi utama lomba */
+
+.rp-competition-intro {
+    text-align: center;
+    max-width: 850px;
+    margin: 0 auto 58px;
+}
+
+.rp-competition-intro h2 {
+    color: var(--rp-kuning);
+    font-size: clamp(1.35rem, 3vw, 2rem);
+    margin-bottom: 16px;
+}
+
+.rp-competition-intro p {
+    line-height: 1.85;
+    opacity: .88;
+}
+
+.rp-section-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    text-align: center;
+    margin: 0 0 28px;
+    color: var(--rp-krem);
+}
+
+.rp-card-theme {
+    color: var(--rp-krem);
+    line-height: 1.7;
+    opacity: .9;
+    margin: 0;
+}
+
+.rp-card-info {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .06);
+}
+
+.rp-card-info p {
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.rp-card-info strong {
+    color: var(--rp-kuning);
+}
+
+.rp-card-section {
+    margin-top: 10px;
+}
+
+.rp-card-section h3 {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 1rem;
+    color: var(--rp-kuning);
+}
+
+.rp-card-section ol,
+.rp-info-card ul {
+    padding-left: 22px;
+    line-height: 1.8;
+}
+
+.rp-card-section li,
+.rp-info-card li {
+    margin-bottom: 8px;
+}
+
+.rp-timeline {
+    display: grid;
+    gap: 12px;
+}
+
+.rp-timeline-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-left: 2px solid var(--rp-oranye);
+    padding: 5px 0 5px 15px;
+}
+
+.rp-timeline-item span {
+    font-size: .85rem;
+    opacity: .78;
+}
+
+.rp-info-section {
+    margin-top: 65px;
+}
+
+.rp-info-card,
+.rp-competition-cta {
+    padding: clamp(24px, 4vw, 42px);
+    background: color-mix( in srgb, var(--rp-maroon) 45%, transparent);
+    border: 1px solid var(--rp-merah);
+    border-radius: 25px;
+}
+
+.rp-contact-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 22px;
+}
+
+.rp-contact-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 180px;
+}
+
+.rp-contact-item span {
+    opacity: .75;
+    font-size: .85rem;
+}
+
+.rp-contact-item a {
+    color: var(--rp-kuning);
+    overflow-wrap: anywhere;
+}
+
+.rp-competition-cta {
+    margin-top: 70px;
+    text-align: center;
+}
+
+.rp-competition-cta h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.rp-competition-cta p {
+    line-height: 1.75;
+    margin-bottom: 26px;
+}
+
+
+/* Perbaikan kontras judul pada background maroon */
+
+.rp-competition-page .rp-competition-hero h1 {
+    color: var(--rp-krem);
+}
+
+.rp-competition-page .rp-competition-hero h1 span {
+    color: var(--rp-oranye);
+}
+
+.rp-competition-page .rp-competition-card h2,
+.rp-competition-page .rp-competition-cta h2 {
+    color: var(--rp-kuning);
+}
+
+.rp-competition-page .rp-competition-card h3 {
+    color: var(--rp-kuning);
+}
+
+.rp-competition-page .rp-competition-intro h2 {
+    color: var(--rp-kuning);
+}
+
+.rp-competition-page .rp-section-title {
+    color: var(--rp-krem);
+}
+
+.rp-competition-card .rp-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 16px;
+}
+
+.rp-competition-card .rp-card-actions a {
+    text-align: center;
+    white-space: normal;
+}
+
+
+/* ==================================================
+   HERO PENDAFTARAN LOMBA
+   Konsisten dengan Tentang & Pendaftaran Peserta
+   ================================================== */
+
+
+/* Kurangi jarak atas dari 112px menjadi 40px */
+
+.rp-competition-page {
+    padding: 40px 16px 80px;
+}
+
+
+/* Hero */
+
+.rp-competition-page .rp-competition-hero {
+    position: relative;
+    max-width: 896px;
+    margin: 0 auto 64px;
+    padding: 0 16px;
+    text-align: center;
+    isolation: isolate;
+}
+
+
+/* Cahaya oranye lembut di belakang judul */
+
+.rp-competition-hero-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 256px;
+    height: 256px;
+    background: color-mix( in srgb, var(--rp-oranye) 20%, transparent);
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: -1;
+}
+
+
+/* Label seperti halaman Tentang */
+
+.rp-competition-page .rp-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    position: relative;
+    color: var(--rp-kuning);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(254, 112, 2, 0.5);
+}
+
+
+/* Judul mengikuti ukuran halaman lainnya */
+
+.rp-competition-page .rp-competition-hero h1 {
+    position: relative;
+    font-size: 2.25rem;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--rp-krem);
+    margin: 0 0 16px;
+}
+
+.rp-competition-page .rp-competition-hero h1 span {
+    color: var(--rp-oranye);
+}
+
+
+/* Deskripsi hero */
+
+.rp-competition-page .rp-competition-hero p {
+    position: relative;
+    color: color-mix( in srgb, var(--rp-krem) 80%, transparent);
+    font-size: 1rem;
+    font-style: italic;
+    line-height: 1.65;
+    margin: 0;
+}
+
+
+/* Responsive */
+
+@media (min-width: 768px) {
+    .rp-competition-page .rp-competition-hero h1 {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .rp-competition-page .rp-competition-hero {
+        padding: 0 8px;
+    }
+    .rp-competition-page .rp-competition-hero h1 {
+        font-size: 2rem;
+    }
+    .rp-competition-hero-glow {
+        width: 200px;
+        height: 200px;
+    }
+}

@@ -51,7 +51,8 @@ interface RapimnasNavItem {
           <a [routerLink]="path.index" [class.active]="isActive(path.index)">Beranda</a>
           <a [routerLink]="path.tentang" [class.active]="isActive(path.tentang)">Tentang</a>
           <a [routerLink]="path.jadwal" [class.active]="isActive(path.jadwal)">Jadwal</a>
-          <a [routerLink]="path.pendaftaranPeserta" [class.active]="isPendaftaranActive()">Pendaftaran Peserta</a>
+          <a [routerLink]="path.pendaftaranPeserta" [class.active]="isActive(path.pendaftaranPeserta)">Pendaftaran Peserta</a>
+          <a [routerLink]="path.pendaftaranLomba" [class.active]="isActive(path.pendaftaranLomba)">Pendaftaran Lomba</a>
           <a [routerLink]="path.arsip" [class.active]="isActive(path.arsip)">Arsip</a>
         </nav>
       </div>
@@ -204,10 +205,9 @@ export class RapimnasHeaderComponent implements OnDestroy {
   }
 
   isActive(path: string): boolean { return this.currentUrl() === path; }
-  isPendaftaranActive = computed(() => this.currentUrl().startsWith('/rapimnas/pendaftaran'));
 
   isNavItemActive(item: RapimnasNavItem): boolean {
-    return item.path === this.path.pendaftaranPeserta ? this.isPendaftaranActive() : this.isActive(item.path);
+    return this.isActive(item.path);
   }
 
   @HostListener('document:keydown.escape')
