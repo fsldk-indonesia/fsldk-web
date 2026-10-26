@@ -1,189 +1,187 @@
 <div class="page-head">
-  <h1>Rapimnas Setup</h1>
-  <p class="text-muted">Kelola seluruh konten landing page publik /rapimnas — Hero, Beranda, Tentang, Jadwal, Arsip, Pendaftaran Peserta, Pendaftaran Panitia, dan Footer/Kontak. Satu tombol Simpan mengirim semua tab sekaligus.</p>
+    <h1>Rapimnas Setup</h1>
+    <p class="text-muted">Kelola seluruh konten landing page publik /rapimnas — Hero, Beranda, Tentang, Jadwal, Arsip, Pendaftaran Peserta, Pendaftaran Panitia, dan Footer/Kontak. Satu tombol Simpan mengirim semua tab sekaligus.</p>
 </div>
 
 @if (loading()) {
-  <div class="card card-pad"><span class="skel skel-title"></span></div>
+<div class="card card-pad"><span class="skel skel-title"></span></div>
 } @else {
-  <div class="tabs">
+<div class="tabs">
     <button type="button" [class.active]="tab() === 'hero'" (click)="tab.set('hero')">Hero</button>
     <button type="button" [class.active]="tab() === 'beranda'" (click)="tab.set('beranda')">Beranda</button>
     <button type="button" [class.active]="tab() === 'tentang'" (click)="tab.set('tentang')">Tentang</button>
     <button type="button" [class.active]="tab() === 'jadwal'" (click)="tab.set('jadwal')">Jadwal</button>
     <button type="button" [class.active]="tab() === 'arsip'" (click)="tab.set('arsip')">Arsip</button>
     <button type="button" [class.active]="tab() === 'peserta'" (click)="tab.set('peserta')">Pendaftaran Peserta</button>
-    <button type="button" [class.active]="tab() === 'panitia'" (click)="tab.set('panitia')">Pendaftaran Panitia</button>
+    <button type="button" [class.active]="tab() === 'lomba'" (click)="tab.set('lomba')">Pendaftaran Lomba</button>
     <button type="button" [class.active]="tab() === 'footer'" (click)="tab.set('footer')">Footer/Kontak</button>
-  </div>
+</div>
 
-  @if (tab() === 'hero') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
+@if (tab() === 'hero') {
+<div class="tab-panel">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Hero</p>
         <div class="form-group"><label class="form-label">Badge Text</label><input class="form-control" [(ngModel)]="heroBadgeText" name="heroBadgeText"></div>
         <div class="form-group"><label class="form-label">Judul</label><input class="form-control" [(ngModel)]="heroTitle" name="heroTitle"></div>
         <div class="form-group"><label class="form-label">Tagline (opsional)</label><input class="form-control" [(ngModel)]="heroTaglineQuote" name="heroTaglineQuote"></div>
         <div class="form-group"><label class="form-label">Teks Lokasi &amp; Tanggal</label><input class="form-control" [(ngModel)]="heroDateRangeText" name="heroDateRangeText"></div>
-        <div class="form-group"><label class="form-label">Target Hitung Mundur</label><app-datetime-picker [(ngModel)]="countdownTargetDate" name="countdownTargetDate" placeholder="Pilih tanggal &amp; waktu…" /></div>
-        <div class="form-group mb-0"><label class="form-label">Gambar Hero</label><app-image-upload [(value)]="heroImageUrl" /></div>
-      </div>
+        <div class="form-group"><label class="form-label">Target Hitung Mundur</label>
+            <app-datetime-picker [(ngModel)]="countdownTargetDate" name="countdownTargetDate" placeholder="Pilih tanggal &amp; waktu…" />
+        </div>
+        <div class="form-group mb-0"><label class="form-label">Gambar Hero</label>
+            <app-image-upload [(value)]="heroImageUrl" />
+        </div>
     </div>
-  }
-
-  @if (tab() === 'beranda') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
+</div>
+} @if (tab() === 'beranda') {
+<div class="tab-panel">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Kartu Fitur (Ukhuwah / Sistem)</p>
         <div class="form-grid-2">
-          <div>
-            <div class="form-group"><label class="form-label">Ikon 1</label>
-              <app-select [(ngModel)]="feature1IconKey" name="feature1IconKey" [options]="iconSelectOptions" />
+            <div>
+                <div class="form-group"><label class="form-label">Ikon 1</label>
+                    <app-select [(ngModel)]="feature1IconKey" name="feature1IconKey" [options]="iconSelectOptions" />
+                </div>
+                <div class="form-group"><label class="form-label">Judul 1</label><input class="form-control" [(ngModel)]="feature1Title" name="feature1Title"></div>
+                <div class="form-group mb-0"><label class="form-label">Deskripsi 1</label><input class="form-control" [(ngModel)]="feature1Desc" name="feature1Desc"></div>
             </div>
-            <div class="form-group"><label class="form-label">Judul 1</label><input class="form-control" [(ngModel)]="feature1Title" name="feature1Title"></div>
-            <div class="form-group mb-0"><label class="form-label">Deskripsi 1</label><input class="form-control" [(ngModel)]="feature1Desc" name="feature1Desc"></div>
-          </div>
-          <div>
-            <div class="form-group"><label class="form-label">Ikon 2</label>
-              <app-select [(ngModel)]="feature2IconKey" name="feature2IconKey" [options]="iconSelectOptions" />
+            <div>
+                <div class="form-group"><label class="form-label">Ikon 2</label>
+                    <app-select [(ngModel)]="feature2IconKey" name="feature2IconKey" [options]="iconSelectOptions" />
+                </div>
+                <div class="form-group"><label class="form-label">Judul 2</label><input class="form-control" [(ngModel)]="feature2Title" name="feature2Title"></div>
+                <div class="form-group mb-0"><label class="form-label">Deskripsi 2</label><input class="form-control" [(ngModel)]="feature2Desc" name="feature2Desc"></div>
             </div>
-            <div class="form-group"><label class="form-label">Judul 2</label><input class="form-control" [(ngModel)]="feature2Title" name="feature2Title"></div>
-            <div class="form-group mb-0"><label class="form-label">Deskripsi 2</label><input class="form-control" [(ngModel)]="feature2Desc" name="feature2Desc"></div>
-          </div>
         </div>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">CTA Penutup</p>
         <div class="form-group"><label class="form-label">Judul CTA</label><input class="form-control" [(ngModel)]="ctaTitle" name="ctaTitle"></div>
         <div class="form-group"><label class="form-label">Deskripsi CTA</label><input class="form-control" [(ngModel)]="ctaDescription" name="ctaDescription"></div>
         <div class="form-group"><label class="form-label">Label Tombol</label><input class="form-control" [(ngModel)]="ctaButtonLabel" name="ctaButtonLabel"></div>
-        <div class="form-group mb-0"><label class="form-label">Gambar Maskot</label><app-image-upload [(value)]="ctaMascotImageUrl" /></div>
-      </div>
+        <div class="form-group mb-0"><label class="form-label">Gambar Maskot</label>
+            <app-image-upload [(value)]="ctaMascotImageUrl" />
+        </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Galeri Kilas Balik</p>
         <app-multi-image-upload [(value)]="galleryImageUrls" [max]="20" />
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Kartu Rangkaian Kegiatan</p>
         @for (card of homeCards; track $index) {
-          <div class="repeater-row" style="grid-template-columns: 160px 1fr 1fr auto auto auto;">
+        <div class="repeater-row" style="grid-template-columns: 160px 1fr 1fr auto auto auto;">
             <app-select [(ngModel)]="card.iconKey" [name]="'homeCardIcon' + $index" [options]="iconSelectOptions" />
             <input class="form-control" placeholder="Judul" [(ngModel)]="card.title" [name]="'homeCardTitle' + $index">
             <input class="form-control" placeholder="Deskripsi" [(ngModel)]="card.description" [name]="'homeCardDesc' + $index">
             <button type="button" class="btn btn-ghost btn-sm" [disabled]="$index === 0" (click)="moveHomeCard($index, -1)">&uarr;</button>
             <button type="button" class="btn btn-ghost btn-sm" [disabled]="$index === homeCards.length - 1" (click)="moveHomeCard($index, 1)">&darr;</button>
             <button type="button" class="btn btn-ghost btn-sm" (click)="removeHomeCard($index)">Hapus</button>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addHomeCard()">+ Tambah Kartu</button>
-      </div>
     </div>
-  }
-
-  @if (tab() === 'tentang') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
+</div>
+} @if (tab() === 'tentang') {
+<div class="tab-panel">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Tema &amp; Deskripsi</p>
         <div class="form-group"><label class="form-label">Kutipan Tema</label><input class="form-control" [(ngModel)]="tentangTaglineQuote" name="tentangTaglineQuote"></div>
         <div class="form-group"><label class="form-label">Paragraf Deskripsi 1</label><textarea class="form-control" rows="4" [(ngModel)]="tentangDescParagraph1" name="tentangDescParagraph1"></textarea></div>
         <div class="form-group mb-0"><label class="form-label">Paragraf Deskripsi 2</label><textarea class="form-control" rows="4" [(ngModel)]="tentangDescParagraph2" name="tentangDescParagraph2"></textarea></div>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Visi</p>
         <textarea class="form-control mb-0" rows="3" [(ngModel)]="tentangVisiText" name="tentangVisiText"></textarea>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Misi</p>
         @for (item of tentangMisi; track $index) {
-          <div class="repeater-row" style="grid-template-columns: 1fr auto;">
+        <div class="repeater-row" style="grid-template-columns: 1fr auto;">
             <input class="form-control" [(ngModel)]="tentangMisi[$index]" [name]="'misi' + $index">
             <button type="button" class="btn btn-ghost btn-sm" (click)="removeMisi($index)">Hapus</button>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addMisi()">+ Tambah Misi</button>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Tujuan Pelaksanaan</p>
         @for (item of tentangTujuan; track $index) {
-          <div class="repeater-row" style="grid-template-columns: 1fr auto;">
+        <div class="repeater-row" style="grid-template-columns: 1fr auto;">
             <input class="form-control" [(ngModel)]="tentangTujuan[$index]" [name]="'tujuan' + $index">
             <button type="button" class="btn btn-ghost btn-sm" (click)="removeTujuan($index)">Hapus</button>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addTujuan()">+ Tambah Tujuan</button>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Rangkaian Kegiatan</p>
         @for (item of tentangKegiatan; track $index) {
-          <div class="repeater-row" style="grid-template-columns: 1fr auto;">
+        <div class="repeater-row" style="grid-template-columns: 1fr auto;">
             <input class="form-control" [(ngModel)]="tentangKegiatan[$index]" [name]="'kegiatan' + $index">
             <button type="button" class="btn btn-ghost btn-sm" (click)="removeKegiatan($index)">Hapus</button>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addKegiatan()">+ Tambah Kegiatan</button>
-      </div>
     </div>
-  }
-
-  @if (tab() === 'jadwal') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
+</div>
+} @if (tab() === 'jadwal') {
+<div class="tab-panel">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Subjudul Header</p>
         <input class="form-control mb-0" [(ngModel)]="jadwalHeaderSubtitle" name="jadwalHeaderSubtitle">
-      </div>
+    </div>
 
-      @for (day of rundownDays; track $index; let dayIdx = $index) {
-        <div class="card card-pad form-section-card">
-          <div class="form-grid-2">
+    @for (day of rundownDays; track $index; let dayIdx = $index) {
+    <div class="card card-pad form-section-card">
+        <div class="form-grid-2">
             <input class="form-control" placeholder="Label Hari (mis. Hari Pertama)" [(ngModel)]="day.dayLabel" [name]="'dayLabel' + dayIdx">
             <input class="form-control" placeholder="Tanggal (mis. Kamis, 12 November 2026)" [(ngModel)]="day.dateText" [name]="'dayDate' + dayIdx">
-          </div>
-          <div class="form-actions" style="justify-content: flex-start; border-top: none; padding-top: 10px; margin-top: 0;">
+        </div>
+        <div class="form-actions" style="justify-content: flex-start; border-top: none; padding-top: 10px; margin-top: 0;">
             <button type="button" class="btn btn-ghost btn-sm" [disabled]="dayIdx === 0" (click)="moveRundownDay(dayIdx, -1)">&uarr; Naik</button>
             <button type="button" class="btn btn-ghost btn-sm" [disabled]="dayIdx === rundownDays.length - 1" (click)="moveRundownDay(dayIdx, 1)">&darr; Turun</button>
             <button type="button" class="btn btn-ghost btn-sm" (click)="removeRundownDay(dayIdx)">Hapus Hari</button>
-          </div>
-
-          <p class="form-section-label mt-lg">Event Hari Ini</p>
-          @for (event of day.events; track $index; let eventIdx = $index) {
-            <div class="repeater-row" style="grid-template-columns: 1fr 1fr 1fr 1fr auto; margin-bottom: 12px;">
-              <input class="form-control" placeholder="Waktu (opsional)" [(ngModel)]="event.time" [name]="'eventTime' + dayIdx + '_' + eventIdx">
-              <input class="form-control" placeholder="Judul" [(ngModel)]="event.title" [name]="'eventTitle' + dayIdx + '_' + eventIdx">
-              <input class="form-control" placeholder="Deskripsi" [(ngModel)]="event.description" [name]="'eventDesc' + dayIdx + '_' + eventIdx">
-              <input class="form-control" placeholder="Venue (opsional)" [(ngModel)]="event.venue" [name]="'eventVenue' + dayIdx + '_' + eventIdx">
-              <button type="button" class="btn btn-ghost btn-sm" (click)="removeRundownEvent(dayIdx, eventIdx)">Hapus</button>
-            </div>
-          }
-          <button type="button" class="btn btn-outline btn-sm" (click)="addRundownEvent(dayIdx)">+ Tambah Event</button>
         </div>
-      }
-      <button type="button" class="btn btn-primary btn-sm mt-md" (click)="addRundownDay()">+ Tambah Hari</button>
-    </div>
-  }
 
-  @if (tab() === 'arsip') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
+        <p class="form-section-label mt-lg">Event Hari Ini</p>
+        @for (event of day.events; track $index; let eventIdx = $index) {
+        <div class="repeater-row" style="grid-template-columns: 1fr 1fr 1fr 1fr auto; margin-bottom: 12px;">
+            <input class="form-control" placeholder="Waktu (opsional)" [(ngModel)]="event.time" [name]="'eventTime' + dayIdx + '_' + eventIdx">
+            <input class="form-control" placeholder="Judul" [(ngModel)]="event.title" [name]="'eventTitle' + dayIdx + '_' + eventIdx">
+            <input class="form-control" placeholder="Deskripsi" [(ngModel)]="event.description" [name]="'eventDesc' + dayIdx + '_' + eventIdx">
+            <input class="form-control" placeholder="Venue (opsional)" [(ngModel)]="event.venue" [name]="'eventVenue' + dayIdx + '_' + eventIdx">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="removeRundownEvent(dayIdx, eventIdx)">Hapus</button>
+        </div>
+        }
+        <button type="button" class="btn btn-outline btn-sm" (click)="addRundownEvent(dayIdx)">+ Tambah Event</button>
+    </div>
+    }
+    <button type="button" class="btn btn-primary btn-sm mt-md" (click)="addRundownDay()">+ Tambah Hari</button>
+</div>
+} @if (tab() === 'arsip') {
+<div class="tab-panel">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Resource / Dokumen Unduhan</p>
         @for (item of resources; track $index; let i = $index) {
-          <div class="card card-pad" style="margin-bottom: 12px; background: var(--color-bg-warm);">
+        <div class="card card-pad" style="margin-bottom: 12px; background: var(--color-bg-warm);">
             <div class="form-grid-2">
-              <div class="form-group"><label class="form-label">Judul</label><input class="form-control" [(ngModel)]="item.title" [name]="'resTitle' + i"></div>
-              <div class="form-group"><label class="form-label">Ikon</label>
-                <app-select [(ngModel)]="item.iconKey" [name]="'resIcon' + i" [options]="iconSelectOptions" />
-              </div>
+                <div class="form-group"><label class="form-label">Judul</label><input class="form-control" [(ngModel)]="item.title" [name]="'resTitle' + i"></div>
+                <div class="form-group"><label class="form-label">Ikon</label>
+                    <app-select [(ngModel)]="item.iconKey" [name]="'resIcon' + i" [options]="iconSelectOptions" />
+                </div>
             </div>
             <div class="form-group"><label class="form-label">Deskripsi</label><input class="form-control" [(ngModel)]="item.description" [name]="'resDesc' + i"></div>
             <div class="form-grid-2">
-              <div class="form-group"><label class="form-label">URL</label><input class="form-control" [(ngModel)]="item.url" [name]="'resUrl' + i"></div>
-              <div class="form-group"><label class="form-label">Label Tombol</label><input class="form-control" [(ngModel)]="item.buttonLabel" [name]="'resBtn' + i"></div>
+                <div class="form-group"><label class="form-label">URL</label><input class="form-control" [(ngModel)]="item.url" [name]="'resUrl' + i"></div>
+                <div class="form-group"><label class="form-label">Label Tombol</label><input class="form-control" [(ngModel)]="item.buttonLabel" [name]="'resBtn' + i"></div>
             </div>
             <label class="switch">
               <input type="checkbox" [(ngModel)]="item.isVisible" [name]="'resVisible' + i">
@@ -191,126 +189,112 @@
               <span class="switch-label">Tampilkan di halaman Arsip</span>
             </label>
             <div class="form-actions" style="justify-content: flex-start; border-top: none; padding-top: 10px; margin-top: 10px;">
-              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === 0" (click)="moveResource(i, -1)">&uarr; Naik</button>
-              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === resources.length - 1" (click)="moveResource(i, 1)">&darr; Turun</button>
-              <button type="button" class="btn btn-ghost btn-sm" (click)="removeResource(i)">Hapus</button>
+                <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === 0" (click)="moveResource(i, -1)">&uarr; Naik</button>
+                <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === resources.length - 1" (click)="moveResource(i, 1)">&darr; Turun</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="removeResource(i)">Hapus</button>
             </div>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addResource()">+ Tambah Resource</button>
-      </div>
     </div>
-  }
-
-  @if (tab() === 'peserta') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
+</div>
+} @if (tab() === 'peserta') {
+<div class="tab-panel">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Timeline Pendaftaran</p>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Rentang Early Bird</label><input class="form-control" [(ngModel)]="pesertaEarlyBirdDateRange" name="pesertaEarlyBirdDateRange"></div>
-          <div class="form-group"><label class="form-label">Rentang Reguler</label><input class="form-control" [(ngModel)]="pesertaRegulerDateRange" name="pesertaRegulerDateRange"></div>
+            <div class="form-group"><label class="form-label">Rentang Early Bird</label><input class="form-control" [(ngModel)]="pesertaEarlyBirdDateRange" name="pesertaEarlyBirdDateRange"></div>
+            <div class="form-group"><label class="form-label">Rentang Reguler</label><input class="form-control" [(ngModel)]="pesertaRegulerDateRange" name="pesertaRegulerDateRange"></div>
         </div>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">HTM Peserta</p>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Non-Semarang — Early Bird</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaNonSemarangEarlyBird" name="pesertaHargaNonSemarangEarlyBird"></div>
-          <div class="form-group"><label class="form-label">Non-Semarang — Reguler</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaNonSemarangReguler" name="pesertaHargaNonSemarangReguler"></div>
-          <div class="form-group"><label class="form-label">Semarang — Early Bird</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaSemarangEarlyBird" name="pesertaHargaSemarangEarlyBird"></div>
-          <div class="form-group"><label class="form-label">Semarang — Reguler</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaSemarangReguler" name="pesertaHargaSemarangReguler"></div>
+            <div class="form-group"><label class="form-label">Non-Semarang — Early Bird</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaNonSemarangEarlyBird" name="pesertaHargaNonSemarangEarlyBird"></div>
+            <div class="form-group"><label class="form-label">Non-Semarang — Reguler</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaNonSemarangReguler" name="pesertaHargaNonSemarangReguler"></div>
+            <div class="form-group"><label class="form-label">Semarang — Early Bird</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaSemarangEarlyBird" name="pesertaHargaSemarangEarlyBird"></div>
+            <div class="form-group"><label class="form-label">Semarang — Reguler</label><input class="form-control" type="number" [(ngModel)]="pesertaHargaSemarangReguler" name="pesertaHargaSemarangReguler"></div>
         </div>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Bank &amp; Tautan</p>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Nama Bank</label><input class="form-control" [(ngModel)]="pesertaBankName" name="pesertaBankName"></div>
-          <div class="form-group"><label class="form-label">No. Rekening</label><input class="form-control" [(ngModel)]="pesertaBankAccountNumber" name="pesertaBankAccountNumber"></div>
-          <div class="form-group"><label class="form-label">Nama Pemilik Rekening</label><input class="form-control" [(ngModel)]="pesertaBankAccountHolder" name="pesertaBankAccountHolder"></div>
-          <div class="form-group"><label class="form-label">URL Guidebook</label><input class="form-control" [(ngModel)]="pesertaGuidebookUrl" name="pesertaGuidebookUrl"></div>
-          <div class="form-group"><label class="form-label">URL Google Form Pendaftaran</label><input class="form-control" [(ngModel)]="pesertaGoogleFormUrl" name="pesertaGoogleFormUrl"></div>
-          <div class="form-group mb-0"><label class="form-label">URL Embed Google Maps</label><input class="form-control" [(ngModel)]="pesertaMapEmbedUrl" name="pesertaMapEmbedUrl"></div>
+            <div class="form-group"><label class="form-label">Nama Bank</label><input class="form-control" [(ngModel)]="pesertaBankName" name="pesertaBankName"></div>
+            <div class="form-group"><label class="form-label">No. Rekening</label><input class="form-control" [(ngModel)]="pesertaBankAccountNumber" name="pesertaBankAccountNumber"></div>
+            <div class="form-group"><label class="form-label">Nama Pemilik Rekening</label><input class="form-control" [(ngModel)]="pesertaBankAccountHolder" name="pesertaBankAccountHolder"></div>
+            <div class="form-group"><label class="form-label">URL Guidebook</label><input class="form-control" [(ngModel)]="pesertaGuidebookUrl" name="pesertaGuidebookUrl"></div>
+            <div class="form-group"><label class="form-label">URL Google Form Pendaftaran</label><input class="form-control" [(ngModel)]="pesertaGoogleFormUrl" name="pesertaGoogleFormUrl"></div>
+            <div class="form-group mb-0"><label class="form-label">URL Embed Google Maps</label><input class="form-control" [(ngModel)]="pesertaMapEmbedUrl" name="pesertaMapEmbedUrl"></div>
         </div>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Narahubung (CP) Peserta</p>
         @for (c of pesertaCpContacts; track $index; let i = $index) {
-          <div class="repeater-row">
+        <div class="repeater-row">
             <input class="form-control" placeholder="Nama" [(ngModel)]="c.name" [name]="'cpName' + i">
             <input class="form-control" placeholder="Nomor WA (62...)" [(ngModel)]="c.phoneNumber" [name]="'cpPhone' + i">
             <button type="button" class="btn btn-ghost btn-sm" (click)="removePesertaCpContact(i)">Hapus</button>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addPesertaCpContact()">+ Tambah CP</button>
-      </div>
+    </div>
 
-      <div class="card card-pad form-section-card">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Titik Penjemputan</p>
         @for (loc of pickupLocations; track $index; let i = $index) {
-          <div class="card card-pad" style="margin-bottom: 12px; background: var(--color-bg-warm);">
+        <div class="card card-pad" style="margin-bottom: 12px; background: var(--color-bg-warm);">
             <div class="form-grid-2">
-              <div class="form-group"><label class="form-label">Nama Lokasi</label><input class="form-control" [(ngModel)]="loc.name" [name]="'pickupName' + i"></div>
-              <div class="form-group"><label class="form-label">Tipe (mis. Stasiun/Bandara/Terminal)</label><input class="form-control" [(ngModel)]="loc.type" [name]="'pickupType' + i"></div>
+                <div class="form-group"><label class="form-label">Nama Lokasi</label><input class="form-control" [(ngModel)]="loc.name" [name]="'pickupName' + i"></div>
+                <div class="form-group"><label class="form-label">Tipe (mis. Stasiun/Bandara/Terminal)</label><input class="form-control" [(ngModel)]="loc.type" [name]="'pickupType' + i"></div>
             </div>
             <div class="form-group"><label class="form-label">Deskripsi (opsional)</label><input class="form-control" [(ngModel)]="loc.description" [name]="'pickupDesc' + i"></div>
             <div class="form-group mb-0"><label class="form-label">Link Google Maps</label><input class="form-control" [(ngModel)]="loc.mapLink" [name]="'pickupMap' + i"></div>
             <div class="form-actions" style="justify-content: flex-start; border-top: none; padding-top: 10px; margin-top: 10px;">
-              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === 0" (click)="movePickupLocation(i, -1)">&uarr; Naik</button>
-              <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === pickupLocations.length - 1" (click)="movePickupLocation(i, 1)">&darr; Turun</button>
-              <button type="button" class="btn btn-ghost btn-sm" (click)="removePickupLocation(i)">Hapus</button>
+                <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === 0" (click)="movePickupLocation(i, -1)">&uarr; Naik</button>
+                <button type="button" class="btn btn-ghost btn-sm" [disabled]="i === pickupLocations.length - 1" (click)="movePickupLocation(i, 1)">&darr; Turun</button>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="removePickupLocation(i)">Hapus</button>
             </div>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addPickupLocation()">+ Tambah Titik Penjemputan</button>
-      </div>
     </div>
-  }
-
-  @if (tab() === 'panitia') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
-        <p class="form-section-label">Pendaftaran Panitia</p>
-        <label class="switch">
-          <input type="checkbox" [(ngModel)]="panitiaIsOpen" name="panitiaIsOpen">
-          <span class="switch-track"></span>
-          <span class="switch-label">Pendaftaran panitia dibuka</span>
-        </label>
-        <div class="form-group mt-md mb-0"><label class="form-label">Pesan saat ditutup</label><textarea class="form-control" rows="3" [(ngModel)]="panitiaClosedMessage" name="panitiaClosedMessage"></textarea></div>
-      </div>
-    </div>
-  }
-
-  @if (tab() === 'footer') {
-    <div class="tab-panel">
-      <div class="card card-pad form-section-card">
+</div>
+} @if (tab() === 'lomba') {
+<div class="tab-panel">
+    <app-rapimnas-cms-lomba-page />
+</div>
+} @if (tab() === 'footer') {
+<div class="tab-panel">
+    <div class="card card-pad form-section-card">
         <p class="form-section-label">Footer / Kontak</p>
         <div class="form-group"><label class="form-label">Email Kontak</label><input class="form-control" [(ngModel)]="footerContactEmail" name="footerContactEmail"></div>
         <div class="form-group"><label class="form-label">Teks Copyright</label><input class="form-control" [(ngModel)]="footerCopyrightText" name="footerCopyrightText"></div>
         <div class="form-grid-2">
-          <div class="form-group"><label class="form-label">Handle Instagram</label><input class="form-control" [(ngModel)]="footerIgHandle" name="footerIgHandle"></div>
-          <div class="form-group"><label class="form-label">URL Instagram</label><input class="form-control" [(ngModel)]="footerIgUrl" name="footerIgUrl"></div>
-          <div class="form-group"><label class="form-label">Handle TikTok</label><input class="form-control" [(ngModel)]="footerTiktokHandle" name="footerTiktokHandle"></div>
-          <div class="form-group"><label class="form-label">URL TikTok</label><input class="form-control" [(ngModel)]="footerTiktokUrl" name="footerTiktokUrl"></div>
+            <div class="form-group"><label class="form-label">Handle Instagram</label><input class="form-control" [(ngModel)]="footerIgHandle" name="footerIgHandle"></div>
+            <div class="form-group"><label class="form-label">URL Instagram</label><input class="form-control" [(ngModel)]="footerIgUrl" name="footerIgUrl"></div>
+            <div class="form-group"><label class="form-label">Handle TikTok</label><input class="form-control" [(ngModel)]="footerTiktokHandle" name="footerTiktokHandle"></div>
+            <div class="form-group"><label class="form-label">URL TikTok</label><input class="form-control" [(ngModel)]="footerTiktokUrl" name="footerTiktokUrl"></div>
         </div>
 
         <p class="form-section-label mt-lg">Kontak WA Footer</p>
         @for (c of footerWaContacts; track $index) {
-          <div class="repeater-row">
+        <div class="repeater-row">
             <input class="form-control" placeholder="Nama" [(ngModel)]="c.name" [name]="'footerWaName' + $index">
             <input class="form-control" placeholder="Nomor WA (62...)" [(ngModel)]="c.phoneNumber" [name]="'footerWaPhone' + $index">
             <button type="button" class="btn btn-ghost btn-sm" (click)="removeFooterWaContact($index)">Hapus</button>
-          </div>
+        </div>
         }
         <button type="button" class="btn btn-outline btn-sm mt-sm" (click)="addFooterWaContact()">+ Tambah Kontak WA</button>
-      </div>
     </div>
-  }
+</div>
+}
 
-  <div class="form-actions">
+<div class="form-actions">
     <button class="btn btn-primary" [disabled]="saving()" (click)="save()">
       @if (saving()) { <span class="spinner"></span> } @else { Simpan }
     </button>
-  </div>
+</div>
 }

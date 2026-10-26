@@ -26,7 +26,7 @@ describe('RapimnasCmsSetupPage - buildPayload()', () => {
   // sortOrder from array position rather than copying the input's sortOrder.
   const sample: RapimnasCms = {
     heroBadgeText: 'Diponegoro\'s Spirit',
-    heroTitle: 'Rapimnas FSLDK 2026',
+    heroTitle: 'Rapimnas 1 FSLDK 2026',
     heroDateRangeText: '1-3 November 2026',
     heroTaglineQuote: 'Satukan Langkah, Teguhkan Dakwah',
     heroImageUrl: null,
@@ -41,10 +41,10 @@ describe('RapimnasCmsSetupPage - buildPayload()', () => {
     ctaDescription: 'Deskripsi CTA',
     ctaButtonLabel: 'Daftar',
     ctaMascotImageUrl: null,
-    footerContactEmail: 'rapimnas@fsldk.or.id',
+    footerContactEmail: 'rapimnasoneundip@gmail.com',
     footerCopyrightText: '(c) 2026 FSLDK',
     footerIgHandle: '@rapimnas',
-    footerIgUrl: 'https://instagram.com/rapimnas',
+    footerIgUrl: 'https://www.instagram.com/rapimnas.fsldk',
     footerTiktokHandle: '@rapimnas',
     footerTiktokUrl: 'https://tiktok.com/@rapimnas',
     jadwalHeaderSubtitle: 'Rundown Acara',

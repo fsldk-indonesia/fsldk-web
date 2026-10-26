@@ -9,7 +9,7 @@ import { RapimnasPublic, RapimnasContact } from '../entities/rapimnas';
     <footer class="rp-footer">
       <div class="rp-footer-inner">
         <div class="rp-footer-col">
-          <h3 class="rp-footer-title">RAPIMNAS FSLDK 2026</h3>
+          <h3 class="rp-footer-title">RAPIMNAS 1 FSLDK 2026</h3>
           <p class="rp-footer-sub">Diselenggarakan di Universitas Diponegoro, Semarang</p>
         </div>
 

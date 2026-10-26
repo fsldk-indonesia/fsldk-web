@@ -3,7 +3,7 @@ export const rapimnasPath = {
   tentang: '/rapimnas/tentang',
   jadwal: '/rapimnas/jadwal',
   arsip: '/rapimnas/arsip',
-  pendaftaranPanitia: '/rapimnas/pendaftaran/panitia',
+  pendaftaranLomba: '/rapimnas/pendaftaran/lomba',
   pendaftaranPeserta: '/rapimnas/pendaftaran/peserta',
   cmsSetup: '/cms/rapimnas-setup',
 };
