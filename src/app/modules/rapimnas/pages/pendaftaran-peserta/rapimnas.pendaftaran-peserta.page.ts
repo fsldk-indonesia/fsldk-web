@@ -39,6 +39,64 @@ const PICKUP_ICON: Record<string, string> = {
     .rp-peserta-block h3 { color: var(--rp-kuning); font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: 0 0 16px; }
     .rp-peserta-block h3 svg { width: 24px; height: 24px; color: var(--rp-oranye); flex-shrink: 0; }
     .rp-timeline-row { display: flex; justify-content: space-between; align-items: center; background: color-mix(in srgb, var(--rp-merah) 20%, transparent); border: 1px solid color-mix(in srgb, var(--rp-merah) 40%, transparent); padding: 16px; border-radius: 12px; margin-bottom: 12px; }
+
+    /* Timeline pendaftaran extended */
+    .rp-timeline-extended {
+      position: relative;
+      overflow: visible;
+      margin-top: 24px;
+      padding: 22px 16px 16px;
+      border: 1px solid var(--rp-oranye);
+      background: color-mix(
+        in srgb,
+        var(--rp-oranye) 9%,
+        var(--rp-maroon)
+      );
+    }
+
+    /* Stiker di atas tepi kartu */
+    .rp-extended-sticker {
+      position: absolute;
+      top: -15px;
+      right: 16px;
+      z-index: 3;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 6px 13px;
+      border-radius: 999px;
+
+      background: linear-gradient(
+        135deg,
+        var(--rp-kuning),
+        var(--rp-oranye)
+      );
+
+      color: #4a1200 !important;
+      font-size: 0.7rem !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+
+      transform: rotate(-6deg);
+      border: 2px solid rgba(255,255,255,.55);
+      box-shadow: 0 6px 16px rgba(0,0,0,.3);
+    }
+
+    @media (max-width: 480px) {
+      .rp-timeline-extended {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .rp-extended-sticker {
+        right: 12px;
+        font-size: 0.62rem !important;
+      }
+    }
+
     .rp-timeline-row:last-child { margin-bottom: 0; }
     .rp-timeline-row strong { color: var(--rp-krem); }
     .rp-timeline-row span { color: color-mix(in srgb, var(--rp-krem) 70%, transparent); font-size: 0.875rem; font-weight: 500; }
@@ -96,6 +154,8 @@ export class RapimnasPendaftaranPesertaPage implements OnInit, RapimnasPendaftar
   readonly formatRupiah = formatRupiah;
   data = signal<RapimnasPublic | null>(null);
   loading = signal(true);
+
+  readonly extendedDateRange= 'Hingga 8 November 2026';
 
   pesertaCpContacts = computed<RapimnasContact[]>(() =>
     (this.data()?.contacts ?? []).filter((c) => c.contactType === 'peserta_cp').sort((a, b) => a.sortOrder - b.sortOrder),
