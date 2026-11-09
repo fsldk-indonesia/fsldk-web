@@ -163,6 +163,10 @@
               }
             }
 
+            @if (isOtherSelected(field)) {
+              <input class="form-control other-input" [class.is-invalid]="!!errorFor(field)" maxlength="500" placeholder="Tuliskan jawaban lainnya…"
+                     [(ngModel)]="answers()[field.fieldID].otherText" (ngModelChange)="onEdit(field)" (blur)="touch(field); touchOther(field)">
+            }
             @if (errorFor(field); as msg) { <div class="err" role="alert"><app-icon name="x-circle" [size]="14" /><span>{{ msg }}</span></div> }
           </div>
         }

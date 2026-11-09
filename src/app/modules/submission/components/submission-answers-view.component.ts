@@ -92,11 +92,17 @@ export class SubmissionAnswersViewComponent {
     const a = this.answerByFieldID(field.fieldID);
     if (!a) return '';
     switch (field.fieldType) {
-      case 'SELECT': case 'RADIO':
-        return field.options.find((o) => o.optionID === a.valueOptionID)?.optionLabel ?? '';
+      case 'SELECT': case 'RADIO': {
+        const o = field.options.find((x) => x.optionID === a.valueOptionID);
+        return o ? (o.isOther && a.valueOtherText ? `${o.optionLabel}: ${a.valueOtherText}` : o.optionLabel) : '';
+      }
       case 'MULTISELECT': case 'CHECKBOX':
         return (a.valueOptionIDs ?? [])
-          .map((id) => field.options.find((o) => o.optionID === id)?.optionLabel)
+          .map((id) => {
+            const o = field.options.find((x) => x.optionID === id);
+            if (!o) return undefined;
+            return o.isOther && a.valueOtherText ? `${o.optionLabel}: ${a.valueOtherText}` : o.optionLabel;
+          })
           .filter((v): v is string => !!v)
           .join(', ');
       case 'FILE_DOCUMENT': case 'FILE_IMAGE':

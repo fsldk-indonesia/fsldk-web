@@ -24,7 +24,7 @@ interface FieldFormValue {
   useScoring: boolean; scoringMethod: ScoringMethod; minScore: number | null; maxScore: number | null; weight: number | null;
 }
 
-interface OptionFormValue { optionValue: string; optionLabel: string; sortOrder: number; isActive: boolean; score: number | null; }
+interface OptionFormValue { optionValue: string; optionLabel: string; sortOrder: number; isActive: boolean; score: number | null; isOther: boolean; }
 
 const emptySectionForm = (sortOrder = 0): SectionFormValue => ({ sectionCode: '', sectionLabel: '', sortOrder, description: '' });
 const emptyFieldForm = (sortOrder = 0): FieldFormValue => ({
@@ -33,7 +33,7 @@ const emptyFieldForm = (sortOrder = 0): FieldFormValue => ({
   conditionalOnFieldID: null, conditionalOperator: 'equals', conditionalValue: '',
   useScoring: false, scoringMethod: 'MANUAL', minScore: null, maxScore: null, weight: null,
 });
-const emptyOptionForm = (sortOrder = 0): OptionFormValue => ({ optionValue: '', optionLabel: '', sortOrder, isActive: true, score: null });
+const emptyOptionForm = (sortOrder = 0): OptionFormValue => ({ optionValue: '', optionLabel: '', sortOrder, isActive: true, score: null, isOther: false });
 
 @Component({
   selector: 'app-submission-form-builder-page',
@@ -387,11 +387,18 @@ export class SubmissionFormBuilderPage implements OnInit, SubmissionFormBuilderV
     this.showOptionForm.set(true);
     this.animateModal(this.optionModalEl, this.optionModalAnimation, true, (a) => this.optionModalAnimation = a);
   }
+  /** Pintasan "+ Lainnya": form pilihan terisi nilai/label "Lainnya" & ditandai
+   *  isOther (membuka isian teks manual saat dipilih; skornya diatur seperti pilihan lain). */
+  openCreateOtherOption(fieldID: number, sortOrder: number, event?: Event): void {
+    this.openCreateOption(fieldID, sortOrder, event);
+    this.optionForm = { ...emptyOptionForm(sortOrder), optionValue: 'lainnya', optionLabel: 'Lainnya', isOther: true };
+  }
+  hasOtherOption(field: FormField): boolean { return field.options.some((o) => o.isOther); }
   openEditOption(o: FormOption, fieldID: number, event?: Event): void {
     this.popupOrigin.set(popupOriginFromEvent(event));
     this.optionEditID = o.optionID;
     this.optionFieldID = fieldID;
-    this.optionForm = { optionValue: o.optionValue, optionLabel: o.optionLabel, sortOrder: o.sortOrder, isActive: o.isActive, score: o.score ?? null };
+    this.optionForm = { optionValue: o.optionValue, optionLabel: o.optionLabel, sortOrder: o.sortOrder, isActive: o.isActive, score: o.score ?? null, isOther: !!o.isOther };
     this.showOptionForm.set(true);
     this.animateModal(this.optionModalEl, this.optionModalAnimation, true, (a) => this.optionModalAnimation = a);
   }

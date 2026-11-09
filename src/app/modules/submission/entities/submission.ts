@@ -72,6 +72,8 @@ export interface AnswerInput {
   valueOptionIDs?: number[];
   valueFileURL?: string;
   valueFileName?: string;
+  /** Isian manual bila opsi "Lainnya" dipilih. */
+  valueOtherText?: string;
 }
 
 export interface AnswerResponse {
@@ -84,6 +86,8 @@ export interface AnswerResponse {
   valueOptionIDs?: number[];
   valueFileURL?: string;
   valueFileName?: string;
+  /** Isian manual bila opsi "Lainnya" dipilih. */
+  valueOtherText?: string;
 }
 
 export interface StatusHistoryEntry {
