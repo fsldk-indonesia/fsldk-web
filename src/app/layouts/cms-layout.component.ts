@@ -539,6 +539,12 @@ function canvasSilhouetteUrl(hex: string): string {
          di atas) supaya benar-benar full area, bukan cuma host block-nya. */
       app-org-picker { order: 5; flex: 1 1 100%; margin-top: 8px; }
       .topbar ::ng-deep app-org-picker .op-trigger { width: 100%; }
+      /* Topbar position:fixed keluar dari flow, jadi ruangnya digantikan
+         padding-top .cms-main (76px = topbar SATU baris). Begitu org-picker
+         turun ke baris sendiri (shell LDK/Puskomda) topbar jadi dua baris
+         (~136px) dan judul halaman ketiban — tambah ruang HANYA kalau
+         org-picker memang ada di topbar (Portal Admin/Kader tetap 76px). */
+      .cms-main:has(.topbar app-org-picker) { padding-top: 156px; }
     }
 
     /* Tema per tier (revisi — sebelumnya tint warna tier disebar ke SELURUH
