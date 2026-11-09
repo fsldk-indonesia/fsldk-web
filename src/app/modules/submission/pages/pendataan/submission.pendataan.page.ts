@@ -190,6 +190,19 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     if (idx >= 0) this.step.set(idx);
   }
 
+  /** Kembalikan wizard ke awal & bersihkan penanda error. Dipanggil saat
+   *  berpindah LDK (org-switcher) atau ke pendataan lain — halaman ini tidak
+   *  dibuat ulang saat itu, jadi tanpa reset posisi section & error merah dari
+   *  LDK sebelumnya terbawa. */
+  private resetWizard(): void {
+    this.step.set(0);
+    this.touched.set(new Set());
+    this.submitTried.set(false);
+    this.requiredTried.set(false);
+    this.fieldErrors.set({});
+  }
+  private lastSubmissionID: number | null = null;
+
   /** Field yang sudah disentuh user (blur/ubah) + flag percobaan simpan/kirim —
    *  pesan validasi klien baru tampil setelah salah satunya terjadi, supaya form
    *  kosong tidak langsung penuh merah. */
@@ -326,6 +339,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     } else {
       this.orgContext.organizationID$(this.route).subscribe((id) => {
         this.targetOrganizationID = id;
+        this.resetWizard();
         this.presenter.loadAll(this.formCode(), id);
       });
     }
@@ -482,6 +496,10 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     this.answers.set(this.buildAnswerMap(this.submission()));
   }
   setSubmission(detail: SubmissionDetail | null): void {
+    // Submission berbeda (ganti LDK / mulai baru) → wizard dari awal. Submission
+    // yang sama (reload setelah Simpan Draf) → posisi section dipertahankan.
+    const id = detail?.submissionID ?? null;
+    if (id !== this.lastSubmissionID) { this.lastSubmissionID = id; this.resetWizard(); }
     this.submission.set(detail);
     if (this.version()) this.answers.set(this.buildAnswerMap(detail));
   }
