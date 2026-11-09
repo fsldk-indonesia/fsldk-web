@@ -195,6 +195,10 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
    *  kosong tidak langsung penuh merah. */
   private touched = signal<Set<number>>(new Set());
   private submitTried = signal(false);
+  /** "Wajib diisi" hanya ditampilkan setelah user mencoba Kirim/Selanjutnya (atau
+   *  menyentuh field-nya). Simpan Draf TIDAK menuntut field wajib, jadi tidak
+   *  boleh memunculkan error merah "wajib diisi" yang membingungkan. */
+  private requiredTried = signal(false);
 
   touch(field: FormField): void {
     if (this.touched().has(field.fieldID)) return;
@@ -215,7 +219,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     const server = this.fieldError(field.fieldID);
     if (server) return server;
     if (!this.submitTried() && !this.touched().has(field.fieldID)) return '';
-    return this.validateField(field, true);
+    return this.validateField(field, this.requiredTried() || this.touched().has(field.fieldID));
   }
 
   /** Cermin validasi backend (submission_service_impl.go: fieldValidationRule +
@@ -259,6 +263,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
    *  tampilkan error di field & scroll ke field pertama yang bermasalah. */
   private validateBeforeSend(checkRequired: boolean): boolean {
     this.submitTried.set(true);
+    if (checkRequired) this.requiredTried.set(true);
     const bad = this.allFields().find((f) => this.validateField(f, checkRequired) !== '');
     if (bad) {
       this.jumpToFieldSection(bad.fieldID);
