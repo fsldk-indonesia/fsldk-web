@@ -76,6 +76,9 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .wizard-dot.current { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
     .wizard-dot:disabled { cursor: default; }
     @media (prefers-reduced-motion: reduce) { .wizard-bar-fill { transition: none; } }
+    .answers-title { font-size: 1.05rem; margin: 22px 0 12px; }
+    .section-card dl { margin: 0; }
+    .section-card .answer-view:last-child { border-bottom: 0; padding-bottom: 0; }
     .answer-view { padding: 10px 0; border-bottom: 1px solid var(--color-border); }
     .answer-view dt { font-weight: 600; font-size: .88rem; }
     .answer-view dd { color: var(--color-text-secondary); margin: 2px 0 0; overflow-wrap: break-word; word-break: break-word; }
@@ -336,6 +339,20 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     if (draft.number != null) return String(draft.number);
     if (draft.date) return draft.date;
     return '';
+  }
+
+  /** Teks jawaban untuk tampilan baca-saja: opsi tampil sebagai LABEL (bukan
+   *  nilai kode seperti "4"), pilihan ganda digabung, file tampil nama berkasnya.
+   *  answerAsString() sengaja tetap memakai nilai opsi — itu dipakai untuk
+   *  evaluasi aturan kondisional. */
+  answerDisplay(field: FormField, draft: AnswerDraft | undefined): string {
+    if (!draft) return '';
+    if (draft.optionID != null) return field.options.find((o) => o.optionID === draft.optionID)?.optionLabel ?? '';
+    if (draft.optionIDs.length) {
+      return draft.optionIDs.map((id) => field.options.find((o) => o.optionID === id)?.optionLabel).filter(Boolean).join(', ');
+    }
+    if (draft.fileURL) return draft.fileName || draft.fileURL;
+    return this.answerAsString(field, draft);
   }
 
   isFieldVisible(field: FormField): boolean {

@@ -60,19 +60,22 @@
     }
   </div>
 
-  <div class="section-card" style="margin-top:20px">
-    <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="file-text" [size]="14" /></span>Jawaban Tersimpan</p>
-    <dl>
-      @for (field of allFields(); track field.fieldID) {
-        @if (isFieldVisible(field)) {
-          <div class="answer-view">
-            <dt>{{ field.fieldLabel }}</dt>
-            <dd>{{ answerAsString(field, answers()[field.fieldID]) || '—' }}</dd>
-          </div>
+  <h2 class="answers-title">Jawaban Tersimpan</h2>
+  @for (section of visibleSections(); track section.sectionID; let i = $index) {
+    <div class="section-card">
+      <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="list-checks" [size]="14" /></span>{{ section.sectionLabel }}</p>
+      <dl>
+        @for (field of section.fields; track field.fieldID) {
+          @if (isFieldVisible(field)) {
+            <div class="answer-view">
+              <dt>{{ field.fieldLabel }}</dt>
+              <dd>{{ answerDisplay(field, answers()[field.fieldID]) || '—' }}</dd>
+            </div>
+          }
         }
-      }
-    </dl>
-  </div>
+      </dl>
+    </div>
+  }
 } @else {
   @if (visibleSections().length > 1) {
     <div class="wizard-head">
