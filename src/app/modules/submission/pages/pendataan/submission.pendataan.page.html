@@ -74,37 +74,59 @@
     </dl>
   </div>
 } @else {
-  @for (section of version()?.sections ?? []; track section.sectionID) {
+  @if (visibleSections().length > 1) {
+    <div class="wizard-head">
+      <div class="wizard-meta">
+        <span>Bagian <strong>{{ stepIndex() + 1 }}</strong> dari {{ visibleSections().length }}</span>
+        <span>{{ progressPercent() }}%</span>
+      </div>
+      <div class="wizard-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="progressPercent()">
+        <div class="wizard-bar-fill" [style.transform]="progressScale()"></div>
+      </div>
+      <ol class="wizard-dots">
+        @for (s of visibleSections(); track s.sectionID; let i = $index) {
+          <li>
+            <button type="button" class="wizard-dot" [class.done]="i < stepIndex()" [class.current]="i === stepIndex()"
+                    [disabled]="i >= stepIndex()" [attr.aria-current]="i === stepIndex() ? 'step' : null"
+                    [attr.title]="s.sectionLabel" (click)="goToStep(i)">{{ i + 1 }}</button>
+          </li>
+        }
+      </ol>
+    </div>
+  }
+
+  @if (currentSection(); as section) {
     <div class="section-card">
       <p class="form-section-label"><span class="icon-badge sm icon-badge-info"><app-icon name="list-checks" [size]="14" /></span>{{ section.sectionLabel }}</p>
       @if (section.description) { <p class="text-muted section-desc">{{ section.description }}</p> }
 
       @for (field of section.fields; track field.fieldID) {
         @if (isFieldVisible(field)) {
-          <div class="field-group">
+          <div class="field-group" [class.has-error]="!!errorFor(field)">
             <label class="field-label">{{ field.fieldLabel }} @if (field.isRequired) { <span class="text-muted">*</span> }</label>
+            @if (field.helpText) { <p class="field-help">{{ field.helpText }}</p> }
 
             @switch (field.fieldType) {
               @case ('TEXT') {
-                <input class="form-control" [(ngModel)]="answers()[field.fieldID].text">
+                <input class="form-control" [class.is-invalid]="!!errorFor(field)" [(ngModel)]="answers()[field.fieldID].text" (ngModelChange)="onEdit(field)" (blur)="touch(field)">
               }
               @case ('TEXTAREA') {
-                <textarea class="form-control" rows="3" [(ngModel)]="answers()[field.fieldID].text"></textarea>
+                <textarea class="form-control" [class.is-invalid]="!!errorFor(field)" rows="3" [(ngModel)]="answers()[field.fieldID].text" (ngModelChange)="onEdit(field)" (blur)="touch(field)"></textarea>
               }
               @case ('NUMBER') {
-                <input type="number" class="form-control" [(ngModel)]="answers()[field.fieldID].number">
+                <input type="number" class="form-control" [class.is-invalid]="!!errorFor(field)" [(ngModel)]="answers()[field.fieldID].number" (ngModelChange)="onEdit(field)" (blur)="touch(field)">
               }
               @case ('DATE') {
-                <app-datetime-picker [showTime]="false" [(ngModel)]="answers()[field.fieldID].date" />
+                <app-datetime-picker [showTime]="false" [(ngModel)]="answers()[field.fieldID].date" (ngModelChange)="onEdit(field)" />
               }
               @case ('SELECT') {
-                <app-select [options]="optionSelectOptions(field)" [(ngModel)]="answers()[field.fieldID].optionID" placeholder="Pilih…" />
+                <app-select [options]="optionSelectOptions(field)" [(ngModel)]="answers()[field.fieldID].optionID" (ngModelChange)="onEdit(field)" placeholder="Pilih…" />
               }
               @case ('RADIO') {
                 <div class="radio-list">
                   @for (opt of field.options; track opt.optionID) {
                     <label class="form-check">
-                      <input type="radio" [name]="'field-' + field.fieldID" [value]="opt.optionID" [(ngModel)]="answers()[field.fieldID].optionID">
+                      <input type="radio" [name]="'field-' + field.fieldID" [value]="opt.optionID" [(ngModel)]="answers()[field.fieldID].optionID" (ngModelChange)="onEdit(field)">
                       {{ opt.optionLabel }}
                     </label>
                   }
@@ -114,7 +136,7 @@
                 <div class="check-list">
                   @for (opt of field.options; track opt.optionID) {
                     <label class="form-check">
-                      <input type="checkbox" [checked]="answers()[field.fieldID].optionIDs.includes(opt.optionID)" (change)="toggleMultiOption(field, opt.optionID)">
+                      <input type="checkbox" [checked]="answers()[field.fieldID].optionIDs.includes(opt.optionID)" (change)="toggleMultiOption(field, opt.optionID); onEdit(field)">
                       {{ opt.optionLabel }}
                     </label>
                   }
@@ -124,22 +146,21 @@
                 <div class="check-list">
                   @for (opt of field.options; track opt.optionID) {
                     <label class="form-check">
-                      <input type="checkbox" [checked]="answers()[field.fieldID].optionIDs.includes(opt.optionID)" (change)="toggleMultiOption(field, opt.optionID)">
+                      <input type="checkbox" [checked]="answers()[field.fieldID].optionIDs.includes(opt.optionID)" (change)="toggleMultiOption(field, opt.optionID); onEdit(field)">
                       {{ opt.optionLabel }}
                     </label>
                   }
                 </div>
               }
               @case ('FILE_DOCUMENT') {
-                <app-pdf-upload [value]="answers()[field.fieldID].fileURL" [allowedExtensions]="['.pdf','.docx','.xlsx']" label="Dokumen" (valueChange)="onFileChange(field, $event)" />
+                <app-pdf-upload [value]="answers()[field.fieldID].fileURL" [allowedExtensions]="['.pdf','.docx','.xlsx']" label="Dokumen" (valueChange)="onFileChange(field, $event); onEdit(field)" />
               }
               @case ('FILE_IMAGE') {
-                <app-image-upload [value]="answers()[field.fieldID].fileURL" (valueChange)="onFileChange(field, $event)" />
+                <app-image-upload [value]="answers()[field.fieldID].fileURL" (valueChange)="onFileChange(field, $event); onEdit(field)" />
               }
             }
 
-            @if (field.helpText) { <p class="field-help">{{ field.helpText }}</p> }
-            @if (fieldError(field.fieldID)) { <div class="err">{{ fieldError(field.fieldID) }}</div> }
+            @if (errorFor(field); as msg) { <div class="err" role="alert"><app-icon name="x-circle" [size]="14" /><span>{{ msg }}</span></div> }
           </div>
         }
       }
@@ -147,10 +168,18 @@
   }
 
   <div class="actions-bar">
+    @if (!isFirstStep()) {
+      <button class="btn btn-outline" (click)="prevStep()" [disabled]="busy()">Sebelumnya</button>
+    }
     <button class="btn btn-outline" (click)="saveDraft()" [disabled]="busy()">Simpan Draf</button>
-    <button class="btn btn-primary" (click)="submitForm()" [disabled]="busy()">Kirim</button>
+    @if (isLastStep()) {
+      <button class="btn btn-primary" (click)="submitForm()" [disabled]="busy()">Kirim</button>
+    } @else {
+      <button class="btn btn-primary" (click)="nextStep()" [disabled]="busy()">Selanjutnya</button>
+    }
     @if (submission()!.status === 'DRAFT') {
-      <button class="btn btn-ghost" style="margin-left:auto" (click)="cancel($event)" [disabled]="busy()">Batalkan</button>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" (click)="cancel($event)" [disabled]="busy()">Batalkan</button>
     }
   </div>
 }

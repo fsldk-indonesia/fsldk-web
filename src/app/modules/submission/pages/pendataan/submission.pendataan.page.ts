@@ -10,7 +10,7 @@ import { OrgPickerComponent, OrgPickerOption } from '../../../../shared/org-pick
 import { PdfUploadComponent } from '../../../../shared/pdf-upload.component';
 import { ImageUploadComponent } from '../../../../shared/image-upload.component';
 import { DateTimePickerComponent } from '../../../../shared/datetime-picker.component';
-import { FormField, FormVersionDetail } from '../../../submission-form/entities/submission-form';
+import { FormField, FormSection, FormVersionDetail } from '../../../submission-form/entities/submission-form';
 import { FieldError } from '../../../../core/entities/api-response';
 import {
   SubmissionDetail, FORM_CODE_LEVELISASI, FORM_CODE_SENSUS_KADER, EDITABLE_STATUSES,
@@ -53,14 +53,35 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .section-desc { margin: -8px 0 14px; }
     .field-group { margin-top: 16px; }
     .field-label { font-weight: 600; font-size: .92rem; margin-bottom: 6px; display: block; }
-    .field-help { color: var(--color-muted); font-size: .82rem; margin-top: 4px; }
+    .field-label { margin-bottom: 2px; }
+    .field-help { color: var(--color-muted); font-size: .74rem; line-height: 1.35; margin: 0 0 6px; }
+    .form-control.is-invalid { border-color: var(--color-danger); background-color: #fffbfa; }
+    .has-error ::ng-deep .app-select-control,
+    .has-error ::ng-deep .dtp-trigger { border-color: var(--color-danger); background-color: #fffbfa; }
+    .has-error .field-label { color: var(--color-danger); }
     .radio-list, .check-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
-    .actions-bar { display: flex; gap: 12px; margin-top: 24px; }
+    .actions-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; }
+    .actions-bar .spacer { flex: 1 1 auto; }
+    .wizard-head { margin-bottom: 16px; scroll-margin-top: 90px; }
+    .wizard-meta { display: flex; justify-content: space-between; align-items: baseline; font-size: .82rem; color: var(--color-muted); margin-bottom: 6px; }
+    .wizard-meta strong { color: var(--color-text); font-weight: 700; }
+    .wizard-bar { height: 8px; border-radius: 999px; background: var(--color-bg-alt); overflow: hidden; }
+    .wizard-bar-fill { height: 100%; width: 100%; border-radius: 999px; background: var(--color-primary); transform-origin: left center; transition: transform var(--motion-slow, .3s) var(--ease-out, ease-out); }
+    .wizard-dots { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+    .wizard-dot {
+      width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--color-border); background: #fff;
+      font-size: .74rem; font-weight: 700; color: var(--color-muted); display: inline-flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .wizard-dot.done { background: var(--color-primary-soft); color: var(--color-primary-dark); border-color: transparent; cursor: pointer; }
+    .wizard-dot.current { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+    .wizard-dot:disabled { cursor: default; }
+    @media (prefers-reduced-motion: reduce) { .wizard-bar-fill { transition: none; } }
     .answer-view { padding: 10px 0; border-bottom: 1px solid var(--color-border); }
     .answer-view dt { font-weight: 600; font-size: .88rem; }
     .answer-view dd { color: var(--color-text-secondary); margin: 2px 0 0; overflow-wrap: break-word; word-break: break-word; }
     .empty-state-inline { padding: 36px 20px 24px; }
-    .err { color: var(--color-danger); font-size: .82rem; margin-top: 6px; }
+    .err { display: flex; align-items: flex-start; gap: 5px; color: var(--color-danger); font-size: .8rem; margin-top: 6px; }
+    .err app-icon { flex: none; margin-top: 1px; }
   `],
 })
 export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView {
@@ -113,6 +134,144 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   answers = signal<Record<number, AnswerDraft>>({});
   fieldErrors = signal<Record<string, string>>({});
   fieldError(fieldID: number): string { return this.fieldErrors()[`field_${fieldID}`] ?? ''; }
+
+  // ---------- Wizard per section ----------
+  private step = signal(0);
+
+  /** Section yang punya minimal satu field terlihat (field kondisional bisa
+   *  menyembunyikan seluruh section). */
+  visibleSections(): FormSection[] {
+    return (this.version()?.sections ?? []).filter((s) => s.fields.some((f) => this.isFieldVisible(f)));
+  }
+  stepIndex(): number {
+    return Math.min(this.step(), Math.max(this.visibleSections().length - 1, 0));
+  }
+  currentSection(): FormSection | undefined { return this.visibleSections()[this.stepIndex()]; }
+  isFirstStep(): boolean { return this.stepIndex() === 0; }
+  isLastStep(): boolean { return this.stepIndex() >= this.visibleSections().length - 1; }
+  progressPercent(): number {
+    const n = this.visibleSections().length;
+    return n ? Math.round(((this.stepIndex() + 1) / n) * 100) : 0;
+  }
+  progressScale(): string { return `scaleX(${this.progressPercent() / 100})`; }
+
+  private scrollToWizardTop(): void {
+    setTimeout(() => document.querySelector('.wizard-head')?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 0);
+  }
+  goToStep(i: number): void {
+    if (i >= this.stepIndex()) return; // maju hanya lewat "Selanjutnya" (divalidasi per section)
+    this.step.set(i);
+    this.scrollToWizardTop();
+  }
+  prevStep(): void {
+    if (this.isFirstStep()) return;
+    this.step.set(this.stepIndex() - 1);
+    this.scrollToWizardTop();
+  }
+  nextStep(): void {
+    const sec = this.currentSection();
+    if (!sec) return;
+    const bad = sec.fields.filter((f) => this.validateField(f, true) !== '');
+    if (bad.length) {
+      this.touched.update((s) => { const n = new Set(s); bad.forEach((f) => n.add(f.fieldID)); sec.fields.forEach((f) => n.add(f.fieldID)); return n; });
+      this.scrollToFirstError();
+      return;
+    }
+    this.step.set(this.stepIndex() + 1);
+    this.scrollToWizardTop();
+  }
+  /** Pindah ke section yang memuat field tertentu (dipakai saat Kirim/Simpan
+   *  menemukan error di section lain, atau error dari server). */
+  private jumpToFieldSection(fieldID: number): void {
+    const idx = this.visibleSections().findIndex((s) => s.fields.some((f) => f.fieldID === fieldID));
+    if (idx >= 0) this.step.set(idx);
+  }
+
+  /** Field yang sudah disentuh user (blur/ubah) + flag percobaan simpan/kirim —
+   *  pesan validasi klien baru tampil setelah salah satunya terjadi, supaya form
+   *  kosong tidak langsung penuh merah. */
+  private touched = signal<Set<number>>(new Set());
+  private submitTried = signal(false);
+
+  touch(field: FormField): void {
+    if (this.touched().has(field.fieldID)) return;
+    this.touched.update((s) => new Set(s).add(field.fieldID));
+  }
+
+  /** Dipanggil tiap jawaban berubah: tandai disentuh & buang error dari server
+   *  untuk field itu (sudah tidak relevan setelah diedit). */
+  onEdit(field: FormField): void {
+    this.touch(field);
+    if (this.fieldErrors()[`field_${field.fieldID}`]) {
+      this.fieldErrors.update((m) => { const n = { ...m }; delete n[`field_${field.fieldID}`]; return n; });
+    }
+  }
+
+  /** Pesan error yang ditampilkan untuk satu field ('' = valid / belum perlu tampil). */
+  errorFor(field: FormField): string {
+    const server = this.fieldError(field.fieldID);
+    if (server) return server;
+    if (!this.submitTried() && !this.touched().has(field.fieldID)) return '';
+    return this.validateField(field, true);
+  }
+
+  /** Cermin validasi backend (submission_service_impl.go: fieldValidationRule +
+   *  collectMissingRequiredFields) supaya error muncul sebelum request dikirim. */
+  private validateField(field: FormField, checkRequired: boolean): string {
+    const d = this.answers()[field.fieldID];
+    if (!d || !this.isFieldVisible(field)) return '';
+    const rule = (field.validationRule ?? {}) as { regex?: string; min?: number; max?: number; minLength?: number; maxLength?: number };
+    let filled = false;
+    switch (field.fieldType) {
+      case 'TEXT': case 'TEXTAREA': {
+        const v = d.text.trim();
+        filled = v !== '';
+        if (filled) {
+          if (rule.minLength != null && v.length < rule.minLength) return `${field.fieldLabel}: panjang minimal ${rule.minLength} karakter (saat ini ${v.length})`;
+          if (rule.maxLength != null && v.length > rule.maxLength) return `${field.fieldLabel}: panjang maksimal ${rule.maxLength} karakter (saat ini ${v.length})`;
+          if (rule.regex) {
+            try { if (!new RegExp(rule.regex).test(v)) return `${field.fieldLabel}: format tidak sesuai`; } catch { /* regex tidak valid: lewati, backend yang menilai */ }
+          }
+        }
+        break;
+      }
+      case 'NUMBER':
+        filled = d.number != null && `${d.number}` !== '';
+        if (filled) {
+          if (rule.min != null && d.number! < rule.min) return `${field.fieldLabel}: nilai minimal ${rule.min}`;
+          if (rule.max != null && d.number! > rule.max) return `${field.fieldLabel}: nilai maksimal ${rule.max}`;
+        }
+        break;
+      case 'DATE': filled = d.date !== ''; break;
+      case 'SELECT': case 'RADIO': filled = d.optionID != null; break;
+      case 'MULTISELECT': case 'CHECKBOX': filled = d.optionIDs.length > 0; break;
+      case 'FILE_DOCUMENT': case 'FILE_IMAGE': filled = d.fileURL !== ''; break;
+    }
+    if (checkRequired && field.isRequired && !filled) return `${field.fieldLabel} wajib diisi`;
+    return '';
+  }
+
+  /** Validasi semua field terlihat sebelum simpan/kirim. Draf tidak menuntut
+   *  field wajib (hanya format), kirim menuntut semuanya. Bila ada yang salah:
+   *  tampilkan error di field & scroll ke field pertama yang bermasalah. */
+  private validateBeforeSend(checkRequired: boolean): boolean {
+    this.submitTried.set(true);
+    const bad = this.allFields().find((f) => this.validateField(f, checkRequired) !== '');
+    if (bad) {
+      this.jumpToFieldSection(bad.fieldID);
+      this.scrollToFirstError();
+    }
+    return !bad;
+  }
+
+  private scrollToFirstError(): void {
+    // Jeda sedikit agar section tujuan (bila baru berpindah) sudah ter-render.
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>('.field-group.has-error');
+      el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      el?.querySelector<HTMLElement>('input, textarea, button, [tabindex]')?.focus({ preventScroll: true });
+    }, 60);
+  }
 
   isEditable = computed(() => {
     const s = this.submission();
@@ -255,6 +414,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     const s = this.submission();
     if (!s) return;
     this.fieldErrors.set({});
+    if (!this.validateBeforeSend(false)) return;
     this.presenter.saveAnswers(s.submissionID, this.buildAnswerInputs(), () => this.reload());
   }
 
@@ -262,6 +422,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     const s = this.submission();
     if (!s) return;
     this.fieldErrors.set({});
+    if (!this.validateBeforeSend(true)) return;
     this.presenter.submit(s.submissionID, this.buildAnswerInputs());
   }
 
@@ -312,8 +473,8 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     const map: Record<string, string> = {};
     for (const e of errors) map[e.attribute] = e.message;
     this.fieldErrors.set(map);
-    queueMicrotask(() => {
-      document.querySelector('.err')?.closest('.field-group')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    });
+    const first = errors.map((e) => /^field_(\d+)$/.exec(e.attribute)).find((m) => m !== null);
+    if (first) this.jumpToFieldSection(Number(first[1]));
+    this.scrollToFirstError();
   }
 }
