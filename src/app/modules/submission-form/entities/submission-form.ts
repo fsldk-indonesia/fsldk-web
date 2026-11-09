@@ -62,6 +62,8 @@ export interface FormOption {
   isActive: boolean;
   /** Hanya relevan bila field induk useScoring && scoringMethod==='AUTOMATIC'. */
   score?: number;
+  /** Opsi "Lainnya": bila dipilih, pengisi mengetik jawaban manual. */
+  isOther?: boolean;
 }
 
 export interface FormField {

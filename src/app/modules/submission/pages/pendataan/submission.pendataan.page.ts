@@ -27,9 +27,11 @@ interface AnswerDraft {
   optionIDs: number[];
   fileURL: string;
   fileName: string;
+  /** Isian manual saat opsi "Lainnya" dipilih. */
+  otherText: string;
 }
 
-const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optionID: null, optionIDs: [], fileURL: '', fileName: '' });
+const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optionID: null, optionIDs: [], fileURL: '', fileName: '', otherText: '' });
 
 @Component({
   selector: 'app-submission-pendataan-page',
@@ -85,6 +87,7 @@ const emptyDraft = (): AnswerDraft => ({ text: '', number: null, date: '', optio
     .empty-state-inline { padding: 36px 20px 24px; }
     .err { display: flex; align-items: flex-start; gap: 5px; color: var(--color-danger); font-size: .8rem; margin-top: 6px; }
     .err app-icon { flex: none; margin-top: 1px; }
+    .other-input { margin-top: 8px; }
   `],
 })
 export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView {
@@ -197,6 +200,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
   private resetWizard(): void {
     this.step.set(0);
     this.touched.set(new Set());
+    this.otherTouched.set(new Set());
     this.submitTried.set(false);
     this.requiredTried.set(false);
     this.fieldErrors.set({});
@@ -208,6 +212,12 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
    *  kosong tidak langsung penuh merah. */
   private touched = signal<Set<number>>(new Set());
   private submitTried = signal(false);
+  /** Kolom isian "Lainnya" yang sudah ditinggalkan (blur) — "wajib diisi"-nya baru tampil setelah itu. */
+  private otherTouched = signal<Set<number>>(new Set());
+  touchOther(field: FormField): void {
+    if (this.otherTouched().has(field.fieldID)) return;
+    this.otherTouched.update((s) => new Set(s).add(field.fieldID));
+  }
   /** "Wajib diisi" hanya ditampilkan setelah user mencoba Kirim/Selanjutnya (atau
    *  menyentuh field-nya). Simpan Draf TIDAK menuntut field wajib, jadi tidak
    *  boleh memunculkan error merah "wajib diisi" yang membingungkan. */
@@ -232,12 +242,16 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
     const server = this.fieldError(field.fieldID);
     if (server) return server;
     if (!this.submitTried() && !this.touched().has(field.fieldID)) return '';
-    return this.validateField(field, this.requiredTried() || this.touched().has(field.fieldID));
+    return this.validateField(
+      field,
+      this.requiredTried() || this.touched().has(field.fieldID),
+      this.requiredTried() || this.otherTouched().has(field.fieldID),
+    );
   }
 
   /** Cermin validasi backend (submission_service_impl.go: fieldValidationRule +
    *  collectMissingRequiredFields) supaya error muncul sebelum request dikirim. */
-  private validateField(field: FormField, checkRequired: boolean): string {
+  private validateField(field: FormField, checkRequired: boolean, strictOther: boolean = checkRequired): string {
     const d = this.answers()[field.fieldID];
     if (!d || !this.isFieldVisible(field)) return '';
     const rule = (field.validationRule ?? {}) as { regex?: string; min?: number; max?: number; minLength?: number; maxLength?: number };
@@ -268,6 +282,12 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
       case 'FILE_DOCUMENT': case 'FILE_IMAGE': filled = d.fileURL !== ''; break;
     }
     if (checkRequired && field.isRequired && !filled) return `${field.fieldLabel} wajib diisi`;
+    // Opsi "Lainnya" terpilih: isian manual wajib & maksimal 500 karakter (draf boleh kosong).
+    if (this.isOtherSelected(field)) {
+      const t = d.otherText.trim();
+      if (t.length > 500) return `${field.fieldLabel}: isian Lainnya maksimal 500 karakter (saat ini ${t.length})`;
+      if (strictOther && t === '') return `${field.fieldLabel}: isian Lainnya wajib diisi`;
+    }
     return '';
   }
 
@@ -366,12 +386,21 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
    *  evaluasi aturan kondisional. */
   answerDisplay(field: FormField, draft: AnswerDraft | undefined): string {
     if (!draft) return '';
-    if (draft.optionID != null) return field.options.find((o) => o.optionID === draft.optionID)?.optionLabel ?? '';
+    const withOther = (o: { optionLabel: string; isOther?: boolean } | undefined): string | undefined =>
+      o ? (o.isOther && draft.otherText ? `${o.optionLabel}: ${draft.otherText}` : o.optionLabel) : undefined;
+    if (draft.optionID != null) return withOther(field.options.find((o) => o.optionID === draft.optionID)) ?? '';
     if (draft.optionIDs.length) {
-      return draft.optionIDs.map((id) => field.options.find((o) => o.optionID === id)?.optionLabel).filter(Boolean).join(', ');
+      return draft.optionIDs.map((id) => withOther(field.options.find((o) => o.optionID === id))).filter(Boolean).join(', ');
     }
     if (draft.fileURL) return draft.fileName || draft.fileURL;
     return this.answerAsString(field, draft);
+  }
+
+  /** True bila jawaban saat ini memilih opsi "Lainnya" (menampilkan kolom isian manual). */
+  isOtherSelected(field: FormField): boolean {
+    const d = this.answers()[field.fieldID];
+    if (!d) return false;
+    return field.options.some((o) => o.isOther && (o.optionID === d.optionID || d.optionIDs.includes(o.optionID)));
   }
 
   isFieldVisible(field: FormField): boolean {
@@ -426,10 +455,12 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
         case 'SELECT': case 'RADIO':
           if (draft.optionID == null) continue;
           input['valueOptionID'] = draft.optionID;
+          if (this.isOtherSelected(field)) input['valueOtherText'] = draft.otherText;
           break;
         case 'MULTISELECT': case 'CHECKBOX':
           if (draft.optionIDs.length === 0) continue;
           input['valueOptionIDs'] = draft.optionIDs;
+          if (this.isOtherSelected(field)) input['valueOtherText'] = draft.otherText;
           break;
         case 'FILE_DOCUMENT': case 'FILE_IMAGE':
           if (!draft.fileURL) continue;
@@ -485,6 +516,7 @@ export class SubmissionPendataanPage implements OnInit, SubmissionPendataanView 
         draft.optionIDs = a.valueOptionIDs ?? [];
         draft.fileURL = a.valueFileURL ?? '';
         draft.fileName = a.valueFileName ?? '';
+        draft.otherText = a.valueOtherText ?? '';
         map[a.fieldID] = draft;
       }
     }
