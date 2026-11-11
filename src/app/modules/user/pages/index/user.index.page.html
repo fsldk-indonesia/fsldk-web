@@ -39,11 +39,11 @@
         <div class="field-card">
           <p class="form-section-label"><span class="icon-badge sm icon-badge-soft"><app-icon name="user-circle" [size]="13" /></span>Informasi Akun</p>
           <div class="form-group"><label class="form-label">Nama Lengkap</label><input class="form-control" [(ngModel)]="form.fullName" [disabled]="isReadonly"></div>
-          <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" [(ngModel)]="form.email" [disabled]="isReadonly"></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-control" type="email" name="user-form-email" autocomplete="off" [(ngModel)]="form.email" [disabled]="isReadonly"></div>
           @if (!isReadonly) {
             <div class="form-group">
               <label class="form-label">Kata Sandi</label>
-              <input class="form-control" type="password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
+              <input class="form-control" type="password" name="user-form-password" autocomplete="new-password" [(ngModel)]="form.password" [placeholder]="editId ? 'Kosongkan untuk tidak mengubah' : ''">
             </div>
           }
         </div>
@@ -61,11 +61,12 @@
           @if (showOrganizationPicker()) {
             <div class="collapse" [class.open]="!isPengunjungRole">
               <div class="collapse-inner">
-                <div class="form-group"><label class="form-label">LDK</label>
-                  <app-org-picker [options]="organizationOptions()" [selectedID]="form.organizationID" (selectedIDChange)="form.organizationID = $event"
+                <div class="form-group"><label class="form-label">LDK @if (!isReadonly && isLdkRequired) { <span class="text-danger">*</span> }</label>
+                  <app-org-picker [options]="organizationOptions()" [selectedID]="form.organizationID" (selectedIDChange)="onOrganizationChange($event)"
                                    (searchChange)="onOrganizationSearch($event)" [disabled]="isReadonly" [fullWidth]="true" [popup]="true"
                                    noun="LDK" icon="building" title="Pilih LDK" subtitle="Pilih LDK yang ditautkan ke akun ini"
                                    confirmLabel="Pilih" searchPlaceholder="Cari LDK..." />
+                  @if (ldkError()) { <div class="form-error">{{ ldkError() }}</div> }
                   <p class="form-hint">{{ ldkFieldHint }}</p>
                 </div>
               </div>

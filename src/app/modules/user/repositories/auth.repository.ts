@@ -132,10 +132,16 @@ export class AuthRepository {
   private isSingleOrgTierOnly(): boolean {
     const u = this.user();
     if (!u) return false;
+    // Role staff tier SELALU terkunci ke portal tier-nya, walau diberi
+    // wildcardTierAccess (Akses Lintas Tier hanya memperluas cakupan data
+    // antar organisasi di portal tier itu, bukan membuka Portal Admin).
+    if (AuthRepository.TIER_STAFF_ROLES.has(u.role)) return true;
     const ownRank = TIER_RANK[u.organizationTypeCode ?? ''] ?? 0;
     const hasWildcard = (u.wildcardTierAccess ?? []).length > 0;
     return ownRank > 0 && !hasWildcard;
   }
+
+  private static readonly TIER_STAFF_ROLES = new Set(['LDK Admin', 'Puskomda Verifikator', 'Puskomnas Verifikator']);
 
   /** Akses CMS Utama (FSLDK/Portal Admin) — berlaku untuk akun yang BUKAN
    *  staff terkunci satu tier organisasi (lihat isSingleOrgTierOnly()) dan
