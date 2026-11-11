@@ -452,6 +452,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.popupOrigin.set(popupOriginFromEvent(event));
     this.isReadonly = false;
     this.editId = null;
+    this.ldkError.set(null);
     const roleID = this.roles()[0]?.roleID ?? 0;
     this.form = { ...emptyForm(roleID), wildcardTierAccess: this.resolveWildcardTierAccess(roleID, []) };
     this.showForm.set(true);
@@ -461,6 +462,7 @@ export class UserIndexPage implements OnInit, UserIndexView {
     this.popupOrigin.set(popupOriginFromEvent(event));
     this.isReadonly = false;
     this.editId = u.userID;
+    this.ldkError.set(null);
     this.form = {
       fullName: u.fullName, email: u.email, password: '', roleID: u.roleID, isActive: u.isActive,
       organizationID: u.organizationID ?? null, wildcardTierAccess: this.resolveWildcardTierAccess(u.roleID, [...(u.wildcardTierAccess ?? [])]),
@@ -545,7 +547,27 @@ export class UserIndexPage implements OnInit, UserIndexView {
   private setBusy(id: number): void { this.busy.update((s) => new Set(s).add(id)); }
   private clearBusy(id: number): void { this.busy.update((s) => { const next = new Set(s); next.delete(id); return next; }); }
 
-  save(): void { this.presenter.save(this.editId, this.form); }
+  /** Field LDK wajib diisi selama sedang tampil (picker tersedia untuk caller
+   *  & role bukan Pengunjung) — kalau disembunyikan, tidak divalidasi. */
+  ldkError = signal<string | null>(null);
+
+  get isLdkRequired(): boolean {
+    return this.showOrganizationPicker() && !this.isPengunjungRole;
+  }
+
+  onOrganizationChange(id: unknown): void {
+    this.form.organizationID = id as number | null;
+    if (this.form.organizationID) this.ldkError.set(null);
+  }
+
+  save(): void {
+    if (this.isLdkRequired && !this.form.organizationID) {
+      this.ldkError.set('LDK wajib dipilih.');
+      return;
+    }
+    this.ldkError.set(null);
+    this.presenter.save(this.editId, this.form);
+  }
   async remove(u: UserRow, event?: Event): Promise<void> {
     const ok = await this.alert.confirm(`Hapus pengguna ${u.fullName}? Tindakan ini tidak dapat dibatalkan.`, {
       title: 'Hapus Pengguna', confirmLabel: 'Ya, Hapus', variant: 'danger',
